@@ -18,15 +18,15 @@
         <controls:MasterDetailsView BackButtonBehavior="Automatic"
                                     ItemsSource="{x:Bind ViewModel.InboxThreads, Mode=OneWay}"
                                     NoSelectionContent="Select a conversation to view"
-                                    CompactModeThresholdWidth="720" Grid.Row="1">
+                                    BorderBrush="Transparent"
+                                    MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
+                                    Grid.Row="1">
             <controls:MasterDetailsView.ItemTemplate>
                 <DataTemplate x:DataType="models:InstaDirectInboxThread">
-                    <StackPanel x:Name="InboxItem" Orientation="Horizontal" Margin="6">
-                        <SymbolIcon Symbol="Contact" Margin="0,0,12,0"/>
-                        <StackPanel>
-                            <TextBlock Text="{x:Bind Users[0].UserName}" FontWeight="Bold"/>
-                            <TextBlock Text="{x:Bind Items[0].Text}" TextTrimming="WordEllipsis" MaxLines="1" TextWrapping="Wrap"/>
-                        </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="{x:Bind Users[0].UserName}" FontWeight="Bold" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                        <TextBlock Text="{x:Bind Items[0].Text}" TextTrimming="WordEllipsis" MaxLines="1" TextWrapping="WrapWholeWords" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                     </StackPanel>
                 </DataTemplate>
             </controls:MasterDetailsView.ItemTemplate>
