@@ -23,7 +23,6 @@ namespace InstantMessaging
         private StorageFile _stateFile;
         private UserSessionData _userSession;
         private const string StateFileName = "state.bin";
-        private Task _loadStateFromStorage;
         private InstaDirectInbox _inbox;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -38,22 +37,32 @@ namespace InstantMessaging
                 else return 0;
             }
         }
+        public bool IsUserAuthenticated { get; private set; }
 
-        public ApiContainer(string userName, string password)
+        private ApiContainer() {}
+
+        public static async Task<ApiContainer> Factory()
         {
-            _userSession = new UserSessionData
+            var instance = new ApiContainer();
+            await instance.LoadStateFromStorage();
+            return instance;
+        }
+
+        public static ApiContainer Factory(string username, string password)
+        {
+            var instance = new ApiContainer();
+            instance._userSession = new UserSessionData
             {
-                UserName = userName,
+                UserName = username,
                 Password = password
             };
 
-            _instaApi = InstaApiBuilder.CreateBuilder()
-                .SetUser(_userSession)
-                .SetRequestDelay(RequestDelay.FromSeconds(1,2))
+            instance._instaApi = InstaApiBuilder.CreateBuilder()
+                .SetUser(instance._userSession)
+                .SetRequestDelay(RequestDelay.FromSeconds(1, 2))
                 .UseLogger(new DebugLogger(LogLevel.All))
                 .Build();
-
-            _loadStateFromStorage = LoadStateFromStorage();
+            return instance;
         }
 
         private async Task LoadStateFromStorage()
@@ -66,20 +75,26 @@ namespace InstantMessaging
                     if (stateStream.Length > 0)
                     {
                         stateStream.Seek(0, SeekOrigin.Begin);
-                        _instaApi.LoadStateDataFromStream(stateStream);
+                        _instaApi = InstaApiBuilder.CreateBuilder()
+                            .LoadStateFromStream(stateStream)
+                            .SetRequestDelay(RequestDelay.FromSeconds(1, 2))
+                            .UseLogger(new DebugLogger(LogLevel.All))
+                            .Build();
+                        IsUserAuthenticated = _instaApi.IsUserAuthenticated;
                     }
                 }
             }
             else
             {
                 _stateFile = await _localFolder.CreateFileAsync(StateFileName, CreationCollisionOption.OpenIfExists);
+                IsUserAuthenticated = false;
             }
         }
 
         public async Task<IResult<InstaLoginResult>> Login()
         {
-            await _loadStateFromStorage;
-
+            if (_instaApi == null)
+                throw new ArgumentNullException("Api has not been initialized");
             if (!_instaApi.IsUserAuthenticated)
             {
                 // login
@@ -108,6 +123,8 @@ namespace InstantMessaging
 
         public async Task GetInboxAsync()
         {
+            if (_instaApi == null)
+                throw new ArgumentNullException("Api has not been initialized");
             var result = await _instaApi.GetDirectInboxAsync();
             if (result.Succeeded)
                 _inbox = result.Value.Inbox;

@@ -29,10 +29,12 @@ namespace InstantMessaging
             this.InitializeComponent();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             ViewModel = (ApiContainer)e.Parameter;
+            await ViewModel.GetInboxAsync();
+            Frame.BackStack.RemoveAt(Frame.BackStack.Count - 1);
         }
     }
 }

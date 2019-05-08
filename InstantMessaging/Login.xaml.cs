@@ -22,6 +22,7 @@ namespace InstantMessaging
     /// </summary>
     public sealed partial class Login : Page
     {
+        ApiContainer ViewModel;
         public Login()
         {
             this.InitializeComponent();
@@ -39,14 +40,21 @@ namespace InstantMessaging
             var password = PasswordBox.Password;
             if(username.Length > 0 && password.Length > 0)
             {
-                var viewModel = new ApiContainer(username, password);
-                var result = await viewModel.Login();
+                ViewModel = ApiContainer.Factory(username, password);
+                var result = await ViewModel.Login();
                 if (!result.Succeeded)
                     return;
-                await viewModel.GetInboxAsync();
-                Frame.Navigate(typeof(MainPage), viewModel);
+                Frame.Navigate(typeof(MainPage), ViewModel);
             }
             
+        }
+
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            ViewModel = await ApiContainer.Factory();
+            if (ViewModel.IsUserAuthenticated)
+                Frame.Navigate(typeof(MainPage), ViewModel);
         }
     }
 }
