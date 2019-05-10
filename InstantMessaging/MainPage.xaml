@@ -10,26 +10,72 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
+    <Page.Resources>
+        <DataTemplate x:Key="ItemContainer" x:DataType="models:InstaDirectInboxItem">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+                <Border Background="Silver" HorizontalAlignment="Left">
+                    <TextBlock x:Name="MessageContent" 
+                               Text="{x:Bind Text}"
+                               Margin="6" 
+                               MaxWidth="200"
+                               HorizontalAlignment="Center" 
+                               TextWrapping="WrapWholeWords"/>
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+    </Page.Resources>
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="90"/>
-            <RowDefinition/>
-        </Grid.RowDefinitions>
         <controls:MasterDetailsView BackButtonBehavior="Automatic"
                                     ItemsSource="{x:Bind ViewModel.InboxThreads, Mode=OneWay}"
+                                    SelectedItem="{x:Bind ViewModel.SelectedThread, Mode=TwoWay}"
                                     NoSelectionContent="Select a conversation to view"
                                     BorderBrush="Transparent"
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
-                                    Grid.Row="1">
+                                    SelectionChanged="MessageContent_SelectionChanged">
             <controls:MasterDetailsView.ItemTemplate>
                 <DataTemplate x:DataType="models:InstaDirectInboxThread">
-
                     <StackPanel>
                         <TextBlock Text="{x:Bind Users[0].UserName}" FontWeight="Bold" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                         <TextBlock Text="{x:Bind Items[0].Text}" TextTrimming="WordEllipsis" MaxLines="1" TextWrapping="WrapWholeWords" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                     </StackPanel>
                 </DataTemplate>
             </controls:MasterDetailsView.ItemTemplate>
+
+            <controls:MasterDetailsView.DetailsTemplate>
+                <DataTemplate x:DataType="models:InstaDirectInboxThread">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition Height="50"/>
+                        </Grid.RowDefinitions>
+
+                        <ListView x:Name="InboxThreadItemsContainer" 
+                                  Grid.Row="0" 
+                                  ItemsSource="{x:Bind Items}"
+                                  ItemTemplate="{StaticResource ItemContainer}">
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <ItemsStackPanel VerticalAlignment="Bottom"
+                                                     ItemsUpdatingScrollMode="KeepLastItemInView"/>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                        </ListView>
+                        <Grid Grid.Row="1" HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="60"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="MessageTextBox" 
+                                 PlaceholderText="Enter messeage" 
+                                 MinWidth="100" 
+                                 VerticalAlignment="Center"
+                                 HorizontalContentAlignment="Stretch"
+                                 Margin="4,0,4,0"/>
+                            <Button x:Name="SendButton" Content="Send" Margin="4" Grid.Column="1"/>
+                        </Grid>
+                    </Grid>
+                </DataTemplate>
+            </controls:MasterDetailsView.DetailsTemplate>
         </controls:MasterDetailsView>
     </Grid>
 </Page>

@@ -60,9 +60,9 @@ namespace InstantMessaging
             }
 
             
-            rootFrame.Navigate(typeof(Login), e.Arguments);
             // Ensure the current window is active
             Window.Current.Activate();
+            rootFrame.Navigate(typeof(Login), e.Arguments);
         }
 
         /// <summary>

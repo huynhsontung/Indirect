@@ -36,5 +36,43 @@ namespace InstantMessaging
             await ViewModel.GetInboxAsync();
             Frame.BackStack.RemoveAt(Frame.BackStack.Count - 1);
         }
+
+        private async void MessageContent_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems[0] == null)
+                return;
+            var result = await ViewModel.GetInboxThread(((InstaSharper.Classes.Models.InstaDirectInboxThread)e.AddedItems[0]).ThreadId);
+            if (result.Succeeded)
+            {
+                //int index = ViewModel.InboxThreads.IndexOf((InstaSharper.Classes.Models.InstaDirectInboxThread)e.AddedItems[0]);
+                //ViewModel.InboxThreads[index] = result.Value;
+
+                ((InstaSharper.Classes.Models.InstaDirectInboxThread)e.AddedItems[0]).Items = result.Value.Items;
+                ViewModel.InboxThreadItems.Clear();
+                foreach(var item in result.Value.Items)
+                {
+                    ViewModel.InboxThreadItems.Add(item);
+                }
+            }
+        }
+    }
+
+    public class BoolToAlignmentConverter : IValueConverter
+    {
+        object IValueConverter.Convert(object value, Type targetType, object parameter, string language)
+        {
+            bool? b = (bool?)value;
+            if (b ?? false)
+            {
+                return "Right";
+            }
+            return "Left";
+
+        }
+
+        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

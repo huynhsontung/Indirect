@@ -26,8 +26,9 @@ namespace InstantMessaging
         private InstaDirectInbox _inbox;
 
         public event PropertyChangedEventHandler PropertyChanged;
-
+        public InstaDirectInboxThread SelectedThread { get; set; }
         public ObservableCollection<InstaDirectInboxThread> InboxThreads { get; } = new ObservableCollection<InstaDirectInboxThread>();
+        public ObservableCollection<InstaDirectInboxItem> InboxThreadItems { get; } = new ObservableCollection<InstaDirectInboxItem>();
         public long UnseenCount
         {
             get
@@ -136,36 +137,9 @@ namespace InstantMessaging
             }
         }
 
-        private async Task GetMessaging()
+        public async Task<IResult<InstaDirectInboxThread>> GetInboxThread(string threadId)
         {
-            //var recipientsResult = await _instaApi.GetRankedRecipientsAsync();
-            //if (!recipientsResult.Succeeded)
-            //{
-            //    Debug.WriteLine("Unable to get ranked recipients");
-            //    return;
-            //}
-
-            //Debug.WriteLine($"Got {recipientsResult.Value.Threads.Count} ranked threads");
-            //foreach (var thread in recipientsResult.Value.Threads)
-            //    Debug.WriteLine($"Threadname: {thread.ThreadTitle}, users: {thread.Users.Count}");
-
-            //var inboxThreads = await _instaApi.GetDirectInboxAsync();
-            //if (!inboxThreads.Succeeded)
-            //{
-            //    Debug.WriteLine("Unable to get inbox");
-            //    return;
-            //}
-            //Debug.WriteLine($"Got {inboxThreads.Value.Inbox.Threads.Count} inbox threads");
-            //foreach (var thread in inboxThreads.Value.Inbox.Threads)
-            //    Debug.WriteLine($"Threadname: {thread.Title}, users: {thread.Users.Count}");
-
-            var singleThreadId = "340282366841710300949128145896318328529";
-            var singleThread = await _instaApi.GetDirectInboxThreadAsync(singleThreadId);
-            if (singleThread.Succeeded)
-            {
-                foreach (var text in singleThread.Value.Items)
-                    Debug.WriteLine(text.Text, "Message Content");
-            }
+            return await _instaApi.GetDirectInboxThreadAsync(threadId);
         }
 
     }
