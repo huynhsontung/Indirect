@@ -11,13 +11,16 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
+        <local:FromMeBoolToAlignmentConverter x:Key="FromMeConverter"/>
         <DataTemplate x:Key="ItemContainer" x:DataType="models:InstaDirectInboxItem">
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
-                <Border Background="Silver" HorizontalAlignment="Left">
+            <StackPanel Orientation="Vertical" 
+                        HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeConverter}}"
+                        Margin="0,2,0,2">
+                <Border Background="Silver" HorizontalAlignment="Left" CornerRadius="4,4,4,4">
                     <TextBlock x:Name="MessageContent" 
                                Text="{x:Bind Text}"
                                Margin="6" 
-                               MaxWidth="200"
+                               MaxWidth="250"
                                HorizontalAlignment="Center" 
                                TextWrapping="WrapWholeWords"/>
                 </Border>
@@ -36,10 +39,17 @@
                 <DataTemplate x:DataType="models:InstaDirectInboxThread">
                     <StackPanel>
                         <TextBlock Text="{x:Bind Users[0].UserName}" FontWeight="Bold" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                        <TextBlock Text="{x:Bind Items[0].Text}" TextTrimming="WordEllipsis" MaxLines="1" TextWrapping="WrapWholeWords" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                        <TextBlock Text="{x:Bind Items[0].Text}" TextTrimming="WordEllipsis" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                     </StackPanel>
                 </DataTemplate>
             </controls:MasterDetailsView.ItemTemplate>
+
+            <controls:MasterDetailsView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsStackPanel VerticalAlignment="Top"
+                                     ItemsUpdatingScrollMode="KeepItemsInView"/>
+                </ItemsPanelTemplate>
+            </controls:MasterDetailsView.ItemsPanel>
 
             <controls:MasterDetailsView.DetailsTemplate>
                 <DataTemplate x:DataType="models:InstaDirectInboxThread">
@@ -52,13 +62,20 @@
                         <ListView x:Name="InboxThreadItemsContainer" 
                                   Grid.Row="0" 
                                   ItemsSource="{x:Bind Items}"
-                                  ItemTemplate="{StaticResource ItemContainer}">
+                                  ItemTemplate="{StaticResource ItemContainer}"
+                                  SelectionMode="None">
                             <ListView.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <ItemsStackPanel VerticalAlignment="Bottom"
                                                      ItemsUpdatingScrollMode="KeepLastItemInView"/>
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="MinHeight" Value="0"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
                         </ListView>
                         <Grid Grid.Row="1" HorizontalAlignment="Stretch">
                             <Grid.ColumnDefinitions>

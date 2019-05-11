@@ -46,7 +46,7 @@ namespace InstantMessaging
             {
                 //int index = ViewModel.InboxThreads.IndexOf((InstaSharper.Classes.Models.InstaDirectInboxThread)e.AddedItems[0]);
                 //ViewModel.InboxThreads[index] = result.Value;
-
+                result.Value.Items.Reverse();
                 ((InstaSharper.Classes.Models.InstaDirectInboxThread)e.AddedItems[0]).Items = result.Value.Items;
                 ViewModel.InboxThreadItems.Clear();
                 foreach(var item in result.Value.Items)
@@ -57,16 +57,16 @@ namespace InstantMessaging
         }
     }
 
-    public class BoolToAlignmentConverter : IValueConverter
+    public class FromMeBoolToAlignmentConverter : IValueConverter
     {
         object IValueConverter.Convert(object value, Type targetType, object parameter, string language)
         {
             bool? b = (bool?)value;
             if (b ?? false)
             {
-                return "Right";
+                return HorizontalAlignment.Right;
             }
-            return "Left";
+            return HorizontalAlignment.Left;
 
         }
 

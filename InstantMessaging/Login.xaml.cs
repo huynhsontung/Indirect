@@ -54,7 +54,10 @@ namespace InstantMessaging
             base.OnNavigatedTo(e);
             ViewModel = await ApiContainer.Factory();
             if (ViewModel.IsUserAuthenticated)
-                Frame.Navigate(typeof(MainPage), ViewModel);
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    Frame.Navigate(typeof(MainPage), ViewModel);
+                });
         }
     }
 }
