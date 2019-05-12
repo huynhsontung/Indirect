@@ -4,19 +4,23 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:local="using:InstantMessaging"
+    xmlns:converters="using:InstantMessaging.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:InstaSharper.Classes.Models"
+    xmlns:wrapper="using:InstantMessaging.Wrapper"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
-        <local:FromMeBoolToAlignmentConverter x:Key="FromMeConverter"/>
+        <converters:FromMeBoolToAlignmentConverter x:Key="FromMe_AlignmentConverter"/>
+        <converters:FromMeBoolToBrushConverter x:Key="FromMe_BrushConverter"/>
+
         <DataTemplate x:Key="ItemContainer" x:DataType="models:InstaDirectInboxItem">
             <StackPanel Orientation="Vertical" 
-                        HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeConverter}}"
+                        HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMe_AlignmentConverter}}"
                         Margin="0,2,0,2">
-                <Border Background="Silver" HorizontalAlignment="Left" CornerRadius="4,4,4,4">
+                <Border Background="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMe_BrushConverter}}" HorizontalAlignment="Left" CornerRadius="4,4,4,4">
                     <TextBlock x:Name="MessageContent" 
                                Text="{x:Bind Text}"
                                Margin="6" 
@@ -36,10 +40,10 @@
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
                                     SelectionChanged="MessageContent_SelectionChanged">
             <controls:MasterDetailsView.ItemTemplate>
-                <DataTemplate x:DataType="models:InstaDirectInboxThread">
+                <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <StackPanel>
                         <TextBlock Text="{x:Bind Users[0].UserName}" FontWeight="Bold" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                        <TextBlock Text="{x:Bind Items[0].Text}" TextTrimming="WordEllipsis" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                        <TextBlock Text="{x:Bind LastPermanentItem.Text}" TextTrimming="WordEllipsis" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                     </StackPanel>
                 </DataTemplate>
             </controls:MasterDetailsView.ItemTemplate>
@@ -52,16 +56,15 @@
             </controls:MasterDetailsView.ItemsPanel>
 
             <controls:MasterDetailsView.DetailsTemplate>
-                <DataTemplate x:DataType="models:InstaDirectInboxThread">
+                <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition/>
                             <RowDefinition Height="50"/>
                         </Grid.RowDefinitions>
 
-                        <ListView x:Name="InboxThreadItemsContainer" 
-                                  Grid.Row="0" 
-                                  ItemsSource="{x:Bind Items}"
+                        <ListView Grid.Row="0" 
+                                  ItemsSource="{x:Bind ObservableItems}"
                                   ItemTemplate="{StaticResource ItemContainer}"
                                   SelectionMode="None">
                             <ListView.ItemsPanel>
@@ -87,8 +90,8 @@
                                  MinWidth="100" 
                                  VerticalAlignment="Center"
                                  HorizontalContentAlignment="Stretch"
-                                 Margin="4,0,4,0"/>
-                            <Button x:Name="SendButton" Content="Send" Margin="4" Grid.Column="1"/>
+                                 Margin="4,0,4,0" MaxLength="2200" KeyDown="MessageTextBox_KeyDown"/>
+                            <Button x:Name="SendButton" Content="Send" Margin="4" Grid.Column="1" Click="SendButton_Click"/>
                         </Grid>
                     </Grid>
                 </DataTemplate>

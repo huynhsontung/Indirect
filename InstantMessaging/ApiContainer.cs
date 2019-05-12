@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.Collections.ObjectModel;
 using InstaSharper.Classes.Models;
 using System.ComponentModel;
+using InstantMessaging.Wrapper;
 
 namespace InstantMessaging
 {   
@@ -26,9 +27,8 @@ namespace InstantMessaging
         private InstaDirectInbox _inbox;
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public InstaDirectInboxThread SelectedThread { get; set; }
-        public ObservableCollection<InstaDirectInboxThread> InboxThreads { get; } = new ObservableCollection<InstaDirectInboxThread>();
-        public ObservableCollection<InstaDirectInboxItem> InboxThreadItems { get; } = new ObservableCollection<InstaDirectInboxItem>();
+        public InstaDirectInboxThreadWrapper SelectedThread { get; set; }
+        public ObservableCollection<InstaDirectInboxThreadWrapper> InboxThreads { get; } = new ObservableCollection<InstaDirectInboxThreadWrapper>();
         public long UnseenCount
         {
             get
@@ -132,15 +132,27 @@ namespace InstantMessaging
 
             foreach(var thread in _inbox.Threads)
             {
-                // ListView puts lower indicies to the bottom
-                InboxThreads.Add(thread);
+                InboxThreads.Add(new InstaDirectInboxThreadWrapper(thread));
             }
         }
 
-        public async Task<IResult<InstaDirectInboxThread>> GetInboxThread(string threadId)
+        public async Task<IResult<InstaDirectInboxThread>> GetInboxThread(InstaDirectInboxThreadWrapper thread)
         {
-            return await _instaApi.GetDirectInboxThreadAsync(threadId);
+            if (thread == null)
+                throw new ArgumentNullException();
+            var result = await _instaApi.GetDirectInboxThreadAsync(thread.ThreadId);
+            if (result.Succeeded)
+            {
+                thread.UpdateItemList(result.Value.Items);
+            }
+            return result;
         }
 
+        // Send message to the current selected recipient
+        public async Task<IResult<InstaDirectInboxThreadList>> SendMessage(string content)
+        {
+            var result = await _instaApi.SendDirectMessage(SelectedThread.Users.FirstOrDefault().Pk.ToString(), SelectedThread.ThreadId, content);
+            return result;
+        }
     }
 }

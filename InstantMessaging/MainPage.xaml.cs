@@ -1,4 +1,5 @@
-﻿using System;
+﻿using InstantMessaging.Wrapper;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -41,38 +42,25 @@ namespace InstantMessaging
         {
             if (e.AddedItems[0] == null)
                 return;
-            var result = await ViewModel.GetInboxThread(((InstaSharper.Classes.Models.InstaDirectInboxThread)e.AddedItems[0]).ThreadId);
-            if (result.Succeeded)
-            {
-                //int index = ViewModel.InboxThreads.IndexOf((InstaSharper.Classes.Models.InstaDirectInboxThread)e.AddedItems[0]);
-                //ViewModel.InboxThreads[index] = result.Value;
-                result.Value.Items.Reverse();
-                ((InstaSharper.Classes.Models.InstaDirectInboxThread)e.AddedItems[0]).Items = result.Value.Items;
-                ViewModel.InboxThreadItems.Clear();
-                foreach(var item in result.Value.Items)
-                {
-                    ViewModel.InboxThreadItems.Add(item);
-                }
-            }
-        }
-    }
-
-    public class FromMeBoolToAlignmentConverter : IValueConverter
-    {
-        object IValueConverter.Convert(object value, Type targetType, object parameter, string language)
-        {
-            bool? b = (bool?)value;
-            if (b ?? false)
-            {
-                return HorizontalAlignment.Right;
-            }
-            return HorizontalAlignment.Left;
-
+            await ViewModel.GetInboxThread(e.AddedItems[0] as InstaDirectInboxThreadWrapper);           
         }
 
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, string language)
+        private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+
+            var button = sender as Control;
+            var messageBox = (button.Parent as Grid).Children[0] as TextBox;
+            var message = messageBox.Text;
+            await ViewModel.SendMessage(message);
+            messageBox.Text = "";
+        }
+
+        private void MessageTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if(e.Key == Windows.System.VirtualKey.Enter)
+            {
+                SendButton_Click(sender, e);
+            }
         }
     }
 }
