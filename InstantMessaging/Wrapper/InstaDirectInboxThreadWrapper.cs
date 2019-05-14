@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace InstantMessaging.Wrapper
 {
-    /// Wrapper of <see cref="InstaSharper.Classes.InstaDirectInboxThread"/> with Observable lists
+    /// Wrapper of <see cref="InstaDirectInboxThread"/> with Observable lists
     public class InstaDirectInboxThreadWrapper
     {
         public ObservableCollection<InstaDirectInboxItem> ObservableItems { get; } = new ObservableCollection<InstaDirectInboxItem>();

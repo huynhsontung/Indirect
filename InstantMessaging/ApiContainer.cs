@@ -1,22 +1,20 @@
-﻿using InstaSharper.API;
+﻿using InstantMessaging.Wrapper;
+using InstaSharper.API;
 using InstaSharper.API.Builder;
 using InstaSharper.Classes;
+using InstaSharper.Classes.Models;
 using InstaSharper.Logger;
 using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
-using System.Diagnostics;
-using System.Collections.ObjectModel;
-using InstaSharper.Classes.Models;
-using System.ComponentModel;
-using InstantMessaging.Wrapper;
 
 namespace InstantMessaging
-{   
+{
     public class ApiContainer : INotifyPropertyChanged
     {
         private IInstaApi _instaApi;
@@ -45,50 +43,59 @@ namespace InstantMessaging
         public static async Task<ApiContainer> Factory()
         {
             var instance = new ApiContainer();
+            await instance.CreateStateFile();
             await instance.LoadStateFromStorage();
             return instance;
         }
 
-        public static ApiContainer Factory(string username, string password)
+        public static async Task<ApiContainer> Factory(string username, string password)
         {
-            var instance = new ApiContainer();
-            instance._userSession = new UserSessionData
+            var instance = new ApiContainer
             {
-                UserName = username,
-                Password = password
+                _userSession = new UserSessionData {UserName = username, Password = password}
             };
 
+            await instance.CreateStateFile();
             instance._instaApi = InstaApiBuilder.CreateBuilder()
                 .SetUser(instance._userSession)
-                .SetRequestDelay(RequestDelay.FromSeconds(1, 2))
                 .UseLogger(new DebugLogger(LogLevel.All))
                 .Build();
             return instance;
         }
 
-        private async Task LoadStateFromStorage()
+        private async Task CreateStateFile()
         {
-            _stateFile = (StorageFile)await _localFolder.TryGetItemAsync(StateFileName);
-            if (_stateFile != null)
-            {
-                using (Stream stateStream = await _stateFile.OpenStreamForReadAsync())
-                {
-                    if (stateStream.Length > 0)
-                    {
-                        stateStream.Seek(0, SeekOrigin.Begin);
-                        _instaApi = InstaApiBuilder.CreateBuilder()
-                            .LoadStateFromStream(stateStream)
-                            .SetRequestDelay(RequestDelay.FromSeconds(1, 2))
-                            .UseLogger(new DebugLogger(LogLevel.All))
-                            .Build();
-                        IsUserAuthenticated = _instaApi.IsUserAuthenticated;
-                    }
-                }
-            }
-            else
+            _stateFile = (StorageFile) await _localFolder.TryGetItemAsync(StateFileName);
+            if (_stateFile == null)
             {
                 _stateFile = await _localFolder.CreateFileAsync(StateFileName, CreationCollisionOption.OpenIfExists);
                 IsUserAuthenticated = false;
+            }
+        }
+
+        private async Task LoadStateFromStorage()
+        {
+            using (Stream stateStream = await _stateFile.OpenStreamForReadAsync())
+            {
+                if (stateStream.Length > 0)
+                {
+                    stateStream.Seek(0, SeekOrigin.Begin);
+                    _instaApi = InstaApiBuilder.CreateBuilder()
+                        .LoadStateFromStream(stateStream)
+                        .UseLogger(new DebugLogger(LogLevel.All))
+                        .Build();
+                    IsUserAuthenticated = _instaApi.IsUserAuthenticated;
+                }
+            }
+        }
+
+        private async Task WriteStateToStorage()
+        {
+            using (var stateFileStream = await _stateFile.OpenStreamForWriteAsync())
+            {
+                var state = _instaApi.GetStateDataAsStream();
+                state.Seek(0, SeekOrigin.Begin);
+                state.CopyTo(stateFileStream);
             }
         }
 
@@ -98,31 +105,28 @@ namespace InstantMessaging
                 throw new ArgumentNullException("Api has not been initialized");
             if (!_instaApi.IsUserAuthenticated)
             {
-                // login
-                Debug.WriteLine($"Logging in as {_userSession.UserName}");
-                //delay.Disable();
                 var logInResult = await _instaApi.LoginAsync();
-                //delay.Enable();
 
-                if (!logInResult.Succeeded)
+                if (!logInResult.Succeeded || logInResult.Value != InstaLoginResult.Success)
                 {
                     return logInResult;
-                }
-                
+                }              
             }
 
-            // Write state back to storage
-            using (var stateFileStream = await _stateFile.OpenStreamForWriteAsync())
-            {
-                var state = _instaApi.GetStateDataAsStream();
-                state.Seek(0, SeekOrigin.Begin);
-                state.CopyTo(stateFileStream);
-            } 
+            await WriteStateToStorage();
 
             return Result.Success(InstaLoginResult.Success);
         }
 
-        public async Task GetInboxAsync()
+        public async Task<IResult<bool>> Logout()
+        {
+            var result = await _instaApi.LogoutAsync();
+            if (result.Value)
+                await WriteStateToStorage();
+            return result;
+        }
+
+        public async Task<IResult<InstaDirectInboxContainer>> GetInboxAsync()
         {
             if (_instaApi == null)
                 throw new ArgumentNullException("Api has not been initialized");
@@ -134,6 +138,8 @@ namespace InstantMessaging
             {
                 InboxThreads.Add(new InstaDirectInboxThreadWrapper(thread));
             }
+
+            return result;
         }
 
         public async Task<IResult<InstaDirectInboxThread>> GetInboxThread(InstaDirectInboxThreadWrapper thread)

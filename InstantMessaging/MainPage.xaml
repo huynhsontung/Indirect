@@ -38,7 +38,7 @@
                                     NoSelectionContent="Select a conversation to view"
                                     BorderBrush="Transparent"
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
-                                    SelectionChanged="MessageContent_SelectionChanged">
+                                    SelectionChanged="MessageContent_SelectionChanged" CompactModeThresholdWidth="540">
             <controls:MasterDetailsView.ItemTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <StackPanel>
@@ -96,6 +96,14 @@
                     </Grid>
                 </DataTemplate>
             </controls:MasterDetailsView.DetailsTemplate>
+
+            <controls:MasterDetailsView.MasterCommandBar>
+                <CommandBar>
+                    <CommandBar.SecondaryCommands>
+                        <AppBarButton Label="Logout" Click="AppBarButton_Click"/>
+                    </CommandBar.SecondaryCommands>
+                </CommandBar>
+            </controls:MasterDetailsView.MasterCommandBar>
         </controls:MasterDetailsView>
     </Grid>
 </Page>

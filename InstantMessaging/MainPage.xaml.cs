@@ -62,5 +62,14 @@ namespace InstantMessaging
                 SendButton_Click(sender, e);
             }
         }
+
+        private async void AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            var result = await ViewModel.Logout();
+            if (result.Value)
+            {
+                Frame.Navigate(typeof(Login));
+            }
+        }
     }
 }

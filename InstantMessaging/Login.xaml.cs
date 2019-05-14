@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using InstaSharper.Classes;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -38,20 +39,20 @@ namespace InstantMessaging
         {
             var username = UsernameBox.Text;
             var password = PasswordBox.Password;
-            if(username.Length > 0 && password.Length > 0)
-            {
-                ViewModel = ApiContainer.Factory(username, password);
-                var result = await ViewModel.Login();
-                if (!result.Succeeded)
-                    return;
-                Frame.Navigate(typeof(MainPage), ViewModel);
-            }
-            
+            if (username.Length <= 0 || password.Length <= 0) return;
+            ViewModel = await ApiContainer.Factory(username, password);
+            var result = await ViewModel.Login();
+            if (!result.Succeeded || result.Value != InstaLoginResult.Success)
+                return;
+            Frame.Navigate(typeof(MainPage), ViewModel);
+
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            UsernameBox.Text = "";
+            PasswordBox.Password = "";
             ViewModel = await ApiContainer.Factory();
             if (ViewModel.IsUserAuthenticated)
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
