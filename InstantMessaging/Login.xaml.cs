@@ -23,7 +23,7 @@ namespace InstantMessaging
     /// </summary>
     public sealed partial class Login : Page
     {
-        ApiContainer ViewModel;
+        ApiContainer _viewModel;
         public Login()
         {
             this.InitializeComponent();
@@ -40,24 +40,22 @@ namespace InstantMessaging
             var username = UsernameBox.Text;
             var password = PasswordBox.Password;
             if (username.Length <= 0 || password.Length <= 0) return;
-            ViewModel = await ApiContainer.Factory(username, password);
-            var result = await ViewModel.Login();
+            _viewModel = await ApiContainer.Factory(username, password);
+            var result = await _viewModel.Login();
             if (!result.Succeeded || result.Value != InstaLoginResult.Success)
                 return;
-            Frame.Navigate(typeof(MainPage), ViewModel);
+            Frame.Navigate(typeof(MainPage), _viewModel);
 
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            UsernameBox.Text = "";
-            PasswordBox.Password = "";
-            ViewModel = await ApiContainer.Factory();
-            if (ViewModel.IsUserAuthenticated)
+            _viewModel = await ApiContainer.Factory();
+            if (_viewModel.IsUserAuthenticated)
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    Frame.Navigate(typeof(MainPage), ViewModel);
+                    Frame.Navigate(typeof(MainPage), _viewModel);
                 });
         }
     }

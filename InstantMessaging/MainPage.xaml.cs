@@ -34,8 +34,8 @@ namespace InstantMessaging
         {
             base.OnNavigatedTo(e);
             ViewModel = (ApiContainer)e.Parameter;
-            await ViewModel.GetInboxAsync();
-            Frame.BackStack.RemoveAt(Frame.BackStack.Count - 1);
+            if (ViewModel != null) await ViewModel.GetInboxAsync();
+            else throw new NullReferenceException("No ViewModel created");
         }
 
         private async void MessageContent_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -18,24 +18,16 @@ namespace InstantMessaging
     public class ApiContainer : INotifyPropertyChanged
     {
         private IInstaApi _instaApi;
-        private StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
+        private readonly StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
         private StorageFile _stateFile;
         private UserSessionData _userSession;
-        private const string StateFileName = "state.bin";
+        private const string STATE_FILE_NAME = "state.bin";
         private InstaDirectInbox _inbox;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public InstaDirectInboxThreadWrapper SelectedThread { get; set; }
         public ObservableCollection<InstaDirectInboxThreadWrapper> InboxThreads { get; } = new ObservableCollection<InstaDirectInboxThreadWrapper>();
-        public long UnseenCount
-        {
-            get
-            {
-                if (_inbox != null)
-                    return _inbox.UnseenCount;
-                else return 0;
-            }
-        }
+        public long UnseenCount => _inbox?.UnseenCount ?? 0;
         public bool IsUserAuthenticated { get; private set; }
 
         private ApiContainer() {}
@@ -65,17 +57,17 @@ namespace InstantMessaging
 
         private async Task CreateStateFile()
         {
-            _stateFile = (StorageFile) await _localFolder.TryGetItemAsync(StateFileName);
+            _stateFile = (StorageFile) await _localFolder.TryGetItemAsync(STATE_FILE_NAME);
             if (_stateFile == null)
             {
-                _stateFile = await _localFolder.CreateFileAsync(StateFileName, CreationCollisionOption.OpenIfExists);
+                _stateFile = await _localFolder.CreateFileAsync(STATE_FILE_NAME, CreationCollisionOption.OpenIfExists);
                 IsUserAuthenticated = false;
             }
         }
 
         private async Task LoadStateFromStorage()
         {
-            using (Stream stateStream = await _stateFile.OpenStreamForReadAsync())
+            using (var stateStream = await _stateFile.OpenStreamForReadAsync())
             {
                 if (stateStream.Length > 0)
                 {
@@ -102,7 +94,7 @@ namespace InstantMessaging
         public async Task<IResult<InstaLoginResult>> Login()
         {
             if (_instaApi == null)
-                throw new ArgumentNullException("Api has not been initialized");
+                throw new NullReferenceException("Api has not been initialized");
             if (!_instaApi.IsUserAuthenticated)
             {
                 var logInResult = await _instaApi.LoginAsync();
@@ -129,7 +121,7 @@ namespace InstantMessaging
         public async Task<IResult<InstaDirectInboxContainer>> GetInboxAsync()
         {
             if (_instaApi == null)
-                throw new ArgumentNullException("Api has not been initialized");
+                throw new NullReferenceException("Api has not been initialized");
             var result = await _instaApi.GetDirectInboxAsync();
             if (result.Succeeded)
                 _inbox = result.Value.Inbox;
@@ -145,7 +137,7 @@ namespace InstantMessaging
         public async Task<IResult<InstaDirectInboxThread>> GetInboxThread(InstaDirectInboxThreadWrapper thread)
         {
             if (thread == null)
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(thread));
             var result = await _instaApi.GetDirectInboxThreadAsync(thread.ThreadId);
             if (result.Succeeded)
             {
@@ -157,7 +149,7 @@ namespace InstantMessaging
         // Send message to the current selected recipient
         public async Task<IResult<InstaDirectInboxThreadList>> SendMessage(string content)
         {
-            var result = await _instaApi.SendDirectMessage(SelectedThread.Users.FirstOrDefault().Pk.ToString(), SelectedThread.ThreadId, content);
+            var result = await _instaApi.SendDirectMessage(SelectedThread.Users.FirstOrDefault()?.Pk.ToString(), SelectedThread.ThreadId, content);
             return result;
         }
     }
