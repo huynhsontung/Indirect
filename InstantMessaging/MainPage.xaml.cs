@@ -24,7 +24,7 @@ namespace InstantMessaging
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        public ApiContainer ViewModel { get; set; }
+        private ApiContainer ViewModel { get; set; }
         public MainPage()
         {
             this.InitializeComponent();
@@ -36,6 +36,7 @@ namespace InstantMessaging
             ViewModel = (ApiContainer)e.Parameter;
             if (ViewModel != null) await ViewModel.GetInboxAsync();
             else throw new NullReferenceException("No ViewModel created");
+//            await ViewModel.FbnsTest();
         }
 
         private async void MessageContent_SelectionChanged(object sender, SelectionChangedEventArgs e)

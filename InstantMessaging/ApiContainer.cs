@@ -10,8 +10,17 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.ServiceModel;
 using System.Threading.Tasks;
+using Windows.Security.Cryptography.Certificates;
 using Windows.Storage;
+using DotNetty.Codecs.Mqtt;
+using DotNetty.Codecs.Mqtt.Packets;
+using DotNetty.Transport.Bootstrapping;
+using DotNetty.Transport.Channels;
+using DotNetty.Transport.Channels.Sockets;
+using InstaSharper.API.Push;
 
 namespace InstantMessaging
 {
@@ -151,6 +160,48 @@ namespace InstantMessaging
         {
             var result = await _instaApi.SendDirectMessage(SelectedThread.Users.FirstOrDefault()?.Pk.ToString(), SelectedThread.ThreadId, content);
             return result;
+        }
+
+
+        private const string DEFAULT_HOST = "mqtt-mini.facebook.com";
+        private const int DEFAULT_PORT = 443;
+        public async Task FbnsTest()
+        {
+            var bootstrap = new Bootstrap();
+            bootstrap
+                .Channel<TcpSocketChannel>()
+                .Option(ChannelOption.TcpNodelay, true)
+                .Option(ChannelOption.ConnectTimeout, TimeSpan.FromSeconds(5))
+                .Handler(new ActionChannelInitializer<TcpSocketChannel>(channel =>
+            {
+                var pipeline = channel.Pipeline;
+                pipeline.AddLast("decoder", new MqttDecoder(false, 10));
+                pipeline.AddLast("encoder", new MqttEncoder());
+                pipeline.AddLast("handler", new MqttHandler());
+            }));
+
+            var mqttChannel = await bootstrap.ConnectAsync(DEFAULT_HOST, DEFAULT_PORT);
+
+            if (mqttChannel.Open)
+            {
+                var connectPacket = new ConnectPacket();
+                connectPacket.ProtocolLevel = 3;
+                connectPacket.ProtocolName = "MQTToT";
+                connectPacket.KeepAliveInSeconds = 900;
+            }
+
+            await mqttChannel.CloseAsync();
+
+        }
+
+        class MqttHandler : SimpleChannelInboundHandler<Packet>
+        {
+            protected override void ChannelRead0(IChannelHandlerContext ctx, Packet msg)
+            {
+                PublishPacket ack = msg as PublishPacket;
+                
+                throw new NotImplementedException();
+            }
         }
     }
 }
