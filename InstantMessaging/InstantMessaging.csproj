@@ -122,13 +122,16 @@
     <Compile Include="ApiContainer.cs" />
     <Compile Include="Converters\FromMeBoolToAlignmentConverter.cs" />
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
+    <Compile Include="Notification\ClientVerificationData.cs" />
+    <Compile Include="Notification\FbnsClient.cs" />
     <Compile Include="Login.xaml.cs">
       <DependentUpon>Login.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MqttHelpers\CustomMqttEncoder.cs" />
+    <Compile Include="Notification\MqttHelpers\CustomMqttEncoder.cs" />
+    <Compile Include="Notification\MqttHelpers\FbnsConnectPacket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Wrapper\InstaDirectInboxThreadWrapper.cs" />
   </ItemGroup>
@@ -184,6 +187,11 @@
       <Project>{43e946c4-033c-409a-96ea-f79e01efef5f}</Project>
       <Name>InstaSharper</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Thrift">
+      <HintPath>Notification\Thrift\Thrift.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
