@@ -20,18 +20,20 @@ using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
-using InstaSharper.API.Push;
+using InstantMessaging.Notification;
 
 namespace InstantMessaging
 {
     public class ApiContainer : INotifyPropertyChanged
     {
+        private const string STATE_FILE_NAME = "state.bin";
+
         private IInstaApi _instaApi;
         private readonly StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
         private StorageFile _stateFile;
         private UserSessionData _userSession;
-        private const string STATE_FILE_NAME = "state.bin";
         private InstaDirectInbox _inbox;
+        private FbnsClient _fbnsClient;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public InstaDirectInboxThreadWrapper SelectedThread { get; set; }
@@ -46,6 +48,7 @@ namespace InstantMessaging
             var instance = new ApiContainer();
             await instance.CreateStateFile();
             await instance.LoadStateFromStorage();
+            instance._fbnsClient = new FbnsClient(instance._instaApi.Device);
             return instance;
         }
 
@@ -61,6 +64,7 @@ namespace InstantMessaging
                 .SetUser(instance._userSession)
                 .UseLogger(new DebugLogger(LogLevel.All))
                 .Build();
+            instance._fbnsClient = new FbnsClient(instance._instaApi.Device);
             return instance;
         }
 
