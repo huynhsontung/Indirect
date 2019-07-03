@@ -15,12 +15,7 @@ using System.ServiceModel;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
 using Windows.Storage;
-using DotNetty.Codecs.Mqtt;
-using DotNetty.Codecs.Mqtt.Packets;
-using DotNetty.Transport.Bootstrapping;
-using DotNetty.Transport.Channels;
-using DotNetty.Transport.Channels.Sockets;
-using InstantMessaging.Notification;
+using InstaSharper.API.Push;
 
 namespace InstantMessaging
 {
