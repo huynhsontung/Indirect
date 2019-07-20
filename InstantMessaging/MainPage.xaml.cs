@@ -1,19 +1,10 @@
 ﻿using InstantMessaging.Wrapper;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using InstantMessaging.Converters;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -24,26 +15,28 @@ namespace InstantMessaging
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private ApiContainer ViewModel { get; set; }
+        private ApiContainer _viewModel;
         public MainPage()
         {
             this.InitializeComponent();
+            FromMeBoolToBrushConverter.CurrentPage = this;
+            InstaUserShortFriendshipWrapper.PageReference = this;
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            ViewModel = (ApiContainer)e.Parameter;
-            if (ViewModel != null) await ViewModel.GetInboxAsync();
-            else throw new NullReferenceException("No ViewModel created");
-//            await ViewModel.FbnsTest();
+            _viewModel = (ApiContainer)e.Parameter;
+            if (_viewModel == null) throw new NullReferenceException("No _viewModel created");
+            await _viewModel.GetInboxAsync();
+//            await _viewModel.StartPushClient();
         }
 
         private async void MessageContent_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems[0] == null)
                 return;
-            await ViewModel.GetInboxThread(e.AddedItems[0] as InstaDirectInboxThreadWrapper);           
+            await _viewModel.GetInboxThread(e.AddedItems[0] as InstaDirectInboxThreadWrapper);           
         }
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
@@ -52,7 +45,7 @@ namespace InstantMessaging
             var button = sender as Control;
             var messageBox = (button.Parent as Grid).Children[0] as TextBox;
             var message = messageBox.Text;
-            await ViewModel.SendMessage(message);
+            await _viewModel.SendMessage(message);
             messageBox.Text = "";
         }
 
@@ -66,10 +59,10 @@ namespace InstantMessaging
 
         private async void AppBarButton_Click(object sender, RoutedEventArgs e)
         {
-            var result = await ViewModel.Logout();
+            var result = await _viewModel.Logout();
             if (result.Value)
             {
-                Frame.Navigate(typeof(Login));
+                Frame.Navigate(typeof(Login), _viewModel);
             }
         }
     }

@@ -2,25 +2,22 @@
 using InstaSharper.API;
 using InstaSharper.API.Builder;
 using InstaSharper.Classes;
-using InstaSharper.Classes.Models;
 using InstaSharper.Logger;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.ServiceModel;
 using System.Threading.Tasks;
-using Windows.Security.Cryptography.Certificates;
 using Windows.Storage;
-using InstaSharper.API.Push;
+using InstaSharper.Classes.Models.Direct;
+using InstaSharper.Enums;
 
 namespace InstantMessaging
 {
     public class ApiContainer : INotifyPropertyChanged
     {
+        // Todo: handle exceptions thrown by _instaApi like no network connection
         private const string STATE_FILE_NAME = "state.bin";
 
         private IInstaApi _instaApi;
@@ -28,7 +25,6 @@ namespace InstantMessaging
         private StorageFile _stateFile;
         private UserSessionData _userSession;
         private InstaDirectInbox _inbox;
-        private FbnsClient _fbnsClient;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public InstaDirectInboxThreadWrapper SelectedThread { get; set; }
@@ -43,23 +39,6 @@ namespace InstantMessaging
             var instance = new ApiContainer();
             await instance.CreateStateFile();
             await instance.LoadStateFromStorage();
-            instance._fbnsClient = new FbnsClient(instance._instaApi.Device);
-            return instance;
-        }
-
-        public static async Task<ApiContainer> Factory(string username, string password)
-        {
-            var instance = new ApiContainer
-            {
-                _userSession = new UserSessionData {UserName = username, Password = password}
-            };
-
-            await instance.CreateStateFile();
-            instance._instaApi = InstaApiBuilder.CreateBuilder()
-                .SetUser(instance._userSession)
-                .UseLogger(new DebugLogger(LogLevel.All))
-                .Build();
-            instance._fbnsClient = new FbnsClient(instance._instaApi.Device);
             return instance;
         }
 
@@ -68,7 +47,7 @@ namespace InstantMessaging
             _stateFile = (StorageFile) await _localFolder.TryGetItemAsync(STATE_FILE_NAME);
             if (_stateFile == null)
             {
-                _stateFile = await _localFolder.CreateFileAsync(STATE_FILE_NAME, CreationCollisionOption.OpenIfExists);
+                _stateFile = await _localFolder.CreateFileAsync(STATE_FILE_NAME, CreationCollisionOption.ReplaceExisting);
                 IsUserAuthenticated = false;
             }
         }
@@ -81,7 +60,7 @@ namespace InstantMessaging
                 {
                     stateStream.Seek(0, SeekOrigin.Begin);
                     _instaApi = InstaApiBuilder.CreateBuilder()
-                        .LoadStateFromStream(stateStream)
+                        .LoadStateDataFromStream(stateStream)
                         .UseLogger(new DebugLogger(LogLevel.All))
                         .Build();
                     IsUserAuthenticated = _instaApi.IsUserAuthenticated;
@@ -89,7 +68,7 @@ namespace InstantMessaging
             }
         }
 
-        private async Task WriteStateToStorage()
+        public async Task WriteStateToStorage()
         {
             using (var stateFileStream = await _stateFile.OpenStreamForWriteAsync())
             {
@@ -99,23 +78,18 @@ namespace InstantMessaging
             }
         }
 
-        public async Task<IResult<InstaLoginResult>> Login()
+        public async Task<IResult<InstaLoginResult>> Login(string username, string password)
         {
-            if (_instaApi == null)
-                throw new NullReferenceException("Api has not been initialized");
-            if (!_instaApi.IsUserAuthenticated)
-            {
-                var logInResult = await _instaApi.LoginAsync();
 
-                if (!logInResult.Succeeded || logInResult.Value != InstaLoginResult.Success)
-                {
-                    return logInResult;
-                }              
-            }
+            _userSession = new UserSessionData {UserName = username, Password = password};
+            _instaApi = InstaApiBuilder.CreateBuilder()
+                .SetUser(_userSession)
+                .UseLogger(new DebugLogger(LogLevel.All))
+                .Build();
 
-            await WriteStateToStorage();
+            var logInResult = await _instaApi.LoginAsync();
 
-            return Result.Success(InstaLoginResult.Success);
+            return logInResult;
         }
 
         public async Task<IResult<bool>> Logout()
@@ -126,17 +100,22 @@ namespace InstantMessaging
             return result;
         }
 
+        public async Task StartPushClient()
+        {
+            await _instaApi.PushClient.Start();
+        }
+
         public async Task<IResult<InstaDirectInboxContainer>> GetInboxAsync()
         {
             if (_instaApi == null)
                 throw new NullReferenceException("Api has not been initialized");
-            var result = await _instaApi.GetDirectInboxAsync();
+            var result = await _instaApi.MessagingProcessor.GetDirectInboxAsync(PaginationParameters.MaxPagesToLoad(1));
             if (result.Succeeded)
                 _inbox = result.Value.Inbox;
 
             foreach(var thread in _inbox.Threads)
             {
-                InboxThreads.Add(new InstaDirectInboxThreadWrapper(thread));
+                InboxThreads.Add(new InstaDirectInboxThreadWrapper(thread, _instaApi));
             }
 
             return result;
@@ -146,7 +125,7 @@ namespace InstantMessaging
         {
             if (thread == null)
                 throw new ArgumentNullException(nameof(thread));
-            var result = await _instaApi.GetDirectInboxThreadAsync(thread.ThreadId);
+            var result = await _instaApi.MessagingProcessor.GetDirectInboxThreadAsync(thread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
             if (result.Succeeded)
             {
                 thread.UpdateItemList(result.Value.Items);
@@ -157,7 +136,7 @@ namespace InstantMessaging
         // Send message to the current selected recipient
         public async Task<IResult<InstaDirectInboxThreadList>> SendMessage(string content)
         {
-            var result = await _instaApi.SendDirectMessage(SelectedThread.Users.FirstOrDefault()?.Pk.ToString(), SelectedThread.ThreadId, content);
+            var result = await _instaApi.MessagingProcessor.SendDirectTextAsync(SelectedThread.Users.FirstOrDefault()?.Pk.ToString(), SelectedThread.ThreadId, content);
             return result;
         }
 

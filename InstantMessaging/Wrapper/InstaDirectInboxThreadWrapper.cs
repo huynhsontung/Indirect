@@ -2,49 +2,28 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.UI.Xaml.Media.Imaging;
+using InstaSharper.API;
+using InstaSharper.Classes.Models.Direct;
+using InstaSharper.Classes.Models.User;
 
 namespace InstantMessaging.Wrapper
 {
     /// Wrapper of <see cref="InstaDirectInboxThread"/> with Observable lists
-    public class InstaDirectInboxThreadWrapper
+    public class InstaDirectInboxThreadWrapper : InstaDirectInboxThread
     {
+        private IInstaApi _instaApi;
+
         public ObservableCollection<InstaDirectInboxItem> ObservableItems { get; } = new ObservableCollection<InstaDirectInboxItem>();
-        public bool Muted { get; set; }
-        public List<InstaUserShort> Users { get; set; }
-        public string Title { get; set; }
+        public new List<InstaUserShortFriendshipWrapper> Users { get; } = new List<InstaUserShortFriendshipWrapper>();
 
-        public string OldestCursor { get; set; }
-        public string NewestCursor { get; set; }
-        public string NextCursor { get; set; }
-        public string PrevCursor { get; set; }
-
-        public DateTime LastActivity { get; set; }
-
-        public long ViewerId { get; set; }
-        public string ThreadId { get; set; }
-        public string ThreadV2Id { get; set; }
-        public bool HasOlder { get; set; }
-
-        public InstaUserShort Inviter { get; set; }
-        public bool Named { get; set; }
-        public bool Pending { get; set; }
-
-        public bool Canonical { get; set; }
-
-        public bool HasNewer { get; set; }
-
-
-        public bool IsSpam { get; set; }
-
-
-        public InstaDirectThreadType ThreadType { get; set; }
-        public InstaDirectInboxItem LastPermanentItem { get; set; }
-
-        public InstaDirectInboxThreadWrapper(InstaDirectInboxThread source)
+        public InstaDirectInboxThreadWrapper(InstaDirectInboxThread source, IInstaApi api)
         {
+            _instaApi = api;
             Canonical = source.Canonical;
             HasNewer = source.HasNewer;
             HasOlder = source.HasOlder;
@@ -57,22 +36,29 @@ namespace InstantMessaging.Wrapper
             ThreadId = source.ThreadId;
             OldestCursor = source.OldestCursor;
             NewestCursor = source.NewestCursor;
-            NextCursor = source.NextCursor;
-            PrevCursor = source.PrevCursor;
             ThreadType = source.ThreadType;
             Title = source.Title;
             Inviter = source.Inviter;
             LastPermanentItem = source.LastPermanentItem;
-            Users = source.Users;
+            HasNewer = source.HasNewer;
+            HasOlder = source.HasOlder;
+            HasUnreadMessage = source.HasUnreadMessage;
+            foreach (var instaUserShortFriendship in source.Users)
+            {
+                var user = new InstaUserShortFriendshipWrapper(instaUserShortFriendship, api);
+                Users.Add(user);
+            }
 
             UpdateItemList(source.Items);
         }
 
+        
+
         public void UpdateItemList(List<InstaDirectInboxItem> source)
         {
-            if(ObservableItems.Count == 0)
+            source.Reverse();
+            if (ObservableItems.Count == 0)
             {
-                source.Reverse();
                 foreach (var item in source)
                     ObservableItems.Add(item);
             }

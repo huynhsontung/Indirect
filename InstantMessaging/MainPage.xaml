@@ -7,44 +7,61 @@
     xmlns:converters="using:InstantMessaging.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="using:InstaSharper.Classes.Models"
     xmlns:wrapper="using:InstantMessaging.Wrapper"
+    xmlns:direct="using:InstaSharper.Classes.Models.Direct"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
-        <converters:FromMeBoolToAlignmentConverter x:Key="FromMe_AlignmentConverter"/>
-        <converters:FromMeBoolToBrushConverter x:Key="FromMe_BrushConverter"/>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="FromThemItemBackground" Color="DimGray"></SolidColorBrush>
+                    <SolidColorBrush x:Key="FromMeItemBackground" Color="{ThemeResource SystemAccentColorDark1}"></SolidColorBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="FromThemItemBackground" Color="LightGray"></SolidColorBrush>
+                    <SolidColorBrush x:Key="FromMeItemBackground" Color="{ThemeResource SystemAccentColorLight1}"></SolidColorBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
 
-        <DataTemplate x:Key="ItemContainer" x:DataType="models:InstaDirectInboxItem">
-            <StackPanel Orientation="Vertical" 
-                        HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMe_AlignmentConverter}}"
-                        Margin="0,2,0,2">
-                <Border Background="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMe_BrushConverter}}" HorizontalAlignment="Left" CornerRadius="4,4,4,4">
-                    <TextBlock x:Name="MessageContent" 
-                               Text="{x:Bind Text}"
-                               Margin="6" 
-                               MaxWidth="250"
-                               HorizontalAlignment="Center" 
-                               TextWrapping="WrapWholeWords"/>
-                </Border>
-            </StackPanel>
-        </DataTemplate>
+            <converters:FromMeBoolToAlignmentConverter x:Key="FromMeAlignmentConverter"/>
+            <converters:FromMeBoolToBrushConverter x:Key="FromMeBrushConverter"/>
+
+            <DataTemplate x:Key="ItemContainer" x:DataType="direct:InstaDirectInboxItem">
+                <StackPanel Orientation="Vertical" 
+                            HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                            Margin="0,2,0,2">
+                    <Border Background="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" HorizontalAlignment="Left" CornerRadius="4,4,4,4">
+                        <TextBlock x:Name="MessageContent" 
+                                   Text="{x:Bind Text}"
+                                   Margin="6" 
+                                   MaxWidth="250"
+                                   HorizontalAlignment="Center" 
+                                   TextWrapping="WrapWholeWords"/>
+                    </Border>
+                </StackPanel>
+            </DataTemplate>
+        </ResourceDictionary>
     </Page.Resources>
     <Grid>
         <controls:MasterDetailsView BackButtonBehavior="Automatic"
-                                    ItemsSource="{x:Bind ViewModel.InboxThreads, Mode=OneWay}"
-                                    SelectedItem="{x:Bind ViewModel.SelectedThread, Mode=TwoWay}"
+                                    ItemsSource="{x:Bind _viewModel.InboxThreads, Mode=OneWay}"
+                                    SelectedItem="{x:Bind _viewModel.SelectedThread, Mode=TwoWay}"
                                     NoSelectionContent="Select a conversation to view"
                                     BorderBrush="Transparent"
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
                                     SelectionChanged="MessageContent_SelectionChanged" CompactModeThresholdWidth="540">
             <controls:MasterDetailsView.ItemTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
-                    <StackPanel>
-                        <TextBlock Text="{x:Bind Users[0].UserName}" FontWeight="Bold" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                        <TextBlock Text="{x:Bind LastPermanentItem.Text}" TextTrimming="WordEllipsis" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                    <StackPanel Orientation="Horizontal">
+                        <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture, Mode=OneWay}" Height="48" Width="48" Margin="4,10,16,10"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{x:Bind Users[0].UserName}" FontWeight="Bold" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                            <TextBlock Text="{x:Bind LastPermanentItem.Text}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                        </StackPanel>
                     </StackPanel>
+                    
                 </DataTemplate>
             </controls:MasterDetailsView.ItemTemplate>
 
