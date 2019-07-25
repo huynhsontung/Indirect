@@ -32,7 +32,7 @@
                 <StackPanel Orientation="Vertical" 
                             HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                             Margin="0,2,0,2">
-                    <Border Background="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" HorizontalAlignment="Left" CornerRadius="4,4,4,4">
+                    <Border Background="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" HorizontalAlignment="Left" CornerRadius="2,2,2,2">
                         <TextBlock x:Name="MessageContent" 
                                    Text="{x:Bind Text}"
                                    Margin="6" 
@@ -44,21 +44,60 @@
             </DataTemplate>
         </ResourceDictionary>
     </Page.Resources>
+
     <Grid>
-        <controls:MasterDetailsView BackButtonBehavior="Automatic"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="TitleBarElement" 
+              Grid.Row="0"
+              Background="Transparent" 
+              Canvas.ZIndex="2">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftPaddingColumn" Width="0"/>
+                <ColumnDefinition/>
+                <ColumnDefinition x:Name="RightPaddingColumn" Width="0"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="BackButtonPlaceholder" Style="{StaticResource NavigationBackButtonNormalStyle}"
+                        Height="32" Width="40" Opacity="0"
+                        Visibility="Collapsed">
+                </Button>
+                <TextBlock x:Name="AppTitleTextBlock"
+                           Text="Custom Title Bar" 
+                           VerticalAlignment="Center"
+                           Style="{StaticResource CaptionTextBlockStyle}" 
+                           Margin="8,0,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <Button x:Name="BackButton" Grid.Row="0" Canvas.ZIndex="3"
+                Style="{StaticResource NavigationBackButtonNormalStyle}"
+                Height="32" Width="40"
+                Click="DetailsBackButton_OnClick" Visibility="Collapsed">
+        </Button>
+
+        <controls:MasterDetailsView x:Name="MainLayout" 
+                                    Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    BackButtonBehavior="Manual"
                                     ItemsSource="{x:Bind _viewModel.InboxThreads, Mode=OneWay}"
                                     SelectedItem="{x:Bind _viewModel.SelectedThread, Mode=TwoWay}"
                                     NoSelectionContent="Select a conversation to view"
                                     BorderBrush="Transparent"
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
-                                    SelectionChanged="MessageContent_SelectionChanged" CompactModeThresholdWidth="540">
+                                    SelectionChanged="MessageContent_SelectionChanged" CompactModeThresholdWidth="640">
             <controls:MasterDetailsView.ItemTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <StackPanel Orientation="Horizontal">
                         <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture, Mode=OneWay}" Height="48" Width="48" Margin="4,10,16,10"/>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{x:Bind Users[0].UserName}" FontWeight="Bold" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                            <TextBlock Text="{x:Bind LastPermanentItem.Text}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                            <TextBlock Style="{StaticResource BaseTextBlockStyle}" Text="{x:Bind Users[0].UserName}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind LastPermanentItem.Text}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                         </StackPanel>
                     </StackPanel>
                     
@@ -76,18 +115,44 @@
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <Grid>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="32"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition/>
-                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="44"/>
                         </Grid.RowDefinitions>
 
-                        <ListView Grid.Row="0" 
-                                  ItemsSource="{x:Bind ObservableItems}"
-                                  ItemTemplate="{StaticResource ItemContainer}"
-                                  SelectionMode="None">
+                        <Border Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1" Background="{ThemeResource SystemControlAcrylicElementBrush}"/>
+
+                        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" Margin="0,8,0,0"  DefaultLabelPosition="Collapsed">
+                            <AppBarButton Icon="Video" Label="Video call"/>
+                            <CommandBar.Content>
+                                <StackPanel Orientation="Horizontal" Background="Transparent">
+                                    <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture, Mode=OneWay}" Height="32" Width="32" Margin="12,0,16,0" VerticalAlignment="Center"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Users[0].UserName}" 
+                                                   Style="{StaticResource BaseTextBlockStyle}"
+                                                   MaxLines="1" 
+                                                   HorizontalAlignment="Left" 
+                                                   ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                                        <TextBlock Text="~Status here~" Style="{StaticResource CaptionTextBlockStyle}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </CommandBar.Content>
+                        </CommandBar>
+                        
+
+                        <ListView Grid.Row="0" Grid.RowSpan="3"
+                              ItemsSource="{x:Bind ObservableItems}"
+                              ItemTemplate="{StaticResource ItemContainer}"
+                              SelectionMode="None">
+                            <ListView.Header>
+                                <!-- Title bar height + command bar height = 32 + 48 = 80 -->
+                                <Border Height="80"/>
+                            </ListView.Header>
                             <ListView.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <ItemsStackPanel VerticalAlignment="Bottom"
-                                                     ItemsUpdatingScrollMode="KeepLastItemInView"/>
+                                                 ItemsUpdatingScrollMode="KeepLastItemInView"/>
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
                             <ListView.ItemContainerStyle>
@@ -97,25 +162,37 @@
                                 </Style>
                             </ListView.ItemContainerStyle>
                         </ListView>
-                        <Grid Grid.Row="1" HorizontalAlignment="Stretch">
+                        <Grid Grid.Row="3" HorizontalAlignment="Stretch">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
                                 <ColumnDefinition Width="60"/>
                             </Grid.ColumnDefinitions>
                             <TextBox x:Name="MessageTextBox" 
-                                 PlaceholderText="Enter messeage" 
-                                 MinWidth="100" 
-                                 VerticalAlignment="Center"
-                                 HorizontalContentAlignment="Stretch"
-                                 Margin="4,0,4,0" MaxLength="2200" KeyDown="MessageTextBox_KeyDown"/>
+                                     PlaceholderText="Enter message" 
+                                     MinWidth="100" 
+                                     VerticalAlignment="Center"
+                                     HorizontalContentAlignment="Stretch"
+                                     Margin="4,0,4,0" MaxLength="2200" KeyDown="MessageTextBox_KeyDown"/>
                             <Button x:Name="SendButton" Content="Send" Margin="4" Grid.Column="1" Click="SendButton_Click"/>
                         </Grid>
                     </Grid>
                 </DataTemplate>
             </controls:MasterDetailsView.DetailsTemplate>
 
+            <controls:MasterDetailsView.MasterHeader>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="32"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                
+                </Grid>
+            </controls:MasterDetailsView.MasterHeader>
+
             <controls:MasterDetailsView.MasterCommandBar>
-                <CommandBar>
+                <CommandBar ClosedDisplayMode="Minimal">
                     <CommandBar.SecondaryCommands>
                         <AppBarButton Label="Logout" Click="AppBarButton_Click"/>
                     </CommandBar.SecondaryCommands>

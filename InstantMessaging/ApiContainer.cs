@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
 using InstaSharper.Classes.Models.Direct;
+using InstaSharper.Classes.Models.User;
 using InstaSharper.Enums;
 
 namespace InstantMessaging
@@ -24,11 +25,23 @@ namespace InstantMessaging
         private readonly StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
         private StorageFile _stateFile;
         private UserSessionData _userSession;
+        private UserSessionData UserSession
+        {
+            get => _userSession;
+            set
+            {
+                _userSession = value;
+                if (value.LoggedInUser != null) LoggedInUser = new InstaUserShortWrapper(value.LoggedInUser, _instaApi);
+            }
+        }
+
         private InstaDirectInbox _inbox;
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public InstaDirectInboxThreadWrapper SelectedThread { get; set; }
+
         public ObservableCollection<InstaDirectInboxThreadWrapper> InboxThreads { get; } = new ObservableCollection<InstaDirectInboxThreadWrapper>();
+        public InstaUserShortWrapper LoggedInUser { get; private set; }
+        public InstaDirectInboxThreadWrapper SelectedThread { get; set; }
         public long UnseenCount => _inbox?.UnseenCount ?? 0;
         public bool IsUserAuthenticated { get; private set; }
 
@@ -40,6 +53,12 @@ namespace InstantMessaging
             await instance.CreateStateFile();
             await instance.LoadStateFromStorage();
             return instance;
+        }
+
+        public void SetSelectedThreadNull()
+        {
+            SelectedThread = null;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedThread)));
         }
 
         private async Task CreateStateFile()
@@ -64,6 +83,7 @@ namespace InstantMessaging
                         .UseLogger(new DebugLogger(LogLevel.All))
                         .Build();
                     IsUserAuthenticated = _instaApi.IsUserAuthenticated;
+                    if(IsUserAuthenticated) UserSession = _instaApi.GetLoggedUser();
                 }
             }
         }
@@ -81,14 +101,14 @@ namespace InstantMessaging
         public async Task<IResult<InstaLoginResult>> Login(string username, string password)
         {
 
-            _userSession = new UserSessionData {UserName = username, Password = password};
+            UserSession = new UserSessionData {UserName = username, Password = password};
             _instaApi = InstaApiBuilder.CreateBuilder()
-                .SetUser(_userSession)
+                .SetUser(UserSession)
                 .UseLogger(new DebugLogger(LogLevel.All))
                 .Build();
 
             var logInResult = await _instaApi.LoginAsync();
-
+            await WriteStateToStorage();
             return logInResult;
         }
 
@@ -121,7 +141,7 @@ namespace InstantMessaging
             return result;
         }
 
-        public async Task<IResult<InstaDirectInboxThread>> GetInboxThread(InstaDirectInboxThreadWrapper thread)
+        public async Task<IResult<InstaDirectInboxThread>> OnThreadChange(InstaDirectInboxThreadWrapper thread)
         {
             if (thread == null)
                 throw new ArgumentNullException(nameof(thread));

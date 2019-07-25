@@ -5,6 +5,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using InstantMessaging.Converters;
+using Microsoft.Toolkit.Uwp.UI.Controls;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -19,8 +20,11 @@ namespace InstantMessaging
         public MainPage()
         {
             this.InitializeComponent();
+            Window.Current.SetTitleBar(TitleBarElement);
             FromMeBoolToBrushConverter.CurrentPage = this;
-            InstaUserShortFriendshipWrapper.PageReference = this;
+            InstaUserShortWrapper.PageReference = this;
+            MainLayout.ViewStateChanged += OnViewStateChange;
+            
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -36,7 +40,7 @@ namespace InstantMessaging
         {
             if (e.AddedItems[0] == null)
                 return;
-            await _viewModel.GetInboxThread(e.AddedItems[0] as InstaDirectInboxThreadWrapper);           
+            await _viewModel.OnThreadChange(e.AddedItems[0] as InstaDirectInboxThreadWrapper);           
         }
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
@@ -64,6 +68,14 @@ namespace InstantMessaging
             {
                 Frame.Navigate(typeof(Login), _viewModel);
             }
+        }
+
+        private void DetailsBackButton_OnClick(object sender, RoutedEventArgs e) => _viewModel.SetSelectedThreadNull();
+
+        private void OnViewStateChange(object sender, MasterDetailsViewState state)
+        {
+            BackButton.Visibility = state == MasterDetailsViewState.Details ? Visibility.Visible : Visibility.Collapsed;
+            BackButtonPlaceholder.Visibility = BackButton.Visibility;
         }
     }
 }
