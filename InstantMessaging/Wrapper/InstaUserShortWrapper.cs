@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Core;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Imaging;
 using InstaSharper.API;
 using InstaSharper.Classes.Models.User;
@@ -29,20 +28,23 @@ namespace InstantMessaging.Wrapper
             ProfilePictureId = source.ProfilePictureId;
             UserName = source.UserName;
             FullName = source.FullName;
-            Task.Run(async () => { await GetProfilePicture(ProfilePictureUrl); });
+            Task.Run(async () => {if(!string.IsNullOrEmpty(ProfilePictureUrl)) await GetProfilePicture(ProfilePictureUrl); });
         }
 
-        private async Task GetProfilePicture(string pictureUrl)
+        protected async Task GetProfilePicture(string pictureUrl)
         {
             var response = await _instaApi.SendGetRequestAsync(new Uri(pictureUrl));
             var rawStream = await response.Content.ReadAsStreamAsync();
-
+            
+            // If called when layout is being populated (for base class call)
             await PageReference.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                 async () =>
                 {
-                    ProfilePicture.DecodePixelHeight = 48;  // Match with PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture, Mode=OneWay}" Height="48" Width="48" ...
                     await ProfilePicture.SetSourceAsync(rawStream.AsRandomAccessStream());
                 });
         }
+
+        
+
     }
 }

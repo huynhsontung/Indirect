@@ -1,11 +1,13 @@
 ﻿using InstantMessaging.Wrapper;
 using System;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using InstantMessaging.Converters;
 using Microsoft.Toolkit.Uwp.UI.Controls;
+using CoreWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -21,10 +23,10 @@ namespace InstantMessaging
         {
             this.InitializeComponent();
             Window.Current.SetTitleBar(TitleBarElement);
-            FromMeBoolToBrushConverter.CurrentPage = this;
             InstaUserShortWrapper.PageReference = this;
+            FromMeBoolToBrushConverter.CurrentPage = this;
             MainLayout.ViewStateChanged += OnViewStateChange;
-            
+            Window.Current.Activated += OnWindowFocusChange;
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -69,8 +71,23 @@ namespace InstantMessaging
                 Frame.Navigate(typeof(Login), _viewModel);
             }
         }
-
+        
         private void DetailsBackButton_OnClick(object sender, RoutedEventArgs e) => _viewModel.SetSelectedThreadNull();
+
+        private void OnWindowFocusChange(object sender, WindowActivatedEventArgs e)
+        {
+            if (e.WindowActivationState == CoreWindowActivationState.Deactivated)
+            {
+                BackButton.IsEnabled = false;
+                AppTitleTextBlock.Opacity = 0.5;
+            }
+            else
+            {
+
+                BackButton.IsEnabled = true;
+                AppTitleTextBlock.Opacity = 1;
+            }
+        }
 
         private void OnViewStateChange(object sender, MasterDetailsViewState state)
         {

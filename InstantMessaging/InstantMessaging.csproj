@@ -129,6 +129,7 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Wrapper\InstaCurrentUserWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxThreadWrapper.cs" />
     <Compile Include="Wrapper\InstaUserShortFriendshipWrapper.cs" />
     <Compile Include="Wrapper\InstaUserShortWrapper.cs" />

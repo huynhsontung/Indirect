@@ -25,22 +25,12 @@ namespace InstantMessaging
         private readonly StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
         private StorageFile _stateFile;
         private UserSessionData _userSession;
-        private UserSessionData UserSession
-        {
-            get => _userSession;
-            set
-            {
-                _userSession = value;
-                if (value.LoggedInUser != null) LoggedInUser = new InstaUserShortWrapper(value.LoggedInUser, _instaApi);
-            }
-        }
-
         private InstaDirectInbox _inbox;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ObservableCollection<InstaDirectInboxThreadWrapper> InboxThreads { get; } = new ObservableCollection<InstaDirectInboxThreadWrapper>();
-        public InstaUserShortWrapper LoggedInUser { get; private set; }
+        public InstaCurrentUserWrapper LoggedInUser { get; private set; }
         public InstaDirectInboxThreadWrapper SelectedThread { get; set; }
         public long UnseenCount => _inbox?.UnseenCount ?? 0;
         public bool IsUserAuthenticated { get; private set; }
@@ -83,7 +73,7 @@ namespace InstantMessaging
                         .UseLogger(new DebugLogger(LogLevel.All))
                         .Build();
                     IsUserAuthenticated = _instaApi.IsUserAuthenticated;
-                    if(IsUserAuthenticated) UserSession = _instaApi.GetLoggedUser();
+                    if(IsUserAuthenticated) _userSession = _instaApi.GetLoggedUser();
                 }
             }
         }
@@ -101,14 +91,15 @@ namespace InstantMessaging
         public async Task<IResult<InstaLoginResult>> Login(string username, string password)
         {
 
-            UserSession = new UserSessionData {UserName = username, Password = password};
+            var session = new UserSessionData {UserName = username, Password = password};
             _instaApi = InstaApiBuilder.CreateBuilder()
-                .SetUser(UserSession)
+                .SetUser(session)
                 .UseLogger(new DebugLogger(LogLevel.All))
                 .Build();
 
             var logInResult = await _instaApi.LoginAsync();
             await WriteStateToStorage();
+            _userSession = _instaApi.GetLoggedUser();
             return logInResult;
         }
 
@@ -129,6 +120,12 @@ namespace InstantMessaging
         {
             if (_instaApi == null)
                 throw new NullReferenceException("Api has not been initialized");
+
+            // Not related to get inbox but it's here anyway
+            var loggedInUser = await _instaApi.GetCurrentUserAsync();
+            LoggedInUser = new InstaCurrentUserWrapper(loggedInUser.Value, _instaApi);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
+
             var result = await _instaApi.MessagingProcessor.GetDirectInboxAsync(PaginationParameters.MaxPagesToLoad(1));
             if (result.Succeeded)
                 _inbox = result.Value.Inbox;
