@@ -8,11 +8,16 @@
     xmlns:wrapper="using:InstantMessaging.Wrapper"
     xmlns:direct="using:InstaSharper.Classes.Models.Direct"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:flui="using:FluiFramework.UWP.Core"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <flui:FluiFrameworkThemeResources></flui:FluiFrameworkThemeResources>
+            </ResourceDictionary.MergedDictionaries>
+
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="FromThemItemBackground" Color="DimGray"></SolidColorBrush>
@@ -33,6 +38,7 @@
                             Margin="0,2,0,2">
                     <Border Background="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" HorizontalAlignment="Left" CornerRadius="2,2,2,2">
                         <TextBlock x:Name="MessageContent" 
+                                   Style="{ThemeResource FluentBodyTextStyle}"
                                    Text="{x:Bind Text}"
                                    Margin="6" 
                                    MaxWidth="250"
@@ -67,9 +73,9 @@
                         Visibility="Collapsed">
                 </Button>
                 <TextBlock x:Name="AppTitleTextBlock"
-                           Text="Custom Title Bar" 
+                           Text="Instantly" 
                            VerticalAlignment="Center"
-                           Style="{StaticResource CaptionTextBlockStyle}" 
+                           Style="{ThemeResource FluentCaptionTextStyle}" 
                            Margin="8,0,0,0"/>
             </StackPanel>
         </Grid>
@@ -93,10 +99,10 @@
             <controls:MasterDetailsView.ItemTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <StackPanel Orientation="Horizontal">
-                        <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture}" Height="44" Width="44" Margin="4,8,16,8"/>
+                        <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture}" Height="48" Width="48" Margin="4,8,16,8"/>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Style="{StaticResource BaseTextBlockStyle}" Text="{x:Bind Users[0].UserName}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind LastPermanentItem.Text}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                            <TextBlock Style="{ThemeResource FluentTitleTextStyle}" Text="{x:Bind Users[0].UserName}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                            <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Text="{x:Bind LastPermanentItem.Text}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                         </StackPanel>
                     </StackPanel>
                     
@@ -122,18 +128,18 @@
 
                         <Border Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1" Background="{ThemeResource SystemControlAcrylicElementBrush}"/>
 
-                        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" Margin="0,8,0,0"  DefaultLabelPosition="Collapsed">
+                        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Collapsed">
                             <AppBarButton Icon="Video" Label="Video call"/>
                             <CommandBar.Content>
                                 <StackPanel Orientation="Horizontal" Background="Transparent">
                                     <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture}" Height="32" Width="32" Margin="12,0,16,0" VerticalAlignment="Center"/>
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="{x:Bind Users[0].UserName}" 
-                                                   Style="{StaticResource BaseTextBlockStyle}"
+                                                   Style="{ThemeResource FluentBaseTextStyle}"
                                                    MaxLines="1" 
                                                    HorizontalAlignment="Left" 
                                                    ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                                        <TextBlock Text="~Status here~" Style="{StaticResource CaptionTextBlockStyle}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                                        <TextBlock Text="~Status here~" Style="{ThemeResource FluentCaptionTextStyle}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                                     </StackPanel>
                                 </StackPanel>
                             </CommandBar.Content>
@@ -187,13 +193,13 @@
                     </Grid.RowDefinitions>
 
                     <CommandBar Grid.Row="1" 
-                                Margin="0,8,0,0"
+                                Margin="0,0,0,2"
                                 DefaultLabelPosition="Collapsed" 
                                 Background="Transparent">
                         <CommandBar.Content>
                             <StackPanel Orientation="Horizontal" Background="Transparent">
-                                <PersonPicture ProfilePicture="{x:Bind _viewModel.LoggedInUser.ProfilePicture, Mode=OneWay}" Height="34" Width="34" Margin="4,0,12,0"/>
-                                <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Direct" MaxLines="1" />
+                                <PersonPicture ProfilePicture="{x:Bind _viewModel.LoggedInUser.ProfilePicture, Mode=OneWay}" Height="34" Width="34" Margin="4,0,16,0"/>
+                                <TextBlock Style="{ThemeResource FluentSubheaderTextStyle}" Text="Direct" MaxLines="1" />
                             </StackPanel>
                         </CommandBar.Content>
 

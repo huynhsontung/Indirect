@@ -18,7 +18,7 @@ namespace InstantMessaging.Wrapper
     {
         private IInstaApi _instaApi;
 
-        public ObservableCollection<InstaDirectInboxItem> ObservableItems { get; } = new ObservableCollection<InstaDirectInboxItem>();
+        public ObservableCollection<InstaDirectInboxItem> ObservableItems { get; set; } = new ObservableCollection<InstaDirectInboxItem>();
         public new List<InstaUserShortFriendshipWrapper> Users { get; } = new List<InstaUserShortFriendshipWrapper>();
 
         public InstaDirectInboxThreadWrapper(InstaDirectInboxThread source, IInstaApi api)
@@ -52,11 +52,31 @@ namespace InstantMessaging.Wrapper
             UpdateItemList(source.Items);
         }
 
-        
-
-        public void UpdateItemList(List<InstaDirectInboxItem> source)
+        public void Update(InstaDirectInboxThread source)
         {
-            source.Reverse();
+            Canonical = source.Canonical;
+            HasNewer = source.HasNewer;
+            HasOlder = source.HasOlder;
+            IsSpam = source.IsSpam;
+            Muted = source.Muted;
+            Named = source.Named;
+            Pending = source.Pending;
+            ViewerId = source.ViewerId;
+            LastActivity = source.LastActivity;
+            ThreadId = source.ThreadId;
+            OldestCursor = source.OldestCursor;
+            NewestCursor = source.NewestCursor;
+            ThreadType = source.ThreadType;
+            Title = source.Title;
+            Inviter = source.Inviter;
+            LastPermanentItem = source.LastPermanentItem;
+            HasNewer = source.HasNewer;
+            HasOlder = source.HasOlder;
+            HasUnreadMessage = source.HasUnreadMessage;
+        }
+
+        public void UpdateItemList(IEnumerable<InstaDirectInboxItem> source)
+        {
             if (ObservableItems.Count == 0)
             {
                 foreach (var item in source)
@@ -64,17 +84,33 @@ namespace InstantMessaging.Wrapper
             }
             else
             {
+                var olderItems = new List<InstaDirectInboxItem>();
+
                 foreach (var item in source)
                 {
-                    if (!ObservableItems.Contains(item))
+                    var existing = ObservableItems.IndexOf(item);
+                    if (existing == -1)
                     {
                         if (DateTime.Compare(item.TimeStamp, ObservableItems[ObservableItems.Count - 1].TimeStamp) > 0)
+                        {
                             ObservableItems.Add(item);
+                        }
                         else
-                            ObservableItems.Insert(0, item);
+                        {
+                            olderItems.Add(item);
+                        }
+                    }
+                    else
+                    {
+                        ObservableItems[existing] = item;
                     }
                 }
-                
+
+                olderItems.Reverse();
+                foreach (var item in olderItems)
+                {
+                    ObservableItems.Insert(0, item);
+                }
             }
         }
     }

@@ -35,7 +35,8 @@ namespace InstantMessaging
             _viewModel = (ApiContainer)e.Parameter;
             if (_viewModel == null) throw new NullReferenceException("No _viewModel created");
             await _viewModel.GetInboxAsync();
-//            await _viewModel.StartPushClient();
+            await _viewModel.UpdateLoggedInUser();
+            await _viewModel.StartPushClient();
         }
 
         private async void MessageContent_SelectionChanged(object sender, SelectionChangedEventArgs e)
