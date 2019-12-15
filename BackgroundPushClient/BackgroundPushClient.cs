@@ -1,45 +1,73 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net.Http;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
-using Windows.Storage;
-using Windows.Web.Http;
-using BackgroundPushClient.Push;
-using InstaSharper.API.Builder;
-using InstaSharper.API.Push;
+using Windows.Networking;
+using Windows.Networking.Sockets;
+using Windows.Security.Cryptography;
+using DotNetty.Codecs.Mqtt.Packets;
+using DotNetty.Transport.Channels;
+using InstaSharper.API.Push.PacketHelpers;
 using InstaSharper.Classes;
-using InstaSharper.Classes.DeviceInfo;
-using InstaSharper.Logger;
-using HttpClient = System.Net.Http.HttpClient;
+using InstaSharper.API.Push;
+using Windows.UI.Notifications;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace BackgroundPushClient
 {
+    /// <summary>
+    /// A more compact version of InstantMessaging.Notification.PushClient including <see cref="HttpRequestProcessor"/>
+    /// </summary>
     public sealed class BackgroundPushClient : IBackgroundTask
     {
-        private const string STATE_FILE_NAME = "state.bin";
+        private const string HOST_NAME = "mqtt-mini.facebook.com";
+        private const string SOCKET_ID = "mqtt_fbns";
+        private const int KEEP_ALIVE = 900;
 
-        private UserSessionData _user;
-        private IHttpRequestProcessor _httpRequestProcessor;
-        private AndroidDevice _device;
-        private FbnsConnectionData _fbnsConnectionData;
+        private BackgroundTaskDeferral _deferral;
 
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
-            var deferral = taskInstance.GetDeferral();
+            _deferral = taskInstance.GetDeferral();
             try
             {
-                await LoadData();
-                if ((DateTime.Now - _fbnsConnectionData.FbnsTokenLastUpdated).TotalHours > 24) _fbnsConnectionData.FbnsToken = "";
-                if (string.IsNullOrEmpty(_fbnsConnectionData.UserAgent))
-                    _fbnsConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(_device);
+                var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
+                var dataStream = details.SocketInformation.Context.Data.AsStream();
+                var formatter = new BinaryFormatter();
+                var stateData = (StateData) formatter.Deserialize(dataStream);
+                var loopGroup = new SingleThreadEventLoop();
+                var socket = details.Reason == SocketActivityTriggerReason.SocketClosed ? 
+                    await SetupNewSocket(taskInstance) : details.SocketInformation.StreamSocket;
+                var streamSocketChannel = new StreamSocketChannel(socket);
+                var packetHandler = new PacketHandler(stateData);
+                packetHandler.MessageReceived += OnMessageReceived;
+                streamSocketChannel.Pipeline.AddLast(new FbnsPacketEncoder(), new FbnsPacketDecoder(), packetHandler);
+                await loopGroup.RegisterAsync(streamSocketChannel);
 
+                switch (details.Reason)
+                {
+                    case SocketActivityTriggerReason.SocketClosed:
+                        // Todo: Implement reconnect
+                        break;
 
+                    case SocketActivityTriggerReason.KeepAliveTimerExpired:
+                        var packet = PingReqPacket.Instance;
+                        await streamSocketChannel.WriteAndFlushAsync(packet);
+                        break;
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
+                var updatedState = packetHandler.CurrentState;
+                var memoryStream = new MemoryStream();
+                formatter.Serialize(memoryStream, updatedState);
+                var buffer = CryptographicBuffer.CreateFromByteArray(memoryStream.ToArray());
+                await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(10));
+                await socket.CancelIOAsync();
+                socket.TransferOwnership(
+                    details.SocketInformation.Id, new SocketActivityContext(buffer), TimeSpan.FromSeconds(KEEP_ALIVE - 60));
             }
             catch
             {
@@ -47,47 +75,58 @@ namespace BackgroundPushClient
             }
             finally
             {
-                deferral.Complete();
+                _deferral.Complete();
             }
         }
 
-        private async Task LoadData()
+        private async Task<StreamSocket> SetupNewSocket(IBackgroundTaskInstance taskInstance)
         {
-            var localFolder = ApplicationData.Current.LocalFolder;
-            var stateFile = await localFolder.GetFileAsync(STATE_FILE_NAME);
-            using (var stateStream = await stateFile.OpenStreamForReadAsync())
+            var socket = new StreamSocket();
+            socket.Control.KeepAlive = true;
+            socket.Control.NoDelay = true;
+            try
             {
-                if (stateStream.Length > 0)
-                {
-                    stateStream.Seek(0, SeekOrigin.Begin);
-                    var formatter = new BinaryFormatter();
-                    var stateData = (StateData)formatter.Deserialize(stateStream);
-                    if(!stateData.IsAuthenticated) throw new Exception("User not authenticated.");
-                    _user = stateData.UserSession;
-                    _device = stateData.DeviceInfo;
-                    _fbnsConnectionData = stateData.FbnsConnectionData;
-                    
-                    var httpHandler = new HttpClientHandler();
-                    httpHandler.CookieContainer = stateData.Cookies;
-                    var httpClient = new HttpClient(httpHandler) {BaseAddress = new Uri("https://i.instagram.com")};
-                    var requestMessage = new ApiRequestMessage
-                    {
-                        PhoneId = _device.PhoneId.ToString(),
-                        Guid = _device.Uuid,
-                        Password = _user?.Password,
-                        Username = _user?.UserName,
-                        DeviceId = _device.DeviceId,
-                        AdId = _device.AdId.ToString()
-                    };
-
-                    _httpRequestProcessor =
-                        new HttpRequestProcessor(RequestDelay.Empty(), httpClient, httpHandler, requestMessage, null);
-                }
-                else
-                {
-                    throw new Exception("Cannot load data required for push client.");
-                }
+                socket.EnableTransferOwnership(taskInstance.Task.TaskId, SocketActivityConnectedStandbyAction.Wake);
             }
+            catch (Exception)
+            {
+                Debug.WriteLine("System does not support connected standby.");
+                socket.EnableTransferOwnership(taskInstance.Task.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
+            }
+
+            await socket.ConnectAsync(new HostName(HOST_NAME), "443", SocketProtectionLevel.Tls12);
+            return socket;
+        }
+
+        private void OnMessageReceived(object sender, MessageReceivedEventArgs args)
+        {
+            var notificationContent = args.NotificationContent;
+            var toastContent = new ToastContent()
+            {
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = notificationContent.Title
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = notificationContent.Message
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Create the toast notification
+            var toast = new ToastNotification(toastContent.GetXml());
+
+            // And send the notification
+            ToastNotificationManager.CreateToastNotifier().Show(toast);
         }
     }
 }

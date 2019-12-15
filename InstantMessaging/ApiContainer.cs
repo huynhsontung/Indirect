@@ -11,6 +11,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
+using Windows.Networking.Sockets;
+using Windows.Security.Cryptography;
 using Windows.Storage;
 using ColorCode.Common;
 using InstantMessaging.Notification;
@@ -26,23 +28,35 @@ namespace InstantMessaging
         // Todo: handle exceptions thrown by _instaApi like no network connection
         private const string STATE_FILE_NAME = "state.bin";
         private const string PUSH_STATE_FILE_NAME = "push.bin";
+        private const string SOCKET_ID = "mqtt_fbns";
 
         private IInstaApi _instaApi;
         private readonly StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
         private StorageFile _stateFile;
-        private StorageFile _pushStateFile;
         private FbnsConnectionData _pushData;
         private UserSessionData _userSession;
         private PushClient _pushClient;
+        private DateTime _lastUpdated = DateTime.Now;
 
         public event EventHandler<PushNotification> NotificationReceived;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ObservableCollection<InstaDirectInboxThreadWrapper> InboxThreads { get; } = new ObservableCollection<InstaDirectInboxThreadWrapper>();
+        public MainPage PageReference { get; set; }
+        public ObservableCollection<InstaDirectInboxThreadWrapper> InboxThreads { get; } = 
+            new ObservableCollection<InstaDirectInboxThreadWrapper>();
         public InstaCurrentUserWrapper LoggedInUser { get; private set; }
         public InstaDirectInboxThreadWrapper SelectedThread { get; set; }
         public bool IsUserAuthenticated { get; private set; }
+        public StateData StateData
+        {
+            get
+            {
+                var data = _instaApi?.GetStateData();
+                if (data == null) return new StateData();
+                data.FbnsConnectionData = _pushData;
+                return data;
+            }
+        }
 
         private ApiContainer() {}
 
@@ -68,8 +82,6 @@ namespace InstantMessaging
                 _stateFile = await _localFolder.CreateFileAsync(STATE_FILE_NAME, CreationCollisionOption.ReplaceExisting);
                 IsUserAuthenticated = false;
             }
-
-            _pushStateFile = (StorageFile)await _localFolder.TryGetItemAsync(PUSH_STATE_FILE_NAME) ?? await _localFolder.CreateFileAsync(PUSH_STATE_FILE_NAME);
         }
 
         private async Task LoadStateFromStorage()
@@ -78,23 +90,16 @@ namespace InstantMessaging
             {
                 if (stateStream.Length > 0)
                 {
+                    var formatter = new BinaryFormatter();
                     stateStream.Seek(0, SeekOrigin.Begin);
+                    StateData stateData = (StateData) formatter.Deserialize(stateStream);
                     _instaApi = InstaApiBuilder.CreateBuilder()
-                        .LoadStateDataFromStream(stateStream)
+                        .LoadStateData(stateData)
                         .UseLogger(new DebugLogger(LogLevel.All))
                         .Build();
                     IsUserAuthenticated = _instaApi.IsUserAuthenticated;
                     if(IsUserAuthenticated) _userSession = _instaApi.GetLoggedUser();
-                }
-            }
-
-            using (var stateStream = await _pushStateFile.OpenStreamForReadAsync())
-            {
-                if (stateStream.Length > 0)
-                {
-                    stateStream.Seek(0, SeekOrigin.Begin);
-                    var formatter = new BinaryFormatter();
-                    _pushData = (FbnsConnectionData) formatter.Deserialize(stateStream);
+                    _pushData = stateData.FbnsConnectionData;
                 }
                 else
                 {
@@ -107,19 +112,31 @@ namespace InstantMessaging
         {
             using (var stateFileStream = await _stateFile.OpenStreamForWriteAsync())
             {
-                var state = _instaApi.GetStateDataAsStream();
-                state.Seek(0, SeekOrigin.Begin);
-                state.CopyTo(stateFileStream);
-            }
-
-            using (var stateFileStream = await _pushStateFile.OpenStreamForWriteAsync())
-            {
                 var formatter = new BinaryFormatter();
-                var stream = new MemoryStream();
-                formatter.Serialize(stream, _pushData);
-                stream.Seek(0, SeekOrigin.Begin);
-                stream.CopyTo(stateFileStream);
+                formatter.Serialize(stateFileStream, StateData);
             }
+        }
+
+        /// <summary>
+        /// Transfer socket as well as necessary context for background push notification client. 
+        /// Transfer only happens if user is logged in.
+        /// </summary>
+        public async Task TransferPushSocket()
+        {
+            if (!_instaApi.IsUserAuthenticated) return;
+
+            // Hand over MQTT socket to socket broker
+            var memoryStream = new MemoryStream();
+            var formatter = new BinaryFormatter();
+            formatter.Serialize(memoryStream, StateData);
+            var buffer = CryptographicBuffer.CreateFromByteArray(memoryStream.ToArray());
+            await _pushClient.SendPing();
+            await _pushClient.Shutdown();
+            await _pushClient.Socket.CancelIOAsync();
+            _pushClient.Socket.TransferOwnership(
+                SOCKET_ID, 
+                new SocketActivityContext(buffer), 
+                TimeSpan.FromSeconds(PushClient.KEEP_ALIVE - 60));
         }
 
         public async Task<IResult<InstaLoginResult>> Login(string username, string password)
@@ -170,7 +187,10 @@ namespace InstantMessaging
                     break;
                 }
 
-                if (!existed) InboxThreads.Add(new InstaDirectInboxThreadWrapper(thread, _instaApi));
+                if (!existed)
+                {
+                    InboxThreads.Add(new InstaDirectInboxThreadWrapper(thread, _instaApi));
+                }
             }
 
             InboxThreads.SortStable((x,y)=> y.LastActivity.CompareTo(x.LastActivity));
@@ -185,18 +205,45 @@ namespace InstantMessaging
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
         }
 
+        /// <summary>
+        /// Start foreground push notification client from existing socket (transferred from background task) or create a new one.
+        /// </summary>
         public async Task StartPushClient()
         {
+            if (!_instaApi.IsUserAuthenticated) return;
             _pushClient = new PushClient(_instaApi, _pushData);
             _pushClient.MessageReceived += OnNotificationReceived;
-            await _pushClient.Start();
+            if (SocketActivityInformation.AllSockets.TryGetValue(SOCKET_ID, out var socketInformation))
+            {
+                var socket = socketInformation.StreamSocket;
+                if (string.IsNullOrEmpty(_pushData.DeviceSecret))   // if we don't have any push data, start fresh
+                    await _pushClient.Start();
+                else
+                    await _pushClient.StartWithExistingSocket(socket);
+
+            }
+            else
+            {
+                await _pushClient.Start();
+            }
         }
 
         private async void OnNotificationReceived(object sender, MessageReceivedEventArgs args)
         {
             NotificationReceived?.Invoke(this, args.NotificationContent);
-            await GetInboxAsync();
-            if (SelectedThread != null) await OnThreadChange(SelectedThread);
+            if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(1))
+            {
+                await PageReference.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                {
+                    var selected = SelectedThread;
+                    await GetInboxAsync();
+                    if (selected != null)
+                    {
+                        if (InboxThreads.Contains(selected)) SelectedThread = selected;
+                        await OnThreadChange(SelectedThread);
+                    }
+                });
+            }
         }
 
         public async Task<IResult<InstaDirectInboxThread>> OnThreadChange(InstaDirectInboxThreadWrapper thread)

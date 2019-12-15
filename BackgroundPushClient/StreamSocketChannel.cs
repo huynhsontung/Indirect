@@ -11,7 +11,7 @@ using Windows.Storage.Streams;
 using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
 
-namespace InstantMessaging.Notification
+namespace BackgroundPushClient
 {
     /// <summary>
     /// StreamSocketChannel is a sample implementation of AbstractChannel that is based on WinRT 
@@ -22,7 +22,7 @@ namespace InstantMessaging.Notification
     /// - Exposing server side certificates and their validation
     /// - Exposing additional configuration options (such as SSL)
     /// </summary>
-    public class StreamSocketChannel : AbstractChannel
+    internal class StreamSocketChannel : AbstractChannel
     {
         readonly StreamSocket streamSocket;
         static readonly ChannelMetadata metadata = new ChannelMetadata(false, 16);

@@ -10,14 +10,16 @@ using Windows.UI.Xaml.Media.Imaging;
 using InstaSharper.API;
 using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Classes.Models.User;
+using System.ComponentModel;
 
 namespace InstantMessaging.Wrapper
 {
     /// Wrapper of <see cref="InstaDirectInboxThread"/> with Observable lists
-    public class InstaDirectInboxThreadWrapper : InstaDirectInboxThread
+    public class InstaDirectInboxThreadWrapper : InstaDirectInboxThread, INotifyPropertyChanged
     {
         private IInstaApi _instaApi;
 
+        public event PropertyChangedEventHandler PropertyChanged;
         public ObservableCollection<InstaDirectInboxItem> ObservableItems { get; set; } = new ObservableCollection<InstaDirectInboxItem>();
         public new List<InstaUserShortFriendshipWrapper> Users { get; } = new List<InstaUserShortFriendshipWrapper>();
 
@@ -73,9 +75,10 @@ namespace InstantMessaging.Wrapper
             HasNewer = source.HasNewer;
             HasOlder = source.HasOlder;
             HasUnreadMessage = source.HasUnreadMessage;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(""));
         }
 
-        public void UpdateItemList(IEnumerable<InstaDirectInboxItem> source)
+        public void UpdateItemList(ICollection<InstaDirectInboxItem> source)
         {
             if (ObservableItems.Count == 0)
             {
@@ -99,10 +102,6 @@ namespace InstantMessaging.Wrapper
                         {
                             olderItems.Add(item);
                         }
-                    }
-                    else
-                    {
-                        ObservableItems[existing] = item;
                     }
                 }
 

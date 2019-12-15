@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
-using System.Net;
 using System.Net.Http;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Background;
 using Windows.Networking;
 using Windows.Networking.Sockets;
-using Windows.Storage.Streams;
+using Windows.Security.Cryptography;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Transport.Channels;
-using DotNetty.Transport.Channels.Embedded;
 using InstaSharper.API;
 using InstaSharper.API.Push;
 using InstaSharper.API.Push.PacketHelpers;
@@ -33,17 +32,21 @@ namespace InstantMessaging.Notification
         public StreamSocket Socket { get; private set; }
 
         private const string HOST_NAME = "mqtt-mini.facebook.com";
+        private const string BACKGROUND_TASK_NAME = "BackgroundPushClient";
+        private const string BACKGROUND_TASK_ENTRY_POINT = "BackgroundPushClient.BackgroundPushClient";
 
         private SingleThreadEventLoop _loopGroup;
         private readonly UserSessionData _user;
         private readonly IHttpRequestProcessor _httpRequestProcessor;
         private readonly AndroidDevice _device;
+        private IBackgroundTaskRegistration _task;
 
-        private const int KEEP_ALIVE = 900;    // seconds
+        public const int KEEP_ALIVE = 900;    // seconds
         private const int TIMEOUT = 5;
-        private int _publishId;
         private bool _waitingForPubAck;
         private CancellationTokenSource _timerResetToken;
+        private IChannelHandlerContext _context;
+        private Task _timerTask;
 
         public PushClient(IInstaApi api, FbnsConnectionData connectionData)
         {
@@ -61,6 +64,50 @@ namespace InstantMessaging.Notification
                 ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(_device);
         }
 
+        public override void ChannelRegistered(IChannelHandlerContext context)
+        {
+            _context = context;
+        }
+
+        private async Task<bool> RequestBackgroundAccess()
+        {
+            foreach (var task in BackgroundTaskRegistration.AllTasks)
+            {
+                if (task.Value.Name == BACKGROUND_TASK_NAME)
+                {
+                    _task = task.Value;
+                    return true;
+                }
+            }
+
+            var permissionResult = await BackgroundExecutionManager.RequestAccessAsync();
+            if (permissionResult == BackgroundAccessStatus.DeniedByUser ||
+                permissionResult == BackgroundAccessStatus.DeniedBySystemPolicy)
+                return false;
+            var backgroundTaskBuilder = new BackgroundTaskBuilder
+            {
+                Name = BACKGROUND_TASK_NAME,
+                TaskEntryPoint = BACKGROUND_TASK_ENTRY_POINT
+            };
+            backgroundTaskBuilder.SetTrigger(new SocketActivityTrigger());
+            _task = backgroundTaskBuilder.Register();
+            return true;
+        }
+
+        public async Task StartWithExistingSocket(StreamSocket socket)
+        {
+            Socket = socket;
+            if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
+            _loopGroup = new SingleThreadEventLoop();
+
+            var streamSocketChannel = new StreamSocketChannel(Socket);
+            streamSocketChannel.Pipeline.AddLast(new FbnsPacketEncoder(), new FbnsPacketDecoder(), this);
+
+            await _loopGroup.RegisterAsync(streamSocketChannel);
+            await SendPing();
+            _timerTask = ResetTimer(_context);
+        }
+
         public async Task Start()
         {
             if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
@@ -74,7 +121,18 @@ namespace InstantMessaging.Notification
             Socket = new StreamSocket();
             Socket.Control.KeepAlive = true;
             Socket.Control.NoDelay = true;
-            // todo: enable ownership transfer stream socket for background push client
+            if (await RequestBackgroundAccess())
+            {
+                try
+                {
+                    Socket.EnableTransferOwnership(_task.TaskId, SocketActivityConnectedStandbyAction.Wake);
+                }
+                catch (Exception)
+                {
+                    Debug .WriteLine("System does not support connected standby.");
+                    Socket.EnableTransferOwnership(_task.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
+                }
+            }
 
             await Socket.ConnectAsync(new HostName(HOST_NAME), "443", SocketProtectionLevel.Tls12);
 
@@ -87,7 +145,16 @@ namespace InstantMessaging.Notification
 
         public async Task Shutdown()
         {
-            if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
+            _timerResetToken?.Cancel();
+            if (_loopGroup != null) 
+                await _loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2));
+        }
+
+        public async Task SendPing()
+        {
+            var packet = PingReqPacket.Instance;
+            await _context.WriteAndFlushAsync(packet);
+            Debug.WriteLine("PingReq sent");
         }
 
         public enum TopicIds
@@ -102,6 +169,7 @@ namespace InstantMessaging.Notification
             // If connection is closed, reconnect
             Task.Delay(TimeSpan.FromSeconds(TIMEOUT)).ContinueWith(async task =>
             {
+                Debug.WriteLine("Reconnecting.");
                 _waitingForPubAck = false;
                 _timerResetToken?.Cancel();
                 await Start();
@@ -109,23 +177,27 @@ namespace InstantMessaging.Notification
 
         }
 
-        protected override void ChannelRead0(IChannelHandlerContext ctx, Packet msg)
+        protected override async void ChannelRead0(IChannelHandlerContext ctx, Packet msg)
         {
+            _context = ctx; // Save context for manual Ping later
             switch (msg.PacketType)
             {
                 case PacketType.CONNACK:
+                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tCONNACK received.");
                     ConnectionData.UpdateAuth(((FbnsConnAckPacket)msg).Authentication);
                     RegisterMqttClient(ctx);
                     break;
 
                 case PacketType.PUBLISH:
+                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tPUBLISH received.");
                     var publishPacket = (PublishPacket)msg;
                     if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
                     {
-                        ctx.WriteAndFlushAsync(PubAckPacket.InResponseTo(publishPacket));
+                        await ctx.WriteAndFlushAsync(PubAckPacket.InResponseTo(publishPacket));
                     }
                     var payload = DecompressPayload(publishPacket.Payload);
                     var json = Encoding.UTF8.GetString(payload);
+                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tMQTT json: {json}");
                     switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                     {
                         case TopicIds.Message:
@@ -135,7 +207,7 @@ namespace InstantMessaging.Notification
                             break;
                         case TopicIds.RegResp:
                             OnRegisterResponse(json);
-                            ResetTimer(ctx);
+                            _timerTask = ResetTimer(ctx);
                             break;
                         default:
                             Debug.WriteLine($"Unknown topic received: {publishPacket.TopicName}", "Warning");
@@ -144,13 +216,18 @@ namespace InstantMessaging.Notification
                     break;
 
                 case PacketType.PUBACK:
+                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tPUBACK received.");
                     _waitingForPubAck = false;
                     break;
 
                 // todo: PingResp never arrives even though data was received. Decoder problem?
                 case PacketType.PINGRESP:
-                    ResetTimer(ctx);
+                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tPINGRESP received.");
+                    //ResetTimer(ctx);
                     break;
+
+                default:
+                    throw new NotSupportedException($"Packet type {msg.PacketType} is not supported.");
             }
         }
 
@@ -233,7 +310,7 @@ namespace InstantMessaging.Notification
             var publishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
             {
                 Payload = Unpooled.CopiedBuffer(compressed),
-                PacketId = ++_publishId,
+                PacketId = (int) CryptographicBuffer.GenerateRandomNumber(),
                 TopicName = ((byte)TopicIds.RegReq).ToString()
             };
 
@@ -250,7 +327,7 @@ namespace InstantMessaging.Notification
             });
         }
 
-        private void ResetTimer(IChannelHandlerContext ctx)
+        private async Task ResetTimer(IChannelHandlerContext ctx)
         {
             _timerResetToken?.Cancel();
             _timerResetToken = new CancellationTokenSource();
@@ -258,29 +335,12 @@ namespace InstantMessaging.Notification
             // Create new cancellation token for timer reset
             var cancellationToken = _timerResetToken.Token;
 
-            Task.Delay(TimeSpan.FromSeconds(KEEP_ALIVE - 60),
-                    cancellationToken) // wait for _keepAliveDuration - 60 seconds
-                .ContinueWith(async task =>
-                {
-                    // Then send a PingReq packet
-                    var packet = PingReqPacket.Instance;
-                    await ctx.WriteAndFlushAsync(packet);
-                    Debug.WriteLine("PingReq sent");
-                }, cancellationToken)
-                .ContinueWith(async task =>
-                {
-                    try
-                    {
-                        await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken); // Wait for another 60s for PingResp
-                        if (!cancellationToken.IsCancellationRequested)
-                            ExceptionCaught(ctx, new Exception());   // If still no PingResp then signal channel inactive and restart the client
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        Debug.WriteLine("Keep alive timer reset.");
-                    }
-                }, cancellationToken);
-
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(KEEP_ALIVE - 60), cancellationToken); // wait for _keepAliveDuration - 60 seconds
+                if (cancellationToken.IsCancellationRequested) break;
+                await SendPing();
+            }
         }
 
         private byte[] DecompressPayload(IByteBuffer payload)

@@ -34,6 +34,7 @@ namespace InstantMessaging
             base.OnNavigatedTo(e);
             _viewModel = (ApiContainer)e.Parameter;
             if (_viewModel == null) throw new NullReferenceException("No _viewModel created");
+            _viewModel.PageReference = this;
             await _viewModel.GetInboxAsync();
             await _viewModel.UpdateLoggedInUser();
             await _viewModel.StartPushClient();

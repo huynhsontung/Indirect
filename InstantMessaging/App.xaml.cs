@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
@@ -24,6 +25,13 @@ namespace InstantMessaging
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            this.Resuming += OnResuming;
+            this.EnteredBackground += OnEnteredBackground;
+        }
+
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            OnLaunchedOrActivated(args);
         }
 
         /// <summary>
@@ -31,7 +39,12 @@ namespace InstantMessaging
         /// will be used such as when the application is launched to open a specific file.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
-        protected override async void OnLaunched(LaunchActivatedEventArgs e)
+        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        {
+            OnLaunchedOrActivated(e);
+        }
+
+        private async void OnLaunchedOrActivated(IActivatedEventArgs e)
         {
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -61,15 +74,12 @@ namespace InstantMessaging
                 Window.Current.Content = rootFrame;
             }
 
-            if (e.PrelaunchActivated == false)
+            if (rootFrame.Content == null)
             {
-                if (rootFrame.Content == null)
-                {
-                    rootFrame.Navigate(ViewModel.IsUserAuthenticated ? typeof(MainPage) : typeof(Login), ViewModel);
-                }
-                // Ensure the current window is active
-                Window.Current.Activate();
+                rootFrame.Navigate(ViewModel.IsUserAuthenticated ? typeof(MainPage) : typeof(Login), ViewModel);
             }
+            // Ensure the current window is active
+            Window.Current.Activate();
         }
 
         /// <summary>
@@ -92,6 +102,18 @@ namespace InstantMessaging
         private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
+            await ViewModel.TransferPushSocket();
+            deferral.Complete();
+        }
+
+        private async void OnResuming(object sender, object e)
+        {
+            await ViewModel.StartPushClient();
+        }
+
+        private async void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)
+        {
+            var deferral = e.GetDeferral();
             await ViewModel.WriteStateToStorage();
             deferral.Complete();
         }
