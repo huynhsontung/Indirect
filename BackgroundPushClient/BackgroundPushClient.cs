@@ -50,13 +50,22 @@ namespace BackgroundPushClient
                 switch (details.Reason)
                 {
                     case SocketActivityTriggerReason.SocketClosed:
-                        // Todo: Implement reconnect
+                        stateData.FbnsConnectionData.FbnsToken = "";
+                        if (string.IsNullOrEmpty(stateData.FbnsConnectionData.UserAgent))
+                            stateData.FbnsConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(stateData.DeviceInfo);
+                        var connectPacket = new FbnsConnectPacket
+                        {
+                            Payload = await PayloadProcessor.BuildPayload(stateData.FbnsConnectionData)
+                        };
+                        await streamSocketChannel.WriteAndFlushAsync(connectPacket);
                         break;
 
                     case SocketActivityTriggerReason.KeepAliveTimerExpired:
                         var packet = PingReqPacket.Instance;
                         await streamSocketChannel.WriteAndFlushAsync(packet);
                         break;
+
+                    // We don't need to handle SocketActivity event. PacketHandler will take care of that.
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
@@ -123,8 +132,11 @@ namespace BackgroundPushClient
             };
 
             // Create the toast notification
-            var toast = new ToastNotification(toastContent.GetXml());
-
+            var toast = new ToastNotification(toastContent.GetXml())
+            {
+                Group = "direct",
+                Tag = notificationContent.SourceUserId
+            };
             // And send the notification
             ToastNotificationManager.CreateToastNotifier().Show(toast);
         }

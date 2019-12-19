@@ -9,11 +9,13 @@ using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage;
+using Windows.UI.Core;
 using ColorCode.Common;
 using InstantMessaging.Notification;
 using InstaSharper.API.Push;
@@ -38,7 +40,6 @@ namespace InstantMessaging
         private PushClient _pushClient;
         private DateTime _lastUpdated = DateTime.Now;
 
-        public event EventHandler<PushNotification> NotificationReceived;
         public event PropertyChangedEventHandler PropertyChanged;
 
         public MainPage PageReference { get; set; }
@@ -193,8 +194,9 @@ namespace InstantMessaging
                 }
             }
 
-            InboxThreads.SortStable((x,y)=> y.LastActivity.CompareTo(x.LastActivity));
-
+            // Todo: Implement better sort that works well with ObservableCollection
+            //InboxThreads.SortStable((x,y)=> y.LastActivity.CompareTo(x.LastActivity));
+            SortInboxThread();
             return result;
         }
 
@@ -213,16 +215,26 @@ namespace InstantMessaging
             if (!_instaApi.IsUserAuthenticated) return;
             _pushClient = new PushClient(_instaApi, _pushData);
             _pushClient.MessageReceived += OnNotificationReceived;
-            if (SocketActivityInformation.AllSockets.TryGetValue(SOCKET_ID, out var socketInformation))
+            try
             {
-                var socket = socketInformation.StreamSocket;
-                if (string.IsNullOrEmpty(_pushData.DeviceSecret))   // if we don't have any push data, start fresh
-                    await _pushClient.Start();
+                if (SocketActivityInformation.AllSockets.TryGetValue(SOCKET_ID, out var socketInformation))
+                {
+                    var dataStream = socketInformation.Context.Data.AsStream();
+                    var formatter = new BinaryFormatter();
+                    var stateData = (StateData)formatter.Deserialize(dataStream);
+                    _pushData = stateData.FbnsConnectionData;
+                    var socket = socketInformation.StreamSocket;
+                    if (string.IsNullOrEmpty(_pushData.FbnsToken)) // if we don't have any push data, start fresh
+                        await _pushClient.Start();
+                    else
+                        await _pushClient.StartWithExistingSocket(socket);
+                }
                 else
-                    await _pushClient.StartWithExistingSocket(socket);
-
+                {
+                    await _pushClient.Start();
+                }
             }
-            else
+            catch (Exception)
             {
                 await _pushClient.Start();
             }
@@ -230,19 +242,10 @@ namespace InstantMessaging
 
         private async void OnNotificationReceived(object sender, MessageReceivedEventArgs args)
         {
-            NotificationReceived?.Invoke(this, args.NotificationContent);
             if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(1))
             {
-                await PageReference.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
-                {
-                    var selected = SelectedThread;
-                    await GetInboxAsync();
-                    if (selected != null)
-                    {
-                        if (InboxThreads.Contains(selected)) SelectedThread = selected;
-                        await OnThreadChange(SelectedThread);
-                    }
-                });
+                await PageReference.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,
+                    async () => await UpdateInboxAndSelectedThread());
             }
         }
 
@@ -262,8 +265,40 @@ namespace InstantMessaging
         public async Task<IResult<InstaDirectInboxThreadList>> SendMessage(string content)
         {
             var result = await _instaApi.MessagingProcessor.SendDirectTextAsync(SelectedThread.Users.FirstOrDefault()?.Pk.ToString(), SelectedThread.ThreadId, content);
+            await PageReference.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                async () => { await UpdateInboxAndSelectedThread(); });
             return result;
         }
 
+        private async Task UpdateInboxAndSelectedThread()
+        {
+            var selected = SelectedThread;
+            await GetInboxAsync();
+            if (selected == null) return;
+            if (InboxThreads.Contains(selected)) SelectedThread = selected;
+            await OnThreadChange(SelectedThread);
+        }
+
+        private void SortInboxThread()
+        {
+            var sorted = InboxThreads.OrderByDescending(x => x.LastActivity).ToList();
+
+            bool satisfied = true;
+            for (var i = 0; i < InboxThreads.Count; i++)
+            {
+                var thread = InboxThreads[i];
+                var j = i;
+                for (; j < sorted.Count; j++)
+                {
+                    if (!thread.Equals(sorted[j]) || i == j) continue;
+                    satisfied = false;
+                    break;
+                }
+
+                if (satisfied) continue;
+                InboxThreads.Move(i, j);
+                i--;
+            }
+        }
     }
 }

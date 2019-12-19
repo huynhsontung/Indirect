@@ -1,5 +1,7 @@
 ﻿using InstantMessaging.Wrapper;
 using System;
+using System.Diagnostics;
+using System.Linq;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -95,6 +97,13 @@ namespace InstantMessaging
         {
             BackButton.Visibility = state == MasterDetailsViewState.Details ? Visibility.Visible : Visibility.Collapsed;
             BackButtonPlaceholder.Visibility = BackButton.Visibility;
+        }
+
+        private void ItemContainer_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            var panel = (Panel) sender;
+            var timestampTextBlock = panel.Children.Last();
+            timestampTextBlock.Visibility = timestampTextBlock.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

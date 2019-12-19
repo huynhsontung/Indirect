@@ -16,6 +16,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <flui:FluiFrameworkThemeResources></flui:FluiFrameworkThemeResources>
+                <ResourceDictionary Source="ItemContainers.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <ResourceDictionary.ThemeDictionaries>
@@ -31,20 +32,30 @@
 
             <converters:FromMeBoolToAlignmentConverter x:Key="FromMeAlignmentConverter"/>
             <converters:FromMeBoolToBrushConverter x:Key="FromMeBrushConverter"/>
+            <converters:FromMeBoolToTextAlignmentConverter x:Key="FromMeTextAlignmentConverter"/>
 
             <DataTemplate x:Key="ItemContainer" x:DataType="direct:InstaDirectInboxItem">
-                <StackPanel Orientation="Vertical" 
+                <StackPanel x:Name="ItemContainer" Orientation="Vertical" 
                             HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                            Margin="0,2,0,2">
-                    <Border Background="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" HorizontalAlignment="Left" CornerRadius="2,2,2,2">
+                            Margin="0,2,0,2" DoubleTapped="ItemContainer_DoubleTapped">
+                    <Border Background="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" 
+                            HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                            CornerRadius="2,2,2,2">
                         <TextBlock x:Name="MessageContent" 
                                    Style="{ThemeResource FluentBodyTextStyle}"
                                    Text="{x:Bind Text}"
                                    Margin="6" 
                                    MaxWidth="250"
-                                   HorizontalAlignment="Center" 
+                                   HorizontalAlignment="Center"
                                    TextWrapping="WrapWholeWords"/>
                     </Border>
+                    <TextBlock x:Name="Timestamp"
+                               Style="{ThemeResource FluentCaptionTextStyle}"
+                               Text="{x:Bind TimeStamp}" 
+                               Opacity="0.8"
+                               Margin="2"
+                               HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                               Visibility="Collapsed" />
                 </StackPanel>
             </DataTemplate>
         </ResourceDictionary>
@@ -102,7 +113,7 @@
                         <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture}" Height="48" Width="48" Margin="4,8,16,8"/>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Style="{ThemeResource FluentTitleTextStyle}" Text="{x:Bind Users[0].UserName}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                            <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Text="{x:Bind LastPermanentItem.Text}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                            <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Text="{x:Bind LastPermanentItem.Text, Mode=OneWay}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                         </StackPanel>
                     </StackPanel>
                     
