@@ -105,5 +105,10 @@ namespace InstantMessaging
             var timestampTextBlock = panel.Children.Last();
             timestampTextBlock.Visibility = timestampTextBlock.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
         }
+
+        private async void RefreshThread_OnClick(object sender, RoutedEventArgs e)
+        {
+            await _viewModel.UpdateInboxAndSelectedThread();
+        }
     }
 }

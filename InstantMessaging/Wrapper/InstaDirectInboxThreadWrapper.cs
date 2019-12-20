@@ -11,6 +11,8 @@ using InstaSharper.API;
 using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Classes.Models.User;
 using System.ComponentModel;
+using Windows.System;
+using InstaSharper.Helpers;
 
 namespace InstantMessaging.Wrapper
 {
@@ -37,14 +39,26 @@ namespace InstantMessaging.Wrapper
             LastActivity = source.LastActivity;
             ThreadId = source.ThreadId;
             OldestCursor = source.OldestCursor;
+            IsGroup = source.IsGroup;
+            IsPin = source.IsPin;
+            ValuedRequest = source.ValuedRequest;
+            PendingScore = source.PendingScore;
+            VCMuted = source.VCMuted;
+            ReshareReceiveCount = source.ReshareReceiveCount;
+            ReshareSendCount = source.ReshareSendCount;
+            ExpiringMediaReceiveCount = source.ExpiringMediaReceiveCount;
+            ExpiringMediaSendCount = source.ExpiringMediaSendCount;
             NewestCursor = source.NewestCursor;
             ThreadType = source.ThreadType;
             Title = source.Title;
+            MentionsMuted = source.MentionsMuted;
+
             Inviter = source.Inviter;
             LastPermanentItem = source.LastPermanentItem;
-            HasNewer = source.HasNewer;
-            HasOlder = source.HasOlder;
+            LeftUsers = source.LeftUsers;
+            LastSeenAt = source.LastSeenAt;
             HasUnreadMessage = source.HasUnreadMessage;
+
             foreach (var instaUserShortFriendship in source.Users)
             {
                 var user = new InstaUserShortFriendshipWrapper(instaUserShortFriendship, api);
@@ -57,8 +71,8 @@ namespace InstantMessaging.Wrapper
         public void Update(InstaDirectInboxThread source)
         {
             Canonical = source.Canonical;
-            HasNewer = source.HasNewer;
-            HasOlder = source.HasOlder;
+            //HasNewer = source.HasNewer;
+            //HasOlder = source.HasOlder;
             IsSpam = source.IsSpam;
             Muted = source.Muted;
             Named = source.Named;
@@ -66,19 +80,44 @@ namespace InstantMessaging.Wrapper
             ViewerId = source.ViewerId;
             LastActivity = source.LastActivity;
             ThreadId = source.ThreadId;
-            OldestCursor = source.OldestCursor;
-            NewestCursor = source.NewestCursor;
+            IsGroup = source.IsGroup;
+            IsPin = source.IsPin;
+            ValuedRequest = source.ValuedRequest;
+            PendingScore = source.PendingScore;
+            VCMuted = source.VCMuted;
+            ReshareReceiveCount = source.ReshareReceiveCount;
+            ReshareSendCount = source.ReshareSendCount;
+            ExpiringMediaReceiveCount = source.ExpiringMediaReceiveCount;
+            ExpiringMediaSendCount = source.ExpiringMediaSendCount;
             ThreadType = source.ThreadType;
             Title = source.Title;
+            MentionsMuted = source.MentionsMuted;
+
             Inviter = source.Inviter;
-            LastPermanentItem = source.LastPermanentItem;
-            HasNewer = source.HasNewer;
-            HasOlder = source.HasOlder;
+            LastPermanentItem = source.LastPermanentItem.TimeStamp > LastPermanentItem.TimeStamp ? 
+                source.LastPermanentItem : LastPermanentItem;
+            LeftUsers = source.LeftUsers;
+            LastSeenAt = source.LastSeenAt;
             HasUnreadMessage = source.HasUnreadMessage;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(""));
+
+            if (string.Compare(OldestCursor, source.OldestCursor, StringComparison.Ordinal) > 0)
+            {
+                OldestCursor = source.OldestCursor;
+                HasOlder = source.HasOlder;
+            }
+
+            if (string.Compare(NewestCursor, source.NewestCursor, StringComparison.Ordinal) < 0)
+            {
+                NewestCursor = source.NewestCursor;
+                HasNewer = HasNewer;
+            }
+
+            UpdateUserList(source.Users);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+            UpdateItemList(source.Items);
         }
 
-        public void UpdateItemList(ICollection<InstaDirectInboxItem> source)
+        private void UpdateItemList(ICollection<InstaDirectInboxItem> source)
         {
             if (ObservableItems.Count == 0)
             {
@@ -110,6 +149,17 @@ namespace InstantMessaging.Wrapper
                 {
                     ObservableItems.Insert(0, item);
                 }
+            }
+        }
+
+        private void UpdateUserList(List<InstaUserShortFriendship> users)
+        {
+            var toBeAdded = users.Where(p2 => Users.All(p1 => !p1.Equals(p2)));
+            var toBeDeleted = Users.Where(p1 => users.All(p2 => !p1.Equals(p2)));
+            Users.AddRange(toBeAdded.Select(x => new InstaUserShortFriendshipWrapper(x, _instaApi)));
+            foreach (var user in toBeDeleted)
+            {
+                Users.Remove(user);
             }
         }
     }

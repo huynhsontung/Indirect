@@ -32,7 +32,7 @@
 
             <converters:FromMeBoolToAlignmentConverter x:Key="FromMeAlignmentConverter"/>
             <converters:FromMeBoolToBrushConverter x:Key="FromMeBrushConverter"/>
-            <converters:FromMeBoolToTextAlignmentConverter x:Key="FromMeTextAlignmentConverter"/>
+            <converters:HasNewMessageBoolToOpacityConverter x:Key="HasNewMessageConverter"/>
 
             <DataTemplate x:Key="ItemContainer" x:DataType="direct:InstaDirectInboxItem">
                 <StackPanel x:Name="ItemContainer" Orientation="Vertical" 
@@ -52,7 +52,7 @@
                     <TextBlock x:Name="Timestamp"
                                Style="{ThemeResource FluentCaptionTextStyle}"
                                Text="{x:Bind TimeStamp}" 
-                               Opacity="0.8"
+                               Opacity="0.6"
                                Margin="2"
                                HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                                Visibility="Collapsed" />
@@ -83,11 +83,11 @@
                         Height="32" Width="40" Opacity="0"
                         Visibility="Collapsed">
                 </Button>
-                <TextBlock x:Name="AppTitleTextBlock"
+                <!--<TextBlock x:Name="AppTitleTextBlock"
                            Text="Instantly" 
                            VerticalAlignment="Center"
                            Style="{ThemeResource FluentCaptionTextStyle}" 
-                           Margin="8,0,0,0"/>
+                           Margin="8,0,0,0"/>-->
             </StackPanel>
         </Grid>
 
@@ -111,7 +111,8 @@
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <StackPanel Orientation="Horizontal">
                         <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture}" Height="48" Width="48" Margin="4,8,16,8"/>
-                        <StackPanel VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Center" 
+                                    Opacity="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageConverter}}">
                             <TextBlock Style="{ThemeResource FluentTitleTextStyle}" Text="{x:Bind Users[0].UserName}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                             <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Text="{x:Bind LastPermanentItem.Text, Mode=OneWay}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                         </StackPanel>
@@ -140,7 +141,7 @@
                         <Border Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1" Background="{ThemeResource SystemControlAcrylicElementBrush}"/>
 
                         <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Collapsed">
-                            <AppBarButton Icon="Video" Label="Video call"/>
+                            <AppBarButton Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
                             <CommandBar.Content>
                                 <StackPanel Orientation="Horizontal" Background="Transparent">
                                     <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture}" Height="32" Width="32" Margin="12,0,16,0" VerticalAlignment="Center"/>
@@ -203,7 +204,13 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <CommandBar Grid.Row="1" 
+                    <StackPanel Orientation="Horizontal" Background="Transparent"
+                                Grid.Row="1" Margin="0,0,0,8">
+                        <PersonPicture ProfilePicture="{x:Bind _viewModel.LoggedInUser.ProfilePicture, Mode=OneWay}" Height="34" Width="34" Margin="4,0,16,0"/>
+                        <TextBlock Style="{ThemeResource FluentHeaderTextStyle}" Text="Direct" MaxLines="1" />
+                    </StackPanel>
+
+                    <!--<CommandBar Grid.Row="1" 
                                 Margin="0,0,0,2"
                                 DefaultLabelPosition="Collapsed" 
                                 Background="Transparent">
@@ -217,7 +224,7 @@
                         <AppBarButton Label="New message">
                             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xF716;"/>
                         </AppBarButton>
-                    </CommandBar>
+                    </CommandBar>-->
                 </Grid>
             </controls:MasterDetailsView.MasterHeader>
 

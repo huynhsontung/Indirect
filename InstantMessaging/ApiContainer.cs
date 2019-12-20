@@ -6,7 +6,6 @@ using InstaSharper.Logger;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -16,11 +15,9 @@ using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage;
 using Windows.UI.Core;
-using ColorCode.Common;
 using InstantMessaging.Notification;
 using InstaSharper.API.Push;
 using InstaSharper.Classes.Models.Direct;
-using InstaSharper.Classes.Models.User;
 using InstaSharper.Enums;
 
 namespace InstantMessaging
@@ -249,16 +246,29 @@ namespace InstantMessaging
             }
         }
 
-        public async Task<IResult<InstaDirectInboxThread>> OnThreadChange(InstaDirectInboxThreadWrapper thread)
+        // This will be invoked before SelectionThread gets changed
+        public async Task OnThreadChange(InstaDirectInboxThreadWrapper thread)
         {
             if (thread == null)
                 throw new ArgumentNullException(nameof(thread));
             var result = await _instaApi.MessagingProcessor.GetDirectInboxThreadAsync(thread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
             if (result.Succeeded)
             {
-                thread.UpdateItemList(result.Value.Items);
+                thread.Update(result.Value);
             }
-            return result;
+        }
+
+        public async Task LoadPreviousPageForCurrentThread()
+        {
+            if (SelectedThread == null || !SelectedThread.HasOlder) return;
+
+            var pagination = PaginationParameters.MaxPagesToLoad(1);
+            pagination.StartFromMaxId(SelectedThread.OldestCursor);
+            var result = await _instaApi.MessagingProcessor.GetDirectInboxThreadAsync(SelectedThread.ThreadId, pagination);
+            if (result.Succeeded)
+            {
+                SelectedThread.Update(result.Value);
+            }
         }
 
         // Send message to the current selected recipient
@@ -270,7 +280,7 @@ namespace InstantMessaging
             return result;
         }
 
-        private async Task UpdateInboxAndSelectedThread()
+        public async Task UpdateInboxAndSelectedThread()
         {
             var selected = SelectedThread;
             await GetInboxAsync();

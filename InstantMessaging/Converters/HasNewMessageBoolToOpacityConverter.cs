@@ -8,16 +8,16 @@ using Windows.UI.Xaml.Data;
 
 namespace InstantMessaging.Converters
 {
-    public class FromMeBoolToTextAlignmentConverter : IValueConverter
+    public class HasNewMessageBoolToOpacityConverter : IValueConverter
     {
         object IValueConverter.Convert(object value, Type targetType, object parameter, string language)
         {
             bool? b = (bool?)value;
             if (b ?? false)
             {
-                return TextAlignment.Right;
+                return 1.0;
             }
-            return TextAlignment.Left;
+            return 0.6;
 
         }
 
