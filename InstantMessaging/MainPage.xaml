@@ -17,7 +17,6 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <flui:FluiFrameworkThemeResources></flui:FluiFrameworkThemeResources>
-                <ResourceDictionary Source="ItemContainers.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <ResourceDictionary.ThemeDictionaries>
@@ -32,10 +31,35 @@
             </ResourceDictionary.ThemeDictionaries>
 
             <converters:FromMeBoolToAlignmentConverter x:Key="FromMeAlignmentConverter"/>
-            <converters:FromMeBoolToBrushConverter x:Key="FromMeBrushConverter"/>
+            <converters:FromMeBoolToBrushConverter x:Key="FromMeBrushConverter" 
+                                                   FromMe="{StaticResource FromMeItemBackground}"
+                                                   FromThem="{StaticResource FromThemItemBackground}"/>
             <converters:HasNewMessageBoolToOpacityConverter x:Key="HasNewMessageConverter"/>
 
-            <DataTemplate x:Key="ItemContainer" x:DataType="direct:InstaDirectInboxItem">
+            <DataTemplate x:Key="NotSupportedItemContainer" x:DataType="direct:InstaDirectInboxItem">
+                <StackPanel Orientation="Vertical" 
+                            HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                            Margin="0,2,0,2" DoubleTapped="ItemContainer_DoubleTapped">
+                    <Border Background="Transparent" HorizontalAlignment="Left" CornerRadius="2,2,2,2" BorderBrush="White" BorderThickness="1" Opacity="0.6" >
+                        <TextBlock x:Name="MessageContent" 
+                                   Style="{ThemeResource FluentCaptionTextStyle}"
+                                   Text="Content type is not yet supported."
+                                   Margin="6" 
+                                   MaxWidth="250"
+                                   HorizontalAlignment="Center" 
+                                   TextWrapping="WrapWholeWords" FontStyle="Italic"/>
+                    </Border>
+                    <TextBlock x:Name="Timestamp"
+                               Style="{ThemeResource FluentCaptionTextStyle}"
+                               Text="{x:Bind TimeStamp}" 
+                               Opacity="0.6"
+                               Margin="2"
+                               HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                               Visibility="Collapsed" />
+                </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="TextItemContainer" x:DataType="direct:InstaDirectInboxItem">
                 <StackPanel x:Name="ItemContainer" Orientation="Vertical" 
                             HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                             Margin="0,2,0,2" DoubleTapped="ItemContainer_DoubleTapped">
@@ -59,6 +83,34 @@
                                Visibility="Collapsed" />
                 </StackPanel>
             </DataTemplate>
+
+            <DataTemplate x:Key="LikeItemContainer" x:DataType="direct:InstaDirectInboxItem">
+                <StackPanel Orientation="Vertical" 
+                            HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                            Margin="0,2,0,2" DoubleTapped="ItemContainer_DoubleTapped">
+                    <TextBlock x:Name="MessageContent" 
+                               Style="{ThemeResource FluentBodyTextStyle}"
+                               Text="{x:Bind Text}"
+                               FontSize="24"
+                               MaxWidth="250"
+                               HorizontalAlignment="Center" 
+                               TextWrapping="WrapWholeWords"/>
+                    <TextBlock x:Name="Timestamp"
+                               Style="{ThemeResource FluentCaptionTextStyle}"
+                               Text="{x:Bind TimeStamp}" 
+                               Opacity="0.6"
+                               Margin="2"
+                               HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                               Visibility="Collapsed" />
+                </StackPanel>
+            </DataTemplate>
+
+            
+            
+            <local:ItemTemplateSelector x:Key="ItemTemplateSelector"
+                                        TextTemplate="{StaticResource TextItemContainer}"
+                                        LikeTemplate="{StaticResource LikeItemContainer}"
+                                        NotSupportedTemplate="{StaticResource NotSupportedItemContainer}"/>
         </ResourceDictionary>
     </Page.Resources>
 
@@ -160,7 +212,7 @@
 
                         <local:ChatListView x:Name="ItemsHolder" Grid.Row="0" Grid.RowSpan="3"
                                   ItemsSource="{x:Bind ObservableItems}"
-                                  ItemTemplate="{StaticResource ItemContainer}"
+                                  ItemTemplateSelector="{StaticResource ItemTemplateSelector}"
                                   IncrementalLoadingThreshold="1"
                                   SelectionMode="None">
                             <ListView.Header>

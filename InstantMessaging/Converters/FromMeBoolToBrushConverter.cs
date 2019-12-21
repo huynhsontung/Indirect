@@ -13,17 +13,18 @@ namespace InstantMessaging.Converters
 {
     class FromMeBoolToBrushConverter : IValueConverter
     {
-        public static MainPage CurrentPage;
+        public Brush FromMe { get; set; }
+        public Brush FromThem { get; set; }
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             bool? b = (bool?)value;
             if (b ?? false)
             {
-                return CurrentPage.Resources["FromMeItemBackground"];
+                return FromMe;
             }
 
-            return CurrentPage.Resources["FromThemItemBackground"];
+            return FromThem;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

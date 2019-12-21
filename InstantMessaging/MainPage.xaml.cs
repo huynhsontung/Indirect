@@ -27,7 +27,6 @@ namespace InstantMessaging
             this.InitializeComponent();
             Window.Current.SetTitleBar(TitleBarElement);
             InstaUserShortWrapper.PageReference = this;
-            FromMeBoolToBrushConverter.CurrentPage = this;
             MainLayout.ViewStateChanged += OnViewStateChange;
             Window.Current.Activated += OnWindowFocusChange;
         }
@@ -43,12 +42,12 @@ namespace InstantMessaging
             await _viewModel.StartPushClient();
         }
 
-        //private async void MessageContent_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        //{
-        //    if (e.AddedItems[0] == null)
-        //        return;
-        //    await _viewModel.OnThreadChange(e.AddedItems[0] as InstaDirectInboxThreadWrapper);
-        //}
+        private async void MessageContent_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems[0] == null)
+                return;
+            await _viewModel.OnThreadChange(e.AddedItems[0] as InstaDirectInboxThreadWrapper);
+        }
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {

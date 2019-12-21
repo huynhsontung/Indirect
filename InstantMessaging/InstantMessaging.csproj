@@ -124,6 +124,7 @@
     <Compile Include="Converters\HasNewMessageBoolToOpacityConverter.cs" />
     <Compile Include="Converters\FromMeBoolToAlignmentConverter.cs" />
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
+    <Compile Include="ItemTemplateSelector.cs" />
     <Compile Include="Login.xaml.cs">
       <DependentUpon>Login.xaml</DependentUpon>
     </Compile>
@@ -160,10 +161,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="ItemContainers.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Login.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
