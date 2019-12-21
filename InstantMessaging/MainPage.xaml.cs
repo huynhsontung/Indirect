@@ -6,6 +6,7 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using InstantMessaging.Converters;
 using Microsoft.Toolkit.Uwp.UI.Controls;
@@ -42,12 +43,12 @@ namespace InstantMessaging
             await _viewModel.StartPushClient();
         }
 
-        private async void MessageContent_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems[0] == null)
-                return;
-            await _viewModel.OnThreadChange(e.AddedItems[0] as InstaDirectInboxThreadWrapper);           
-        }
+        //private async void MessageContent_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        //{
+        //    if (e.AddedItems[0] == null)
+        //        return;
+        //    await _viewModel.OnThreadChange(e.AddedItems[0] as InstaDirectInboxThreadWrapper);
+        //}
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
@@ -110,5 +111,6 @@ namespace InstantMessaging
         {
             await _viewModel.UpdateInboxAndSelectedThread();
         }
+
     }
 }

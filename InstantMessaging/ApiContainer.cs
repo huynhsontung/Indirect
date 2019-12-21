@@ -22,7 +22,7 @@ using InstaSharper.Enums;
 
 namespace InstantMessaging
 {
-    public class ApiContainer : INotifyPropertyChanged
+    class ApiContainer : INotifyPropertyChanged
     {
         // Todo: handle exceptions thrown by _instaApi like no network connection
         private const string STATE_FILE_NAME = "state.bin";
@@ -256,6 +256,8 @@ namespace InstantMessaging
             {
                 thread.Update(result.Value);
             }
+
+            PageReference.DataContext = thread.ObservableItems;
         }
 
         public async Task LoadPreviousPageForCurrentThread()

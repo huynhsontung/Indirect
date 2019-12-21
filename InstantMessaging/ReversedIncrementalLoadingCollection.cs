@@ -13,7 +13,7 @@ using System.ComponentModel;
 
 namespace InstantMessaging
 {
-    internal class ReversedIncrementalLoadingCollection<TSource, IType> : ObservableCollection<IType>,
+    class ReversedIncrementalLoadingCollection<TSource, IType> : ObservableCollection<IType>,
         ISupportIncrementalLoading where TSource : Microsoft.Toolkit.Collections.IIncrementalSource<IType>
     {
         /// <summary>
@@ -204,15 +204,16 @@ namespace InstantMessaging
         /// <summary>
         /// Actually performs the incremental loading.
         /// </summary>
+        /// <param name="count">Number of items per page load.</param>
         /// <param name="cancellationToken">
-        /// Used to propagate notification that operation should be canceled.
+        ///     Used to propagate notification that operation should be canceled.
         /// </param>
         /// <returns>
         /// Returns a collection of <typeparamref name="IType"/>.
         /// </returns>
-        protected virtual async Task<IEnumerable<IType>> LoadDataAsync(CancellationToken cancellationToken)
+        protected virtual async Task<IEnumerable<IType>> LoadDataAsync(uint count, CancellationToken cancellationToken)
         {
-            var result = await Source.GetPagedItemsAsync(CurrentPageIndex++, ItemsPerPage, cancellationToken);
+            var result = await Source.GetPagedItemsAsync(CurrentPageIndex++, (int)count, cancellationToken);
             return result;
         }
 
@@ -229,7 +230,7 @@ namespace InstantMessaging
                     try
                     {
                         IsLoading = true;
-                        data = await LoadDataAsync(_cancellationToken);
+                        data = await LoadDataAsync(count, _cancellationToken);
                     }
                     catch (OperationCanceledException)
                     {
@@ -243,11 +244,11 @@ namespace InstantMessaging
                     if (data != null && data.Any() && !_cancellationToken.IsCancellationRequested)
                     {
                         resultCount = (uint)data.Count();
-                        
 
-                        foreach (var item in data)
+                        var reversed = data.Reverse();
+                        foreach (var item in reversed)
                         {
-                            Add(item);
+                            Insert(0, item);
                         }
                     }
                     else

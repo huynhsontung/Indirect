@@ -11,22 +11,26 @@ using InstaSharper.API;
 using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Classes.Models.User;
 using System.ComponentModel;
+using System.Threading;
 using Windows.System;
+using InstaSharper.Classes;
 using InstaSharper.Helpers;
+using Microsoft.Toolkit.Collections;
 
 namespace InstantMessaging.Wrapper
 {
     /// Wrapper of <see cref="InstaDirectInboxThread"/> with Observable lists
-    public class InstaDirectInboxThreadWrapper : InstaDirectInboxThread, INotifyPropertyChanged
+    class InstaDirectInboxThreadWrapper : InstaDirectInboxThread, INotifyPropertyChanged, IIncrementalSource<InstaDirectInboxItem>
     {
         private IInstaApi _instaApi;
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public ObservableCollection<InstaDirectInboxItem> ObservableItems { get; set; } = new ObservableCollection<InstaDirectInboxItem>();
+        public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItem> ObservableItems { get; set; }
         public new List<InstaUserShortFriendshipWrapper> Users { get; } = new List<InstaUserShortFriendshipWrapper>();
 
         public InstaDirectInboxThreadWrapper(InstaDirectInboxThread source, IInstaApi api)
         {
+            ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItem>(this);
             _instaApi = api;
             Canonical = source.Canonical;
             HasNewer = source.HasNewer;
@@ -70,6 +74,12 @@ namespace InstantMessaging.Wrapper
 
         public void Update(InstaDirectInboxThread source)
         {
+            UpdateExcludeItemList(source);
+            UpdateItemList(source.Items);
+        }
+
+        private void UpdateExcludeItemList(InstaDirectInboxThread source)
+        {
             Canonical = source.Canonical;
             //HasNewer = source.HasNewer;
             //HasOlder = source.HasOlder;
@@ -94,7 +104,7 @@ namespace InstantMessaging.Wrapper
             MentionsMuted = source.MentionsMuted;
 
             Inviter = source.Inviter;
-            LastPermanentItem = source.LastPermanentItem.TimeStamp > LastPermanentItem.TimeStamp ? 
+            LastPermanentItem = source.LastPermanentItem.TimeStamp > LastPermanentItem.TimeStamp ?
                 source.LastPermanentItem : LastPermanentItem;
             LeftUsers = source.LeftUsers;
             LastSeenAt = source.LastSeenAt;
@@ -114,7 +124,6 @@ namespace InstantMessaging.Wrapper
 
             UpdateUserList(source.Users);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
-            UpdateItemList(source.Items);
         }
 
         private void UpdateItemList(ICollection<InstaDirectInboxItem> source)
@@ -161,6 +170,29 @@ namespace InstantMessaging.Wrapper
             {
                 Users.Remove(user);
             }
+        }
+
+        public async Task LoadOlderItems()
+        {
+            var pagination = PaginationParameters.MaxPagesToLoad(1);
+            pagination.StartFromMaxId(OldestCursor);
+            var result = await _instaApi.MessagingProcessor.GetDirectInboxThreadAsync(ThreadId, pagination);
+            if (result.Succeeded)
+            {
+                Update(result.Value);
+            }
+        }
+
+        public async Task<IEnumerable<InstaDirectInboxItem>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
+        {
+            var pagesToLoad = pageSize / 20;
+            if (pagesToLoad < 1) pagesToLoad = 1;
+            var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
+            pagination.StartFromMaxId(OldestCursor);
+            var result = await _instaApi.MessagingProcessor.GetDirectInboxThreadAsync(ThreadId, pagination);
+            if (!result.Succeeded) return new List<InstaDirectInboxItem>();
+            UpdateExcludeItemList(result.Value);
+            return result.Value.Items;
         }
     }
 }

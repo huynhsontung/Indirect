@@ -9,6 +9,7 @@
     xmlns:direct="using:InstaSharper.Classes.Models.Direct"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:flui="using:FluiFramework.UWP.Core"
+    xmlns:local="using:InstantMessaging"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -83,11 +84,11 @@
                         Height="32" Width="40" Opacity="0"
                         Visibility="Collapsed">
                 </Button>
-                <!--<TextBlock x:Name="AppTitleTextBlock"
-                           Text="Instantly" 
+                <TextBlock x:Name="AppTitleTextBlock"
+                           Text="" 
                            VerticalAlignment="Center"
                            Style="{ThemeResource FluentCaptionTextStyle}" 
-                           Margin="8,0,0,0"/>-->
+                           Margin="8,0,0,0"/>
             </StackPanel>
         </Grid>
 
@@ -106,7 +107,7 @@
                                     NoSelectionContent="Select a conversation to view"
                                     BorderBrush="Transparent"
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
-                                    SelectionChanged="MessageContent_SelectionChanged" CompactModeThresholdWidth="640">
+                                    CompactModeThresholdWidth="640">
             <controls:MasterDetailsView.ItemTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <StackPanel Orientation="Horizontal">
@@ -156,12 +157,12 @@
                                 </StackPanel>
                             </CommandBar.Content>
                         </CommandBar>
-                        
 
-                        <ListView Grid.Row="0" Grid.RowSpan="3"
-                              ItemsSource="{x:Bind ObservableItems}"
-                              ItemTemplate="{StaticResource ItemContainer}"
-                              SelectionMode="None">
+                        <local:ChatListView x:Name="ItemsHolder" Grid.Row="0" Grid.RowSpan="3"
+                                  ItemsSource="{x:Bind ObservableItems}"
+                                  ItemTemplate="{StaticResource ItemContainer}"
+                                  IncrementalLoadingThreshold="1"
+                                  SelectionMode="None">
                             <ListView.Header>
                                 <!-- Title bar height + command bar height = 32 + 48 = 80 -->
                                 <Border Height="80"/>
@@ -169,7 +170,7 @@
                             <ListView.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <ItemsStackPanel VerticalAlignment="Bottom"
-                                                 ItemsUpdatingScrollMode="KeepLastItemInView"/>
+                                                     ItemsUpdatingScrollMode="KeepLastItemInView"/>
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
                             <ListView.ItemContainerStyle>
@@ -178,7 +179,8 @@
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                                 </Style>
                             </ListView.ItemContainerStyle>
-                        </ListView>
+                        </local:ChatListView>
+                        
                         <Grid Grid.Row="3" HorizontalAlignment="Stretch">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
