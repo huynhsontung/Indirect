@@ -135,28 +135,24 @@ namespace InstantMessaging.Wrapper
             }
             else
             {
-                var olderItems = new List<InstaDirectInboxItem>();
-
                 foreach (var item in source)
                 {
-                    var existing = ObservableItems.IndexOf(item);
-                    if (existing == -1)
+                    var existed = ObservableItems.Any(existingItem => existingItem.Equals(item));
+
+                    if (existed) continue;
+                    for (var i = ObservableItems.Count-1; i >= 0; i--)
                     {
-                        if (DateTime.Compare(item.TimeStamp, ObservableItems[ObservableItems.Count - 1].TimeStamp) > 0)
+                        if (item.TimeStamp > ObservableItems[i].TimeStamp)
                         {
-                            ObservableItems.Add(item);
+                            ObservableItems.Insert(i+1, item);
+                            break;
                         }
-                        else
+
+                        if (i == 0)
                         {
-                            olderItems.Add(item);
+                            ObservableItems.Insert(0, item);
                         }
                     }
-                }
-
-                olderItems.Reverse();
-                foreach (var item in olderItems)
-                {
-                    ObservableItems.Insert(0, item);
                 }
             }
         }

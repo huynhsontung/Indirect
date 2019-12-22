@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -37,16 +38,7 @@ namespace InstantMessaging
             _viewModel = (ApiContainer)e.Parameter;
             if (_viewModel == null) throw new NullReferenceException("No _viewModel created");
             _viewModel.PageReference = this;
-            await _viewModel.GetInboxAsync();
-            await _viewModel.UpdateLoggedInUser();
-            await _viewModel.StartPushClient();
-        }
-
-        private async void MessageContent_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems[0] == null)
-                return;
-            await _viewModel.OnThreadChange(e.AddedItems[0] as InstaDirectInboxThreadWrapper);
+            await _viewModel.OnLoggedIn();
         }
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
@@ -111,5 +103,12 @@ namespace InstantMessaging
             await _viewModel.UpdateInboxAndSelectedThread();
         }
 
+        private void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems[0] == null)
+                return;
+            var inboxThread = (InstaDirectInboxThreadWrapper) e.AddedItems[0];
+            DataContext = inboxThread.ObservableItems;
+        }
     }
 }

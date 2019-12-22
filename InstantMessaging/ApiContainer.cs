@@ -6,6 +6,7 @@ using InstaSharper.Logger;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -19,6 +20,7 @@ using InstantMessaging.Notification;
 using InstaSharper.API.Push;
 using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Enums;
+using Microsoft.Toolkit.Uwp;
 
 namespace InstantMessaging
 {
@@ -40,8 +42,10 @@ namespace InstantMessaging
         public event PropertyChangedEventHandler PropertyChanged;
 
         public MainPage PageReference { get; set; }
-        public ObservableCollection<InstaDirectInboxThreadWrapper> InboxThreads { get; } = 
-            new ObservableCollection<InstaDirectInboxThreadWrapper>();
+        public InstaDirectInboxWrapper Inbox { get; private set; }
+
+        public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads => Inbox.Threads;
+
         public InstaCurrentUserWrapper LoggedInUser { get; private set; }
         public InstaDirectInboxThreadWrapper SelectedThread { get; set; }
         public bool IsUserAuthenticated { get; private set; }
@@ -64,6 +68,15 @@ namespace InstantMessaging
             await instance.CreateStateFile();
             await instance.LoadStateFromStorage();
             return instance;
+        }
+
+        public async Task OnLoggedIn()
+        {
+            if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
+            Inbox = new InstaDirectInboxWrapper(_instaApi);
+            PageReference.DataContext = InboxThreads;
+            await UpdateLoggedInUser();
+            await StartPushClient();
         }
 
         public void SetSelectedThreadNull()
@@ -162,42 +175,7 @@ namespace InstantMessaging
             return result;
         }
 
-
-        public async Task<IResult<InstaDirectInboxContainer>> GetInboxAsync()
-        {
-            if (_instaApi == null)
-                throw new NullReferenceException("Api has not been initialized");
-
-            var result = await _instaApi.MessagingProcessor.GetDirectInboxAsync(PaginationParameters.MaxPagesToLoad(1));
-            InstaDirectInbox inbox;
-            if (result.Succeeded)
-                inbox = result.Value.Inbox;
-            else throw new OperationCanceledException("Failed to fetch Inbox");
-
-            foreach (var thread in inbox.Threads)
-            {
-                var existed = false;
-                foreach (var existingThread in InboxThreads)
-                {
-                    if (thread.ThreadId != existingThread.ThreadId) continue;
-                    existingThread.Update(thread);
-                    existed = true;
-                    break;
-                }
-
-                if (!existed)
-                {
-                    InboxThreads.Add(new InstaDirectInboxThreadWrapper(thread, _instaApi));
-                }
-            }
-
-            // Todo: Implement better sort that works well with ObservableCollection
-            //InboxThreads.SortStable((x,y)=> y.LastActivity.CompareTo(x.LastActivity));
-            SortInboxThread();
-            return result;
-        }
-
-        public async Task UpdateLoggedInUser()
+        private async Task UpdateLoggedInUser()
         {
             var loggedInUser = await _instaApi.GetCurrentUserAsync();
             LoggedInUser = new InstaCurrentUserWrapper(loggedInUser.Value, _instaApi);
@@ -239,34 +217,19 @@ namespace InstantMessaging
 
         private async void OnNotificationReceived(object sender, MessageReceivedEventArgs args)
         {
-            if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(1))
+            Debug.WriteLine("Notification received.");
+            if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.1))
             {
                 await PageReference.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,
                     async () => await UpdateInboxAndSelectedThread());
             }
         }
 
-        // This will be invoked before SelectionThread gets changed
-        public async Task OnThreadChange(InstaDirectInboxThreadWrapper thread)
+        public async Task UpdateSelectedThread()
         {
-            if (thread == null)
-                throw new ArgumentNullException(nameof(thread));
-            var result = await _instaApi.MessagingProcessor.GetDirectInboxThreadAsync(thread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
-            if (result.Succeeded)
-            {
-                thread.Update(result.Value);
-            }
-
-            PageReference.DataContext = thread.ObservableItems;
-        }
-
-        public async Task LoadPreviousPageForCurrentThread()
-        {
-            if (SelectedThread == null || !SelectedThread.HasOlder) return;
-
-            var pagination = PaginationParameters.MaxPagesToLoad(1);
-            pagination.StartFromMaxId(SelectedThread.OldestCursor);
-            var result = await _instaApi.MessagingProcessor.GetDirectInboxThreadAsync(SelectedThread.ThreadId, pagination);
+            if (SelectedThread == null)
+                return;
+            var result = await _instaApi.MessagingProcessor.GetDirectInboxThreadAsync(SelectedThread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
             if (result.Succeeded)
             {
                 SelectedThread.Update(result.Value);
@@ -285,32 +248,11 @@ namespace InstantMessaging
         public async Task UpdateInboxAndSelectedThread()
         {
             var selected = SelectedThread;
-            await GetInboxAsync();
+            await Inbox.UpdateInbox();
             if (selected == null) return;
-            if (InboxThreads.Contains(selected)) SelectedThread = selected;
-            await OnThreadChange(SelectedThread);
-        }
-
-        private void SortInboxThread()
-        {
-            var sorted = InboxThreads.OrderByDescending(x => x.LastActivity).ToList();
-
-            bool satisfied = true;
-            for (var i = 0; i < InboxThreads.Count; i++)
-            {
-                var thread = InboxThreads[i];
-                var j = i;
-                for (; j < sorted.Count; j++)
-                {
-                    if (!thread.Equals(sorted[j]) || i == j) continue;
-                    satisfied = false;
-                    break;
-                }
-
-                if (satisfied) continue;
-                InboxThreads.Move(i, j);
-                i--;
-            }
+            if (InboxThreads.Contains(selected) && SelectedThread != selected) SelectedThread = selected;
+            await UpdateSelectedThread();
+            _lastUpdated = DateTime.Now;
         }
     }
 }

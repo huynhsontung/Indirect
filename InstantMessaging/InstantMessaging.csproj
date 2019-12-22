@@ -137,6 +137,7 @@
     <Compile Include="ReversedIncrementalLoadingCollection.cs" />
     <Compile Include="Wrapper\InstaCurrentUserWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxThreadWrapper.cs" />
+    <Compile Include="Wrapper\InstaDirectInboxWrapper.cs" />
     <Compile Include="Wrapper\InstaUserShortFriendshipWrapper.cs" />
     <Compile Include="Wrapper\InstaUserShortWrapper.cs" />
   </ItemGroup>

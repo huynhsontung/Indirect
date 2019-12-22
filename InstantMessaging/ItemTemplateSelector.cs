@@ -15,6 +15,8 @@ namespace InstantMessaging
         public DataTemplate LikeTemplate { get; set; }
         public DataTemplate NotSupportedTemplate { get; set; }
 
+        private static readonly DataTemplate EmptyTemplate = new DataTemplate();
+
         protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
         {
             var element = container as FrameworkElement;
@@ -27,6 +29,9 @@ namespace InstantMessaging
                         
                     case InstaDirectThreadItemType.Text:
                         return TextTemplate;
+
+                    case InstaDirectThreadItemType.ActionLog:
+                        return EmptyTemplate;
                     
                     default:
                         return NotSupportedTemplate;
