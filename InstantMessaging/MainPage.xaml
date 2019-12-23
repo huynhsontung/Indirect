@@ -137,10 +137,10 @@
                         Visibility="Collapsed">
                 </Button>
                 <TextBlock x:Name="AppTitleTextBlock"
-                           Text="" 
+                           Text="InstantMessaging" 
                            VerticalAlignment="Center"
                            Style="{ThemeResource FluentCaptionTextStyle}" 
-                           Margin="8,0,0,0"/>
+                           Margin="13,0,0,0"/>
             </StackPanel>
         </Grid>
 
@@ -165,10 +165,10 @@
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <StackPanel Orientation="Horizontal">
                         <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture}" Height="48" Width="48" Margin="4,8,16,8"/>
-                        <StackPanel VerticalAlignment="Center" 
-                                    Opacity="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageConverter}}">
-                            <TextBlock Style="{ThemeResource FluentTitleTextStyle}" Text="{x:Bind Users[0].UserName}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                            <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Text="{x:Bind LastPermanentItem.Text, Mode=OneWay}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Style="{ThemeResource FluentTitleTextStyle}" Text="{x:Bind Title}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                            <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Text="{x:Bind LastPermanentItem.Text, Mode=OneWay}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                       Opacity="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageConverter}}"/>
                         </StackPanel>
                     </StackPanel>
                     
@@ -189,7 +189,7 @@
                             <RowDefinition Height="32"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition/>
-                            <RowDefinition Height="44"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1" Background="{ThemeResource SystemControlAcrylicElementBrush}"/>
@@ -199,14 +199,11 @@
                             <CommandBar.Content>
                                 <StackPanel Orientation="Horizontal" Background="Transparent">
                                     <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture}" Height="32" Width="32" Margin="12,0,16,0" VerticalAlignment="Center"/>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{x:Bind Users[0].UserName}" 
-                                                   Style="{ThemeResource FluentBaseTextStyle}"
-                                                   MaxLines="1" 
-                                                   HorizontalAlignment="Left" 
-                                                   ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                                        <TextBlock Text="~Status here~" Style="{ThemeResource FluentCaptionTextStyle}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                                    </StackPanel>
+                                    <TextBlock Text="{x:Bind Title}" 
+                                               Style="{ThemeResource FluentTitleTextStyle}"
+                                               MaxLines="1" 
+                                               VerticalAlignment="Center"
+                                               ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                                 </StackPanel>
                             </CommandBar.Content>
                         </CommandBar>
@@ -234,18 +231,27 @@
                             </ListView.ItemContainerStyle>
                         </local:ChatListView>
                         
-                        <Grid Grid.Row="3" HorizontalAlignment="Stretch">
+                        <Grid x:Name="MessageInputGrid" Grid.Row="3" HorizontalAlignment="Stretch" Margin="0,2,0,2">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
+                                <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="60"/>
                             </Grid.ColumnDefinitions>
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
                             <TextBox x:Name="MessageTextBox" 
-                                     PlaceholderText="Enter message" 
-                                     MinWidth="100" 
+                                     Grid.Column="0" Grid.Row="0" Grid.RowSpan="2"
+                                     TextWrapping="Wrap"
+                                     PlaceholderText="Enter message"
                                      VerticalAlignment="Center"
-                                     HorizontalContentAlignment="Stretch"
                                      Margin="4,0,4,0" MaxLength="2200" KeyDown="MessageTextBox_KeyDown"/>
-                            <Button x:Name="SendButton" Content="Send" Margin="4" Grid.Column="1" Click="SendButton_Click"/>
+                            <Button x:Name="SendButton" 
+                                    Grid.Column="1" Grid.Row="1"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource ButtonRevealStyle}" Content="Send" Margin="4" Click="SendButton_Click"/>
                         </Grid>
                     </Grid>
                 </DataTemplate>
@@ -258,12 +264,54 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" Background="Transparent"
-                                Grid.Row="1" Margin="0,0,0,8">
-                        <PersonPicture ProfilePicture="{x:Bind _viewModel.LoggedInUser.ProfilePicture, Mode=OneWay}" Height="34" Width="34" Margin="4,0,16,0"/>
-                        <TextBlock Style="{ThemeResource FluentHeaderTextStyle}" Text="Direct" MaxLines="1" />
-                    </StackPanel>
+                    <PersonPicture Grid.Row="1" Grid.Column="0" 
+                                   ProfilePicture="{x:Bind _viewModel.LoggedInUser.ProfilePicture, Mode=OneWay}" Height="32" Width="32" 
+                                   Margin="4,0,16,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1"
+                               Style="{ThemeResource FluentHeaderTextStyle}" Text="Direct" MaxLines="1" FontSize="30"
+                               VerticalAlignment="Center"/>
+                    <AppBarButton Grid.Row="1" Grid.Column="2"
+                                  Style="{StaticResource AppBarButtonRevealStyle}"
+                                  VerticalAlignment="Center"
+                                  Label="New message" Click="NewMessageButton_OnClick" LabelPosition="Collapsed">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF716;"/>
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+
+                    <AutoSuggestBox x:Name="SearchBox" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                                    TextChanged="SearchBox_OnTextChanged"
+                                    SuggestionChosen="SearchBox_OnSuggestionChosen"
+                                    QuerySubmitted="SearchBox_OnQuerySubmitted"
+                                    PlaceholderText="Search" 
+                                    QueryIcon="Find" Margin="0,8,0,8">
+                        <AutoSuggestBox.ItemTemplate>
+                            <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
+                                <StackPanel Orientation="Horizontal" Background="Transparent" Margin="0,4,0,4">
+                                    <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture}" Height="28" Width="28" VerticalAlignment="Center"/>
+                                    <StackPanel Orientation="Vertical" 
+                                                Margin="12,0,0,0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Title}" 
+                                                   Style="{ThemeResource FluentBaseTextStyle}"
+                                                   MaxLines="1"/>
+                                        <TextBlock Text="{x:Bind LastPermanentItem.Text}"
+                                                   Style="{ThemeResource FluentCaptionTextStyle}"
+                                                   MaxLines="1"/>
+                                    </StackPanel>
+                                    
+                                </StackPanel>
+                            </DataTemplate>
+                        </AutoSuggestBox.ItemTemplate>
+                    </AutoSuggestBox>
+
+                    
                 </Grid>
             </controls:MasterDetailsView.MasterHeader>
 

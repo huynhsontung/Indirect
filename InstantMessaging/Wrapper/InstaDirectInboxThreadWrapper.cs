@@ -22,11 +22,39 @@ namespace InstantMessaging.Wrapper
     /// Wrapper of <see cref="InstaDirectInboxThread"/> with Observable lists
     class InstaDirectInboxThreadWrapper : InstaDirectInboxThread, INotifyPropertyChanged, IIncrementalSource<InstaDirectInboxItem>
     {
-        private IInstaApi _instaApi;
+        private readonly IInstaApi _instaApi;
 
         public event PropertyChangedEventHandler PropertyChanged;
+
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItem> ObservableItems { get; set; }
-        public new List<InstaUserShortFriendshipWrapper> Users { get; } = new List<InstaUserShortFriendshipWrapper>();
+        public new List<InstaUserShortWrapper> Users { get; } = new List<InstaUserShortWrapper>();
+
+        /// <summary>
+        /// Only use this constructor to make empty placeholder thread.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="api"></param>
+        public InstaDirectInboxThreadWrapper(InstaUserShort user, IInstaApi api)
+        {
+            ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItem>(this);
+            _instaApi = api;
+            Users.Add(new InstaUserShortWrapper(user, api));
+            Title = user.UserName;
+        }
+
+        public InstaDirectInboxThreadWrapper(InstaRankedRecipientThread rankedThread, IInstaApi api)
+        {
+            ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItem>(this);
+            _instaApi = api;
+            Canonical = rankedThread.Canonical;
+            Named = rankedThread.Named;
+            Pending = rankedThread.Pending;
+            Title = rankedThread.ThreadTitle;
+            ThreadId = rankedThread.ThreadId;
+            ThreadType = InstaDirectThreadType.Private;
+            ViewerId = rankedThread.ViewerId;
+            Users.AddRange(rankedThread.Users.Select(x => new InstaUserShortWrapper(x, api)));
+        }
 
         public InstaDirectInboxThreadWrapper(InstaDirectInboxThread source, IInstaApi api)
         {
@@ -110,13 +138,15 @@ namespace InstantMessaging.Wrapper
             LastSeenAt = source.LastSeenAt;
             HasUnreadMessage = source.HasUnreadMessage;
 
-            if (string.Compare(OldestCursor, source.OldestCursor, StringComparison.Ordinal) > 0)
+            if (string.IsNullOrEmpty(OldestCursor) || 
+                string.Compare(OldestCursor, source.OldestCursor, StringComparison.Ordinal) > 0)
             {
                 OldestCursor = source.OldestCursor;
                 HasOlder = source.HasOlder;
             }
 
-            if (string.Compare(NewestCursor, source.NewestCursor, StringComparison.Ordinal) < 0)
+            if (string.IsNullOrEmpty(NewestCursor) || 
+                string.Compare(NewestCursor, source.NewestCursor, StringComparison.Ordinal) < 0)
             {
                 NewestCursor = source.NewestCursor;
                 HasNewer = HasNewer;
@@ -128,6 +158,7 @@ namespace InstantMessaging.Wrapper
 
         private void UpdateItemList(ICollection<InstaDirectInboxItem> source)
         {
+            if (source == null) return;
             if (ObservableItems.Count == 0)
             {
                 foreach (var item in source)
@@ -172,7 +203,7 @@ namespace InstantMessaging.Wrapper
         {
             var pagination = PaginationParameters.MaxPagesToLoad(1);
             pagination.StartFromMaxId(OldestCursor);
-            var result = await _instaApi.MessagingProcessor.GetDirectInboxThreadAsync(ThreadId, pagination);
+            var result = await _instaApi.MessagingProcessor.GetThreadAsync(ThreadId, pagination);
             if (result.Succeeded)
             {
                 Update(result.Value);
@@ -181,11 +212,13 @@ namespace InstantMessaging.Wrapper
 
         public async Task<IEnumerable<InstaDirectInboxItem>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
         {
+            // Without ThreadId we cant fetch thread items.
+            if (string.IsNullOrEmpty(ThreadId)) return new List<InstaDirectInboxItem>();
             var pagesToLoad = pageSize / 20;
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(OldestCursor);
-            var result = await _instaApi.MessagingProcessor.GetDirectInboxThreadAsync(ThreadId, pagination);
+            var result = await _instaApi.MessagingProcessor.GetThreadAsync(ThreadId, pagination);
             if (!result.Succeeded) return new List<InstaDirectInboxItem>();
             UpdateExcludeItemList(result.Value);
             return result.Value.Items;

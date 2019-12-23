@@ -39,7 +39,7 @@ namespace InstantMessaging.Wrapper
 
         public async Task UpdateInbox()
         {
-            var result = await _instaApi.MessagingProcessor.GetDirectInboxAsync(PaginationParameters.MaxPagesToLoad(1));
+            var result = await _instaApi.MessagingProcessor.GetInboxAsync(PaginationParameters.MaxPagesToLoad(1));
             InstaDirectInbox inbox;
             if (result.Succeeded)
                 inbox = result.Value.Inbox;
@@ -70,7 +70,7 @@ namespace InstantMessaging.Wrapper
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(OldestCursor);
-            var result = await _instaApi.MessagingProcessor.GetDirectInboxAsync(pagination);
+            var result = await _instaApi.MessagingProcessor.GetInboxAsync(pagination);
             InstaDirectInbox inbox;
             if (result.Succeeded)
                 inbox = result.Value.Inbox;

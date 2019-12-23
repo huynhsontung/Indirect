@@ -1,5 +1,6 @@
 ﻿using InstantMessaging.Wrapper;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -12,6 +13,7 @@ using Windows.UI.Xaml.Navigation;
 using InstantMessaging.Converters;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using CoreWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
+using InstaDirectInboxThreadWrapper = InstantMessaging.Wrapper.InstaDirectInboxThreadWrapper;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -105,10 +107,52 @@ namespace InstantMessaging
 
         private void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems[0] == null)
+            if (e.AddedItems.Count == 0 || e.AddedItems[0] == null)
+            {
+                DataContext = _viewModel.InboxThreads;
                 return;
+            }
             var inboxThread = (InstaDirectInboxThreadWrapper) e.AddedItems[0];
             DataContext = inboxThread.ObservableItems;
+        }
+
+        private void NewMessageButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            SearchBox.Focus(FocusState.Programmatic);
+        }
+
+        private async void SearchBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
+            if (string.IsNullOrEmpty(sender.Text))
+            {
+                sender.ItemsSource = null;
+            }
+            else
+            {
+                // This will return a list of placeholder thread
+                sender.ItemsSource = await _viewModel.Search(sender.Text);
+            }
+        }
+
+        private void SearchBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        {
+            var selectedItem = (InstaDirectInboxThreadWrapper) args.SelectedItem;
+            sender.Text = selectedItem.Title;
+        }
+
+        private async void SearchBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            var itemSource = (List<InstaDirectInboxThreadWrapper>) sender.ItemsSource;
+            if (args.ChosenSuggestion != null)
+            {
+                await _viewModel.MakeProperInboxThread((InstaDirectInboxThreadWrapper) args.ChosenSuggestion);
+            }
+            else if (itemSource != null && itemSource.Count > 0)
+            {
+                await _viewModel.MakeProperInboxThread(itemSource[0]);
+            }
+            sender.Text = string.Empty;
         }
     }
 }
