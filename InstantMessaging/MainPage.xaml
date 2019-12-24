@@ -289,7 +289,7 @@
                                     TextChanged="SearchBox_OnTextChanged"
                                     SuggestionChosen="SearchBox_OnSuggestionChosen"
                                     QuerySubmitted="SearchBox_OnQuerySubmitted"
-                                    PlaceholderText="Search" 
+                                    PlaceholderText="Search"
                                     QueryIcon="Find" Margin="0,8,0,8">
                         <AutoSuggestBox.ItemTemplate>
                             <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">

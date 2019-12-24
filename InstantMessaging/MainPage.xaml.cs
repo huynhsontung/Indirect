@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -29,7 +30,6 @@ namespace InstantMessaging
         {
             this.InitializeComponent();
             Window.Current.SetTitleBar(TitleBarElement);
-            InstaUserShortWrapper.PageReference = this;
             MainLayout.ViewStateChanged += OnViewStateChange;
             Window.Current.Activated += OnWindowFocusChange;
         }
@@ -43,14 +43,13 @@ namespace InstantMessaging
             await _viewModel.OnLoggedIn();
         }
 
-        private async void SendButton_Click(object sender, RoutedEventArgs e)
+        private void SendButton_Click(object sender, RoutedEventArgs e)
         {
-
             var button = sender as Control;
-            var messageBox = (button.Parent as Grid).Children[0] as TextBox;
+            var messageBox = (TextBox) (button.Parent as Grid).Children[0];
             var message = messageBox.Text;
-            await _viewModel.SendMessage(message);
             messageBox.Text = "";
+            _ = _viewModel.SendMessage(message);
         }
 
         private void MessageTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -100,9 +99,9 @@ namespace InstantMessaging
             timestampTextBlock.Visibility = timestampTextBlock.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private async void RefreshThread_OnClick(object sender, RoutedEventArgs e)
+        private void RefreshThread_OnClick(object sender, RoutedEventArgs e)
         {
-            await _viewModel.UpdateInboxAndSelectedThread();
+            _ = _viewModel.UpdateInboxAndSelectedThread();
         }
 
         private void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -121,18 +120,21 @@ namespace InstantMessaging
             SearchBox.Focus(FocusState.Programmatic);
         }
 
-        private async void SearchBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        private void SearchBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
             if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
-            if (string.IsNullOrEmpty(sender.Text))
+            if (string.IsNullOrEmpty(sender.Text) || sender.Text.Length > 50)
             {
-                sender.ItemsSource = null;
+                return;
             }
-            else
-            {
-                // This will return a list of placeholder thread
-                sender.ItemsSource = await _viewModel.Search(sender.Text);
-            }
+            // Run logic on separate thread and update with UpdateSuggestionListCallback()
+            _ = _viewModel.Search(sender.Text);
+            
+        }
+
+        public void UpdateSuggestionListCallback(object updatedList)
+        {
+            _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { SearchBox.ItemsSource = updatedList; });
         }
 
         private void SearchBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
@@ -143,16 +145,18 @@ namespace InstantMessaging
 
         private async void SearchBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
-            var itemSource = (List<InstaDirectInboxThreadWrapper>) sender.ItemsSource;
             if (args.ChosenSuggestion != null)
             {
                 await _viewModel.MakeProperInboxThread((InstaDirectInboxThreadWrapper) args.ChosenSuggestion);
             }
-            else if (itemSource != null && itemSource.Count > 0)
+            else if (!string.IsNullOrEmpty(sender.Text))
             {
-                await _viewModel.MakeProperInboxThread(itemSource[0]);
+                var items = await _viewModel.Search(sender.Text);
+                if (items.Count == 0) return;
+                await _viewModel.MakeProperInboxThread(items[0]);
             }
             sender.Text = string.Empty;
+            sender.ItemsSource = null;
         }
     }
 }

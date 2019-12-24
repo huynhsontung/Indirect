@@ -12,11 +12,13 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage;
 using Windows.UI.Core;
+using Windows.UI.Xaml.Controls;
 using InstantMessaging.Notification;
 using InstaSharper.API.Push;
 using InstaSharper.Classes.Models.Direct;
@@ -39,6 +41,7 @@ namespace InstantMessaging
         private UserSessionData _userSession;
         private PushClient _pushClient;
         private DateTime _lastUpdated = DateTime.Now;
+        private CancellationTokenSource _searchCancellationToken;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -73,6 +76,7 @@ namespace InstantMessaging
                 return data;
             }
         }
+
 
         private ApiContainer()
         {
@@ -250,19 +254,24 @@ namespace InstantMessaging
         // Send message to the current selected recipient
         public async Task SendMessage(string content)
         {
+            var selectedThread = SelectedThread;
             if (string.IsNullOrEmpty(content)) return;
-            IResult<InstaDirectInboxThreadList> result;
-            if (string.IsNullOrEmpty(SelectedThread.ThreadId))
+            IResult<List<InstaDirectInboxThread>> result;
+            if (!string.IsNullOrEmpty(selectedThread.ThreadId))
             {
-                result = await _instaApi.MessagingProcessor.SendDirectTextAsync(null, SelectedThread.ThreadId, content);
+                result = await _instaApi.MessagingProcessor.SendDirectTextAsync(null, selectedThread.ThreadId, content);
             }
             else
             {
-                result = await _instaApi.MessagingProcessor.SendDirectTextAsync(SelectedThread.Users.Select(x => x.Pk),
+                result = await _instaApi.MessagingProcessor.SendDirectTextAsync(selectedThread.Users.Select(x => x.Pk),
                     null, content);
             }
-            await PageReference.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                async () => { await UpdateInboxAndSelectedThread(); });
+
+            if (result.Succeeded && result.Value.Count > 0)
+            {
+                selectedThread.Update(result.Value[0]);
+                await Inbox.UpdateInbox();
+            }
         }
 
         public async Task UpdateInboxAndSelectedThread()
@@ -270,13 +279,20 @@ namespace InstantMessaging
             var selected = SelectedThread;
             await Inbox.UpdateInbox();
             if (selected == null) return;
-            if (InboxThreads.Contains(selected) && SelectedThread != selected) _selectedThread = selected;
+            // if (InboxThreads.Contains(selected) && SelectedThread != selected) _selectedThread = selected;
             await UpdateSelectedThread();
             _lastUpdated = DateTime.Now;
         }
 
         public async Task<List<InstaDirectInboxThreadWrapper>> Search(string query)
         {
+            if (query.Length > 50) return new List<InstaDirectInboxThreadWrapper>(0);
+            _searchCancellationToken?.Cancel();
+            _searchCancellationToken = new CancellationTokenSource();
+            var cancellationToken = _searchCancellationToken.Token;
+            await Task.Delay(500, cancellationToken);   // Delay so we don't search something mid typing
+            if (cancellationToken.IsCancellationRequested) return new List<InstaDirectInboxThreadWrapper>(0);
+
             var result = await _instaApi.MessagingProcessor.GetRankedRecipientsByUsernameAsync(query);
             if (!result.Succeeded) return new List<InstaDirectInboxThreadWrapper>(0);
             var recipients = result.Value;
@@ -291,6 +307,7 @@ namespace InstantMessaging
                 x.LastPermanentItem.Text = x.Users.Count == 1 ? x.Users[0].FullName : $"{x.Users.Count} participants";
                 return x;
             }).ToList();
+            PageReference.UpdateSuggestionListCallback(decoratedList);
             return decoratedList;
         }
 
@@ -302,7 +319,7 @@ namespace InstantMessaging
                 var userIds = placeholderThread.Users.Select(x => x.Pk);
                 var result = await _instaApi.MessagingProcessor.GetThreadByParticipantsAsync(userIds);
                 if (!result.Succeeded) return;
-                thread = result.Value.Users.Count > 0 ? 
+                thread = result.Value != null && result.Value.Users.Count > 0 ? 
                     new InstaDirectInboxThreadWrapper(result.Value, _instaApi) : new InstaDirectInboxThreadWrapper(placeholderThread.Users[0], _instaApi);
             }
             else
