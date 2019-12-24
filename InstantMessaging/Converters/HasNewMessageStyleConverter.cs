@@ -8,16 +8,19 @@ using Windows.UI.Xaml.Data;
 
 namespace InstantMessaging.Converters
 {
-    public class HasNewMessageBoolToOpacityConverter : IValueConverter
+    public class HasNewMessageStyleConverter : IValueConverter
     {
+        public Style NothingNew { get; set; }
+        public Style HasNewMessage { get; set; }
+
         object IValueConverter.Convert(object value, Type targetType, object parameter, string language)
         {
             bool? b = (bool?)value;
             if (b ?? false)
             {
-                return 1.0;
+                return HasNewMessage;
             }
-            return 0.6;
+            return NothingNew;
 
         }
 

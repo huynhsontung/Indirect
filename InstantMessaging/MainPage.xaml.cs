@@ -108,7 +108,6 @@ namespace InstantMessaging
         {
             if (e.AddedItems.Count == 0 || e.AddedItems[0] == null)
             {
-                DataContext = _viewModel.InboxThreads;
                 return;
             }
             var inboxThread = (InstaDirectInboxThreadWrapper) e.AddedItems[0];

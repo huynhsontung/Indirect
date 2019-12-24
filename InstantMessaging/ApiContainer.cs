@@ -271,6 +271,7 @@ namespace InstantMessaging
             {
                 selectedThread.Update(result.Value[0]);
                 await Inbox.UpdateInbox();
+                if (SelectedThread == null) SelectedThread = selectedThread;
             }
         }
 
@@ -279,7 +280,7 @@ namespace InstantMessaging
             var selected = SelectedThread;
             await Inbox.UpdateInbox();
             if (selected == null) return;
-            // if (InboxThreads.Contains(selected) && SelectedThread != selected) _selectedThread = selected;
+            if (InboxThreads.Contains(selected) && SelectedThread != selected) SelectedThread = selected;
             await UpdateSelectedThread();
             _lastUpdated = DateTime.Now;
         }

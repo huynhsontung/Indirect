@@ -96,7 +96,11 @@ namespace InstantMessaging.Wrapper
                 }
 
                 if (satisfied) continue;
-                Threads.Move(i, j);
+                // Threads.Move(i,j);
+                // ObservableCollection.Move call ObservableCollection implementation of RemoveItem which is cause to refresh all items
+                var tmp = Threads[i];
+                Threads.RemoveAt(i);
+                Threads.Insert(j, tmp);
                 i--;
                 satisfied = true;
             }

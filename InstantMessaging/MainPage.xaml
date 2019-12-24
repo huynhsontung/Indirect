@@ -16,7 +16,7 @@
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <flui:FluiFrameworkThemeResources></flui:FluiFrameworkThemeResources>
+                <flui:FluiFrameworkThemeResources/>
             </ResourceDictionary.MergedDictionaries>
 
             <ResourceDictionary.ThemeDictionaries>
@@ -34,7 +34,16 @@
             <converters:FromMeBoolToBrushConverter x:Key="FromMeBrushConverter" 
                                                    FromMe="{StaticResource FromMeItemBackground}"
                                                    FromThem="{StaticResource FromThemItemBackground}"/>
-            <converters:HasNewMessageBoolToOpacityConverter x:Key="HasNewMessageConverter"/>
+            <converters:HasNewMessageStyleConverter x:Key="HasNewMessageConverter"
+                                                    NothingNew="{StaticResource NothingNew}"
+                                                    HasNewMessage="{StaticResource HasNewMessage}"/>
+
+            <Style x:Name="NothingNew" BasedOn="{StaticResource CaptionTextBlockStyle}" TargetType="TextBlock">
+                <Setter Property="Opacity" Value="0.6"/>
+            </Style>
+            <Style x:Name="HasNewMessage" BasedOn="{StaticResource CaptionTextBlockStyle}" TargetType="TextBlock">
+                <Setter Property="FontWeight" Value="Bold"/>
+            </Style>
 
             <DataTemplate x:Key="NotSupportedItemContainer" x:DataType="direct:InstaDirectInboxItem">
                 <StackPanel Orientation="Vertical" 
@@ -150,7 +159,7 @@
                 Click="DetailsBackButton_OnClick" Visibility="Collapsed">
         </Button>
 
-        <controls:MasterDetailsView x:Name="MainLayout" 
+        <controls:MasterDetailsView x:Name="MainLayout"
                                     Grid.Row="0"
                                     Grid.RowSpan="2"
                                     BackButtonBehavior="Manual"
@@ -167,20 +176,21 @@
                         <PersonPicture ProfilePicture="{x:Bind Users[0].ProfilePicture}" Height="48" Width="48" Margin="4,8,16,8"/>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Style="{ThemeResource FluentTitleTextStyle}" Text="{x:Bind Title}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
-                            <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Text="{x:Bind LastPermanentItem.Text, Mode=OneWay}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                       Opacity="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageConverter}}"/>
+                            <TextBlock Style="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageConverter}}" 
+                                       Text="{x:Bind LastPermanentItem.Text, Mode=OneWay}" MaxLines="1" 
+                                       HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                         </StackPanel>
                     </StackPanel>
                     
                 </DataTemplate>
             </controls:MasterDetailsView.ItemTemplate>
 
-            <controls:MasterDetailsView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <ItemsStackPanel VerticalAlignment="Top"
-                                     ItemsUpdatingScrollMode="KeepItemsInView"/>
-                </ItemsPanelTemplate>
-            </controls:MasterDetailsView.ItemsPanel>
+            <!-- <controls:MasterDetailsView.ItemsPanel> -->
+            <!--     <ItemsPanelTemplate> -->
+            <!--         <ItemsStackPanel VerticalAlignment="Top" -->
+            <!--                          ItemsUpdatingScrollMode="KeepScrollOffset"/> -->
+            <!--     </ItemsPanelTemplate> -->
+            <!-- </controls:MasterDetailsView.ItemsPanel> -->
 
             <controls:MasterDetailsView.DetailsTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
@@ -247,7 +257,8 @@
                                      TextWrapping="Wrap"
                                      PlaceholderText="Enter message"
                                      VerticalAlignment="Center"
-                                     Margin="4,0,4,0" MaxLength="2200" KeyDown="MessageTextBox_KeyDown"/>
+                                     Margin="4,0,4,0" MaxLength="2200" 
+                                     KeyDown="MessageTextBox_KeyDown"/>
                             <Button x:Name="SendButton" 
                                     Grid.Column="1" Grid.Row="1"
                                     VerticalAlignment="Center"

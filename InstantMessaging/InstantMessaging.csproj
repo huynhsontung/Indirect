@@ -121,7 +121,7 @@
     </Compile>
     <Compile Include="ApiContainer.cs" />
     <Compile Include="ChatListView.cs" />
-    <Compile Include="Converters\HasNewMessageBoolToOpacityConverter.cs" />
+    <Compile Include="Converters\HasNewMessageStyleConverter.cs" />
     <Compile Include="Converters\FromMeBoolToAlignmentConverter.cs" />
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
     <Compile Include="ItemTemplateSelector.cs" />
