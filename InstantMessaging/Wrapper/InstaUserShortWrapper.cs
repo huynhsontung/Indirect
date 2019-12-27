@@ -16,11 +16,10 @@ namespace InstantMessaging.Wrapper
         private readonly IInstaApi _instaApi;
         public BitmapImage ProfilePicture { get; set; } = new BitmapImage();
 
-        private readonly StorageFolder _tempFolder;
+        private readonly StorageFolder _tempFolder = ApplicationData.Current.TemporaryFolder;
 
         public InstaUserShortWrapper(InstaUserShort source, IInstaApi api)
         {
-            _tempFolder = ApplicationData.Current.TemporaryFolder;
             _instaApi = api;
             IsVerified = source.IsVerified;
             IsPrivate = source.IsPrivate;
@@ -35,51 +34,20 @@ namespace InstantMessaging.Wrapper
         protected async Task GetProfilePicture(string pictureUrl)
         {
             var pictureUri = new Uri(pictureUrl);
-            var localPath = pictureUri.LocalPath.Replace('/', '\\');
-            var profilePictureFile = (StorageFile) await _tempFolder.TryGetItemAsync(localPath);
-            if (profilePictureFile == null || DateTime.Now - profilePictureFile.DateCreated > TimeSpan.FromDays(7))
-            {
-                var response = await _instaApi.SendGetRequestAsync(pictureUri);
-                profilePictureFile =
-                    await _tempFolder.CreateFileAsync(localPath, CreationCollisionOption.ReplaceExisting);
-                using (var fileStream = await profilePictureFile.OpenStreamForWriteAsync())
+            var dataStream = await Helpers.GetAndCacheObject(pictureUri, _instaApi);
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+                CoreDispatcherPriority.Normal,
+                async () =>
                 {
-                    await response.Content.CopyToAsync(fileStream);
-                }
-                var rawStream = await response.Content.ReadAsStreamAsync();
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                    CoreDispatcherPriority.Normal,
-                    async () =>
+                    try
                     {
-                        try
-                        {
-                            await ProfilePicture.SetSourceAsync(rawStream.AsRandomAccessStream());
-                        }
-                        catch (Exception)
-                        {
-                            // ignored
-                        }
-                    });
-            }
-            else
-            {
-                using (var fileStream = await profilePictureFile.OpenAsync(FileAccessMode.Read))
-                {
-                    await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                        CoreDispatcherPriority.Normal,
-                        async () =>
-                        {
-                            try
-                            {
-                                await ProfilePicture.SetSourceAsync(fileStream);
-                            }
-                            catch (Exception)
-                            {
-                                // ignored
-                            }
-                        });
-                }
-            }
+                        await ProfilePicture.SetSourceAsync(dataStream);
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                });
         }
 
         

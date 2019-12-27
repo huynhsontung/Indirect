@@ -121,9 +121,16 @@
     </Compile>
     <Compile Include="ApiContainer.cs" />
     <Compile Include="ChatListView.cs" />
+    <Compile Include="Converters\ReactionsFromMeConverter.cs" />
+    <Compile Include="Converters\ReactionTextVisibilityConverter.cs" />
+    <Compile Include="Converters\ReactionsVisibilityConverter.cs" />
     <Compile Include="Converters\HasNewMessageStyleConverter.cs" />
     <Compile Include="Converters\FromMeBoolToAlignmentConverter.cs" />
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
+    <Compile Include="Helpers.cs" />
+    <Compile Include="ThreadItemControl.xaml.cs">
+      <DependentUpon>ThreadItemControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ItemTemplateSelector.cs" />
     <Compile Include="Login.xaml.cs">
       <DependentUpon>Login.xaml</DependentUpon>
@@ -136,10 +143,22 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReversedIncrementalLoadingCollection.cs" />
     <Compile Include="Wrapper\InstaCurrentUserWrapper.cs" />
+    <Compile Include="Wrapper\InstaDirectBroadcastWrapper.cs" />
+    <Compile Include="Wrapper\InstaDirectInboxItemWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxThreadWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxWrapper.cs" />
+    <Compile Include="Wrapper\InstaDirectReactionsWrapper.cs" />
+    <Compile Include="Wrapper\InstaImageWrapper.cs" />
+    <Compile Include="Wrapper\InstaInboxMediaWrapper.cs" />
+    <Compile Include="Wrapper\InstaMediaWrapper.cs" />
+    <Compile Include="Wrapper\InstaReelShareWrapper.cs" />
+    <Compile Include="Wrapper\InstaStoryShareWrapper.cs" />
     <Compile Include="Wrapper\InstaUserShortFriendshipWrapper.cs" />
     <Compile Include="Wrapper\InstaUserShortWrapper.cs" />
+    <Compile Include="Wrapper\InstaUserWrapper.cs" />
+    <Compile Include="Wrapper\InstaVideoWrapper.cs" />
+    <Compile Include="Wrapper\InstaVisualMediaContainerWrapper.cs" />
+    <Compile Include="Wrapper\InstaVisualMediaWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -162,6 +181,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="ThreadItemControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Login.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

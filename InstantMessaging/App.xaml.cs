@@ -102,6 +102,7 @@ namespace InstantMessaging
         /// <param name="e">Details about the suspend request.</param>
         private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
+            if (!ViewModel.IsUserAuthenticated) return;
             var deferral = e.SuspendingOperation.GetDeferral();
             await ViewModel.TransferPushSocket();
             deferral.Complete();

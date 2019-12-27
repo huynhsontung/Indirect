@@ -31,7 +31,6 @@ namespace InstantMessaging
     {
         // Todo: handle exceptions thrown by _instaApi like no network connection
         private const string STATE_FILE_NAME = "state.bin";
-        private const string PUSH_STATE_FILE_NAME = "push.bin";
         private const string SOCKET_ID = "mqtt_fbns";
 
         private IInstaApi _instaApi;

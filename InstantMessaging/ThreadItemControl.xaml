@@ -1,0 +1,117 @@
+﻿<UserControl
+    x:Class="InstantMessaging.ThreadItemControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:InstantMessaging"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:InstantMessaging.Converters" 
+    xmlns:core="using:FluiFramework.UWP.Core"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <core:FluiFrameworkThemeResources/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="FromThemItemBackground" Color="DimGray"></SolidColorBrush>
+                    <SolidColorBrush x:Key="FromMeItemBackground" Color="{ThemeResource SystemAccentColorDark1}"></SolidColorBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="FromThemItemBackground" Color="LightGray"></SolidColorBrush>
+                    <SolidColorBrush x:Key="FromMeItemBackground" Color="{ThemeResource SystemAccentColorLight1}" Opacity="0.5"></SolidColorBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <converters:ReactionsFromMeConverter x:Key="ReactionsFromMeConverter"
+                                                 FromMe="{StaticResource FromMeReaction}"
+                                                 FromThem="{StaticResource FromThemReaction}"/>
+            <converters:ReactionsVisibilityConverter x:Key="ReactionsVisibilityConverter"/>
+            <converters:ReactionTextVisibilityConverter x:Key="ReactionTextVisibilityConverter"/>
+            <converters:FromMeBoolToAlignmentConverter x:Key="FromMeAlignmentConverter"/>
+            <converters:FromMeBoolToBrushConverter x:Key="FromMeBrushConverter" 
+                                                   FromMe="{StaticResource FromMeItemBackground}"
+                                                   FromThem="{StaticResource FromThemItemBackground}"/>
+
+            <Style x:Name="FromMeReaction" TargetType="FontIcon">
+                <Setter Property="Glyph" Value="&#xEB52;"/>
+                <Setter Property="Foreground" Value="Crimson"/>
+            </Style>
+            <Style x:Name="FromThemReaction" TargetType="FontIcon">
+                <Setter Property="Glyph" Value="&#xEB51;"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+
+    <StackPanel x:Name="ItemContainer" Orientation="Vertical" 
+                HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                Margin="0,2,0,2" DoubleTapped="ItemContainer_DoubleTapped">
+
+        <Border x:Name="NotSupportedMessage" 
+                Visibility="Collapsed"
+                Background="Transparent" HorizontalAlignment="Left" 
+                CornerRadius="2,2,2,2" BorderBrush="White" BorderThickness="1" Opacity="0.6" >
+            <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
+                       Text="Content type is not yet supported."
+                       Margin="6" 
+                       MaxWidth="250"
+                       HorizontalAlignment="Center" 
+                       TextWrapping="WrapWholeWords" FontStyle="Italic"/>
+        </Border>
+
+        <Border x:Name="MessageContentWithBorder" 
+                Background="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" 
+                HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                CornerRadius="2,2,2,2">
+            <TextBlock Style="{ThemeResource FluentBodyTextStyle}"
+                       Text="{x:Bind Source.Text}"
+                       Margin="6" 
+                       MaxWidth="250"
+                       HorizontalAlignment="Center"
+                       TextWrapping="WrapWholeWords"/>
+        </Border>
+
+        <TextBlock x:Name="MessageContentNoBorder" 
+                   Visibility="Collapsed"
+                   Style="{ThemeResource FluentBodyTextStyle}"
+                   Text="{x:Bind Source.Text}"
+                   FontSize="24"
+                   MaxWidth="250"
+                   HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                   TextWrapping="WrapWholeWords"/>
+
+        <Image x:Name="ImageFrame"
+               MaxWidth="250" MaxHeight="350"
+               Source="{x:Bind Source.PreviewImage}"
+               HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+               Visibility="Collapsed"/>
+
+        <MediaPlayerElement x:Name="MediaFrame" 
+                            Visibility="Collapsed"
+                            Source="{x:Bind Source.MediaSource}"
+                            HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                            MaxWidth="250" MaxHeight="350"/>
+
+        <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="6,1,8,0"
+                    HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                    Visibility="{x:Bind Source.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
+            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
+                    Style="{x:Bind Source.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
+            <TextBlock Text="{x:Bind Source.Reactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"
+                       Visibility="{x:Bind Source.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
+                       Style="{ThemeResource FluentCaptionTextStyle}"/>
+        </StackPanel>
+        <TextBlock x:Name="Timestamp"
+                   Style="{ThemeResource FluentCaptionTextStyle}"
+                   Text="{x:Bind Source.TimeStamp}" 
+                   Opacity="0.6"
+                   Margin="2"
+                   HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                   Visibility="Collapsed" />
+    </StackPanel>
+</UserControl>
