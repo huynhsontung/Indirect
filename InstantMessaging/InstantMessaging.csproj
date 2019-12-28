@@ -131,7 +131,6 @@
     <Compile Include="ThreadItemControl.xaml.cs">
       <DependentUpon>ThreadItemControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ItemTemplateSelector.cs" />
     <Compile Include="Login.xaml.cs">
       <DependentUpon>Login.xaml</DependentUpon>
     </Compile>

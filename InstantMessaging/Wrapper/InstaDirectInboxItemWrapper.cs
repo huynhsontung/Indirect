@@ -33,6 +33,7 @@ namespace InstantMessaging.Wrapper
         public new InstaReelShareWrapper ReelShareMedia { get; set; }
         public new InstaDirectBroadcastWrapper LiveViewerInvite { get; set; }
 
+        private BitmapImage _localImage;
         public BitmapImage PreviewImage
         {
             get
@@ -47,6 +48,13 @@ namespace InstantMessaging.Wrapper
 
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
                         return GetPreviewImage(VisualMedia.Media.Images);
+
+                    case InstaDirectThreadItemType.AnimatedMedia:
+                        if (_localImage != null) return _localImage;
+                        _localImage = new BitmapImage(new Uri(AnimatedMedia.Media.Url));
+                        _localImage.DecodePixelHeight = AnimatedMedia.Media.Height;
+                        _localImage.DecodePixelWidth = AnimatedMedia.Media.Width;
+                        return _localImage;
 
                     default:
                         return null;
@@ -69,6 +77,9 @@ namespace InstantMessaging.Wrapper
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
                         return GetFullImage(VisualMedia.Media.Images, VisualMedia.Media.Width, VisualMedia.Media.Height);
 
+                    case InstaDirectThreadItemType.AnimatedMedia:
+                        return PreviewImage;
+
                     default:
                         return null;
                 }
@@ -83,9 +94,9 @@ namespace InstantMessaging.Wrapper
                 if (_mediaSource != null) return _mediaSource;
                 switch (ItemType)
                 {
-                    case InstaDirectThreadItemType.AnimatedMedia:
-                        _mediaSource = MediaSource.CreateFromUri(new Uri(AnimatedMedia.Media.Mp4Url));
-                        return _mediaSource;
+                    // case InstaDirectThreadItemType.AnimatedMedia:
+                    //     _mediaSource = MediaSource.CreateFromUri(new Uri(AnimatedMedia.Media.Mp4Url));
+                    //     return _mediaSource;
 
                     default:
                         return null;

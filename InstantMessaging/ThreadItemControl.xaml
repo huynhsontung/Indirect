@@ -87,6 +87,7 @@
 
         <Image x:Name="ImageFrame"
                MaxWidth="250" MaxHeight="350"
+               Width="{x:Bind Source.PreviewImage.DecodePixelWidth}"
                Source="{x:Bind Source.PreviewImage}"
                HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                Visibility="Collapsed"/>

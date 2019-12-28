@@ -92,12 +92,7 @@ namespace InstantMessaging
                 // case InstaDirectThreadItemType.VoiceMedia:
                 //     break;
                 case InstaDirectThreadItemType.AnimatedMedia:
-                    MediaFrame.AutoPlay = true;
-                    MediaFrame.AreTransportControlsEnabled = false;
-                    MediaFrame.MediaPlayer.IsLoopingEnabled = true;
-                    MediaFrame.Width = Source.AnimatedMedia.Media.Width;
-                    MediaFrame.Height = Source.AnimatedMedia.Media.Height;
-                    MediaFrame.Visibility = Visibility.Visible;
+                    ImageFrame.Visibility = Visibility.Visible;
                     break;
                 // case InstaDirectThreadItemType.LiveViewerInvite:
                 //     break;

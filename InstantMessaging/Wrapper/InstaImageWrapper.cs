@@ -20,7 +20,7 @@ namespace InstantMessaging.Wrapper
             {
                 // Some images have multiple quality versions.
                 // Only download an image when explicitly asked to do so.
-                GetImageAsync();
+                _ = GetImageAsync();
                 return _image;
             }
         }
