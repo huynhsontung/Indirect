@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:converters="using:InstantMessaging.Converters" 
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:core="using:FluiFramework.UWP.Core"
     mc:Ignorable="d"
     d:DesignHeight="300"
@@ -36,6 +37,9 @@
             <converters:FromMeBoolToBrushConverter x:Key="FromMeBrushConverter" 
                                                    FromMe="{StaticResource FromMeItemBackground}"
                                                    FromThem="{StaticResource FromThemItemBackground}"/>
+            <converters:OpenButtonStyleConverter x:Key="OpenButtonStyleConverter" 
+                                                 AvailableStyle="{StaticResource AvailableOpen}"
+                                                 NotAvailableStyle="{StaticResource NotAvailableOpen}"/>
 
             <Style x:Name="FromMeReaction" TargetType="FontIcon">
                 <Setter Property="Glyph" Value="&#xEB52;"/>
@@ -43,6 +47,20 @@
             </Style>
             <Style x:Name="FromThemReaction" TargetType="FontIcon">
                 <Setter Property="Glyph" Value="&#xEB51;"/>
+            </Style>
+
+            <Style x:Name="AvailableOpen" BasedOn="{StaticResource ButtonRevealStyle}" TargetType="Button">
+                <Setter Property="Content" Value="📷 Photo"/>
+                <Setter Property="Background" Value="{StaticResource FromMeItemBackground}"/>
+                <Setter Property="IsEnabled" Value="True"/>
+            </Style>
+            <Style x:Name="NotAvailableOpen" BasedOn="{StaticResource ButtonRevealStyle}" TargetType="Button">
+                <Setter Property="Content" Value="Expired"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="BorderBrush" Value="White"/>
+                <Setter Property="Opacity" Value="0.6"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="IsEnabled" Value="False"/>
             </Style>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -52,9 +70,16 @@
                 HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                 Margin="0,2,0,2" DoubleTapped="ItemContainer_DoubleTapped">
 
-        <Border x:Name="NotSupportedMessage" 
+        <Button x:Name="OpenMediaButton"
                 Visibility="Collapsed"
-                Background="Transparent" HorizontalAlignment="Left" 
+                HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                Style="{x:Bind Source.VisualMedia.IsExpired, Converter={StaticResource OpenButtonStyleConverter}}"
+                CornerRadius="2,2,2,2"/>
+
+        <Border x:Name="NotAvailableMessage" 
+                Visibility="Collapsed"
+                Background="Transparent" 
+                HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                 CornerRadius="2,2,2,2" BorderBrush="White" BorderThickness="1" Opacity="0.6" >
             <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
                        Text="Content type is not yet supported."
@@ -85,22 +110,24 @@
                    HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                    TextWrapping="WrapWholeWords"/>
 
-        <Image x:Name="ImageFrame"
-               MaxWidth="250" MaxHeight="350"
-               Width="{x:Bind Source.PreviewImage.DecodePixelWidth}"
-               Source="{x:Bind Source.PreviewImage}"
-               HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-               Visibility="Collapsed"/>
+        <controls:ImageEx x:Name="ImageFrame"
+                          MaxWidth="250" MaxHeight="350"
+                          IsCacheEnabled="True"
+                          CornerRadius="2"
+                          Source="{x:Bind Source.PreviewImage}"
+                          HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                          Visibility="Collapsed" Tapped="ImageFrame_Tapped"/>
 
         <MediaPlayerElement x:Name="MediaFrame" 
                             Visibility="Collapsed"
-                            Source="{x:Bind Source.MediaSource}"
+                            AreTransportControlsEnabled="True"
+                            Source="{x:Bind Source.MediaSource}" PosterSource="{x:Bind Source.PreviewImage}"
                             HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                            MaxWidth="250" MaxHeight="350"/>
+                            MaxWidth="250" MaxHeight="350" PointerExited="MediaFrame_PointerExited" Tapped="MediaFrame_Tapped"/>
 
-        <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="6,1,8,0"
-                    HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                    Visibility="{x:Bind Source.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
+            <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="6,1,8,0"
+                        HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                        Visibility="{x:Bind Source.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
                     Style="{x:Bind Source.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
             <TextBlock Text="{x:Bind Source.Reactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -25,6 +26,7 @@ namespace InstantMessaging
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private StorageFolder _temporaryFolder = ApplicationData.Current.TemporaryFolder;
         private ApiContainer _viewModel;
         public MainPage()
         {
@@ -92,13 +94,6 @@ namespace InstantMessaging
             BackButtonPlaceholder.Visibility = BackButton.Visibility;
         }
 
-        private void ItemContainer_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            var panel = (Panel) sender;
-            var timestampTextBlock = panel.Children.Last();
-            timestampTextBlock.Visibility = timestampTextBlock.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
-        }
-
         private void RefreshThread_OnClick(object sender, RoutedEventArgs e)
         {
             _ = _viewModel.UpdateInboxAndSelectedThread();
@@ -112,6 +107,7 @@ namespace InstantMessaging
             }
             var inboxThread = (InstaDirectInboxThreadWrapper) e.AddedItems[0];
             DataContext = inboxThread.ObservableItems;
+            _ = _viewModel.MarkLatestItemSeen(inboxThread);
         }
 
         private void NewMessageButton_OnClick(object sender, RoutedEventArgs e)

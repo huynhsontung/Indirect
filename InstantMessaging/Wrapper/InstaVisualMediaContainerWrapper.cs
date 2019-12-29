@@ -15,11 +15,11 @@ namespace InstantMessaging.Wrapper
         public InstaVisualMediaContainerWrapper(InstaVisualMediaContainer source, IInstaApi api)
         {
             UrlExpireAt = source.UrlExpireAt;
-            Media = new InstaVisualMediaWrapper(source.Media, api);
+            Media = source.Media != null ? new InstaVisualMediaWrapper(source.Media, api) : null;
             SeenCount = source.SeenCount;
             ReplayExpiringAtUs = source.ReplayExpiringAtUs;
             ViewMode = source.ViewMode;
-            SeenCount = source.SeenCount;
+            SeenUserIds = source.SeenUserIds;
         }
     }
 }

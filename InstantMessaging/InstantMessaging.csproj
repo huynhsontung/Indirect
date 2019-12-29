@@ -121,6 +121,7 @@
     </Compile>
     <Compile Include="ApiContainer.cs" />
     <Compile Include="ChatListView.cs" />
+    <Compile Include="Converters\OpenButtonStyleConverter.cs" />
     <Compile Include="Converters\ReactionsFromMeConverter.cs" />
     <Compile Include="Converters\ReactionTextVisibilityConverter.cs" />
     <Compile Include="Converters\ReactionsVisibilityConverter.cs" />
@@ -128,6 +129,9 @@
     <Compile Include="Converters\FromMeBoolToAlignmentConverter.cs" />
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="ImmersiveView.xaml.cs">
+      <DependentUpon>ImmersiveView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ThreadItemControl.xaml.cs">
       <DependentUpon>ThreadItemControl.xaml</DependentUpon>
     </Compile>
@@ -180,6 +184,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="ImmersiveView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ThreadItemControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

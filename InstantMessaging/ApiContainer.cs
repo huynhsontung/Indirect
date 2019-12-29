@@ -341,5 +341,18 @@ namespace InstantMessaging
 
             SelectedThread = thread;
         }
+
+        public async Task MarkLatestItemSeen(InstaDirectInboxThreadWrapper thread)
+        {
+            if (string.IsNullOrEmpty(thread.ThreadId)) return;
+            if (thread.LastSeenAt.TryGetValue(thread.ViewerId, out var lastSeen))
+            {
+                if (string.IsNullOrEmpty(thread.LastPermanentItem?.ItemId) || 
+                    lastSeen.ItemId == thread.LastPermanentItem.ItemId ||
+                    thread.LastPermanentItem.FromMe) return;
+                await _instaApi.MessagingProcessor.MarkItemSeenAsync(thread.ThreadId,
+                    thread.LastPermanentItem.ItemId);
+            }
+        }
     }
 }

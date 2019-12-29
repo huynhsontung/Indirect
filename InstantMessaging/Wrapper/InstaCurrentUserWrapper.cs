@@ -40,7 +40,7 @@ namespace InstantMessaging.Wrapper
             Gender = source.Gender;
             Email = source.Email;
 
-            ProfilePictureUrl = HdProfilePicture.Uri;
+            ProfilePictureUrl = HdProfilePicture.Url;
         }
     }
 }

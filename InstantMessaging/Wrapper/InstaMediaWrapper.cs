@@ -8,6 +8,7 @@ using InstaSharper.Classes.Models.Media;
 
 namespace InstantMessaging.Wrapper
 {
+    // Instagram post wrapper
     class InstaMediaWrapper : InstaMedia
     {
         private readonly IInstaApi _instaApi;

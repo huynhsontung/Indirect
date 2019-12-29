@@ -41,13 +41,13 @@ namespace InstantMessaging.Wrapper
                 switch (ItemType)
                 {
                     case InstaDirectThreadItemType.Media:
-                        return GetPreviewImage(Media.Images);
+                        return GetPreviewImage(Media?.Images);
 
                     case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
-                        return GetPreviewImage(RavenMedia.Images);
+                        return GetPreviewImage(RavenMedia?.Images);
 
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
-                        return GetPreviewImage(VisualMedia.Media.Images);
+                        return GetPreviewImage(VisualMedia?.Media?.Images);
 
                     case InstaDirectThreadItemType.AnimatedMedia:
                         if (_localImage != null) return _localImage;
@@ -94,9 +94,14 @@ namespace InstantMessaging.Wrapper
                 if (_mediaSource != null) return _mediaSource;
                 switch (ItemType)
                 {
-                    // case InstaDirectThreadItemType.AnimatedMedia:
-                    //     _mediaSource = MediaSource.CreateFromUri(new Uri(AnimatedMedia.Media.Mp4Url));
-                    //     return _mediaSource;
+                    case InstaDirectThreadItemType.Media:
+                        return Media.Videos.FirstOrDefault()?.Video;
+
+                    case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
+                        return RavenMedia.Videos.FirstOrDefault()?.Video;
+
+                    case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
+                        return VisualMedia.Media.Videos.FirstOrDefault()?.Video;
 
                     default:
                         return null;
