@@ -1,4 +1,5 @@
-﻿using Windows.UI.Xaml;
+﻿using System;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
@@ -27,12 +28,24 @@ namespace Indirect
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            LoginButton.IsEnabled = false;
             var username = UsernameBox.Text;
             var password = PasswordBox.Password;
             if (username.Length <= 0 || password.Length <= 0) return;
             var result = await _viewModel.Login(username, password);
             if (!result.Succeeded || result.Value != InstaLoginResult.Success)
+            {
+                var failDialog = new ContentDialog
+                {
+                    Title = "Login failed",
+                    Content = $"Reason: {result.Info.Message}",
+                    DefaultButton = ContentDialogButton.Close,
+                    CloseButtonText = "Close"
+                };
+                var dialogResult = await failDialog.ShowAsync();
+                LoginButton.IsEnabled = true;
                 return;
+            }
             Frame.Navigate(typeof(MainPage), _viewModel);
         }
 
