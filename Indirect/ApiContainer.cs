@@ -22,6 +22,7 @@ using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Enums;
 using InstaSharper.Logger;
 using Microsoft.Toolkit.Uwp;
+using Microsoft.Toolkit.Uwp.UI;
 
 namespace Indirect
 {
@@ -75,9 +76,7 @@ namespace Indirect
         }
 
 
-        private ApiContainer()
-        {
-        }
+        private ApiContainer() {}
 
         public static async Task<ApiContainer> Factory()
         {
@@ -193,6 +192,8 @@ namespace Indirect
             var result = await _instaApi.LogoutAsync();
             await _pushClient.Shutdown();
             _pushData = null;
+            await ImageCache.Instance.ClearAsync();
+            await VideoCache.Instance.ClearAsync();
             if (result.Value)
                 await WriteStateToStorage();
             return result;

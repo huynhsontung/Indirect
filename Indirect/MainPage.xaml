@@ -25,12 +25,12 @@
                                                     HasNewMessage="{StaticResource HasNewMessage}"/>
 
             <Style x:Name="NothingNew" BasedOn="{StaticResource CaptionTextBlockStyle}" TargetType="TextBlock">
-                <Setter Property="Opacity" Value="0.6"/>
+                <Setter Property="Foreground" Value="{StaticResource SystemBaseMediumColor}"/>
             </Style>
             <Style x:Name="HasNewMessage" BasedOn="{StaticResource CaptionTextBlockStyle}" TargetType="TextBlock">
                 <Setter Property="FontWeight" Value="Bold"/>
             </Style>
-
+            <Style TargetType="Button" BasedOn="{StaticResource ButtonRevealStyle}"/>
         </ResourceDictionary>
     </Page.Resources>
 
@@ -115,7 +115,7 @@
 
                         <Border Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1" Background="{ThemeResource SystemControlAcrylicElementBrush}"/>
 
-                        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Collapsed">
+                        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Right">
                             <AppBarButton Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
                             <CommandBar.Content>
                                 <StackPanel Orientation="Horizontal" Background="Transparent">
@@ -131,7 +131,6 @@
 
                         <indirect:ChatListView x:Name="ItemsHolder" Grid.Row="0" Grid.RowSpan="3"
                                   ItemsSource="{x:Bind ObservableItems}"
-                                  
                                   IncrementalLoadingThreshold="1"
                                   SelectionMode="None">
                             <ListView.Header>
@@ -153,7 +152,7 @@
 
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="wrapper:InstaDirectInboxItemWrapper">
-                                    <indirect:ThreadItemControl Source="{x:Bind}"/>
+                                    <indirect:ThreadItemControl Item="{x:Bind}" Thread="{Binding ElementName=ItemsHolder, Path=DataContext}"/>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </indirect:ChatListView>
@@ -166,7 +165,7 @@
 
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="36"/>
                             </Grid.RowDefinitions>
                             
                             <TextBox x:Name="MessageTextBox" 
@@ -177,9 +176,13 @@
                                      Margin="4,0,4,0" MaxLength="2200" 
                                      KeyDown="MessageTextBox_KeyDown"/>
                             <Button x:Name="SendButton" 
+                                    HorizontalAlignment="Stretch"
                                     Grid.Column="1" Grid.Row="1"
                                     VerticalAlignment="Center"
-                                    Style="{StaticResource ButtonRevealStyle}" Content="Send" Margin="4" Click="SendButton_Click"/>
+                                    Padding="8,6,8,4"
+                                    Margin="2,0,4,0" Click="SendButton_Click">
+                                <SymbolIcon Symbol="Send"/>
+                            </Button>
                         </Grid>
                     </Grid>
                 </DataTemplate>
@@ -198,20 +201,25 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <PersonPicture Grid.Row="1" Grid.Column="0" 
-                                   ProfilePicture="{x:Bind _viewModel.LoggedInUser.ProfilePicture, Mode=OneWay}" Height="32" Width="32" 
-                                   Margin="4,0,16,0" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Row="1" Grid.Column="1"
+                    <Button Grid.Row="1" Grid.Column="0" Padding="6"
+                            Margin="0,0,6,0" VerticalAlignment="Center" Background="Transparent">
+                        <PersonPicture ProfilePicture="{x:Bind _viewModel.LoggedInUser.ProfilePicture, Mode=OneWay}" Height="32" Width="32" />
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Logout" Click="LogoutButton_Click"/>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,-3,0,0"
                                Style="{ThemeResource FluentHeaderTextStyle}" Text="Direct" MaxLines="1" FontSize="30"
                                VerticalAlignment="Center"/>
-                    <AppBarButton Grid.Row="1" Grid.Column="2"
-                                  Style="{StaticResource AppBarButtonRevealStyle}"
-                                  VerticalAlignment="Center"
-                                  Label="New message" Click="NewMessageButton_OnClick" LabelPosition="Collapsed">
-                        <AppBarButton.Icon>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF716;"/>
-                        </AppBarButton.Icon>
-                    </AppBarButton>
+                    <Button Grid.Row="1" Grid.Column="2"
+                            Background="Transparent"
+                            Padding="6"
+                            VerticalAlignment="Center"
+                            Click="NewMessageButton_OnClick">
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF716;" Width="32" Height="32"/>
+                    </Button>
 
                     <AutoSuggestBox x:Name="SearchBox" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
                                     TextChanged="SearchBox_OnTextChanged"
@@ -219,7 +227,7 @@
                                     QuerySubmitted="SearchBox_OnQuerySubmitted"
                                     PlaceholderText="Search"
                                     UpdateTextOnSelect="False"
-                                    QueryIcon="Find" Margin="0,8,0,8">
+                                    QueryIcon="Find" Margin="0,4,0,8">
                         <AutoSuggestBox.ItemTemplate>
                             <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                                 <StackPanel Orientation="Horizontal" Background="Transparent" Margin="0,4,0,4">
@@ -243,14 +251,6 @@
                     
                 </Grid>
             </controls:MasterDetailsView.MasterHeader>
-
-            <controls:MasterDetailsView.MasterCommandBar>
-                <CommandBar ClosedDisplayMode="Minimal">
-                    <CommandBar.SecondaryCommands>
-                        <AppBarButton Label="Logout" Click="AppBarButton_Click"/>
-                    </CommandBar.SecondaryCommands>
-                </CommandBar>
-            </controls:MasterDetailsView.MasterCommandBar>
         </controls:MasterDetailsView>
     </Grid>
 </Page>

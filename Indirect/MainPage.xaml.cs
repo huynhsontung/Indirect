@@ -34,6 +34,7 @@ namespace Indirect
             _viewModel = (ApiContainer)e.Parameter;
             if (_viewModel == null) throw new NullReferenceException("No _viewModel created");
             _viewModel.PageReference = this;
+            MainLayout.DataContext = _viewModel;
             await _viewModel.OnLoggedIn();
         }
 
@@ -54,7 +55,7 @@ namespace Indirect
             }
         }
 
-        private async void AppBarButton_Click(object sender, RoutedEventArgs e)
+        private async void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
             var result = await _viewModel.Logout();
             if (result.Value)

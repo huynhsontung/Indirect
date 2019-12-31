@@ -5,6 +5,7 @@ using Windows.Media.Core;
 using Windows.UI.Xaml.Media.Imaging;
 using InstaSharper.API;
 using InstaSharper.Classes.Models.Direct;
+using InstaSharper.Classes.Models.Media;
 
 namespace Indirect.Wrapper
 {
@@ -13,39 +14,87 @@ namespace Indirect.Wrapper
         private readonly IInstaApi _instaApi;
 
         public new InstaDirectReactionsWrapper Reactions { get; set; }
-        public new InstaInboxMediaWrapper Media { get; set; }
-        public new InstaMediaWrapper MediaShare { get; set; }
-        public new InstaStoryShareWrapper StoryShare { get; set; }
-        public new InstaVisualMediaWrapper RavenMedia { get; set; }
-        public new InstaVisualMediaContainerWrapper VisualMedia { get; set; }
+        // public new InstaInboxMediaWrapper Media { get; set; }
+        // public new InstaMediaWrapper MediaShare { get; set; }
+        // public new InstaStoryShareWrapper StoryShare { get; set; }
+        // public new InstaVisualMediaWrapper RavenMedia { get; set; }
+        // public new InstaVisualMediaContainerWrapper VisualMedia { get; set; }
         public new InstaUserShortWrapper ProfileMedia { get; set; }
-        public new List<InstaMediaWrapper> ProfileMediasPreview { get; set; }
-        public new InstaMediaWrapper FelixShareMedia { get; set; }
-        public new InstaReelShareWrapper ReelShareMedia { get; set; }
-        public new InstaDirectBroadcastWrapper LiveViewerInvite { get; set; }
+        // public new List<InstaMediaWrapper> ProfileMediasPreview { get; set; }
+        // public new InstaMediaWrapper FelixShareMedia { get; set; }
+        // public new InstaReelShareWrapper ReelShareMedia { get; set; }
+        // public new InstaDirectBroadcastWrapper LiveViewerInvite { get; set; }
 
-        private BitmapImage _localImage;
-        public BitmapImage PreviewImage
+        public int PreviewMediaHeight
         {
             get
             {
                 switch (ItemType)
                 {
                     case InstaDirectThreadItemType.Media:
-                        return GetPreviewImage(Media?.Images);
+                        return GetPreviewImage(Media.Images)?.Height ?? 0;
 
                     case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
-                        return GetPreviewImage(RavenMedia?.Images);
+                        return GetPreviewImage(RavenMedia.Images)?.Height ?? 0;
 
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
-                        return GetPreviewImage(VisualMedia?.Media?.Images);
+                        return GetPreviewImage(VisualMedia.Media.Images)?.Height ?? 0;
 
                     case InstaDirectThreadItemType.AnimatedMedia:
-                        if (_localImage != null) return _localImage;
-                        _localImage = new BitmapImage(new Uri(AnimatedMedia.Media.Url));
-                        _localImage.DecodePixelHeight = AnimatedMedia.Media.Height;
-                        _localImage.DecodePixelWidth = AnimatedMedia.Media.Width;
-                        return _localImage;
+                        return AnimatedMedia.Media.Height;
+
+                    default:
+                        return 0;
+                }
+            }
+        }
+
+        public int PreviewMediaWidth
+        {
+            get
+            {
+                switch (ItemType)
+                {
+                    case InstaDirectThreadItemType.Media:
+                        return GetPreviewImage(Media.Images)?.Width ?? 0;
+
+                    case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
+                        return GetPreviewImage(RavenMedia.Images)?.Width ?? 0;
+
+                    case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
+                        return GetPreviewImage(VisualMedia.Media.Images)?.Width ?? 0;
+
+                    case InstaDirectThreadItemType.AnimatedMedia:
+                        return AnimatedMedia.Media.Width;
+
+                    default:
+                        return 0;
+                }
+            }
+        }
+
+        public Uri PreviewImageUri
+        {
+            get
+            {
+                string url;
+                switch (ItemType)
+                {
+                    case InstaDirectThreadItemType.Media:
+                        url = GetPreviewImage(Media.Images)?.Url;
+                        return url != null ? new Uri(url) : null;
+
+
+                    case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
+                        url = GetPreviewImage(RavenMedia.Images)?.Url;
+                        return url != null ? new Uri(url) : null;
+
+                    case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
+                        url = GetPreviewImage(VisualMedia.Media.Images)?.Url;
+                        return url != null ? new Uri(url) : null;
+
+                    case InstaDirectThreadItemType.AnimatedMedia:
+                        return new Uri(AnimatedMedia.Media.Url);
 
                     default:
                         return null;
@@ -53,23 +102,23 @@ namespace Indirect.Wrapper
             }
         }
 
-        public BitmapImage FullImage
+        public Uri FullImageUri
         {
             get
             {
                 switch (ItemType)
                 {
                     case InstaDirectThreadItemType.Media:
-                        return GetFullImage(Media.Images, Media.OriginalWidth, Media.OriginalHeight);
+                        return GetFullImageUri(Media.Images, Media.OriginalWidth, Media.OriginalHeight);
 
                     case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
-                        return GetFullImage(RavenMedia.Images, RavenMedia.Width, RavenMedia.Height);
+                        return GetFullImageUri(RavenMedia.Images, RavenMedia.Width, RavenMedia.Height);
 
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
-                        return GetFullImage(VisualMedia.Media.Images, VisualMedia.Media.Width, VisualMedia.Media.Height);
+                        return GetFullImageUri(VisualMedia.Media.Images, VisualMedia.Media.Width, VisualMedia.Media.Height);
 
                     case InstaDirectThreadItemType.AnimatedMedia:
-                        return PreviewImage;
+                        return PreviewImageUri;
 
                     default:
                         return null;
@@ -77,22 +126,20 @@ namespace Indirect.Wrapper
             }
         }
 
-        private MediaSource _mediaSource;
-        public MediaSource MediaSource
+        public Uri VideoUri
         {
             get
             {
-                if (_mediaSource != null) return _mediaSource;
                 switch (ItemType)
                 {
                     case InstaDirectThreadItemType.Media:
-                        return Media.Videos.FirstOrDefault()?.Video;
+                        return new Uri(Media.Videos.FirstOrDefault()?.Url);
         
                     case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
-                        return RavenMedia.Videos.FirstOrDefault()?.Video;
+                        return new Uri(RavenMedia.Videos.FirstOrDefault()?.Url);
         
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
-                        return VisualMedia.Media.Videos.FirstOrDefault()?.Video;
+                        return new Uri(VisualMedia.Media.Videos.FirstOrDefault()?.Url);
         
                     default:
                         return null;
@@ -109,12 +156,12 @@ namespace Indirect.Wrapper
             ItemId = source.ItemId;
             ItemType = source.ItemType;
             Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions) : null;
-            Media = source.Media != null ? new InstaInboxMediaWrapper(source.Media, api) : null;
-            MediaShare = source.MediaShare != null ? new InstaMediaWrapper(source.MediaShare, api) : null;
+            Media = source.Media;
+            MediaShare = source.MediaShare;
             ClientContext = source.ClientContext;
-            StoryShare = source.StoryShare != null ? new InstaStoryShareWrapper(source.StoryShare, api) : null;
-            RavenMedia = source.RavenMedia != null ? new InstaVisualMediaWrapper(source.RavenMedia, api) : null;
-            VisualMedia = source.VisualMedia != null ? new InstaVisualMediaContainerWrapper(source.VisualMedia, api) : null;
+            StoryShare = source.StoryShare;
+            RavenMedia = source.RavenMedia;
+            VisualMedia = source.VisualMedia;
             RavenViewMode = source.RavenViewMode;
             RavenSeenUserIds = source.RavenSeenUserIds;
             RavenReplayChainCount = source.RavenReplayChainCount;
@@ -122,35 +169,38 @@ namespace Indirect.Wrapper
             RavenExpiringMediaActionSummary = source.RavenExpiringMediaActionSummary;
             ActionLog = source.ActionLog;
             ProfileMedia = source.ProfileMedia != null ? new InstaUserShortWrapper(source.ProfileMedia, api) : null;
-            if (source.ProfileMediasPreview != null)
-            {
-                ProfileMediasPreview = new List<InstaMediaWrapper>();
-                ProfileMediasPreview.AddRange(source.ProfileMediasPreview.Select(x => new InstaMediaWrapper(x, api)));
-            }
+            ProfileMediasPreview = source.ProfileMediasPreview;
             Placeholder = source.Placeholder;
             LinkMedia = source.LinkMedia;
             LocationMedia = source.LocationMedia;
-            FelixShareMedia = source.FelixShareMedia != null ? new InstaMediaWrapper(source.FelixShareMedia, api) : null;
-            ReelShareMedia = source.ReelShareMedia != null ? new InstaReelShareWrapper(source.ReelShareMedia, api) : null;
+            FelixShareMedia = source.FelixShareMedia;
+            ReelShareMedia = source.ReelShareMedia;
             VoiceMedia = source.VoiceMedia; // todo: investigate whether voice received in single request
             AnimatedMedia = source.AnimatedMedia;
             HashtagMedia = source.HashtagMedia;
-            LiveViewerInvite = source.LiveViewerInvite != null ? new InstaDirectBroadcastWrapper(source.LiveViewerInvite, api) : null;
+            LiveViewerInvite = source.LiveViewerInvite;
             FromMe = source.FromMe;
         }
 
-        private static BitmapImage GetPreviewImage(List<InstaImageWrapper> imageCandidates)
+        private static InstaImage GetPreviewImage(List<InstaImage> imageCandidates)
         {
             if (imageCandidates == null || imageCandidates.Count == 0) return null;
             var image = imageCandidates.OrderBy(x => x.Height + x.Width).First();
-            return image.Image;
+            return image;
         }
 
-        private static BitmapImage GetFullImage(List<InstaImageWrapper> imageCandidates, int originalWidth, int originalHeight)
+        private static InstaImage GetFullImage(List<InstaImage> imageCandidates, int originalWidth, int originalHeight)
         {
             if (imageCandidates == null || imageCandidates.Count == 0) return null;
             var image = imageCandidates.Single(x => x.Width == originalWidth && x.Height == originalHeight);
-            return image.Image;
+            return image;
+        }
+
+        private static Uri GetFullImageUri(List<InstaImage> imageCandidates, int originalWidth, int originalHeight)
+        {
+            if (imageCandidates == null || imageCandidates.Count == 0) return null;
+            var image = imageCandidates.Single(x => x.Width == originalWidth && x.Height == originalHeight);
+            return new Uri(image.Url);
         }
     }
 }

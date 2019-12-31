@@ -26,11 +26,10 @@
                               VerticalAlignment="Stretch"
                               Stretch="Uniform"
                               IsCacheEnabled="True"
-                              Source="{x:Bind _image}"/>
+                              Source="{x:Bind _item.FullImageUri}"/>
         </ScrollViewer>
 
         <MediaPlayerElement x:Name="MediaPlayer"
-                            Source="{x:Bind _video}"
                             Visibility="Collapsed"
                             AreTransportControlsEnabled="True"/>
     </Grid>

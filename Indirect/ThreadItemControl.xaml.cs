@@ -11,44 +11,63 @@ using Windows.UI.Xaml.Input;
 using Indirect.Wrapper;
 using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Enums;
+using Microsoft.Toolkit.Uwp.UI;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
 namespace Indirect
 {
-    internal sealed partial class ThreadItemControl : UserControl, INotifyPropertyChanged
+    internal sealed partial class ThreadItemControl : UserControl
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        public static readonly DependencyProperty ThreadProperty = DependencyProperty.Register(
+            nameof(Thread),
+            typeof(InstaDirectInboxThreadWrapper),
+            typeof(ThreadItemControl),
+            new PropertyMetadata(null, OnThreadChanged));
 
-        private InstaDirectInboxItemWrapper _source;
+        public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
+            nameof(Item),
+            typeof(InstaDirectInboxItemWrapper),
+            typeof(ThreadItemControl),
+            new PropertyMetadata(null, OnItemSourceChanged));
 
-        public InstaDirectInboxItemWrapper Source
+        public InstaDirectInboxItemWrapper Item
         {
-            get => _source;
-            set
-            {
-                _source = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Source)));
-            }
+            get => (InstaDirectInboxItemWrapper) GetValue(ItemProperty);
+            set => SetValue(ItemProperty, value);
+        }
+
+        public InstaDirectInboxThreadWrapper Thread
+        {
+            get => (InstaDirectInboxThreadWrapper) GetValue(ThreadProperty);
+            set => SetValue(ThreadProperty, value);
+        }
+
+        private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var view = (ThreadItemControl)d;
+        }
+
+        private static void OnItemSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var view = (ThreadItemControl) d;
+            view.HandleItemSourceChange(e);
         }
 
         public ThreadItemControl()
         {
             this.InitializeComponent();
-            PropertyChanged += OnPropertyChanged;
+            MediaFrame.TransportControls.IsFullWindowEnabled = false;
+            MediaFrame.TransportControls.IsFullWindowButtonVisible = false;
+            MediaFrame.TransportControls.IsZoomButtonVisible = false;
+            MediaFrame.TransportControls.ShowAndHideAutomatically = true;
         }
 
-        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void HandleItemSourceChange(DependencyPropertyChangedEventArgs e)
         {
-            if (e.PropertyName != nameof(Source)) return;
             this.Bindings.Update();
-            OpenMediaButton.Visibility = Visibility.Collapsed;
             MessageContentWithBorder.Visibility = Visibility.Collapsed;
-            MessageContentNoBorder.Visibility = Visibility.Collapsed;
-            ImageFrame.Visibility = Visibility.Collapsed;
-            NotAvailableMessage.Visibility = Visibility.Collapsed;
-            MediaFrame.Visibility = Visibility.Collapsed;
-            switch (Source.ItemType)
+            switch (Item.ItemType)
             {
                 case InstaDirectThreadItemType.Text:
                 case InstaDirectThreadItemType.Link:
@@ -62,28 +81,25 @@ namespace Indirect
 
                 // case InstaDirectThreadItemType.MediaShare:
                 //     break;
-                case InstaDirectThreadItemType.RavenMedia when Source.VisualMedia.ViewMode != InstaViewMode.Permanent:
+                case InstaDirectThreadItemType.RavenMedia when Item.VisualMedia.ViewMode != InstaViewMode.Permanent:
                     OpenMediaButton.Visibility = Visibility.Visible;
                     break;
 
-                case InstaDirectThreadItemType.Media when Source.Media.MediaType == InstaMediaType.Image:
+                case InstaDirectThreadItemType.Media when Item.Media.MediaType == InstaMediaType.Image:
                 case InstaDirectThreadItemType.RavenMedia when
-                    Source.RavenMedia?.MediaType == InstaMediaType.Image || Source.VisualMedia?.Media.MediaType == InstaMediaType.Image:
-                    ConformElementSize(ImageFrame, Source.PreviewImage.DecodePixelWidth, Source.PreviewImage.DecodePixelHeight);
+                    Item.RavenMedia?.MediaType == InstaMediaType.Image || Item.VisualMedia?.Media.MediaType == InstaMediaType.Image:
+                    // ConformElementSize(ImageFrame, Source.PreviewImageUri.DecodePixelWidth, Source.PreviewImageUri.DecodePixelHeight);
                     ImageFrame.Visibility = Visibility.Visible;
                     break;
 
-                case InstaDirectThreadItemType.Media when Source.Media.MediaType == InstaMediaType.Video:
+                case InstaDirectThreadItemType.Media when Item.Media.MediaType == InstaMediaType.Video:
                 case InstaDirectThreadItemType.RavenMedia when
-                    Source.RavenMedia?.MediaType == InstaMediaType.Video || Source.VisualMedia.Media.MediaType == InstaMediaType.Video:
-                    var videoWidth = Source.RavenMedia?.Width ?? Source.VisualMedia.Media.Width;
-                    var videoHeight = Source.RavenMedia?.Height ?? Source.VisualMedia.Media.Height;
+                    Item.RavenMedia?.MediaType == InstaMediaType.Video || Item.VisualMedia.Media.MediaType == InstaMediaType.Video:
+                    var videoWidth = Item.RavenMedia?.Width ?? Item.VisualMedia.Media.Width;
+                    var videoHeight = Item.RavenMedia?.Height ?? Item.VisualMedia.Media.Height;
+                    _ = SetVideoSourceAsync();
                     ConformElementSize(MediaFrame, videoWidth, videoHeight);
-                    MediaFrame.TransportControls.IsFullWindowEnabled = false;
-                    MediaFrame.TransportControls.IsFullWindowButtonVisible = false;
-                    MediaFrame.TransportControls.IsZoomButtonVisible = false;
-                    MediaFrame.TransportControls.ShowAndHideAutomatically = true;
-                    MediaFrame.Visibility = Visibility.Visible;
+                    VideoGrid.Visibility = Visibility.Visible;
                     break;
                 // case InstaDirectThreadItemType.ReelShare:
                 //     break;
@@ -117,12 +133,12 @@ namespace Indirect
 
         private async Task SetVideoSourceAsync()
         {
-            var uri = new Uri(Source.RavenMedia?.Videos.FirstOrDefault()?.Url ??
-                              Source.VisualMedia?.Media.Videos.First().Url);
-            var videoSource = MediaSource.CreateFromUri(uri);
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+            var previewSource = await ImageCache.Instance.GetFromCacheAsync(Item.PreviewImageUri);
+            var videoSource = await VideoCache.Instance.GetFromCacheAsync(Item.VideoUri);
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 MediaFrame.Source = videoSource;
+                MediaFrame.PosterSource = previewSource;
             });
         }
 
@@ -153,23 +169,35 @@ namespace Indirect
 
         private void MediaFrame_PointerExited(object sender, PointerRoutedEventArgs e)
         {
-            ((MediaPlayerElement) sender).TransportControls.Hide();
+            MediaFrame.TransportControls.Hide();
+            VideoPopupButton.Visibility = Visibility.Collapsed;
         }
 
         private void ImageFrame_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            var fullImage = Source.FullImage;
-            if (fullImage == null) return;
-            var immersive = new ImmersiveView(fullImage);
+            if (Item.ItemType == InstaDirectThreadItemType.AnimatedMedia) return;
+            var uri = Item.FullImageUri;
+            if (uri == null) return;
+            var immersive = new ImmersiveView(Item, InstaMediaType.Image);
             var result = immersive.ShowAsync();
         }
 
-        private void MediaFrame_Tapped(object sender, TappedRoutedEventArgs e)
+        private void VideoPopupButton_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            var video = Source.MediaSource;
-            if (video == null) return;
-            var immersive = new ImmersiveView(video);
+            var uri = Item.VideoUri;
+            if (uri == null) return;
+            var immersive = new ImmersiveView(Item, InstaMediaType.Video);
             var result = immersive.ShowAsync();
+        }
+
+        private void MediaFrame_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            VideoPopupButton.Visibility = Visibility.Visible;
+        }
+
+        private void OpenMediaButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            ImageFrame_Tapped(sender, new TappedRoutedEventArgs());
         }
     }
 }

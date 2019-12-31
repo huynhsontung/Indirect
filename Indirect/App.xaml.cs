@@ -7,6 +7,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.Toolkit.Uwp.UI;
 
 namespace Indirect
 {
@@ -27,6 +28,8 @@ namespace Indirect
             this.Suspending += OnSuspending;
             this.Resuming += OnResuming;
             this.EnteredBackground += OnEnteredBackground;
+            ImageCache.Instance.CacheDuration = TimeSpan.FromDays(30);
+            VideoCache.Instance.CacheDuration = TimeSpan.FromDays(3);
         }
 
         protected override void OnActivated(IActivatedEventArgs args)

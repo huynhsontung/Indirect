@@ -1,31 +1,36 @@
-﻿using Windows.Media.Core;
+﻿using System;
+using Windows.Media.Core;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
+using Indirect.Wrapper;
+using InstaSharper.Enums;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace Indirect
 {
-    public sealed partial class ImmersiveView : ContentDialog
+    sealed partial class ImmersiveView : ContentDialog
     {
-        private BitmapImage _image;
-        private MediaSource _video;
+        private InstaDirectInboxItemWrapper _item;
 
-        public ImmersiveView(BitmapImage image)
+        public ImmersiveView(InstaDirectInboxItemWrapper item, InstaMediaType mediaType)
         {
             this.InitializeComponent();
-            ScrollViewer.Visibility = Visibility.Visible;
-            Grid.MinHeight = ((Frame)Window.Current.Content).ActualHeight * 0.8;
-            _image = image;
+            _item = item;
+            if (mediaType == InstaMediaType.Image)
+            {
+                ScrollViewer.Visibility = Visibility.Visible;
+                Grid.MinHeight = ((Frame)Window.Current.Content).ActualHeight * 0.8;
+            }
+            else
+            {
+                MediaPlayer.Visibility = Visibility.Visible;
+                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                    async () => { MediaPlayer.Source = await VideoCache.Instance.GetFromCacheAsync(item.VideoUri); });
+            }
 
-        }
-
-        public ImmersiveView(MediaSource video)
-        {
-            this.InitializeComponent();
-            MediaPlayer.Visibility = Visibility.Visible;
-            _video = video;
         }
 
         private void ScrollViewer_OnSizeChanged(object sender, SizeChangedEventArgs e)

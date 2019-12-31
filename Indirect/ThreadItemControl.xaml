@@ -19,12 +19,12 @@
 
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="FromThemItemBackground" Color="DimGray"></SolidColorBrush>
+                    <SolidColorBrush x:Key="FromThemItemBackground" Color="{StaticResource SystemBaseLowColor}"></SolidColorBrush>
                     <SolidColorBrush x:Key="FromMeItemBackground" Color="{ThemeResource SystemAccentColorDark1}"></SolidColorBrush>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="FromThemItemBackground" Color="LightGray"></SolidColorBrush>
-                    <SolidColorBrush x:Key="FromMeItemBackground" Color="{ThemeResource SystemAccentColorLight1}" Opacity="0.5"></SolidColorBrush>
+                    <SolidColorBrush x:Key="FromThemItemBackground" Color="{StaticResource SystemBaseLowColor}"></SolidColorBrush>
+                    <SolidColorBrush x:Key="FromMeItemBackground" Color="{ThemeResource SystemAccentColorLight1}"></SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
@@ -56,9 +56,7 @@
             </Style>
             <Style x:Name="NotAvailableOpen" BasedOn="{StaticResource ButtonRevealStyle}" TargetType="Button">
                 <Setter Property="Content" Value="Expired"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="BorderBrush" Value="White"/>
-                <Setter Property="Opacity" Value="0.6"/>
+                <Setter Property="Foreground" Value="{StaticResource SystemBaseMediumColor}"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="IsEnabled" Value="False"/>
             </Style>
@@ -67,21 +65,22 @@
 
 
     <StackPanel x:Name="ItemContainer" Orientation="Vertical" 
-                HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                 Margin="0,2,0,2" DoubleTapped="ItemContainer_DoubleTapped">
 
         <Button x:Name="OpenMediaButton"
                 Visibility="Collapsed"
-                HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                Style="{x:Bind Source.VisualMedia.IsExpired, Converter={StaticResource OpenButtonStyleConverter}}"
-                CornerRadius="2,2,2,2"/>
+                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                Style="{x:Bind Item.VisualMedia.IsExpired, Converter={StaticResource OpenButtonStyleConverter}}"
+                CornerRadius="2,2,2,2" Click="OpenMediaButton_OnClick"/>
 
         <Border x:Name="NotAvailableMessage" 
                 Visibility="Collapsed"
                 Background="Transparent" 
-                HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                CornerRadius="2,2,2,2" BorderBrush="White" BorderThickness="1" Opacity="0.6" >
+                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                CornerRadius="2,2,2,2" BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
             <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
+                       Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                        Text="Content type is not yet supported."
                        Margin="6" 
                        MaxWidth="250"
@@ -90,11 +89,11 @@
         </Border>
 
         <Border x:Name="MessageContentWithBorder" 
-                Background="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" 
-                HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                Background="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" 
+                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                 CornerRadius="2,2,2,2">
             <TextBlock Style="{ThemeResource FluentBodyTextStyle}"
-                       Text="{x:Bind Source.Text}"
+                       Text="{x:Bind Item.Text}"
                        Margin="6" 
                        MaxWidth="250"
                        HorizontalAlignment="Center"
@@ -104,42 +103,57 @@
         <TextBlock x:Name="MessageContentNoBorder" 
                    Visibility="Collapsed"
                    Style="{ThemeResource FluentBodyTextStyle}"
-                   Text="{x:Bind Source.Text}"
+                   Text="{x:Bind Item.Text}"
                    FontSize="24"
                    MaxWidth="250"
-                   HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                   HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                    TextWrapping="WrapWholeWords"/>
 
-        <controls:ImageEx x:Name="ImageFrame"
+        <controls:ImageEx x:Name="ImageFrame" CachingStrategy="Custom"
                           MaxWidth="250" MaxHeight="350"
                           IsCacheEnabled="True"
                           CornerRadius="2"
-                          Source="{x:Bind Source.PreviewImage}"
-                          HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                          BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                          BorderThickness="1"
+                          Source="{x:Bind Item.PreviewImageUri}"
+                          HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                           Visibility="Collapsed" Tapped="ImageFrame_Tapped"/>
 
-        <MediaPlayerElement x:Name="MediaFrame" 
-                            Visibility="Collapsed"
-                            AreTransportControlsEnabled="True"
-                            PosterSource="{x:Bind Source.PreviewImage}"
-                            HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                            MaxWidth="250" MaxHeight="350" PointerExited="MediaFrame_PointerExited" Tapped="MediaFrame_Tapped"/>
+        
+         <Grid x:Name="VideoGrid" Visibility="Collapsed"
+               PointerExited="MediaFrame_PointerExited"
+               PointerEntered="MediaFrame_OnPointerEntered" CornerRadius="2"
+               BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
+               BorderThickness="1"> 
+             <Button x:Name="VideoPopupButton" Canvas.ZIndex="2"
+                           Style="{StaticResource AccentButtonStyle}"
+                           Background="{ThemeResource SystemControlBackgroundAccentBrush}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Tapped="VideoPopupButton_OnTapped">
+                 <SymbolIcon Symbol="NewWindow"/>
+             </Button>
+            <MediaPlayerElement x:Name="MediaFrame"
+                                AreTransportControlsEnabled="True"
+                                MaxWidth="250" MaxHeight="350"
+                                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"/>
+        </Grid> 
 
-            <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="6,1,8,0"
-                        HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                        Visibility="{x:Bind Source.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
-            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
-                    Style="{x:Bind Source.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
-            <TextBlock Text="{x:Bind Source.Reactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"
-                       Visibility="{x:Bind Source.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
-                       Style="{ThemeResource FluentCaptionTextStyle}"/>
+        
+
+        <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="6,1,8,0"
+                    HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                    Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
+        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
+                Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
+        <TextBlock Text="{x:Bind Item.Reactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"
+                   Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
+                   Style="{ThemeResource FluentCaptionTextStyle}"/>
         </StackPanel>
         <TextBlock x:Name="Timestamp"
                    Style="{ThemeResource FluentCaptionTextStyle}"
-                   Text="{x:Bind Source.TimeStamp}" 
-                   Opacity="0.6"
+                   Text="{x:Bind Item.TimeStamp}" 
+                   Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                    Margin="2"
-                   HorizontalAlignment="{x:Bind Source.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                   HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                    Visibility="Collapsed" />
     </StackPanel>
 </UserControl>

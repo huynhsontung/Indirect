@@ -142,6 +142,9 @@
     <Compile Include="ImmersiveView.xaml.cs">
       <DependentUpon>ImmersiveView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ThreadDetailsView.xaml.cs">
+      <DependentUpon>ThreadDetailsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ThreadItemControl.xaml.cs">
       <DependentUpon>ThreadItemControl.xaml</DependentUpon>
     </Compile>
@@ -155,6 +158,7 @@
     <Compile Include="Notification\StreamSocketChannel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReversedIncrementalLoadingCollection.cs" />
+    <Compile Include="VideoCache.cs" />
     <Compile Include="Wrapper\InstaCurrentUserWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectBroadcastWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxItemWrapper.cs" />
@@ -177,7 +181,6 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="InstantMessaging_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\BadgeLogo.scale-100.png" />
@@ -245,6 +248,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="ImmersiveView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ThreadDetailsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
