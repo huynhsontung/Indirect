@@ -84,6 +84,9 @@ namespace Indirect.Wrapper
                         url = GetPreviewImage(Media.Images)?.Url;
                         return url != null ? new Uri(url) : null;
 
+                    case InstaDirectThreadItemType.MediaShare:
+                        url = GetPreviewImage(MediaShare.Images)?.Url;
+                        return url != null ? new Uri(url) : null;
 
                     case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
                         url = GetPreviewImage(RavenMedia.Images)?.Url;
@@ -111,6 +114,9 @@ namespace Indirect.Wrapper
                     case InstaDirectThreadItemType.Media:
                         return GetFullImageUri(Media.Images, Media.OriginalWidth, Media.OriginalHeight);
 
+                    case InstaDirectThreadItemType.MediaShare:
+                        return GetFullImageUri(MediaShare.Images, MediaShare.Width, MediaShare.Height);
+
                     case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
                         return GetFullImageUri(RavenMedia.Images, RavenMedia.Width, RavenMedia.Height);
 
@@ -132,14 +138,17 @@ namespace Indirect.Wrapper
             {
                 switch (ItemType)
                 {
-                    case InstaDirectThreadItemType.Media:
-                        return new Uri(Media.Videos.FirstOrDefault()?.Url);
+                    case InstaDirectThreadItemType.Media when Media.Videos.Count > 0:
+                        return new Uri(Media.Videos.First().Url);
+
+                    case InstaDirectThreadItemType.MediaShare when MediaShare.Videos.Count > 0:
+                        return new Uri(MediaShare.Videos.First().Url);
+
+                    case InstaDirectThreadItemType.RavenMedia when RavenMedia != null && RavenMedia.Videos.Count > 0:
+                        return new Uri(RavenMedia.Videos.First().Url);
         
-                    case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
-                        return new Uri(RavenMedia.Videos.FirstOrDefault()?.Url);
-        
-                    case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
-                        return new Uri(VisualMedia.Media.Videos.FirstOrDefault()?.Url);
+                    case InstaDirectThreadItemType.RavenMedia when VisualMedia != null && VisualMedia.Media.Videos.Count > 0:
+                        return new Uri(VisualMedia.Media.Videos.First().Url);
         
                     default:
                         return null;

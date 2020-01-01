@@ -72,7 +72,7 @@
                 Visibility="Collapsed"
                 HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                 Style="{x:Bind Item.VisualMedia.IsExpired, Converter={StaticResource OpenButtonStyleConverter}}"
-                CornerRadius="2,2,2,2" Click="OpenMediaButton_OnClick"/>
+                CornerRadius="2" Click="OpenMediaButton_OnClick"/>
 
         <Border x:Name="NotAvailableMessage" 
                 Visibility="Collapsed"
@@ -86,6 +86,31 @@
                        MaxWidth="250"
                        HorizontalAlignment="Center" 
                        TextWrapping="WrapWholeWords" FontStyle="Italic"/>
+        </Border>
+
+        <Border x:Name="HyperlinkContent" 
+                Visibility="Collapsed"
+                MaxWidth="250"
+                Background="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" 
+                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                CornerRadius="2,2,2,2" Padding="6,0,6,0">
+            <HyperlinkButton Content="{x:Bind Item.Text}" NavigateUri="{x:Bind _navigateUri}" Foreground="{StaticResource SystemControlForegroundBaseHighBrush}"/>
+        </Border>
+
+        <Border x:Name="HyperlinkPreview" 
+                Visibility="Collapsed"
+                Background="Transparent" 
+                MaxWidth="250"
+                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                CornerRadius="2" Padding="8,6,8,6" Tapped="OpenWebLink"
+                BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
+            <StackPanel Orientation="Vertical">
+                <TextBlock Text="{x:Bind Item.LinkMedia.LinkContext.LinkTitle}" Style="{ThemeResource FluentBaseTextStyle}"/>
+                <AppBarSeparator/>
+                <TextBlock Text="{x:Bind Item.LinkMedia.LinkContext.LinkSummary}" 
+                           Style="{ThemeResource FluentCaptionTextStyle}"
+                           Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+            </StackPanel>
         </Border>
 
         <Border x:Name="MessageContentWithBorder" 
@@ -120,11 +145,12 @@
                           Visibility="Collapsed" Tapped="ImageFrame_Tapped"/>
 
         
-         <Grid x:Name="VideoGrid" Visibility="Collapsed"
+         <Grid x:Name="VideoView" Visibility="Collapsed"
                PointerExited="MediaFrame_PointerExited"
                PointerEntered="MediaFrame_OnPointerEntered" CornerRadius="2"
                BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
-               BorderThickness="1"> 
+               BorderThickness="1"
+               HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"> 
              <Button x:Name="VideoPopupButton" Canvas.ZIndex="2"
                            Style="{StaticResource AccentButtonStyle}"
                            Background="{ThemeResource SystemControlBackgroundAccentBrush}"
@@ -133,20 +159,46 @@
              </Button>
             <MediaPlayerElement x:Name="MediaFrame"
                                 AreTransportControlsEnabled="True"
-                                MaxWidth="250" MaxHeight="350"
-                                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"/>
+                                MaxWidth="250" MaxHeight="350"/>
         </Grid> 
 
-        
+        <Grid x:Name="MediaShareView" Visibility="Collapsed"
+              CornerRadius="2" Tapped="OpenWebLink"
+              Background="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" 
+              MaxWidth="250" MaxHeight="350"
+              HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,6,8,6">
+                <PersonPicture ProfilePicture="{x:Bind Item.MediaShare.User.ProfilePictureUrl}" Height="24" Width="24" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                <TextBlock Text="{x:Bind Item.MediaShare.User.UserName}" 
+                           Style="{ThemeResource FluentBaseTextStyle}"
+                           MaxLines="1" 
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <controls:ImageEx x:Name="MediaShareImageFrame" Grid.Row="1" 
+                              Source="{x:Bind Item.PreviewImageUri}"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"/>
+            <TextBlock Grid.Row="2" 
+                       Style="{ThemeResource FluentCaptionTextStyle}"
+                       Text="{x:Bind Item.MediaShare.Caption.Text}" 
+                       TextWrapping="WrapWholeWords"
+                       Margin="8,4,8,8"/>
+        </Grid>
 
-        <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="6,1,8,0"
-                    HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+
+        <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="8,2,8,0"
+                    HorizontalAlignment="Left"
                     Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
-        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
-                Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
-        <TextBlock Text="{x:Bind Item.Reactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"
-                   Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
-                   Style="{ThemeResource FluentCaptionTextStyle}"/>
+            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
+                    Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
+            <TextBlock Text="{x:Bind Item.Reactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"
+                       Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
+                       Style="{ThemeResource FluentCaptionTextStyle}"/>
         </StackPanel>
         <TextBlock x:Name="Timestamp"
                    Style="{ThemeResource FluentCaptionTextStyle}"

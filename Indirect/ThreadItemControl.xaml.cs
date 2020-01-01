@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Contacts;
 using Windows.Media.Core;
 using Windows.Media.Streaming.Adaptive;
 using Windows.UI.Core;
@@ -54,6 +55,8 @@ namespace Indirect
             view.HandleItemSourceChange(e);
         }
 
+        private Uri _navigateUri;
+
         public ThreadItemControl()
         {
             this.InitializeComponent();
@@ -65,22 +68,33 @@ namespace Indirect
 
         private void HandleItemSourceChange(DependencyPropertyChangedEventArgs e)
         {
+            ProcessItem();
             this.Bindings.Update();
             MessageContentWithBorder.Visibility = Visibility.Collapsed;
             switch (Item.ItemType)
             {
-                case InstaDirectThreadItemType.Text:
-                case InstaDirectThreadItemType.Link:
-                case InstaDirectThreadItemType.Hashtag:
+                case InstaDirectThreadItemType.Text when string.IsNullOrEmpty(_navigateUri?.ToString()):
                     MessageContentWithBorder.Visibility = Visibility.Visible;
+                    break;
+
+                case InstaDirectThreadItemType.Text:
+                    HyperlinkContent.Visibility = Visibility.Visible;
+                    break;
+
+                case InstaDirectThreadItemType.Link:
+                    HyperlinkContent.Visibility = Visibility.Visible;
+                    HyperlinkPreview.Visibility = Visibility.Visible;
                     break;
 
                 case InstaDirectThreadItemType.Like:
                     MessageContentNoBorder.Visibility = Visibility.Visible;
                     break;
 
-                // case InstaDirectThreadItemType.MediaShare:
-                //     break;
+                case InstaDirectThreadItemType.MediaShare:
+                    // todo: Handle all MediaShare cases
+                    MediaShareView.Visibility = Visibility.Visible;
+                    break;
+
                 case InstaDirectThreadItemType.RavenMedia when Item.VisualMedia.ViewMode != InstaViewMode.Permanent:
                     OpenMediaButton.Visibility = Visibility.Visible;
                     break;
@@ -99,7 +113,7 @@ namespace Indirect
                     var videoHeight = Item.RavenMedia?.Height ?? Item.VisualMedia.Media.Height;
                     _ = SetVideoSourceAsync();
                     ConformElementSize(MediaFrame, videoWidth, videoHeight);
-                    VideoGrid.Visibility = Visibility.Visible;
+                    VideoView.Visibility = Visibility.Visible;
                     break;
                 // case InstaDirectThreadItemType.ReelShare:
                 //     break;
@@ -127,6 +141,25 @@ namespace Indirect
                 //     break;
                 default:
                     NotAvailableMessage.Visibility = Visibility.Visible;
+                    break;
+            }
+        }
+
+        private void ProcessItem()
+        {
+            Item.TimeStamp = Item.TimeStamp.ToLocalTime();
+            switch (Item.ItemType)
+            {
+                case InstaDirectThreadItemType.Text when Item.Text[0] == '#' && !Item.Text.Contains(' '):
+                    _navigateUri = new Uri("https://www.instagram.com/explore/tags/" + Item.Text.Substring(1));
+                    break;
+
+                case InstaDirectThreadItemType.Link:
+                    _navigateUri = new Uri(Item.LinkMedia.LinkContext.LinkUrl);
+                    break;
+
+                case InstaDirectThreadItemType.MediaShare:
+                    _navigateUri = new Uri("https://www.instagram.com/p/" + Item.MediaShare.Code);
                     break;
             }
         }
@@ -198,6 +231,11 @@ namespace Indirect
         private void OpenMediaButton_OnClick(object sender, RoutedEventArgs e)
         {
             ImageFrame_Tapped(sender, new TappedRoutedEventArgs());
+        }
+
+        private void OpenWebLink(object sender, TappedRoutedEventArgs e)
+        {
+            _ = Windows.System.Launcher.LaunchUriAsync(_navigateUri);
         }
     }
 }

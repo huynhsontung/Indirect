@@ -12,6 +12,8 @@ namespace Indirect
         public static TimeSpan DefaultCacheDuration = TimeSpan.FromDays(30);
         private static readonly StorageFolder TempFolder = ApplicationData.Current.TemporaryFolder;
 
+        public static Uri GetUri(string url) => new Uri(url);
+
         public static async Task<IRandomAccessStream> GetAndCacheObject(Uri target, IInstaApi api)
         {
             return await GetAndCacheObject(target, api, DefaultCacheDuration);
