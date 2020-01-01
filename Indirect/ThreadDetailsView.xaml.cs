@@ -94,10 +94,11 @@ namespace Indirect
             };
             picker.FileTypeFilter.Add(".jpg");
             picker.FileTypeFilter.Add(".jpeg");
+            picker.FileTypeFilter.Add(".mp4");
 
             var file = await picker.PickSingleFileAsync();
             if (file == null) return;
-            FilePickerPreview.Source = file.Path;
+            FilePickerPreview.Source = file;
             FilePickerFlyout.ShowAt(AddFilesButton);
         }
     }

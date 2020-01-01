@@ -14,6 +14,11 @@ namespace Indirect
 
         public static Uri GetUri(string url) => new Uri(url);
 
+        public static bool IsHttpUri(Uri uri)
+        {
+            return uri.IsAbsoluteUri && (uri.Scheme == "http" || uri.Scheme == "https");
+        }
+
         public static async Task<IRandomAccessStream> GetAndCacheObject(Uri target, IInstaApi api)
         {
             return await GetAndCacheObject(target, api, DefaultCacheDuration);

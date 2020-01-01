@@ -29,8 +29,8 @@
             <Flyout x:Name="FilePickerFlyout">
                 <StackPanel Orientation="Vertical">
                     <StackPanel x:Name="SendConfirmation" MaxWidth="300">
-                        <controls:ImageEx x:Name="FilePickerPreview" Height="160" HorizontalAlignment="Stretch"
-                                          CornerRadius="2" Margin="0,0,0,12" IsCacheEnabled="False"/>
+                        <local:PhotoVideoControl x:Name="FilePickerPreview" Height="160" HorizontalAlignment="Center"
+                                                 CornerRadius="2" Margin="0,0,0,12"/>
                         <TextBlock Style="{ThemeResource FluentBaseTextStyle}" Text="Do you want to send this photo?" Margin="0,0,0,12" HorizontalAlignment="Center"/>
                         <Button Content="Send"  HorizontalAlignment="Center"/>
                     </StackPanel>
