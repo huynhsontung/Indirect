@@ -138,6 +138,7 @@
     <Compile Include="Converters\HasNewMessageStyleConverter.cs" />
     <Compile Include="Converters\FromMeBoolToAlignmentConverter.cs" />
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
+    <Compile Include="Converters\SendButtonGlyphConverter.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="ImmersiveView.xaml.cs">
       <DependentUpon>ImmersiveView.xaml</DependentUpon>

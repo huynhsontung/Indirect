@@ -13,10 +13,6 @@
     d:DesignWidth="400">
     <UserControl.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <core:FluiFrameworkThemeResources/>
-            </ResourceDictionary.MergedDictionaries>
-
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="FromThemItemBackground" Color="{StaticResource SystemBaseLowColor}"></SolidColorBrush>
@@ -69,7 +65,7 @@
                 Margin="0,2,0,2" DoubleTapped="ItemContainer_DoubleTapped">
 
         <Button x:Name="OpenMediaButton"
-                Visibility="Collapsed"
+                Visibility="Collapsed" ToolTipService.ToolTip="Open media in immersive view"
                 HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                 Style="{x:Bind Item.VisualMedia.IsExpired, Converter={StaticResource OpenButtonStyleConverter}}"
                 CornerRadius="2" Click="OpenMediaButton_OnClick"/>
@@ -152,9 +148,10 @@
                BorderThickness="1"
                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"> 
              <Button x:Name="VideoPopupButton" Canvas.ZIndex="2"
-                           Style="{StaticResource AccentButtonStyle}"
-                           Background="{ThemeResource SystemControlBackgroundAccentBrush}"
-                           HorizontalAlignment="Center" VerticalAlignment="Center" Tapped="VideoPopupButton_OnTapped">
+                       Style="{StaticResource AccentButtonStyle}"
+                       Background="{ThemeResource SystemControlBackgroundAccentBrush}"
+                       ToolTipService.ToolTip="Open video in immersive view"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" Tapped="VideoPopupButton_OnTapped">
                  <SymbolIcon Symbol="NewWindow"/>
              </Button>
             <MediaPlayerElement x:Name="MediaFrame"

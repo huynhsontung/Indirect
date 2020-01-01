@@ -46,21 +46,23 @@ namespace Indirect
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ThreadDetailsView) d;
-            view.HandleThreadSourceChanged();
+            view.HandleThreadChanged();
         }
 
 
         public ThreadDetailsView()
         {
             this.InitializeComponent();
+            // GotFocus += (sender, args) =>
+            // {
+            //     MessageTextBox.Focus(FocusState.Programmatic);
+            // };
         }
 
 
-        private void HandleThreadSourceChanged()
+        private void HandleThreadChanged()
         {
-            DataContext = Thread;
             this.Bindings.Update();
-
         }
 
         private void RefreshThread_OnClick(object sender, RoutedEventArgs e)
@@ -70,19 +72,33 @@ namespace Indirect
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            var button = sender as Control;
-            var messageBox = (TextBox)(button.Parent as Grid).Children[0];
-            var message = messageBox.Text;
-            messageBox.Text = "";
-            _ = ViewModel.SendMessage(message);
+            var message = MessageTextBox.Text;
+            MessageTextBox.Text = "";
+            _ = string.IsNullOrEmpty(message) ? ViewModel.SendLike() : ViewModel.SendMessage(message);
         }
 
         private void MessageTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
-            if (e.Key == Windows.System.VirtualKey.Enter)
+            if (e.Key == Windows.System.VirtualKey.Enter && !string.IsNullOrEmpty(MessageTextBox.Text))
             {
                 SendButton_Click(sender, e);
             }
+        }
+
+        private async void AddFilesButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker
+            {
+                ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail,
+                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.ComputerFolder
+            };
+            picker.FileTypeFilter.Add(".jpg");
+            picker.FileTypeFilter.Add(".jpeg");
+
+            var file = await picker.PickSingleFileAsync();
+            if (file == null) return;
+            FilePickerPreview.Source = file.Path;
+            FilePickerFlyout.ShowAt(AddFilesButton);
         }
     }
 }

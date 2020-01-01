@@ -256,6 +256,15 @@ namespace Indirect
             if (result.Succeeded) SelectedThread.Update(result.Value);
         }
 
+        public async Task SendLike()
+        {
+            var selectedThread = SelectedThread;
+            if (string.IsNullOrEmpty(selectedThread.ThreadId)) return;
+            var result = await _instaApi.MessagingProcessor.SendDirectLikeAsync(selectedThread.ThreadId);
+            if (result.Value)
+                await UpdateInboxAndSelectedThread();
+        }
+
         // Send message to the current selected recipient
         public async Task SendMessage(string content)
         {
