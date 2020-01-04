@@ -3,9 +3,11 @@ using System.IO;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.UI.Xaml;
+using Indirect.Wrapper;
 using InstaSharper.API;
 
-namespace Indirect
+namespace Indirect.Utilities
 {
     internal class Helpers
     {

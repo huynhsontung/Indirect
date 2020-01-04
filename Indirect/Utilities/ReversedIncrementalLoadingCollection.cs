@@ -10,7 +10,7 @@ using Windows.UI.Xaml.Data;
 using Microsoft.Toolkit.Collections;
 using Microsoft.Toolkit.Uwp;
 
-namespace Indirect
+namespace Indirect.Utilities
 {
     class ReversedIncrementalLoadingCollection<TSource, IType> : ObservableCollection<IType>,
         ISupportIncrementalLoading where TSource : Microsoft.Toolkit.Collections.IIncrementalSource<IType>

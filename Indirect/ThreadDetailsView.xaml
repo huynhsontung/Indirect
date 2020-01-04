@@ -7,7 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:wrapper="using:Indirect.Wrapper"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
+    xmlns:utilities="using:Indirect.Utilities"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
@@ -58,7 +59,7 @@
             </CommandBar.Content>
         </CommandBar>
 
-        <local:ChatListView x:Name="ItemsHolder" Grid.Row="0" Grid.RowSpan="3"
+        <utilities:ChatListView x:Name="ItemsHolder" Grid.Row="0" Grid.RowSpan="3"
                             ItemsSource="{x:Bind Thread.ObservableItems}"
                             IncrementalLoadingThreshold="1"
                             SelectionMode="None">
@@ -84,7 +85,7 @@
                     <local:ThreadItemControl Item="{x:Bind}" Thread="{Binding ElementName=ItemsHolder, Path=DataContext}"/>
                 </DataTemplate>
             </ListView.ItemTemplate>
-        </local:ChatListView>
+        </utilities:ChatListView>
 
         <Grid x:Name="MessageInputGrid" Grid.Row="3" HorizontalAlignment="Stretch" Margin="0,2,0,2">
             <Grid.ColumnDefinitions>
@@ -101,7 +102,7 @@
             <Button x:Name="AddFilesButton" ToolTipService.ToolTip="Add photos/videos"
                     Grid.Column="0" Grid.Row="1"
                     HorizontalAlignment="Stretch"
-                    Margin="4,0,0,0"
+                    Margin="2,0,0,0"
                     Click="AddFilesButton_OnClick">
                 <SymbolIcon Symbol="Add"/>
             </Button>

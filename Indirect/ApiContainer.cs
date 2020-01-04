@@ -13,6 +13,7 @@ using Windows.Security.Cryptography;
 using Windows.Storage;
 using Windows.UI.Core;
 using Indirect.Notification;
+using Indirect.Utilities;
 using Indirect.Wrapper;
 using InstaSharper.API;
 using InstaSharper.API.Builder;

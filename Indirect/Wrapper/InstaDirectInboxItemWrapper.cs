@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Windows.Media.Core;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Imaging;
 using InstaSharper.API;
 using InstaSharper.Classes.Models.Direct;
@@ -24,6 +25,26 @@ namespace Indirect.Wrapper
         // public new InstaMediaWrapper FelixShareMedia { get; set; }
         // public new InstaReelShareWrapper ReelShareMedia { get; set; }
         // public new InstaDirectBroadcastWrapper LiveViewerInvite { get; set; }
+
+        public Uri NavigateUri
+        {
+            get {
+                switch (ItemType)
+                {
+                    case InstaDirectThreadItemType.Text when Text[0] == '#' && !Text.Contains(' '):
+                        return new Uri("https://www.instagram.com/explore/tags/" + Text.Substring(1));
+
+                    case InstaDirectThreadItemType.Link:
+                        return Uri.TryCreate(LinkMedia.LinkContext.LinkUrl, UriKind.Absolute, out var uri) ? uri : null;
+
+                    case InstaDirectThreadItemType.MediaShare:
+                        return new Uri("https://www.instagram.com/p/" + MediaShare.Code);
+                    
+                    default:
+                        return null;
+                }
+            }
+        }
 
         public int PreviewMediaHeight
         {
@@ -112,16 +133,16 @@ namespace Indirect.Wrapper
                 switch (ItemType)
                 {
                     case InstaDirectThreadItemType.Media:
-                        return GetFullImageUri(Media.Images, Media.OriginalWidth, Media.OriginalHeight);
+                        return GetFullImageUri(Media.Images);
 
                     case InstaDirectThreadItemType.MediaShare:
-                        return GetFullImageUri(MediaShare.Images, MediaShare.Width, MediaShare.Height);
+                        return GetFullImageUri(MediaShare.Images);
 
                     case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
-                        return GetFullImageUri(RavenMedia.Images, RavenMedia.Width, RavenMedia.Height);
+                        return GetFullImageUri(RavenMedia.Images);
 
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
-                        return GetFullImageUri(VisualMedia.Media.Images, VisualMedia.Media.Width, VisualMedia.Media.Height);
+                        return GetFullImageUri(VisualMedia.Media.Images);
 
                     case InstaDirectThreadItemType.AnimatedMedia:
                         return PreviewImageUri;
@@ -131,6 +152,9 @@ namespace Indirect.Wrapper
                 }
             }
         }
+
+        public int VideoWidth => RavenMedia?.Width ?? VisualMedia?.Media?.Width ?? Media.OriginalWidth;
+        public int VideoHeight => RavenMedia?.Height ?? VisualMedia?.Media?.Height ?? Media.OriginalHeight;
 
         public Uri VideoUri
         {
@@ -155,6 +179,9 @@ namespace Indirect.Wrapper
                 }
             }
         }
+
+        public bool IsNavigateUriValid => NavigateUri?.IsAbsoluteUri ?? false;
+        
 
         public InstaDirectInboxItemWrapper(InstaDirectInboxItem source, IInstaApi api)
         {
@@ -205,10 +232,10 @@ namespace Indirect.Wrapper
             return image;
         }
 
-        private static Uri GetFullImageUri(List<InstaImage> imageCandidates, int originalWidth, int originalHeight)
+        private static Uri GetFullImageUri(List<InstaImage> imageCandidates)
         {
             if (imageCandidates == null || imageCandidates.Count == 0) return null;
-            var image = imageCandidates.Single(x => x.Width == originalWidth && x.Height == originalHeight);
+            var image = imageCandidates.OrderByDescending(x => x.Height + x.Width).First();
             return new Uri(image.Url);
         }
     }

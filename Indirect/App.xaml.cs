@@ -7,6 +7,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using Indirect.Utilities;
 using Microsoft.Toolkit.Uwp.UI;
 
 namespace Indirect

@@ -7,7 +7,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:core="using:FluiFramework.UWP.Core" 
+    xmlns:utils="using:Indirect.Utilities"
     xmlns:converters="using:Indirect.Converters"
+    xmlns:wrappers="using:Indirect.Wrapper"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
@@ -24,6 +26,8 @@
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
+            <converters:LinkPreviewVisibilityConverter x:Key="LinkPreviewVisibilityConverter"/>
+            <converters:FromMeBoolToGridColumnConverter x:Key="FromMeBoolToGridColumnConverter"/>
             <converters:ReactionsFromMeConverter x:Key="ReactionsFromMeConverter"
                                                  FromMe="{StaticResource FromMeReaction}"
                                                  FromThem="{StaticResource FromThemReaction}"/>
@@ -56,6 +60,171 @@
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="IsEnabled" Value="False"/>
             </Style>
+
+            <DataTemplate x:Key="NotSupportedTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <Border x:Name="NotAvailableMessage" 
+                        Background="Transparent" 
+                        HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                        CornerRadius="2,2,2,2" BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
+                    <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
+                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                               Text="Content type is not yet supported."
+                               Margin="6" 
+                               MaxWidth="250"
+                               HorizontalAlignment="Center" 
+                               TextWrapping="WrapWholeWords" FontStyle="Italic"/>
+                </Border>
+            </DataTemplate>
+
+            <DataTemplate x:Key="HiddenMediaTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <Button x:Name="OpenMediaButton"
+                        ToolTipService.ToolTip="Open media in immersive view"
+                        HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                        Style="{x:Bind VisualMedia.IsExpired, Converter={StaticResource OpenButtonStyleConverter}}"
+                        CornerRadius="2" Click="OpenMediaButton_OnClick"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="LikeTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <TextBlock x:Name="MessageContentNoBorder" 
+                           Style="{ThemeResource FluentBodyTextStyle}"
+                           Text="{x:Bind Text}"
+                           FontSize="24"
+                           MaxWidth="250"
+                           HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                           TextWrapping="WrapWholeWords"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="TextTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <Border x:Name="MessageContentWithBorder"
+                        Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
+                        HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                        CornerRadius="2,2,2,2">
+                    <TextBlock Style="{ThemeResource FluentBodyTextStyle}"
+                               Text="{x:Bind Text}"
+                               Margin="6"
+                               MaxWidth="250"
+                               HorizontalAlignment="Center"
+                               TextWrapping="WrapWholeWords"/>
+                </Border>
+            </DataTemplate>
+
+            <DataTemplate x:Key="HyperlinkTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <Border x:Name="HyperlinkContent" 
+                        MaxWidth="250"
+                        Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}" 
+                        HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                        CornerRadius="2,2,2,2" Padding="6,0,6,0">
+                    <HyperlinkButton Content="{x:Bind Text}" NavigateUri="{x:Bind NavigateUri}" Foreground="{StaticResource SystemControlForegroundBaseHighBrush}"/>
+                </Border>
+            </DataTemplate>
+
+            <DataTemplate x:Key="HyperlinkWithPreviewTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <StackPanel Orientation="Vertical">
+                    <Border x:Name="HyperlinkContent" 
+                            MaxWidth="250"
+                            Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}" 
+                            HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                            CornerRadius="2,2,2,2" Padding="6,0,6,0">
+                        <HyperlinkButton Content="{x:Bind Text}" NavigateUri="{x:Bind NavigateUri}" Foreground="{StaticResource SystemControlForegroundBaseHighBrush}"/>
+                    </Border>
+
+                    <Border x:Name="HyperlinkPreview" Visibility="{x:Bind IsNavigateUriValid, Converter={StaticResource LinkPreviewVisibilityConverter}}"
+                            Background="Transparent" 
+                            MaxWidth="250"
+                            HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                            CornerRadius="2" Padding="8,6,8,6" Tapped="OpenWebLink"
+                            BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
+                        <StackPanel Orientation="Vertical">
+                            <controls:ImageEx Source="{x:Bind LinkMedia.LinkContext.LinkImageUrl}" IsCacheEnabled="False" 
+                                              Margin="-8,-6,-8,8" 
+                                              CornerRadius="0"/>
+                            <TextBlock Text="{x:Bind LinkMedia.LinkContext.LinkTitle}" Style="{ThemeResource FluentBaseTextStyle}"/>
+                            <NavigationViewItemSeparator/>
+                            <TextBlock Text="{x:Bind LinkMedia.LinkContext.LinkSummary}" 
+                                       Style="{ThemeResource FluentCaptionTextStyle}"
+                                       Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" TextWrapping="WrapWholeWords"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ImageTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <controls:ImageEx x:Name="ImageFrame" CachingStrategy="Custom"
+                                  MaxWidth="250" MaxHeight="350"
+                                  IsCacheEnabled="True"
+                                  CornerRadius="2"
+                                  BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                                  BorderThickness="1"
+                                  Source="{x:Bind PreviewImageUri}"
+                                  HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                                  Tapped="ImageFrame_Tapped"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="VideoTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <Grid x:Name="VideoView"
+                      HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="VideoPopupButton" Canvas.ZIndex="2"
+                            Grid.Column="{x:Bind FromMe, Converter={StaticResource FromMeBoolToGridColumnConverter}, FallbackValue=0}"
+                            Style="{StaticResource ButtonRevealStyle}"
+                            Background="Transparent"
+                            Margin="8"
+                            ToolTipService.ToolTip="Open video in immersive view"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" Tapped="VideoPopupButton_OnTapped">
+                        <SymbolIcon Symbol="NewWindow"/>
+                    </Button>
+
+                    <Border Grid.Column="1"
+                            CornerRadius="2"
+                            BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                            BorderThickness="1">
+                        <local:AutoVideoControl x:Name="MediaFrame"
+                                                MaxWidth="250" MaxHeight="350" 
+                                                VideoHeight="{x:Bind VideoHeight}" VideoWidth="{x:Bind VideoWidth}"
+                                                Source="{x:Bind VideoUri}">
+                            <local:AutoVideoControl.TransportControls>
+                                <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False"
+                                                        IsZoomButtonVisible="False" ShowAndHideAutomatically="False"/>
+                            </local:AutoVideoControl.TransportControls>
+                        </local:AutoVideoControl>
+                    </Border>
+                </Grid>
+            </DataTemplate>
+
+            <DataTemplate x:Name="MediaShareTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <Grid x:Name="MediaShareView"
+                      CornerRadius="2" Tapped="OpenWebLink"
+                      Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}" 
+                      MaxWidth="250" MaxHeight="350"
+                      HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,6,8,6">
+                        <PersonPicture ProfilePicture="{x:Bind MediaShare.User.ProfilePictureUrl}" Height="24" Width="24" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Bind MediaShare.User.UserName}" 
+                                   Style="{ThemeResource FluentBaseTextStyle}"
+                                   MaxLines="1" 
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <controls:ImageEx x:Name="MediaShareImageFrame" Grid.Row="1" 
+                                      Source="{x:Bind PreviewImageUri}"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Stretch"/>
+                    <TextBlock Grid.Row="2" 
+                               Style="{ThemeResource FluentCaptionTextStyle}"
+                               Text="{x:Bind MediaShare.Caption.Text}" 
+                               TextWrapping="WrapWholeWords"
+                               Margin="8,4,8,8"/>
+                </Grid>
+            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -63,130 +232,20 @@
     <StackPanel x:Name="ItemContainer" Orientation="Vertical" 
                 HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
                 Margin="0,2,0,2" DoubleTapped="ItemContainer_DoubleTapped">
-
-        <Button x:Name="OpenMediaButton"
-                Visibility="Collapsed" ToolTipService.ToolTip="Open media in immersive view"
-                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                Style="{x:Bind Item.VisualMedia.IsExpired, Converter={StaticResource OpenButtonStyleConverter}}"
-                CornerRadius="2" Click="OpenMediaButton_OnClick"/>
-
-        <Border x:Name="NotAvailableMessage" 
-                Visibility="Collapsed"
-                Background="Transparent" 
-                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                CornerRadius="2,2,2,2" BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
-            <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
-                       Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                       Text="Content type is not yet supported."
-                       Margin="6" 
-                       MaxWidth="250"
-                       HorizontalAlignment="Center" 
-                       TextWrapping="WrapWholeWords" FontStyle="Italic"/>
-        </Border>
-
-        <Border x:Name="HyperlinkContent" 
-                Visibility="Collapsed"
-                MaxWidth="250"
-                Background="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" 
-                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                CornerRadius="2,2,2,2" Padding="6,0,6,0">
-            <HyperlinkButton Content="{x:Bind Item.Text}" NavigateUri="{x:Bind _navigateUri}" Foreground="{StaticResource SystemControlForegroundBaseHighBrush}"/>
-        </Border>
-
-        <Border x:Name="HyperlinkPreview" 
-                Visibility="Collapsed"
-                Background="Transparent" 
-                MaxWidth="250"
-                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                CornerRadius="2" Padding="8,6,8,6" Tapped="OpenWebLink"
-                BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
-            <StackPanel Orientation="Vertical">
-                <TextBlock Text="{x:Bind Item.LinkMedia.LinkContext.LinkTitle}" Style="{ThemeResource FluentBaseTextStyle}"/>
-                <AppBarSeparator/>
-                <TextBlock Text="{x:Bind Item.LinkMedia.LinkContext.LinkSummary}" 
-                           Style="{ThemeResource FluentCaptionTextStyle}"
-                           Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
-            </StackPanel>
-        </Border>
-
-        <Border x:Name="MessageContentWithBorder" 
-                Background="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" 
-                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                CornerRadius="2,2,2,2">
-            <TextBlock Style="{ThemeResource FluentBodyTextStyle}"
-                       Text="{x:Bind Item.Text}"
-                       Margin="6" 
-                       MaxWidth="250"
-                       HorizontalAlignment="Center"
-                       TextWrapping="WrapWholeWords"/>
-        </Border>
-
-        <TextBlock x:Name="MessageContentNoBorder" 
-                   Visibility="Collapsed"
-                   Style="{ThemeResource FluentBodyTextStyle}"
-                   Text="{x:Bind Item.Text}"
-                   FontSize="24"
-                   MaxWidth="250"
-                   HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                   TextWrapping="WrapWholeWords"/>
-
-        <controls:ImageEx x:Name="ImageFrame" CachingStrategy="Custom"
-                          MaxWidth="250" MaxHeight="350"
-                          IsCacheEnabled="True"
-                          CornerRadius="2"
-                          BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                          BorderThickness="1"
-                          Source="{x:Bind Item.PreviewImageUri}"
-                          HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                          Visibility="Collapsed" Tapped="ImageFrame_Tapped"/>
-
         
-         <Grid x:Name="VideoView" Visibility="Collapsed"
-               PointerExited="MediaFrame_PointerExited"
-               PointerEntered="MediaFrame_OnPointerEntered" CornerRadius="2"
-               BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
-               BorderThickness="1"
-               HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"> 
-             <Button x:Name="VideoPopupButton" Canvas.ZIndex="2"
-                       Style="{StaticResource AccentButtonStyle}"
-                       Background="{ThemeResource SystemControlBackgroundAccentBrush}"
-                       ToolTipService.ToolTip="Open video in immersive view"
-                       HorizontalAlignment="Center" VerticalAlignment="Center" Tapped="VideoPopupButton_OnTapped">
-                 <SymbolIcon Symbol="NewWindow"/>
-             </Button>
-            <MediaPlayerElement x:Name="MediaFrame"
-                                AreTransportControlsEnabled="True"
-                                MaxWidth="250" MaxHeight="350"/>
-        </Grid> 
-
-        <Grid x:Name="MediaShareView" Visibility="Collapsed"
-              CornerRadius="2" Tapped="OpenWebLink"
-              Background="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeBrushConverter}}" 
-              MaxWidth="250" MaxHeight="350"
-              HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,6,8,6">
-                <PersonPicture ProfilePicture="{x:Bind Item.MediaShare.User.ProfilePictureUrl}" Height="24" Width="24" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                <TextBlock Text="{x:Bind Item.MediaShare.User.UserName}" 
-                           Style="{ThemeResource FluentBaseTextStyle}"
-                           MaxLines="1" 
-                           VerticalAlignment="Center"/>
-            </StackPanel>
-            <controls:ImageEx x:Name="MediaShareImageFrame" Grid.Row="1" 
-                              Source="{x:Bind Item.PreviewImageUri}"
-                              HorizontalAlignment="Stretch"
-                              VerticalAlignment="Stretch"/>
-            <TextBlock Grid.Row="2" 
-                       Style="{ThemeResource FluentCaptionTextStyle}"
-                       Text="{x:Bind Item.MediaShare.Caption.Text}" 
-                       TextWrapping="WrapWholeWords"
-                       Margin="8,4,8,8"/>
-        </Grid>
-
+        <ContentControl x:Name="MainContentControl" Content="{x:Bind Item}">
+            <ContentControl.ContentTemplateSelector>
+                <local:ItemTemplateSelector TextTemplate="{StaticResource TextTemplate}"
+                                            LikeTemplate="{StaticResource LikeTemplate}"
+                                            HyperlinkTemplate="{StaticResource HyperlinkTemplate}"
+                                            HyperlinkWithPreviewTemplate="{StaticResource HyperlinkWithPreviewTemplate}"
+                                            NotSupportedTemplate="{StaticResource NotSupportedTemplate}"
+                                            HiddenMediaTemplate="{StaticResource HiddenMediaTemplate}"
+                                            ImageTemplate="{StaticResource ImageTemplate}"
+                                            VideoTemplate="{StaticResource VideoTemplate}"
+                                            MediaShareTemplate="{StaticResource MediaShareTemplate}"/>
+            </ContentControl.ContentTemplateSelector>
+        </ContentControl>
 
         <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="8,2,8,0"
                     HorizontalAlignment="Left"

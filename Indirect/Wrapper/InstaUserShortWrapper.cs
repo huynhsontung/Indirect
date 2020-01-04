@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Imaging;
+using Indirect.Utilities;
 using InstaSharper.API;
 using InstaSharper.Classes.Models.User;
 

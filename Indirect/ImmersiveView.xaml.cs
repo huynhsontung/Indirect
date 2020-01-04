@@ -6,6 +6,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Indirect.Wrapper;
 using InstaSharper.Enums;
+using Microsoft.Toolkit.Uwp.UI.Controls;
+using ScrollViewer = Windows.UI.Xaml.Controls.ScrollViewer;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -13,7 +15,7 @@ namespace Indirect
 {
     sealed partial class ImmersiveView : ContentDialog
     {
-        private InstaDirectInboxItemWrapper _item;
+        private readonly InstaDirectInboxItemWrapper _item;
 
         public ImmersiveView(InstaDirectInboxItemWrapper item, InstaMediaType mediaType)
         {
@@ -21,14 +23,12 @@ namespace Indirect
             _item = item;
             if (mediaType == InstaMediaType.Image)
             {
-                ScrollViewer.Visibility = Visibility.Visible;
-                Grid.MinHeight = ((Frame)Window.Current.Content).ActualHeight * 0.8;
+                ContentControl.MinHeight = ((Frame)Window.Current.Content).ActualHeight * 0.8;
+                ContentControl.ContentTemplate = (DataTemplate) Resources["ImageView"];
             }
             else
             {
-                MediaPlayer.Visibility = Visibility.Visible;
-                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                    async () => { MediaPlayer.Source = await VideoCache.Instance.GetFromCacheAsync(item.VideoUri); });
+                ContentControl.ContentTemplate = (DataTemplate) Resources["VideoView"];
             }
 
         }
@@ -36,8 +36,17 @@ namespace Indirect
         private void ScrollViewer_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             var scrollviewer = (ScrollViewer) sender;
+            var imageView = scrollviewer.Content as ImageEx;
+            if (imageView == null) return;
             // ImageView.Width = scrollviewer.ViewportWidth;
-            ImageView.Height = scrollviewer.ViewportHeight;
+            imageView.Height = scrollviewer.ViewportHeight;
+        }
+
+        private void ImmersiveView_OnClosing(ContentDialog sender, ContentDialogClosingEventArgs args)
+        {
+            var videoView = ContentControl.ContentTemplateRoot as AutoVideoControl;
+            if (videoView == null) return;
+            videoView.MediaPlayer.Pause();
         }
     }
 }

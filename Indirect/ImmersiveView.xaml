@@ -2,35 +2,42 @@
     x:Class="Indirect.ImmersiveView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Indirect"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:Indirect"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:wrapper="using:Indirect.Wrapper"
     mc:Ignorable="d"
     Background="Transparent"
     BorderBrush="Transparent"
     DefaultButton="Close"
-    CloseButtonText="Close">
+    CloseButtonText="Close"
+    Closing="ImmersiveView_OnClosing">
 
-    <Grid x:Name="Grid">
-        <ScrollViewer x:Name="ScrollViewer"
-                      Visibility="Collapsed"
-                      VerticalContentAlignment="Center"
-                      HorizontalContentAlignment="Center"
-                      HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Auto"
-                      ZoomMode="Enabled" MinZoomFactor="1"
-                      SizeChanged="ScrollViewer_OnSizeChanged">
-            <controls:ImageEx x:Name="ImageView"
-                              HorizontalAlignment="Stretch"
-                              VerticalAlignment="Stretch"
-                              Stretch="Uniform"
-                              IsCacheEnabled="True"
-                              Source="{x:Bind _item.FullImageUri}"/>
-        </ScrollViewer>
+    <ContentDialog.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="ImageView" x:DataType="wrapper:InstaDirectInboxItemWrapper">
+                <ScrollViewer x:Name="ScrollViewer"
+                              VerticalContentAlignment="Center"
+                              HorizontalContentAlignment="Center"
+                              HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Auto"
+                              ZoomMode="Enabled" MinZoomFactor="1"
+                              SizeChanged="ScrollViewer_OnSizeChanged">
+                    <controls:ImageEx x:Name="ImageView"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Stretch"
+                                      Stretch="Uniform"
+                                      IsCacheEnabled="True"
+                                      Source="{x:Bind FullImageUri}"/>
+                </ScrollViewer>
+            </DataTemplate>
 
-        <MediaPlayerElement x:Name="MediaPlayer"
-                            Visibility="Collapsed"
-                            AreTransportControlsEnabled="True"/>
-    </Grid>
+            <DataTemplate x:Key="VideoView" x:DataType="wrapper:InstaDirectInboxItemWrapper">
+                <local:AutoVideoControl x:Name="MediaPlayer" Source="{x:Bind VideoUri}"/>
+            </DataTemplate>
+        </ResourceDictionary>
+    </ContentDialog.Resources>
+
+    <ContentControl x:Name="ContentControl" Content="{x:Bind _item}"/>
 </ContentDialog>
