@@ -38,8 +38,8 @@ namespace Indirect
             var scrollviewer = (ScrollViewer) sender;
             var imageView = scrollviewer.Content as ImageEx;
             if (imageView == null) return;
-            // ImageView.Width = scrollviewer.ViewportWidth;
             imageView.Height = scrollviewer.ViewportHeight;
+            if (_item.FullImageWidth > scrollviewer.ViewportWidth) imageView.Width = scrollviewer.ViewportWidth;
         }
 
         private void ImmersiveView_OnClosing(ContentDialog sender, ContentDialogClosingEventArgs args)

@@ -44,7 +44,7 @@ namespace Indirect
             var messageBox = (TextBox) (button.Parent as Grid).Children[0];
             var message = messageBox.Text;
             messageBox.Text = "";
-            _ = _viewModel.SendMessage(message);
+            _viewModel.SendMessage(message);
         }
 
         private void MessageTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -89,7 +89,7 @@ namespace Indirect
 
         private void RefreshThread_OnClick(object sender, RoutedEventArgs e)
         {
-            _ = _viewModel.UpdateInboxAndSelectedThread();
+            _viewModel.UpdateInboxAndSelectedThread();
         }
 
         private void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

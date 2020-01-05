@@ -74,7 +74,7 @@ namespace Indirect
             }
             else
             {
-                if (storageFile.FileType == ".mp4" || storageFile.FileType == ".MP4")
+                if (storageFile.ContentType.Contains("video"))
                 {
                     ImageFrame.Visibility = Visibility.Collapsed;
                     VideoFrame.Visibility = Visibility.Visible;
@@ -104,6 +104,7 @@ namespace Indirect
 
         private void VideoFrame_OnTapped(object sender, TappedRoutedEventArgs e)
         {
+            var videoFrame = (AutoVideoControl) sender;
             if (VideoFrame.MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
             {
                 VideoFrame.MediaPlayer.Pause();
@@ -112,6 +113,11 @@ namespace Indirect
             {
                 VideoFrame.MediaPlayer.Play();
             }
+        }
+
+        public void PauseVideo()
+        {
+            VideoFrame.MediaPlayer?.Pause();
         }
     }
 }

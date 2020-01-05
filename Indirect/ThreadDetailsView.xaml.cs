@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Security.Cryptography;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -13,6 +15,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Wrapper;
+using InstaSharper.Enums;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -67,14 +70,21 @@ namespace Indirect
 
         private void RefreshThread_OnClick(object sender, RoutedEventArgs e)
         {
-            _ = ViewModel.UpdateInboxAndSelectedThread();
+            ViewModel.UpdateInboxAndSelectedThread();
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
             var message = MessageTextBox.Text;
             MessageTextBox.Text = "";
-            _ = string.IsNullOrEmpty(message) ? ViewModel.SendLike() : ViewModel.SendMessage(message);
+            if(string.IsNullOrEmpty(message))
+            {
+                ViewModel.SendLike();
+            }
+            else
+            {
+                ViewModel.SendMessage(message);
+            }
         }
 
         private void MessageTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -94,12 +104,81 @@ namespace Indirect
             };
             picker.FileTypeFilter.Add(".jpg");
             picker.FileTypeFilter.Add(".jpeg");
-            picker.FileTypeFilter.Add(".mp4");
+            // picker.FileTypeFilter.Add(".mp4");   // todo: to be tested
 
             var file = await picker.PickSingleFileAsync();
             if (file == null) return;
+            if (file.ContentType.Contains("image"))
+            {
+                var properties = await file.GetBasicPropertiesAsync();
+                if (properties.Size >= 5e7)
+                {
+                    DisplayFailDialog("Image too large.");
+                    return;
+                }
+
+                // var imageProps = await file.Properties.GetImagePropertiesAsync();
+                // var ratio = (double) imageProps.Width / imageProps.Height;
+                // if (ratio < 0.8 || ratio > 1.91)
+                // {
+                //     DisplayFailDialog("Image does not have valid aspect ratio.");
+                //     return;
+                // }
+            }
+
+            if (file.ContentType.Contains("video"))
+            {
+                var properties = await file.Properties.GetVideoPropertiesAsync();
+                if (properties.Duration > TimeSpan.FromMinutes(1))
+                {
+                    DisplayFailDialog("Video too long. Please pick video shorter than 1 minute.");
+                    return;
+                }
+            }
             FilePickerPreview.Source = file;
             FilePickerFlyout.ShowAt(AddFilesButton);
+        }
+
+        private async void DisplayFailDialog(string reason)
+        {
+            var dialog = new ContentDialog()
+            {
+                Title = "File not valid",
+                Content = reason,
+                CloseButtonText = "Close"
+            };
+            await dialog.ShowAsync();
+        }
+
+        private void FilePickerFlyout_OnClosing(FlyoutBase sender, FlyoutBaseClosingEventArgs args)
+        {
+            FilePickerPreview.PauseVideo();
+        }
+
+        private void SendFileButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            UploadProgress.Visibility = Visibility.Visible;
+            var file = (StorageFile) FilePickerPreview.Source;
+            ViewModel.SendFile(file, progress =>
+            {
+                if (progress.UploadState != InstaUploadState.Completed &&
+                    progress.UploadState != InstaUploadState.Error) return;
+                UploadProgress.Visibility = Visibility.Collapsed;
+                if (progress.UploadState == InstaUploadState.Error)
+                {
+                    var dialog = new ContentDialog()
+                    {
+                        Title = "Upload failed",
+                        CloseButtonText = "Close"
+                    };
+                    _ = dialog.ShowAsync();
+                }
+                else
+                {
+                    ViewModel.UpdateInboxAndSelectedThread();
+                }
+            });
+            FilePickerFlyout.Hide();
         }
     }
 }

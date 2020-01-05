@@ -43,6 +43,17 @@ namespace Indirect
             typeof(double),
             typeof(AutoVideoControl),
             new PropertyMetadata(0, OnVideoSizeChanged));
+        public static readonly DependencyProperty AreTransportControlsEnabledProperty = DependencyProperty.Register(
+            nameof(AreTransportControlsEnabled),
+            typeof(bool),
+            typeof(AutoVideoControl),
+            new PropertyMetadata(true, AreTransportControlsEnabledChanged));
+
+        private static void AreTransportControlsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var view = (AutoVideoControl) d;
+            view.VideoPlayer.AreTransportControlsEnabled = (bool) e.NewValue;
+        }
 
 
         private static void OnVideoSizeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -142,6 +153,11 @@ namespace Indirect
         {
             get => Convert.ToDouble(GetValue(VideoHeightProperty));
             set => SetValue(VideoHeightProperty, value);
+        }
+        public bool AreTransportControlsEnabled
+        {
+            get => (bool) GetValue(AreTransportControlsEnabledProperty);
+            set => SetValue(AreTransportControlsEnabledProperty, value);
         }
 
         public MediaPlayer MediaPlayer => VideoPlayer.MediaPlayer;

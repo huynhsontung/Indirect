@@ -71,24 +71,6 @@ namespace Indirect
                 Item.Text = Item.LinkMedia.Text;
         }
 
-        private static void ConformElementSize(FrameworkElement element, double width, double height)
-        {
-            var elementMaxRatio = element.MaxHeight / element.MaxWidth;
-            var ratio = height / width;
-            if (ratio <= elementMaxRatio)
-            {
-                element.Width = width;
-                var actualWidth = width <= element.MaxWidth ? width : element.MaxWidth;
-                element.Height = actualWidth / width * height;
-            }
-            else
-            {
-                element.Height = height;
-                var actualHeight = height <= element.MaxHeight ? height : element.MaxHeight;
-                element.Width = actualHeight / height * width;
-            }
-        }
-
         private void ItemContainer_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             var panel = (Panel)sender;

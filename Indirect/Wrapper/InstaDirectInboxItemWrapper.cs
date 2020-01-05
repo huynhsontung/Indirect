@@ -46,7 +46,7 @@ namespace Indirect.Wrapper
             }
         }
 
-        public int PreviewMediaHeight
+        public int PreviewImageHeight
         {
             get
             {
@@ -70,7 +70,7 @@ namespace Indirect.Wrapper
             }
         }
 
-        public int PreviewMediaWidth
+        public int PreviewImageWidth
         {
             get
             {
@@ -84,6 +84,54 @@ namespace Indirect.Wrapper
 
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
                         return GetPreviewImage(VisualMedia.Media.Images)?.Width ?? 0;
+
+                    case InstaDirectThreadItemType.AnimatedMedia:
+                        return AnimatedMedia.Media.Width;
+
+                    default:
+                        return 0;
+                }
+            }
+        }
+
+        public int FullImageHeight
+        {
+            get
+            {
+                switch (ItemType)
+                {
+                    case InstaDirectThreadItemType.Media:
+                        return GetFullImage(Media.Images)?.Height ?? 0;
+
+                    case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
+                        return GetFullImage(RavenMedia.Images)?.Height ?? 0;
+
+                    case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
+                        return GetFullImage(VisualMedia.Media.Images)?.Height ?? 0;
+
+                    case InstaDirectThreadItemType.AnimatedMedia:
+                        return AnimatedMedia.Media.Height;
+
+                    default:
+                        return 0;
+                }
+            }
+        }
+
+        public int FullImageWidth
+        {
+            get
+            {
+                switch (ItemType)
+                {
+                    case InstaDirectThreadItemType.Media:
+                        return GetFullImage(Media.Images)?.Width ?? 0;
+
+                    case InstaDirectThreadItemType.RavenMedia when RavenMedia != null:
+                        return GetFullImage(RavenMedia.Images)?.Width ?? 0;
+
+                    case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
+                        return GetFullImage(VisualMedia.Media.Images)?.Width ?? 0;
 
                     case InstaDirectThreadItemType.AnimatedMedia:
                         return AnimatedMedia.Media.Width;
@@ -225,10 +273,10 @@ namespace Indirect.Wrapper
             return image;
         }
 
-        private static InstaImage GetFullImage(List<InstaImage> imageCandidates, int originalWidth, int originalHeight)
+        private static InstaImage GetFullImage(List<InstaImage> imageCandidates)
         {
             if (imageCandidates == null || imageCandidates.Count == 0) return null;
-            var image = imageCandidates.Single(x => x.Width == originalWidth && x.Height == originalHeight);
+            var image = imageCandidates.OrderByDescending(x => x.Height + x.Width).First();
             return image;
         }
 

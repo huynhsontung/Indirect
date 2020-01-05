@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage;
+using Windows.Storage.FileProperties;
+using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Indirect.Notification;
 using Indirect.Utilities;
@@ -20,6 +22,7 @@ using InstaSharper.API.Builder;
 using InstaSharper.API.Push;
 using InstaSharper.Classes;
 using InstaSharper.Classes.Models.Direct;
+using InstaSharper.Classes.Models.Media;
 using InstaSharper.Enums;
 using InstaSharper.Logger;
 using Microsoft.Toolkit.Uwp;
@@ -245,7 +248,7 @@ namespace Indirect
             Debug.WriteLine("Notification received.");
             if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.1))
                 await PageReference.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                    async () => await UpdateInboxAndSelectedThread());
+                    UpdateInboxAndSelectedThread);
         }
 
         public async Task UpdateSelectedThread()
@@ -257,17 +260,16 @@ namespace Indirect
             if (result.Succeeded) SelectedThread.Update(result.Value);
         }
 
-        public async Task SendLike()
+        public async void SendLike()
         {
             var selectedThread = SelectedThread;
             if (string.IsNullOrEmpty(selectedThread.ThreadId)) return;
             var result = await _instaApi.MessagingProcessor.SendDirectLikeAsync(selectedThread.ThreadId);
-            if (result.Value)
-                await UpdateInboxAndSelectedThread();
+            if (result.Value) UpdateInboxAndSelectedThread();
         }
 
         // Send message to the current selected recipient
-        public async Task SendMessage(string content)
+        public async void SendMessage(string content)
         {
             var selectedThread = SelectedThread;
             if (string.IsNullOrEmpty(content)) return;
@@ -290,7 +292,69 @@ namespace Indirect
             }
         }
 
-        public async Task UpdateInboxAndSelectedThread()
+        public async void SendFile(StorageFile file, Action<InstaUploaderProgress> progress)
+        {
+            if (file.ContentType.Contains("image"))
+            {
+                var properties = await file.Properties.GetImagePropertiesAsync();
+                int imageHeight = (int) properties.Height;
+                int imageWidth = (int) properties.Width;
+                byte[] bytes;
+                if (properties.Width > 1080 || properties.Height > 1080)
+                {
+                    bytes = await Helpers.CompressImage(file, 1080, 1080);
+                    double widthRatio = (double)1080 / imageWidth;
+                    double heightRatio = (double)1080 / imageHeight;
+                    double scaleRatio = Math.Min(widthRatio, heightRatio);
+                    imageHeight = (int) Math.Floor(imageHeight * scaleRatio);
+                    imageWidth = (int) Math.Floor(imageWidth * scaleRatio);
+                }
+                else
+                {
+                    var buffer = await FileIO.ReadBufferAsync(file);
+                    bytes = buffer.ToArray();
+                }
+                var instaImage = new InstaImage
+                {
+                    ImageBytes = bytes, 
+                    Width = imageWidth, 
+                    Height = imageHeight, 
+                    Url = file.Path
+                };
+                if (string.IsNullOrEmpty(SelectedThread.ThreadId) || SelectedThread.PendingScore == 0) return;
+                await _instaApi.MessagingProcessor.SendDirectPhotoAsync(instaImage, SelectedThread.ThreadId,
+                    SelectedThread.PendingScore, progress);
+                return;
+            }
+
+            if (file.ContentType.Contains("video"))
+            {
+                var properties = await file.Properties.GetVideoPropertiesAsync();
+                var buffer = await FileIO.ReadBufferAsync(file);
+                var bytes = buffer.ToArray();
+                var instaVideo = new InstaVideo()
+                {
+                    VideoBytes = bytes,
+                    Width = (int) properties.Width,
+                    Height = (int) properties.Height,
+                    Url = file.Path
+                };
+                var thumbnail = await file.GetThumbnailAsync(ThumbnailMode.VideosView);
+                var thumbnailBytes = new byte[thumbnail.Size];
+                await thumbnail.ReadAsync(thumbnailBytes.AsBuffer(), (uint) thumbnail.Size, InputStreamOptions.None);
+                var thumbnailImage = new InstaImage()
+                {
+                    ImageBytes = thumbnailBytes,
+                    Width = (int) thumbnail.OriginalWidth,
+                    Height = (int) thumbnail.OriginalHeight
+                };
+                await _instaApi.MessagingProcessor.SendDirectVideoAsync(progress,
+                    new InstaVideoUpload(instaVideo, thumbnailImage), SelectedThread.ThreadId);
+                return;
+            }
+        }
+
+        public async void UpdateInboxAndSelectedThread()
         {
             var selected = SelectedThread;
             await Inbox.UpdateInbox();

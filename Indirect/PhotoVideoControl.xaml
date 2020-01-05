@@ -9,15 +9,30 @@
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!-- <DataTemplate x:Key="ImageView"> -->
+            <!--     <controls:ImageEx x:Name="ImageFrame" Source="{x:Bind _imageSource}" /> -->
+            <!-- </DataTemplate> -->
+            <!-- -->
+            <!-- <DataTemplate x:Key="VideoView"> -->
+            <!--     <local:AutoVideoControl x:Name="VideoFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" -->
+            <!--                             AreTransportControlsEnabled="False" Visibility="Collapsed" -->
+            <!--                             Source="{x:Bind _videoSource}" -->
+            <!--                             Tapped="VideoFrame_OnTapped" LostFocus="VideoFrame_OnLostFocus"/> -->
+            <!-- </DataTemplate> -->
+        </ResourceDictionary>
+    </UserControl.Resources>
+
 
     <Grid CornerRadius="{x:Bind CornerRadius}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <controls:ImageEx x:Name="ImageFrame" Source="{x:Bind _imageSource}" />
-        <MediaPlayerElement x:Name="VideoFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                            AreTransportControlsEnabled="False" Visibility="Collapsed"
-                            Source="{x:Bind _videoSource}"
-                            Tapped="VideoFrame_OnTapped"/>
+        <local:AutoVideoControl x:Name="VideoFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                AreTransportControlsEnabled="False" Visibility="Collapsed"
+                                Source="{x:Bind _videoSource}"
+                                Tapped="VideoFrame_OnTapped"/>
     </Grid>
 </UserControl>
