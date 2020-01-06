@@ -23,6 +23,7 @@ using InstaSharper.API.Push;
 using InstaSharper.Classes;
 using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Classes.Models.Media;
+using InstaSharper.Classes.ResponseWrappers.Direct;
 using InstaSharper.Enums;
 using InstaSharper.Logger;
 using Microsoft.Toolkit.Uwp;
@@ -265,7 +266,7 @@ namespace Indirect
             var selectedThread = SelectedThread;
             if (string.IsNullOrEmpty(selectedThread.ThreadId)) return;
             var result = await _instaApi.MessagingProcessor.SendDirectLikeAsync(selectedThread.ThreadId);
-            if (result.Value) UpdateInboxAndSelectedThread();
+            if (result.Succeeded) UpdateInboxAndSelectedThread();
         }
 
         // Send message to the current selected recipient
@@ -273,13 +274,46 @@ namespace Indirect
         {
             var selectedThread = SelectedThread;
             if (string.IsNullOrEmpty(content)) return;
+            var tokens = content.Split("\t\n ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            var links = tokens.Where(x =>
+                x.StartsWith("http://") || x.StartsWith("https://") || x.StartsWith("www.")).ToList();
+            // var hashtags = tokens.Where(x => x.StartsWith('#')).Select(x => x.Substring(1)).ToList();
             IResult<List<InstaDirectInboxThread>> result;
+            IResult<ItemAckPayloadResponse> ackResult = new Result<ItemAckPayloadResponse>(false, new ItemAckPayloadResponse());   // for links and hashtags
             if (!string.IsNullOrEmpty(selectedThread.ThreadId))
             {
+                if (links.Any())
+                {
+                    ackResult = await _instaApi.MessagingProcessor.SendDirectLinkAsync(content, links, selectedThread.ThreadId);
+                }
+
+                // if (hashtags.Any())
+                // {
+                //     ackResult = await _instaApi.MessagingProcessor.SendDirectHashtagAsync(content, null,
+                //         selectedThread.ThreadId);
+                // }
+
+                if (ackResult.Succeeded)
+                {
+                    UpdateInboxAndSelectedThread();
+                    return;
+                }
+
                 result = await _instaApi.MessagingProcessor.SendDirectTextAsync(null, selectedThread.ThreadId, content);
             }
             else
             {
+                if (links.Any())
+                {
+                    ackResult = await _instaApi.MessagingProcessor.SendDirectLinkToRecipientsAsync(content, links,
+                        selectedThread.Users.Select(x => x.Pk.ToString()).ToArray());
+                    if (ackResult.Succeeded)
+                    {
+                        UpdateInboxAndSelectedThread();
+                        return;
+                    }
+
+                }
                 result = await _instaApi.MessagingProcessor.SendDirectTextAsync(selectedThread.Users.Select(x => x.Pk),
                     null, content);
             }
@@ -362,6 +396,7 @@ namespace Indirect
             if (InboxThreads.Contains(selected) && SelectedThread != selected) SelectedThread = selected;
             await UpdateSelectedThread();
             _lastUpdated = DateTime.Now;
+            MarkLatestItemSeen(selected);
         }
 
         public async Task<List<InstaDirectInboxThreadWrapper>> Search(string query)
@@ -422,9 +457,9 @@ namespace Indirect
             SelectedThread = thread;
         }
 
-        public async Task MarkLatestItemSeen(InstaDirectInboxThreadWrapper thread)
+        public async void MarkLatestItemSeen(InstaDirectInboxThreadWrapper thread)
         {
-            if (string.IsNullOrEmpty(thread.ThreadId)) return;
+            if (string.IsNullOrEmpty(thread?.ThreadId)) return;
             if (thread.LastSeenAt.TryGetValue(thread.ViewerId, out var lastSeen))
             {
                 if (string.IsNullOrEmpty(thread.LastPermanentItem?.ItemId) || 

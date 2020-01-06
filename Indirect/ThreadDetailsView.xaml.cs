@@ -117,13 +117,13 @@ namespace Indirect
                     return;
                 }
 
-                // var imageProps = await file.Properties.GetImagePropertiesAsync();
-                // var ratio = (double) imageProps.Width / imageProps.Height;
-                // if (ratio < 0.8 || ratio > 1.91)
-                // {
-                //     DisplayFailDialog("Image does not have valid aspect ratio.");
-                //     return;
-                // }
+                var imageProps = await file.Properties.GetImagePropertiesAsync();
+                var ratio = (double) imageProps.Width / imageProps.Height;
+                if (ratio < 0.4 || ratio > 2.5)
+                {
+                    DisplayFailDialog("Image does not have valid aspect ratio.");
+                    return;
+                }
             }
 
             if (file.ContentType.Contains("video"))

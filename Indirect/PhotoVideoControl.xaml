@@ -11,28 +11,37 @@
     d:DesignWidth="400">
     <UserControl.Resources>
         <ResourceDictionary>
-            <!-- <DataTemplate x:Key="ImageView"> -->
-            <!--     <controls:ImageEx x:Name="ImageFrame" Source="{x:Bind _imageSource}" /> -->
-            <!-- </DataTemplate> -->
-            <!-- -->
-            <!-- <DataTemplate x:Key="VideoView"> -->
-            <!--     <local:AutoVideoControl x:Name="VideoFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" -->
-            <!--                             AreTransportControlsEnabled="False" Visibility="Collapsed" -->
-            <!--                             Source="{x:Bind _videoSource}" -->
-            <!--                             Tapped="VideoFrame_OnTapped" LostFocus="VideoFrame_OnLostFocus"/> -->
-            <!-- </DataTemplate> -->
+             <DataTemplate x:Key="ImageView"> 
+                 <controls:ImageEx x:Name="ImageFrame" Source="{Binding}" /> 
+             </DataTemplate> 
+             
+             <DataTemplate x:Key="VideoView"> 
+                 <local:AutoVideoControl x:Name="VideoFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                                         AreTransportControlsEnabled="{Binding AreTransportControlsEnabled, Mode=OneWay, FallbackValue=False}"
+                                         Source="{Binding}" 
+                                         Tapped="VideoFrame_OnTapped"/> 
+             </DataTemplate>
+
+            
         </ResourceDictionary>
     </UserControl.Resources>
 
+    <ContentControl x:Name="ContentControl"
+                    CornerRadius="{x:Bind CornerRadius}" Content="{x:Bind _source, Mode=OneWay}">
+        <ContentControl.ContentTemplateSelector>
+            <local:PhotoVideoTemplateSelector ImageView="{StaticResource ImageView}"
+                                              VideoView="{StaticResource VideoView}"/>
+        </ContentControl.ContentTemplateSelector>
+    </ContentControl>
 
-    <Grid CornerRadius="{x:Bind CornerRadius}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-        <controls:ImageEx x:Name="ImageFrame" Source="{x:Bind _imageSource}" />
-        <local:AutoVideoControl x:Name="VideoFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                AreTransportControlsEnabled="False" Visibility="Collapsed"
-                                Source="{x:Bind _videoSource}"
-                                Tapped="VideoFrame_OnTapped"/>
-    </Grid>
+    <!-- <Grid CornerRadius="{x:Bind CornerRadius}"> -->
+    <!--     <Grid.ColumnDefinitions> -->
+    <!--         <ColumnDefinition Width="Auto"/> -->
+    <!--     </Grid.ColumnDefinitions> -->
+    <!--     <controls:ImageEx x:Name="ImageFrame" Source="{x:Bind _imageSource}" /> -->
+    <!--     <local:AutoVideoControl x:Name="VideoFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" -->
+    <!--                             AreTransportControlsEnabled="False" Visibility="Collapsed" -->
+    <!--                             Source="{x:Bind _videoSource}" -->
+    <!--                             Tapped="VideoFrame_OnTapped"/> -->
+    <!-- </Grid> -->
 </UserControl>

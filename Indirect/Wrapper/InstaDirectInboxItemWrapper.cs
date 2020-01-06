@@ -31,7 +31,7 @@ namespace Indirect.Wrapper
             get {
                 switch (ItemType)
                 {
-                    case InstaDirectThreadItemType.Text when Text[0] == '#' && !Text.Contains(' '):
+                    case InstaDirectThreadItemType.Text when !string.IsNullOrEmpty(Text) && Text[0] == '#' && !Text.Contains(' '):
                         return new Uri("https://www.instagram.com/explore/tags/" + Text.Substring(1));
 
                     case InstaDirectThreadItemType.Link:
@@ -39,6 +39,9 @@ namespace Indirect.Wrapper
 
                     case InstaDirectThreadItemType.MediaShare:
                         return new Uri("https://www.instagram.com/p/" + MediaShare.Code);
+
+                    case InstaDirectThreadItemType.Hashtag:
+                        return new Uri("https://www.instagram.com/explore/tags/" + HashtagMedia.Name.ToLower());
                     
                     default:
                         return null;
@@ -60,6 +63,9 @@ namespace Indirect.Wrapper
 
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
                         return GetPreviewImage(VisualMedia.Media.Images)?.Height ?? 0;
+
+                    case InstaDirectThreadItemType.ReelShare:
+                        return GetPreviewImage(ReelShareMedia.Media.ImageList)?.Height ?? 0;
 
                     case InstaDirectThreadItemType.AnimatedMedia:
                         return AnimatedMedia.Media.Height;
@@ -85,6 +91,9 @@ namespace Indirect.Wrapper
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
                         return GetPreviewImage(VisualMedia.Media.Images)?.Width ?? 0;
 
+                    case InstaDirectThreadItemType.ReelShare:
+                        return GetPreviewImage(ReelShareMedia.Media.ImageList)?.Width ?? 0;
+
                     case InstaDirectThreadItemType.AnimatedMedia:
                         return AnimatedMedia.Media.Width;
 
@@ -109,6 +118,9 @@ namespace Indirect.Wrapper
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
                         return GetFullImage(VisualMedia.Media.Images)?.Height ?? 0;
 
+                    case InstaDirectThreadItemType.ReelShare:
+                        return GetFullImage(ReelShareMedia.Media.ImageList)?.Height ?? 0;
+
                     case InstaDirectThreadItemType.AnimatedMedia:
                         return AnimatedMedia.Media.Height;
 
@@ -132,6 +144,9 @@ namespace Indirect.Wrapper
 
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
                         return GetFullImage(VisualMedia.Media.Images)?.Width ?? 0;
+
+                    case InstaDirectThreadItemType.ReelShare:
+                        return GetFullImage(ReelShareMedia.Media.ImageList)?.Width ?? 0;
 
                     case InstaDirectThreadItemType.AnimatedMedia:
                         return AnimatedMedia.Media.Width;
@@ -165,6 +180,10 @@ namespace Indirect.Wrapper
                         url = GetPreviewImage(VisualMedia.Media.Images)?.Url;
                         return url != null ? new Uri(url) : null;
 
+                    case InstaDirectThreadItemType.ReelShare:
+                        url = GetPreviewImage(ReelShareMedia.Media.ImageList)?.Url;
+                        return url != null ? new Uri(url) : null;
+
                     case InstaDirectThreadItemType.AnimatedMedia:
                         return new Uri(AnimatedMedia.Media.Url);
 
@@ -192,6 +211,9 @@ namespace Indirect.Wrapper
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null:
                         return GetFullImageUri(VisualMedia.Media.Images);
 
+                    case InstaDirectThreadItemType.ReelShare:
+                        return GetFullImageUri(ReelShareMedia.Media.ImageList);
+
                     case InstaDirectThreadItemType.AnimatedMedia:
                         return PreviewImageUri;
 
@@ -201,8 +223,8 @@ namespace Indirect.Wrapper
             }
         }
 
-        public int VideoWidth => RavenMedia?.Width ?? VisualMedia?.Media?.Width ?? Media.OriginalWidth;
-        public int VideoHeight => RavenMedia?.Height ?? VisualMedia?.Media?.Height ?? Media.OriginalHeight;
+        public int VideoWidth => (int) (RavenMedia?.Width ?? VisualMedia?.Media?.Width ?? Media?.OriginalWidth ?? ReelShareMedia.Media.OriginalWidth);
+        public int VideoHeight => (int) (RavenMedia?.Height ?? VisualMedia?.Media?.Height ?? Media?.OriginalHeight ?? ReelShareMedia.Media.OriginalHeight);
 
         public Uri VideoUri
         {
@@ -221,6 +243,9 @@ namespace Indirect.Wrapper
         
                     case InstaDirectThreadItemType.RavenMedia when VisualMedia != null && VisualMedia.Media.Videos.Count > 0:
                         return new Uri(VisualMedia.Media.Videos.First().Url);
+
+                    case InstaDirectThreadItemType.ReelShare:
+                        return new Uri(ReelShareMedia.Media.VideoList.First().Url);
         
                     default:
                         return null;

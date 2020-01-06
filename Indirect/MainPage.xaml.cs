@@ -100,7 +100,7 @@ namespace Indirect
             }
             var inboxThread = (InstaDirectInboxThreadWrapper) e.AddedItems[0];
             DataContext = inboxThread.ObservableItems;
-            _ = _viewModel.MarkLatestItemSeen(inboxThread);
+            _viewModel.MarkLatestItemSeen(inboxThread);
         }
 
         private void NewMessageButton_OnClick(object sender, RoutedEventArgs e)

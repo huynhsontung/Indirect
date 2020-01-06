@@ -21,6 +21,7 @@ namespace Indirect
         public DataTemplate MediaShareTemplate { get; set; }
         public DataTemplate HyperlinkTemplate { get; set; }
         public DataTemplate HyperlinkWithPreviewTemplate { get; set; }
+        public DataTemplate ReelShareTemplate { get; set; }
         public DataTemplate NotSupportedTemplate { get; set; }
 
         private static readonly DataTemplate EmptyTemplate = new DataTemplate();
@@ -36,6 +37,7 @@ namespace Indirect
                     case InstaDirectThreadItemType.Like:
                         return LikeTemplate;
 
+                    case InstaDirectThreadItemType.Hashtag:
                     case InstaDirectThreadItemType.Text when !string.IsNullOrEmpty(inboxItem.NavigateUri?.ToString()):
                         return HyperlinkTemplate;
 
@@ -64,6 +66,9 @@ namespace Indirect
                     case InstaDirectThreadItemType.RavenMedia when
                         inboxItem.RavenMedia?.MediaType == InstaMediaType.Video || inboxItem.VisualMedia.Media.MediaType == InstaMediaType.Video:
                         return VideoTemplate;
+
+                    case InstaDirectThreadItemType.ReelShare:
+                        return ReelShareTemplate;
 
                     default:
                         return NotSupportedTemplate;

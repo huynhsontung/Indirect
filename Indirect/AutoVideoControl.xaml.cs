@@ -14,8 +14,10 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Utilities;
+using Microsoft.Toolkit.Uwp.UI;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -48,6 +50,42 @@ namespace Indirect
             typeof(bool),
             typeof(AutoVideoControl),
             new PropertyMetadata(true, AreTransportControlsEnabledChanged));
+        public static readonly DependencyProperty PosterSourceProperty = DependencyProperty.Register(
+            nameof(Source),
+            typeof(object),
+            typeof(AutoVideoControl),
+            new PropertyMetadata(null, OnPosterSourceChanged));
+
+        private static async void OnPosterSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var view = (AutoVideoControl) d;
+            var source = e.NewValue;
+            if (source == null) return;
+            var imageSource = source as ImageSource;
+            if (imageSource != null)
+            {
+                view.VideoPlayer.PosterSource = imageSource;
+                return;
+            }
+
+            var uri = source as Uri;
+            if (uri == null)
+            {
+                var url = source as string ?? source.ToString();
+                if (!Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) return;
+            }
+
+            if (Helpers.IsHttpUri(uri))
+            {
+                imageSource = await ImageCache.Instance.GetFromCacheAsync(uri);
+            }
+            else
+            {
+                imageSource = new BitmapImage(uri);
+            }
+
+            view.VideoPlayer.PosterSource = imageSource;
+        }
 
         private static void AreTransportControlsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -138,6 +176,11 @@ namespace Indirect
         {
             get => GetValue(SourceProperty);
             set => SetValue(SourceProperty, value);
+        }
+        public object PosterSource
+        {
+            get => GetValue(PosterSourceProperty);
+            set => SetValue(PosterSourceProperty, value);
         }
         public MediaTransportControls TransportControls
         {

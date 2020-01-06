@@ -134,6 +134,7 @@
       <DependentUpon>AutoVideoControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converters\LinkPreviewVisibilityConverter.cs" />
+    <Compile Include="Converters\ReelShareTextVisibilityConverter.cs" />
     <Compile Include="Utilities\ChatListView.cs" />
     <Compile Include="Converters\FromMeBoolToGridColumnConverter.cs" />
     <Compile Include="Converters\OpenButtonStyleConverter.cs" />

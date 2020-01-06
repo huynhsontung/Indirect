@@ -105,5 +105,17 @@ namespace Indirect
             if (Item.NavigateUri == null) return;
             _ = Windows.System.Launcher.LaunchUriAsync(Item.NavigateUri);
         }
+
+        private void ReelShareImage_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (Item.ReelShareMedia.Media.MediaType == 1)
+            {
+                ImageFrame_Tapped(sender, e);
+            }
+            else
+            {
+                VideoPopupButton_OnTapped(sender, e);
+            }
+        }
     }
 }

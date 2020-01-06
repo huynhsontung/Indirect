@@ -34,6 +34,7 @@
             <converters:ReactionsVisibilityConverter x:Key="ReactionsVisibilityConverter"/>
             <converters:ReactionTextVisibilityConverter x:Key="ReactionTextVisibilityConverter"/>
             <converters:FromMeBoolToAlignmentConverter x:Key="FromMeAlignmentConverter"/>
+            <converters:ReelShareTextVisibilityConverter x:Key="ReelShareTextVisibilityConverter"/>
             <converters:FromMeBoolToBrushConverter x:Key="FromMeBrushConverter" 
                                                    FromMe="{StaticResource FromMeItemBackground}"
                                                    FromThem="{StaticResource FromThemItemBackground}"/>
@@ -104,7 +105,8 @@
                                Margin="6"
                                MaxWidth="250"
                                HorizontalAlignment="Center"
-                               TextWrapping="WrapWholeWords"/>
+                               TextWrapping="WrapWholeWords"
+                               IsTextSelectionEnabled="True"/>
                 </Border>
             </DataTemplate>
 
@@ -149,7 +151,7 @@
             </DataTemplate>
 
             <DataTemplate x:Key="ImageTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
-                <controls:ImageEx x:Name="ImageFrame" CachingStrategy="Custom"
+                <controls:ImageEx x:Name="ImageFrame"
                                   MaxWidth="250" MaxHeight="350"
                                   IsCacheEnabled="True"
                                   CornerRadius="2"
@@ -186,7 +188,7 @@
                         <local:AutoVideoControl x:Name="MediaFrame"
                                                 MaxWidth="250" MaxHeight="350" 
                                                 VideoHeight="{x:Bind VideoHeight}" VideoWidth="{x:Bind VideoWidth}"
-                                                Source="{x:Bind VideoUri}">
+                                                Source="{x:Bind VideoUri}" PosterSource="{x:Bind PreviewImageUri}">
                             <local:AutoVideoControl.TransportControls>
                                 <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False"
                                                         IsZoomButtonVisible="False" ShowAndHideAutomatically="False"/>
@@ -225,6 +227,34 @@
                                Margin="8,4,8,8"/>
                 </Grid>
             </DataTemplate>
+
+            <DataTemplate x:Key="ReelShareTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <StackPanel Orientation="Vertical" 
+                            HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
+                    <TextBlock Text="{x:Bind Text}"
+                               Style="{ThemeResource FluentCaptionTextStyle}"
+                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                               HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                               Margin="0,0,0,2"/>
+                    <controls:ImageEx Source="{x:Bind PreviewImageUri}"
+                                      MaxWidth="100" MaxHeight="200"
+                                      HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                                      CornerRadius="2" Tapped="ReelShareImage_Tapped"/>
+                    <Border x:Name="MessageContentWithBorder"
+                            Visibility="{x:Bind ReelShareMedia.Type, Converter={StaticResource ReelShareTextVisibilityConverter}}"
+                            Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
+                            HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                            CornerRadius="2,2,2,2">
+                        <TextBlock Style="{ThemeResource FluentBodyTextStyle}"
+                                   Text="{x:Bind ReelShareMedia.Text}"
+                                   Margin="6"
+                                   MaxWidth="250"
+                                   HorizontalAlignment="Center"
+                                   TextWrapping="WrapWholeWords"
+                                   IsTextSelectionEnabled="True"/>
+                    </Border>
+                </StackPanel>
+            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -243,7 +273,8 @@
                                             HiddenMediaTemplate="{StaticResource HiddenMediaTemplate}"
                                             ImageTemplate="{StaticResource ImageTemplate}"
                                             VideoTemplate="{StaticResource VideoTemplate}"
-                                            MediaShareTemplate="{StaticResource MediaShareTemplate}"/>
+                                            MediaShareTemplate="{StaticResource MediaShareTemplate}"
+                                            ReelShareTemplate="{StaticResource ReelShareTemplate}"/>
             </ContentControl.ContentTemplateSelector>
         </ContentControl>
 
