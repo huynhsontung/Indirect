@@ -17,7 +17,7 @@ namespace Indirect.Wrapper
     /// Wrapper of <see cref="InstaDirectInboxThread"/> with Observable lists
     class InstaDirectInboxThreadWrapper : InstaDirectInboxThread, INotifyPropertyChanged, IIncrementalSource<InstaDirectInboxItemWrapper>
     {
-        private readonly IInstaApi _instaApi;
+        private readonly InstaApi _instaApi;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -29,7 +29,7 @@ namespace Indirect.Wrapper
         /// </summary>
         /// <param name="user"></param>
         /// <param name="api"></param>
-        public InstaDirectInboxThreadWrapper(InstaUserShort user, IInstaApi api)
+        public InstaDirectInboxThreadWrapper(InstaUserShort user, InstaApi api)
         {
             ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
             _instaApi = api;
@@ -37,7 +37,7 @@ namespace Indirect.Wrapper
             Title = user.UserName;
         }
 
-        public InstaDirectInboxThreadWrapper(InstaRankedRecipientThread rankedThread, IInstaApi api)
+        public InstaDirectInboxThreadWrapper(InstaRankedRecipientThread rankedThread, InstaApi api)
         {
             ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
             _instaApi = api;
@@ -54,7 +54,7 @@ namespace Indirect.Wrapper
             }
         }
 
-        public InstaDirectInboxThreadWrapper(InstaDirectInboxThread source, IInstaApi api)
+        public InstaDirectInboxThreadWrapper(InstaDirectInboxThread source, InstaApi api)
         {
             ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
             _instaApi = api;
@@ -234,5 +234,8 @@ namespace Indirect.Wrapper
             UpdateExcludeItemList(result.Value);
             return result.Value.Items.Select(x => new InstaDirectInboxItemWrapper(x, _instaApi));
         }
+
+        public void LikeItem(string itemId) =>
+            _instaApi.MessagingProcessor.LikeItemAsync(ThreadId, itemId);
     }
 }

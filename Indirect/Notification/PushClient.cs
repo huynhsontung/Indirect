@@ -48,7 +48,7 @@ namespace Indirect.Notification
         private IChannelHandlerContext _context;
         private Task _timerTask;
 
-        public PushClient(IInstaApi api, FbnsConnectionData connectionData)
+        public PushClient(InstaApi api, FbnsConnectionData connectionData)
         {
             ConnectionData = connectionData;
 

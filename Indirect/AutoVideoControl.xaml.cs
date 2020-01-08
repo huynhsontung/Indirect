@@ -167,7 +167,11 @@ namespace Indirect
                 uri = new Uri(sUri);
             }
 
-            mediaSource = await VideoCache.Instance.GetFromCacheAsync(uri);
+            if (Helpers.IsHttpUri(uri))
+                mediaSource = await VideoCache.Instance.GetFromCacheAsync(uri);
+            else
+                mediaSource = MediaSource.CreateFromUri(uri);
+            
             view.VideoPlayer.Source = mediaSource;
         }
 

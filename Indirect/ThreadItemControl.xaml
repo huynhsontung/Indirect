@@ -62,11 +62,27 @@
                 <Setter Property="IsEnabled" Value="False"/>
             </Style>
 
+            <DataTemplate x:Key="UnexpectedTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <Border Background="Transparent" 
+                        ToolTipService.ToolTip="This item type is something I has not encountered during development and is totally unaccounted for.
+                        It would be nice if you can provide me some context regarding this item so I can support this item in the future."
+                        HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                        CornerRadius="2" BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
+                    <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
+                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                               Text="Unexpected item type. Contact the developer."
+                               Margin="6" 
+                               MaxWidth="250"
+                               HorizontalAlignment="Center" 
+                               TextWrapping="WrapWholeWords" FontStyle="Italic"/>
+                </Border>
+            </DataTemplate>
+
             <DataTemplate x:Key="NotSupportedTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
                 <Border x:Name="NotAvailableMessage" 
                         Background="Transparent" 
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
-                        CornerRadius="2,2,2,2" BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
+                        CornerRadius="2" BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1">
                     <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                                Text="Content type is not yet supported."
@@ -255,13 +271,28 @@
                     </Border>
                 </StackPanel>
             </DataTemplate>
+
+            <DataTemplate x:Key="AudioTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <Border CornerRadius="2"
+                        HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                        BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                        BorderThickness="1">
+                    <local:AutoVideoControl Width="250" Source="{x:Bind VideoUri}">
+                        <local:AutoVideoControl.TransportControls>
+                            <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False"
+                                                    IsZoomButtonVisible="False" ShowAndHideAutomatically="False"
+                                                    IsCompact="True"/>
+                        </local:AutoVideoControl.TransportControls>
+                    </local:AutoVideoControl>
+                </Border>
+            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
 
     <StackPanel x:Name="ItemContainer" Orientation="Vertical" 
                 HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
-                Margin="0,2,0,2" DoubleTapped="ItemContainer_DoubleTapped">
+                Margin="0,2,0,2" DoubleTapped="ShowTimestamp">
         
         <ContentControl x:Name="MainContentControl" Content="{x:Bind Item}">
             <ContentControl.ContentTemplateSelector>
@@ -273,8 +304,10 @@
                                             HiddenMediaTemplate="{StaticResource HiddenMediaTemplate}"
                                             ImageTemplate="{StaticResource ImageTemplate}"
                                             VideoTemplate="{StaticResource VideoTemplate}"
+                                            AudioTemplate="{StaticResource AudioTemplate}"
                                             MediaShareTemplate="{StaticResource MediaShareTemplate}"
-                                            ReelShareTemplate="{StaticResource ReelShareTemplate}"/>
+                                            ReelShareTemplate="{StaticResource ReelShareTemplate}"
+                                            UnexpectedTemplate="{StaticResource UnexpectedTemplate}"/>
             </ContentControl.ContentTemplateSelector>
         </ContentControl>
 

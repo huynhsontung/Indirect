@@ -15,8 +15,8 @@ namespace Indirect.Wrapper
     {
         public new IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> Threads { get; }
 
-        private readonly IInstaApi _instaApi;
-        public InstaDirectInboxWrapper(IInstaApi api)
+        private readonly InstaApi _instaApi;
+        public InstaDirectInboxWrapper(InstaApi api)
         {
             _instaApi = api ?? throw new NullReferenceException();
             Threads =

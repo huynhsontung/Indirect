@@ -7,7 +7,7 @@ namespace Indirect.Wrapper
     {
         public new InstaVisualMediaWrapper Media { get; set; }
 
-        public InstaVisualMediaContainerWrapper(InstaVisualMediaContainer source, IInstaApi api)
+        public InstaVisualMediaContainerWrapper(InstaVisualMediaContainer source, InstaApi api)
         {
             UrlExpireAt = source.UrlExpireAt;
             Media = source.Media != null ? new InstaVisualMediaWrapper(source.Media, api) : null;

@@ -11,6 +11,5 @@
     EffectiveViewportChanged="AutoVideoControl_OnEffectiveViewportChanged">
 
     <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" 
-                        PointerExited="VideoPlayer_OnPointerExited"
                         MaxWidth="{x:Bind MaxWidth}" MaxHeight="{x:Bind MaxHeight}"/>
 </UserControl>

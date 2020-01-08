@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Windows.Media.Core;
+using Windows.Security.Cryptography;
+using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Imaging;
 using InstaSharper.API;
@@ -12,7 +14,7 @@ namespace Indirect.Wrapper
 {
     class InstaDirectInboxItemWrapper : InstaDirectInboxItem
     {
-        private readonly IInstaApi _instaApi;
+        private readonly InstaApi _instaApi;
 
         public new InstaDirectReactionsWrapper Reactions { get; set; }
         // public new InstaInboxMediaWrapper Media { get; set; }
@@ -246,6 +248,9 @@ namespace Indirect.Wrapper
 
                     case InstaDirectThreadItemType.ReelShare:
                         return new Uri(ReelShareMedia.Media.VideoList.First().Url);
+
+                    case InstaDirectThreadItemType.VoiceMedia:
+                        return new Uri(VoiceMedia.Media.Audio.AudioSource);
         
                     default:
                         return null;
@@ -256,7 +261,7 @@ namespace Indirect.Wrapper
         public bool IsNavigateUriValid => NavigateUri?.IsAbsoluteUri ?? false;
         
 
-        public InstaDirectInboxItemWrapper(InstaDirectInboxItem source, IInstaApi api)
+        public InstaDirectInboxItemWrapper(InstaDirectInboxItem source, InstaApi api)
         {
             _instaApi = api;
             Text = source.Text;

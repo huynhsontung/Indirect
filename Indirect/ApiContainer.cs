@@ -37,7 +37,9 @@ namespace Indirect
         private const string STATE_FILE_NAME = "state.bin";
         private const string SOCKET_ID = "mqtt_fbns";
 
-        private IInstaApi _instaApi;
+        private static readonly InstaApiBuilder Builder = InstaApiBuilder.CreateBuilder();
+
+        private InstaApi _instaApi;
         private readonly StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
         private StorageFile _stateFile;
         private FbnsConnectionData _pushData;
@@ -127,8 +129,7 @@ namespace Indirect
                     var stateData = (StateData) formatter.Deserialize(stateStream);
                     if (stateData.Cookies != null)
                     {
-                        _instaApi = InstaApiBuilder.CreateBuilder()
-                            .LoadStateData(stateData)
+                        _instaApi = Builder.LoadStateData(stateData)
                             .UseLogger(new DebugLogger(LogLevel.All))
                             .Build();
                         IsUserAuthenticated = _instaApi.IsUserAuthenticated;
@@ -181,8 +182,7 @@ namespace Indirect
         public async Task<IResult<InstaLoginResult>> Login(string username, string password)
         {
             var session = new UserSessionData {UserName = username, Password = password};
-            _instaApi = InstaApiBuilder.CreateBuilder()
-                .SetUser(session)
+            _instaApi = Builder.SetUser(session)
                 .UseLogger(new DebugLogger(LogLevel.All))
                 .Build();
 
@@ -250,6 +250,7 @@ namespace Indirect
             if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.1))
                 await PageReference.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                     UpdateInboxAndSelectedThread);
+            if (SelectedThread != null) MarkLatestItemSeen(SelectedThread);
         }
 
         public async Task UpdateSelectedThread()

@@ -7,7 +7,7 @@ namespace Indirect.Wrapper
     {
         public InstaFriendshipShortStatus FriendshipStatus { get; set; }
 
-        public InstaUserShortFriendshipWrapper(InstaUserShortFriendship source, IInstaApi api) : base(source, api)
+        public InstaUserShortFriendshipWrapper(InstaUserShortFriendship source, InstaApi api) : base(source, api)
         {
             FriendshipStatus = source.FriendshipStatus;
         }

@@ -5,7 +5,7 @@ namespace Indirect.Wrapper
 {
     class InstaDirectBroadcastWrapper : InstaDirectBroadcast
     {
-        public InstaDirectBroadcastWrapper(InstaDirectBroadcast source, IInstaApi api)
+        public InstaDirectBroadcastWrapper(InstaDirectBroadcast source, InstaApi api)
         {
             // todo: finish DirectBroadcastWrapper
         }

@@ -11,12 +11,12 @@ namespace Indirect.Wrapper
 {
     public class InstaUserShortWrapper : InstaUserShort
     {
-        private readonly IInstaApi _instaApi;
+        private readonly InstaApi _instaApi;
         public BitmapImage ProfilePicture { get; set; } = new BitmapImage();
 
         private readonly StorageFolder _tempFolder = ApplicationData.Current.TemporaryFolder;
 
-        public InstaUserShortWrapper(InstaUserShort source, IInstaApi api)
+        public InstaUserShortWrapper(InstaUserShort source, InstaApi api)
         {
             _instaApi = api;
             IsVerified = source.IsVerified;

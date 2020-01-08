@@ -14,9 +14,9 @@ namespace Indirect.Wrapper
         public int UnseenCount { get; set; }
         public InstaFriendshipShortStatus FriendshipStatus { get; set; }
 
-        private readonly IInstaApi _instaApi;
+        private readonly InstaApi _instaApi;
 
-        public InstaUserWrapper(InstaUserShort source, IInstaApi api) : base(source, api)
+        public InstaUserWrapper(InstaUserShort source, InstaApi api) : base(source, api)
         {
             _instaApi = api;
 

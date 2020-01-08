@@ -7,7 +7,7 @@ namespace Indirect.Wrapper
 {
     class InstaImageWrapper : InstaImage
     {
-        private readonly IInstaApi _instaApi;
+        private readonly InstaApi _instaApi;
         // private BitmapImage _image = new BitmapImage();
         // private bool _loaded = false;
 
@@ -24,7 +24,7 @@ namespace Indirect.Wrapper
 
         public BitmapImage Image;
 
-        public InstaImageWrapper(InstaImage source, IInstaApi api)
+        public InstaImageWrapper(InstaImage source, InstaApi api)
         {
             _instaApi = api;
             Url = source.Url;

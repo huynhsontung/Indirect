@@ -17,12 +17,14 @@ namespace Indirect
         public DataTemplate LikeTemplate { get; set; }
         public DataTemplate ImageTemplate { get; set; }
         public DataTemplate VideoTemplate { get; set; }
+        public DataTemplate AudioTemplate { get; set; }
         public DataTemplate HiddenMediaTemplate { get; set; }
         public DataTemplate MediaShareTemplate { get; set; }
         public DataTemplate HyperlinkTemplate { get; set; }
         public DataTemplate HyperlinkWithPreviewTemplate { get; set; }
         public DataTemplate ReelShareTemplate { get; set; }
         public DataTemplate NotSupportedTemplate { get; set; }
+        public DataTemplate UnexpectedTemplate { get; set; }
 
         private static readonly DataTemplate EmptyTemplate = new DataTemplate();
 
@@ -69,6 +71,12 @@ namespace Indirect
 
                     case InstaDirectThreadItemType.ReelShare:
                         return ReelShareTemplate;
+
+                    case InstaDirectThreadItemType.VoiceMedia:
+                        return AudioTemplate;
+
+                    case InstaDirectThreadItemType.Unknown:
+                        return UnexpectedTemplate;
 
                     default:
                         return NotSupportedTemplate;

@@ -21,7 +21,7 @@ namespace Indirect.Wrapper
         public InstaGenderType Gender { get; set; }
         public string Email { get; set; }
 
-        public InstaCurrentUserWrapper(InstaCurrentUser source, IInstaApi api) : base(source, api)
+        public InstaCurrentUserWrapper(InstaCurrentUser source, InstaApi api) : base(source, api)
         {
             HasAnonymousProfilePicture = source.HasAnonymousProfilePicture;
             Biography = source.Biography;

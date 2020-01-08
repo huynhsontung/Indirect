@@ -7,7 +7,7 @@ namespace Indirect.Wrapper
     {
         public new InstaMediaWrapper Media { get; set; }
 
-        public InstaStoryShareWrapper(InstaStoryShare source, IInstaApi api)
+        public InstaStoryShareWrapper(InstaStoryShare source, InstaApi api)
         {
             Media = new InstaMediaWrapper(source.Media, api);
             ReelType = source.ReelType;

@@ -7,13 +7,13 @@ namespace Indirect.Wrapper
 {
     class InstaInboxMediaWrapper : InstaInboxMedia
     {
-        private readonly IInstaApi _instaApi;
+        private readonly InstaApi _instaApi;
 
         public new List<InstaImageWrapper> Images { get; } = new List<InstaImageWrapper>();
 
         public new List<InstaVideoWrapper> Videos { get; } = new List<InstaVideoWrapper>();
 
-        public InstaInboxMediaWrapper(InstaInboxMedia source, IInstaApi api)
+        public InstaInboxMediaWrapper(InstaInboxMedia source, InstaApi api)
         {
             _instaApi = api;
             OriginalWidth = source.OriginalWidth;

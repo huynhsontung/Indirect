@@ -7,7 +7,7 @@ namespace Indirect.Wrapper
     // Instagram post wrapper
     class InstaMediaWrapper : InstaMedia
     {
-        private readonly IInstaApi _instaApi;
+        private readonly InstaApi _instaApi;
 
         public new List<InstaImageWrapper> Images { get; } = new List<InstaImageWrapper>();
 
@@ -15,7 +15,7 @@ namespace Indirect.Wrapper
 
         public new InstaUserWrapper User { get; set; }
 
-        public InstaMediaWrapper(InstaMedia source, IInstaApi api)
+        public InstaMediaWrapper(InstaMedia source, InstaApi api)
         {
             _instaApi = api;
             // todo: finish MediaWrapper

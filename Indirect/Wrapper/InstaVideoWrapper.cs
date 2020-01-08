@@ -9,8 +9,8 @@ namespace Indirect.Wrapper
     {
         public MediaSource Video { get; set; }
 
-        private readonly IInstaApi _instaApi;
-        public InstaVideoWrapper(InstaVideo source, IInstaApi api)
+        private readonly InstaApi _instaApi;
+        public InstaVideoWrapper(InstaVideo source, InstaApi api)
         {
             _instaApi = api;
             Url = source.Url;

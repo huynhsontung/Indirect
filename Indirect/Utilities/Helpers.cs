@@ -25,12 +25,12 @@ namespace Indirect.Utilities
             return uri.IsAbsoluteUri && (uri.Scheme == "http" || uri.Scheme == "https");
         }
 
-        public static async Task<IRandomAccessStream> GetAndCacheObject(Uri target, IInstaApi api)
+        public static async Task<IRandomAccessStream> GetAndCacheObject(Uri target, InstaApi api)
         {
             return await GetAndCacheObject(target, api, DefaultCacheDuration);
         }
 
-        public static async Task<IRandomAccessStream> GetAndCacheObject(Uri target, IInstaApi api,
+        public static async Task<IRandomAccessStream> GetAndCacheObject(Uri target, InstaApi api,
             TimeSpan cacheDuration)
         {
             var localPath = target.LocalPath.Replace('/', '\\');

@@ -71,11 +71,16 @@ namespace Indirect
                 Item.Text = Item.LinkMedia.Text;
         }
 
-        private void ItemContainer_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        private void ShowTimestamp(object sender, DoubleTappedRoutedEventArgs e)
         {
             var panel = (Panel)sender;
             var timestampTextBlock = panel.Children.Last();
             timestampTextBlock.Visibility = timestampTextBlock.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void LikeItem(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            Thread.LikeItem(Item.ItemId);
         }
 
         private void ImageFrame_Tapped(object sender, TappedRoutedEventArgs e)

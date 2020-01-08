@@ -11,7 +11,7 @@ namespace Indirect.Wrapper
 
         public new List<InstaVideoWrapper> Videos { get; set; } = new List<InstaVideoWrapper>(2);
 
-        public InstaVisualMediaWrapper(InstaVisualMedia source, IInstaApi api)
+        public InstaVisualMediaWrapper(InstaVisualMedia source, InstaApi api)
         {
             MediaId = source.MediaId;
             InstaIdentifier = source.InstaIdentifier;
