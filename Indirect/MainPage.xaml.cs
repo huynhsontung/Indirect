@@ -18,8 +18,8 @@ namespace Indirect
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private StorageFolder _temporaryFolder = ApplicationData.Current.TemporaryFolder;
         private ApiContainer _viewModel;
+
         public MainPage()
         {
             this.InitializeComponent();
@@ -28,40 +28,28 @@ namespace Indirect
             Window.Current.Activated += OnWindowFocusChange;
         }
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             _viewModel = (ApiContainer)e.Parameter;
             if (_viewModel == null) throw new NullReferenceException("No _viewModel created");
-            _viewModel.PageReference = this;
             MainLayout.DataContext = _viewModel;
-            await _viewModel.OnLoggedIn();
-        }
-
-        private void SendButton_Click(object sender, RoutedEventArgs e)
-        {
-            var button = sender as Control;
-            var messageBox = (TextBox) (button.Parent as Grid).Children[0];
-            var message = messageBox.Text;
-            messageBox.Text = "";
-            _viewModel.SendMessage(message);
-        }
-
-        private void MessageTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            if(e.Key == Windows.System.VirtualKey.Enter)
-            {
-                SendButton_Click(sender, e);
-            }
+            _viewModel.OnLoggedIn();
         }
 
         private async void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
-            var result = await _viewModel.Logout();
-            if (result.Value)
+            var confirmDialog = new ContentDialog()
             {
-                Frame.Navigate(typeof(Login), _viewModel);
-            }
+                Title = "Log out?",
+                CloseButtonText = "Close",
+                PrimaryButtonText = "Logout", 
+                DefaultButton = ContentDialogButton.Close
+            };
+            var confirmation = await confirmDialog.ShowAsync();
+            if (confirmation != ContentDialogResult.Primary) return;
+            await _viewModel.Logout();
+            Frame.Navigate(typeof(Login), _viewModel);
         }
         
         private void DetailsBackButton_OnClick(object sender, RoutedEventArgs e) => _viewModel.SetSelectedThreadNull();
@@ -115,14 +103,9 @@ namespace Indirect
             {
                 return;
             }
-            // Run logic on separate thread and update with UpdateSuggestionListCallback()
-            _ = _viewModel.Search(sender.Text);
-            
-        }
 
-        public void UpdateSuggestionListCallback(object updatedList)
-        {
-            _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { SearchBox.ItemsSource = updatedList; });
+            _viewModel.Search(sender.Text,
+                updatedList => SearchBox.ItemsSource = updatedList);
         }
 
         private void SearchBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
@@ -131,17 +114,19 @@ namespace Indirect
             sender.Text = selectedItem.Title;
         }
 
-        private async void SearchBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        private void SearchBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
             if (args.ChosenSuggestion != null)
             {
-                await _viewModel.MakeProperInboxThread((InstaDirectInboxThreadWrapper) args.ChosenSuggestion);
+                _viewModel.MakeProperInboxThread((InstaDirectInboxThreadWrapper) args.ChosenSuggestion);
             }
             else if (!string.IsNullOrEmpty(sender.Text))
             {
-                var items = await _viewModel.Search(sender.Text);
-                if (items.Count == 0) return;
-                await _viewModel.MakeProperInboxThread(items[0]);
+                _viewModel.Search(sender.Text, updatedList =>
+                {
+                    if (updatedList.Count == 0) return;
+                    _viewModel.MakeProperInboxThread(updatedList[0]);
+                });
             }
             sender.Text = string.Empty;
             sender.ItemsSource = null;

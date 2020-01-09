@@ -82,7 +82,8 @@ namespace Indirect.Notification
 
             var permissionResult = await BackgroundExecutionManager.RequestAccessAsync();
             if (permissionResult == BackgroundAccessStatus.DeniedByUser ||
-                permissionResult == BackgroundAccessStatus.DeniedBySystemPolicy)
+                permissionResult == BackgroundAccessStatus.DeniedBySystemPolicy ||
+                permissionResult == BackgroundAccessStatus.Unspecified)
                 return false;
             var backgroundTaskBuilder = new BackgroundTaskBuilder
             {
@@ -127,10 +128,18 @@ namespace Indirect.Notification
                 {
                     Socket.EnableTransferOwnership(_task.TaskId, SocketActivityConnectedStandbyAction.Wake);
                 }
-                catch (Exception)
+                catch (Exception connectedStandby)
                 {
-                    Debug .WriteLine("System does not support connected standby.");
-                    Socket.EnableTransferOwnership(_task.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
+                    Debug.WriteLine(connectedStandby);
+                    try
+                    {
+                        Socket.EnableTransferOwnership(_task.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e);
+                        Debug.WriteLine("Failed to transfer socket completely!");
+                    }
                 }
             }
 

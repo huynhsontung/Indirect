@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.UI.Core;
 using InstaSharper.API;
 using InstaSharper.Classes;
 using InstaSharper.Classes.Models.Direct;

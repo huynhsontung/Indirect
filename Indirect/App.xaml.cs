@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
@@ -17,7 +18,9 @@ namespace Indirect
     /// </summary>
     sealed partial class App : Application
     {
-        internal ApiContainer ViewModel { get; set; }
+        public const string VIEW_MODEL_PROP_NAME = "ViewModel";
+
+        private ApiContainer ViewModel { get; set; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -59,6 +62,7 @@ namespace Indirect
             var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             coreTitleBar.ExtendViewIntoTitleBar = true;
             ViewModel = await ApiContainer.Factory();
+            CoreApplication.Properties.Add(VIEW_MODEL_PROP_NAME, ViewModel);
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
@@ -107,8 +111,18 @@ namespace Indirect
         {
             if (!ViewModel.IsUserAuthenticated) return;
             var deferral = e.SuspendingOperation.GetDeferral();
-            await ViewModel.TransferPushSocket();
-            deferral.Complete();
+            try
+            {
+                await ViewModel.TransferPushSocket();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(exception);
+            }
+            finally
+            {
+                deferral.Complete();
+            }
         }
 
         private async void OnResuming(object sender, object e)

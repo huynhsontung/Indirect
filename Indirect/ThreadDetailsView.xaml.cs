@@ -49,7 +49,7 @@ namespace Indirect
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ThreadDetailsView) d;
-            view.HandleThreadChanged();
+            view.Bindings.Update();
         }
 
 

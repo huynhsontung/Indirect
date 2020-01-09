@@ -8,6 +8,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage;
@@ -34,6 +35,7 @@ namespace Indirect
     internal class ApiContainer : INotifyPropertyChanged
     {
         // Todo: handle exceptions thrown by _instaApi like no network connection
+        public const string INSTA_API_PROP_NAME = "InstaApi";
         private const string STATE_FILE_NAME = "state.bin";
         private const string SOCKET_ID = "mqtt_fbns";
 
@@ -50,7 +52,6 @@ namespace Indirect
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public MainPage PageReference { get; set; }
         public InstaDirectInboxWrapper Inbox { get; private set; }
 
         public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads =>
@@ -93,11 +94,11 @@ namespace Indirect
             return instance;
         }
 
-        public async Task OnLoggedIn()
+        public async void OnLoggedIn()
         {
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
+            CoreApplication.Properties.Add(INSTA_API_PROP_NAME, _instaApi);
             Inbox = new InstaDirectInboxWrapper(_instaApi);
-            PageReference.DataContext = InboxThreads;
             await UpdateLoggedInUser();
             await StartPushClient();
         }
@@ -192,16 +193,20 @@ namespace Indirect
             return logInResult;
         }
 
-        public async Task<IResult<bool>> Logout()
+        public async Task Logout()
         {
-            var result = await _instaApi.LogoutAsync();
+            // Instagram doesnt support logout anymore
+            // var result = await _instaApi.LogoutAsync();
             await _pushClient.Shutdown();
-            _pushData = null;
+            _pushData = new FbnsConnectionData();
             await ImageCache.Instance.ClearAsync();
             await VideoCache.Instance.ClearAsync();
-            if (result.Value)
-                await WriteStateToStorage();
-            return result;
+            if (CoreApplication.Properties.ContainsKey(INSTA_API_PROP_NAME))
+                CoreApplication.Properties.Remove(INSTA_API_PROP_NAME);
+            using (var stream = await _stateFile.OpenStreamForWriteAsync())
+            {
+                stream.SetLength(0);
+            }
         }
 
         private async Task UpdateLoggedInUser()
@@ -244,12 +249,11 @@ namespace Indirect
             }
         }
 
-        private async void OnNotificationReceived(object sender, MessageReceivedEventArgs args)
+        private void OnNotificationReceived(object sender, MessageReceivedEventArgs args)
         {
             Debug.WriteLine("Notification received.");
             if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.1))
-                await PageReference.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                    UpdateInboxAndSelectedThread);
+                UpdateInboxAndSelectedThread();
             if (SelectedThread != null) MarkLatestItemSeen(SelectedThread);
         }
 
@@ -400,17 +404,24 @@ namespace Indirect
             MarkLatestItemSeen(selected);
         }
 
-        public async Task<List<InstaDirectInboxThreadWrapper>> Search(string query)
+        public async void Search(string query, Action<List<InstaDirectInboxThreadWrapper>> updateAction)
         {
-            if (query.Length > 50) return new List<InstaDirectInboxThreadWrapper>(0);
+            if (query.Length > 50) return;
             _searchCancellationToken?.Cancel();
             _searchCancellationToken = new CancellationTokenSource();
             var cancellationToken = _searchCancellationToken.Token;
-            await Task.Delay(500, cancellationToken);   // Delay so we don't search something mid typing
-            if (cancellationToken.IsCancellationRequested) return new List<InstaDirectInboxThreadWrapper>(0);
+            try
+            {
+                await Task.Delay(500, cancellationToken);   // Delay so we don't search something mid typing
+            }
+            catch (Exception)
+            {
+                return;
+            }
+            if (cancellationToken.IsCancellationRequested) return;
 
             var result = await _instaApi.MessagingProcessor.GetRankedRecipientsByUsernameAsync(query);
-            if (!result.Succeeded) return new List<InstaDirectInboxThreadWrapper>(0);
+            if (!result.Succeeded) return;
             var recipients = result.Value;
             var threadsFromUser = recipients.Users.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi)).ToList();
             var threadsFromRankedThread = recipients.Threads.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi)).ToList();
@@ -423,11 +434,10 @@ namespace Indirect
                 x.LastPermanentItem.Text = x.Users.Count == 1 ? x.Users[0].FullName : $"{x.Users.Count} participants";
                 return x;
             }).ToList();
-            PageReference.UpdateSuggestionListCallback(decoratedList);
-            return decoratedList;
+            updateAction?.Invoke(decoratedList);
         }
 
-        public async Task MakeProperInboxThread(InstaDirectInboxThreadWrapper placeholderThread)
+        public async void MakeProperInboxThread(InstaDirectInboxThreadWrapper placeholderThread)
         {
             InstaDirectInboxThreadWrapper thread;
             if (string.IsNullOrEmpty(placeholderThread.ThreadId))
