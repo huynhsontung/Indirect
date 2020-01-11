@@ -9,6 +9,9 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Utilities;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp.UI;
 
 namespace Indirect
@@ -28,6 +31,7 @@ namespace Indirect
         /// </summary>
         public App()
         {
+            AppCenter.Start("\r\n7+/p70mcWvQhf2BJ1PBcJwvmChA0qX22", typeof(Analytics), typeof(Crashes));
             this.InitializeComponent();
             this.Suspending += OnSuspending;
             this.Resuming += OnResuming;

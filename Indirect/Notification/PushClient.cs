@@ -21,6 +21,7 @@ using InstaSharper.Classes;
 using InstaSharper.Classes.DeviceInfo;
 using InstaSharper.Helpers;
 using Ionic.Zlib;
+using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 
 namespace Indirect.Notification
@@ -137,6 +138,9 @@ namespace Indirect.Notification
                     }
                     catch (Exception e)
                     {
+#if !DEBUG
+                        Crashes.TrackError(e);
+#endif
                         Debug.WriteLine(e);
                         Debug.WriteLine("Failed to transfer socket completely!");
                     }
