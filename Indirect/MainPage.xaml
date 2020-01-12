@@ -123,6 +123,9 @@
                         <PersonPicture ProfilePicture="{x:Bind _viewModel.LoggedInUser.ProfilePicture, Mode=OneWay}" Height="32" Width="32" />
                         <Button.Flyout>
                             <MenuFlyout>
+                                <MenuFlyoutItem Text="Magic!" Click="Magic_Click"/>
+                                <MenuFlyoutItem Text="About" Click="About_Click"/>
+                                <MenuFlyoutSeparator/>
                                 <MenuFlyoutItem Text="Logout" Click="LogoutButton_Click"/>
                             </MenuFlyout>
                         </Button.Flyout>

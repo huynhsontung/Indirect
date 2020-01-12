@@ -18,7 +18,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid ProcessKeyboardAccelerators="Details_OnProcessKeyboardAccelerators">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="Auto"/>
@@ -78,7 +78,7 @@
 
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxItemWrapper">
-                    <local:ThreadItemControl Item="{x:Bind}" Thread="{Binding ElementName=ItemsHolder, Path=DataContext}"/>
+                    <local:ThreadItemControl Item="{x:Bind}"/>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </utilities:ChatListView>

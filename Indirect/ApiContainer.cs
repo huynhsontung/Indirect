@@ -15,12 +15,16 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
+using DotNetty.Buffers;
+using DotNetty.Codecs.Mqtt.Packets;
+using DotNetty.Transport.Channels.Embedded;
 using Indirect.Notification;
 using Indirect.Utilities;
 using Indirect.Wrapper;
 using InstaSharper.API;
 using InstaSharper.API.Builder;
 using InstaSharper.API.Push;
+using InstaSharper.API.Push.PacketHelpers;
 using InstaSharper.Classes;
 using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Classes.Models.Media;
@@ -29,6 +33,8 @@ using InstaSharper.Enums;
 using InstaSharper.Logger;
 using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.UI;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Indirect
 {
@@ -254,7 +260,6 @@ namespace Indirect
             Debug.WriteLine("Notification received.");
             if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.1))
                 UpdateInboxAndSelectedThread();
-            if (SelectedThread != null) MarkLatestItemSeen(SelectedThread);
         }
 
         public async Task UpdateSelectedThread()
@@ -263,7 +268,10 @@ namespace Indirect
                 return;
             var result = await _instaApi.MessagingProcessor.GetThreadAsync(SelectedThread.ThreadId,
                 PaginationParameters.MaxPagesToLoad(1));
-            if (result.Succeeded) SelectedThread.Update(result.Value);
+            if (result.Succeeded)
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+                    CoreDispatcherPriority.Normal,
+                    () => { SelectedThread.Update(result.Value); });
         }
 
         public async void SendLike()
@@ -479,6 +487,88 @@ namespace Indirect
                 await _instaApi.MessagingProcessor.MarkItemSeenAsync(thread.ThreadId,
                     thread.LastPermanentItem.ItemId);
             }
+        }
+
+
+        EmbeddedChannel _embedded = new EmbeddedChannel(new FbnsPacketEncoder(), new FbnsPacketDecoder());
+        public async void StartSyncClient()
+        {
+            var state = _instaApi.GetStateData();
+            var device = _instaApi.DeviceInfo;
+            var cookieHeader = state.Cookies.GetCookieHeader(new Uri("https://i.instagram.com"));
+            var connectPacket = new FbnsConnectPacket()
+            {
+                CleanSession = true,
+                ClientId = "mqttwsclient",
+                HasUsername = true,
+                HasPassword = false,
+                KeepAliveInSeconds = 10,
+                ProtocolLevel = 3,
+                ProtocolName = "MQIsdp"
+            };
+            var aid = Generate16DigitsRandom();
+            var userAgent =
+                $"Mozilla/5.0 (Linux; Android 10; {device.DeviceName}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.93 Mobile Safari/537.36";
+            var json = new JObject(
+                new JProperty("u", LoggedInUser.Pk),
+                new JProperty("s", Generate16DigitsRandom()),
+                new JProperty("cp", 1),
+                new JProperty("ecp", 0),
+                new JProperty("chat_on", true),
+                new JProperty("fg", true),
+                new JProperty("d", device.PhoneId.ToString()),
+                new JProperty("ct", "cookie_auth"),
+                new JProperty("mqtt_sid", ""),
+                new JProperty("aid", aid),
+                new JProperty("st", new JArray()),
+                new JProperty("pm", new JArray()),
+                new JProperty("dc", ""),
+                new JProperty("no_auto_fg", true),
+                new JProperty("a", userAgent)
+            );
+            var username = JsonConvert.SerializeObject(json, Formatting.None);
+            connectPacket.Username = username;
+            _embedded.WriteOutbound(connectPacket);
+            var buffer = _embedded.ReadOutbound<IByteBuffer>();
+            using (var stream = new ReadOnlyByteBufferStream(buffer, true))
+            {
+                var memoryStream = new MemoryStream();
+                stream.CopyTo(memoryStream);
+                var bytesToSend = memoryStream.ToArray();
+                var messageWebsocket = new MessageWebSocket();
+                messageWebsocket.Control.MessageType = SocketMessageType.Binary;
+                messageWebsocket.SetRequestHeader("Cookie", cookieHeader);
+                messageWebsocket.SetRequestHeader("User-Agent", userAgent);
+                messageWebsocket.SetRequestHeader("Origin", "https://www.instagram.com");
+                messageWebsocket.MessageReceived += SyncClientOnMessageReceived;
+                await messageWebsocket.ConnectAsync(new Uri("wss://edge-chat.instagram.com/chat"));
+                using (var dataWriter = new DataWriter(messageWebsocket.OutputStream))
+                {
+                    dataWriter.WriteBytes(bytesToSend);
+                }
+            }
+        }
+
+        private async void SyncClientOnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
+        {
+            var stream = args.GetDataStream().AsStreamForRead();
+            var buffer = new byte[stream.Length];
+            await stream.ReadAsync(buffer, 0, (int) stream.Length);
+            var dotnettyBuffer = Unpooled.CopiedBuffer(buffer);
+            var packet = _embedded.WriteInbound(dotnettyBuffer);
+            Debug.WriteLine("Success?");
+        }
+
+        private ulong Generate16DigitsRandom()
+        {
+            var result = "";
+            var random = new Random();
+            for (int i = 0; i < 16; i++)
+            {
+                result += random.Next(1, 9).ToString();
+            }
+
+            return ulong.Parse(result);
         }
     }
 }

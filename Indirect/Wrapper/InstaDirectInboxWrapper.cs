@@ -45,23 +45,6 @@ namespace Indirect.Wrapper
                 inbox = result.Value.Inbox;
             else return;
             UpdateExcludeThreads(inbox);
-            foreach (var thread in inbox.Threads)
-            {
-                var existed = false;
-                foreach (var existingThread in Threads)
-                {
-                    if (thread.ThreadId != existingThread.ThreadId) continue;
-                    existingThread.Update(thread);
-                    existed = true;
-                    break;
-                }
-
-                if (!existed)
-                {
-                    Threads.Insert(0, new InstaDirectInboxThreadWrapper(thread, _instaApi));
-                }
-            }
-            SortInboxThread();
         }
 
         public async Task<IEnumerable<InstaDirectInboxThreadWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
@@ -77,33 +60,6 @@ namespace Indirect.Wrapper
             else return new List<InstaDirectInboxThreadWrapper>(0);
             UpdateExcludeThreads(inbox);
             return inbox.Threads.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi));
-        }
-
-        private void SortInboxThread()
-        {
-            var sorted = Threads.OrderByDescending(x => x.LastActivity).ToList();
-
-            bool satisfied = true;
-            for (var i = 0; i < Threads.Count; i++)
-            {
-                var thread = Threads[i];
-                var j = i;
-                for (; j < sorted.Count; j++)
-                {
-                    if (!thread.Equals(sorted[j]) || i == j) continue;
-                    satisfied = false;
-                    break;
-                }
-
-                if (satisfied) continue;
-                // Threads.Move(i,j);
-                // ObservableCollection.Move call ObservableCollection implementation of RemoveItem which is cause to refresh all items
-                var tmp = Threads[i];
-                Threads.RemoveAt(i);
-                Threads.Insert(j, tmp);
-                i--;
-                satisfied = true;
-            }
         }
     }
 }

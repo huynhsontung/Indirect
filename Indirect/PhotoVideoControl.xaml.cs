@@ -63,7 +63,12 @@ namespace Indirect
                 {
                     var uriString = Source as string;
                     if (!string.IsNullOrEmpty(uriString)) uri = new Uri(uriString);
-                    else return;
+                    else
+                    {
+                        _source = Source;
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(_source)));
+                        return;
+                    }
                 }
                 _source = uri;
 

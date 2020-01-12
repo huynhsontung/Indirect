@@ -131,5 +131,18 @@ namespace Indirect
             sender.Text = string.Empty;
             sender.ItemsSource = null;
         }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            var about = new AboutDialog();
+            _ = about.ShowAsync();
+        }
+
+        private void Magic_Click(object sender, RoutedEventArgs e)
+        {
+#if DEBUG
+            _viewModel.StartSyncClient();
+#endif
+        }
     }
 }

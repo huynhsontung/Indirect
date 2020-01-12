@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Security.Cryptography;
 using Windows.Storage;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Wrapper;
 using InstaSharper.Enums;
@@ -50,22 +53,13 @@ namespace Indirect
         {
             var view = (ThreadDetailsView) d;
             view.Bindings.Update();
+            view.MessageTextBox.Focus(FocusState.Programmatic);
         }
 
 
         public ThreadDetailsView()
         {
             this.InitializeComponent();
-            // GotFocus += (sender, args) =>
-            // {
-            //     MessageTextBox.Focus(FocusState.Programmatic);
-            // };
-        }
-
-
-        private void HandleThreadChanged()
-        {
-            this.Bindings.Update();
         }
 
         private void RefreshThread_OnClick(object sender, RoutedEventArgs e)
@@ -179,6 +173,22 @@ namespace Indirect
                 }
             });
             FilePickerFlyout.Hide();
+        }
+
+        private async void Details_OnProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)
+        {
+            if (args.Key == VirtualKey.V && args.Modifiers == VirtualKeyModifiers.Control)
+            {
+                var dataPackage = Clipboard.GetContent();
+                if (dataPackage.Contains(StandardDataFormats.Bitmap))
+                {
+                    var imageStream = await dataPackage.GetBitmapAsync();
+                    var bitmapImage = new BitmapImage();
+                    await bitmapImage.SetSourceAsync(await imageStream.OpenReadAsync());
+                    FilePickerPreview.Source = bitmapImage;
+                    FilePickerFlyout.ShowAt(AddFilesButton);
+                }
+            }
         }
     }
 }

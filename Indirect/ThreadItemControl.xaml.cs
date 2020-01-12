@@ -1,8 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Contacts;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Media.Core;
 using Windows.Media.Streaming.Adaptive;
 using Windows.UI.Core;
@@ -20,11 +22,11 @@ namespace Indirect
 {
     internal sealed partial class ThreadItemControl : UserControl
     {
-        public static readonly DependencyProperty ThreadProperty = DependencyProperty.Register(
-            nameof(Thread),
-            typeof(InstaDirectInboxThreadWrapper),
-            typeof(ThreadItemControl),
-            new PropertyMetadata(null, OnThreadChanged));
+        // public static readonly DependencyProperty ThreadProperty = DependencyProperty.Register(
+        //     nameof(Thread),
+        //     typeof(InstaDirectInboxThreadWrapper),
+        //     typeof(ThreadItemControl),
+        //     new PropertyMetadata(null, OnThreadChanged));
 
         public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
             nameof(Item),
@@ -38,11 +40,11 @@ namespace Indirect
             set => SetValue(ItemProperty, value);
         }
 
-        public InstaDirectInboxThreadWrapper Thread
-        {
-            get => (InstaDirectInboxThreadWrapper) GetValue(ThreadProperty);
-            set => SetValue(ThreadProperty, value);
-        }
+        // public InstaDirectInboxThreadWrapper Thread
+        // {
+        //     get => (InstaDirectInboxThreadWrapper) GetValue(ThreadProperty);
+        //     set => SetValue(ThreadProperty, value);
+        // }
 
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -57,6 +59,8 @@ namespace Indirect
             view.Bindings.Update();
             if (item.ItemType == InstaDirectThreadItemType.ActionLog)
                 view.ItemContainer.Visibility = Visibility.Collapsed;
+            if (item.ItemType == InstaDirectThreadItemType.Text)
+                view.MenuCopyOption.Visibility = Visibility.Visible;
         }
 
         public ThreadItemControl()
@@ -76,11 +80,6 @@ namespace Indirect
             var panel = (Panel)sender;
             var timestampTextBlock = panel.Children.Last();
             timestampTextBlock.Visibility = timestampTextBlock.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        private void LikeItem(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            Thread.LikeItem(Item.ItemId);
         }
 
         private void ImageFrame_Tapped(object sender, TappedRoutedEventArgs e)
@@ -121,6 +120,35 @@ namespace Indirect
             {
                 VideoPopupButton_OnTapped(sender, e);
             }
+        }
+
+        private bool _timeout;
+        private async void LikeUnlike_Click(object sender, RoutedEventArgs e)
+        {
+            if (_timeout) return;
+            if (Item.Reactions?.MeLiked ?? false)
+            {
+                Item.UnlikeItem();
+            }
+            else
+            {
+                Item.LikeItem();
+            }
+            _timeout = true;
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            _timeout = false;
+
+        }
+
+        private void MenuCopyOption_Click(object sender, RoutedEventArgs e)
+        {
+            var border = MainContentControl.ContentTemplateRoot as Border;
+            var textBlock = border?.Child as TextBlock;
+            if (textBlock == null) return;
+            var dataPackage = new DataPackage();
+            dataPackage.RequestedOperation = DataPackageOperation.Copy;
+            dataPackage.SetText(textBlock.Text);
+            Clipboard.SetContent(dataPackage);
         }
     }
 }

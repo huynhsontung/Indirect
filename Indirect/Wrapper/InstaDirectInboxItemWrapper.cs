@@ -16,7 +16,8 @@ namespace Indirect.Wrapper
     {
         private readonly InstaApi _instaApi;
 
-        public new InstaDirectReactionsWrapper Reactions { get; set; }
+        public InstaDirectInboxThreadWrapper Parent { get; }
+        public new InstaDirectReactionsWrapper Reactions { get; }
         // public new InstaInboxMediaWrapper Media { get; set; }
         // public new InstaMediaWrapper MediaShare { get; set; }
         // public new InstaStoryShareWrapper StoryShare { get; set; }
@@ -261,15 +262,16 @@ namespace Indirect.Wrapper
         public bool IsNavigateUriValid => NavigateUri?.IsAbsoluteUri ?? false;
         
 
-        public InstaDirectInboxItemWrapper(InstaDirectInboxItem source, InstaApi api)
+        public InstaDirectInboxItemWrapper(InstaDirectInboxItem source, InstaDirectInboxThreadWrapper parent, InstaApi api)
         {
             _instaApi = api;
+            Parent = parent;
             Text = source.Text;
             UserId = source.UserId;
             TimeStamp = source.TimeStamp;
             ItemId = source.ItemId;
             ItemType = source.ItemType;
-            Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions) : null;
+            Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions) : new InstaDirectReactionsWrapper();
             Media = source.Media;
             MediaShare = source.MediaShare;
             ClientContext = source.ClientContext;
@@ -315,6 +317,18 @@ namespace Indirect.Wrapper
             if (imageCandidates == null || imageCandidates.Count == 0) return null;
             var image = imageCandidates.OrderByDescending(x => x.Height + x.Width).First();
             return new Uri(image.Url);
+        }
+
+        public void LikeItem()
+        {
+            if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId)) return;
+            _instaApi.MessagingProcessor.LikeItemAsync(Parent.ThreadId, ItemId);
+        }
+
+        public void UnlikeItem()
+        {
+            if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId)) return;
+            _instaApi.MessagingProcessor.UnlikeItemAsync(Parent.ThreadId, ItemId);
         }
     }
 }

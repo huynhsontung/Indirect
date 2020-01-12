@@ -26,6 +26,28 @@
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
+            <converters:LikeUnlikeStyleConverter x:Key="LikeUnlikeStyleConverter">
+                <converters:LikeUnlikeStyleConverter.LikeStyle>
+                    <Style x:Name="LikeMenuStyle" TargetType="MenuFlyoutItem">
+                        <Setter Property="Text" Value="Like"/>
+                        <Setter Property="Icon">
+                            <Setter.Value>
+                                <FontIcon Glyph="&#xEB52;"/>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </converters:LikeUnlikeStyleConverter.LikeStyle>
+                <converters:LikeUnlikeStyleConverter.UnlikeStyle>
+                    <Style x:Name="UnlikeMenuStyle" TargetType="MenuFlyoutItem">
+                        <Setter Property="Text" Value="Unlike"/>
+                        <Setter Property="Icon">
+                            <Setter.Value>
+                                <FontIcon Glyph="&#xEB51;"/>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </converters:LikeUnlikeStyleConverter.UnlikeStyle>
+            </converters:LikeUnlikeStyleConverter>
             <converters:LinkPreviewVisibilityConverter x:Key="LinkPreviewVisibilityConverter"/>
             <converters:FromMeBoolToGridColumnConverter x:Key="FromMeBoolToGridColumnConverter"/>
             <converters:ReactionsFromMeConverter x:Key="ReactionsFromMeConverter"
@@ -122,7 +144,7 @@
                                MaxWidth="250"
                                HorizontalAlignment="Center"
                                TextWrapping="WrapWholeWords"
-                               IsTextSelectionEnabled="True"/>
+                               IsTextSelectionEnabled="False"/>
                 </Border>
             </DataTemplate>
 
@@ -295,6 +317,17 @@
                 Margin="0,2,0,2" DoubleTapped="ShowTimestamp">
         
         <ContentControl x:Name="MainContentControl" Content="{x:Bind Item}">
+            <ContentControl.ContextFlyout>
+                <MenuFlyout x:Name="ItemContextMenu">
+                    <MenuFlyoutItem Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
+                                    Click="LikeUnlike_Click" Visibility="Collapsed"/>
+                    <MenuFlyoutItem x:Name="MenuCopyOption" Visibility="Collapsed" Text="Copy" Click="MenuCopyOption_Click">
+                        <MenuFlyoutItem.Icon>
+                            <SymbolIcon Symbol="Copy"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                </MenuFlyout>
+            </ContentControl.ContextFlyout>
             <ContentControl.ContentTemplateSelector>
                 <local:ItemTemplateSelector TextTemplate="{StaticResource TextTemplate}"
                                             LikeTemplate="{StaticResource LikeTemplate}"

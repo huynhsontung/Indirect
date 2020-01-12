@@ -31,7 +31,7 @@ namespace Indirect
         /// </summary>
         public App()
         {
-            AppCenter.Start("\r\n7+/p70mcWvQhf2BJ1PBcJwvmChA0qX22", typeof(Analytics), typeof(Crashes));
+            AppCenter.Start("9c5e2e07-388a-469f-bf69-327b5953dbce", typeof(Analytics), typeof(Crashes));
             this.InitializeComponent();
             this.Suspending += OnSuspending;
             this.Resuming += OnResuming;

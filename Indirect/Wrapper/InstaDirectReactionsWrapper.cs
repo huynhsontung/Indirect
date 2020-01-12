@@ -34,6 +34,13 @@ namespace Indirect.Wrapper
             }
         }
 
+        public InstaDirectReactionsWrapper()
+        {
+            Likes = new List<InstaDirectLikeReaction>(0);
+            MeLiked = false;
+            LikesCount = 0;
+        }
+
         public InstaDirectReactionsWrapper(InstaDirectReactions source)
         {
             Likes = source.Likes;

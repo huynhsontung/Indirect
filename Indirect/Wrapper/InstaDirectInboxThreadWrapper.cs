@@ -95,7 +95,7 @@ namespace Indirect.Wrapper
                 Users.Add(user);
             }
 
-            UpdateItemList(source.Items);
+            // UpdateItemList(source.Items);
         }
 
         public void Update(InstaDirectInboxThread source)
@@ -157,7 +157,7 @@ namespace Indirect.Wrapper
         private void UpdateItemList(ICollection<InstaDirectInboxItem> source)
         {
             if (source == null) return;
-            var convertedSource = source.Select(x => new InstaDirectInboxItemWrapper(x, _instaApi));
+            var convertedSource = source.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi));
             if (ObservableItems.Count == 0)
             {
                 foreach (var item in convertedSource)
@@ -174,8 +174,7 @@ namespace Indirect.Wrapper
                     {
                         if (item.Reactions != null)
                         {
-                            if (existingItem.Reactions == null) existingItem.Reactions = item.Reactions;
-                            else existingItem.Reactions.Update(item.Reactions, Users, ViewerId);
+                            existingItem.Reactions.Update(item.Reactions, Users, ViewerId);
                         }
                         continue;
                     }
@@ -221,21 +220,20 @@ namespace Indirect.Wrapper
             }
         }
 
+        private bool _loaded;
         public async Task<IEnumerable<InstaDirectInboxItemWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
         {
             // Without ThreadId we cant fetch thread items.
-            if (string.IsNullOrEmpty(ThreadId) || !(HasOlder ?? true)) return new List<InstaDirectInboxItemWrapper>();
+            if (string.IsNullOrEmpty(ThreadId) || !(HasOlder ?? true)) return new List<InstaDirectInboxItemWrapper>(0);
             var pagesToLoad = pageSize / 20;
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
-            pagination.StartFromMaxId(OldestCursor);
+            if (_loaded) pagination.StartFromMaxId(OldestCursor);
+            else _loaded = true;
             var result = await _instaApi.MessagingProcessor.GetThreadAsync(ThreadId, pagination);
-            if (!result.Succeeded || result.Value.Items == null) return new List<InstaDirectInboxItemWrapper>();
+            if (!result.Succeeded || result.Value.Items == null) return new List<InstaDirectInboxItemWrapper>(0);
             UpdateExcludeItemList(result.Value);
-            return result.Value.Items.Select(x => new InstaDirectInboxItemWrapper(x, _instaApi));
+            return result.Value.Items.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi));
         }
-
-        public void LikeItem(string itemId) =>
-            _instaApi.MessagingProcessor.LikeItemAsync(ThreadId, itemId);
     }
 }
