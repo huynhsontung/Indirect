@@ -28,6 +28,7 @@ using InstaSharper.API.Push.PacketHelpers;
 using InstaSharper.Classes;
 using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Classes.Models.Media;
+using InstaSharper.Classes.Models.User;
 using InstaSharper.Classes.ResponseWrappers.Direct;
 using InstaSharper.Enums;
 using InstaSharper.Logger;
@@ -63,7 +64,7 @@ namespace Indirect
         public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads =>
             Inbox.Threads;
 
-        public InstaCurrentUserWrapper LoggedInUser { get; private set; }
+        public InstaCurrentUser LoggedInUser { get; private set; }
 
         private InstaDirectInboxThreadWrapper _selectedThread;
         public InstaDirectInboxThreadWrapper SelectedThread
@@ -218,7 +219,7 @@ namespace Indirect
         private async Task UpdateLoggedInUser()
         {
             var loggedInUser = await _instaApi.GetCurrentUserAsync();
-            LoggedInUser = new InstaCurrentUserWrapper(loggedInUser.Value, _instaApi);
+            LoggedInUser = loggedInUser.Value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
         }
 
@@ -490,7 +491,8 @@ namespace Indirect
         }
 
 
-        EmbeddedChannel _embedded = new EmbeddedChannel(new FbnsPacketEncoder(), new FbnsPacketDecoder());
+        private EmbeddedChannel _embedded = new EmbeddedChannel(new FbnsPacketEncoder(), new FbnsPacketDecoder());
+        private DataWriter _socketWriter;
         public async void StartSyncClient()
         {
             var state = _instaApi.GetStateData();
@@ -542,21 +544,41 @@ namespace Indirect
                 messageWebsocket.SetRequestHeader("Origin", "https://www.instagram.com");
                 messageWebsocket.MessageReceived += SyncClientOnMessageReceived;
                 await messageWebsocket.ConnectAsync(new Uri("wss://edge-chat.instagram.com/chat"));
-                using (var dataWriter = new DataWriter(messageWebsocket.OutputStream))
+                _socketWriter = new DataWriter(messageWebsocket.OutputStream);
+                _socketWriter.WriteBytes(bytesToSend);
+                try
                 {
-                    dataWriter.WriteBytes(bytesToSend);
+                    await _socketWriter.StoreAsync();
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e);
                 }
             }
         }
 
-        private async void SyncClientOnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
+        private void SyncClientOnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
-            var stream = args.GetDataStream().AsStreamForRead();
-            var buffer = new byte[stream.Length];
-            await stream.ReadAsync(buffer, 0, (int) stream.Length);
-            var dotnettyBuffer = Unpooled.CopiedBuffer(buffer);
-            var packet = _embedded.WriteInbound(dotnettyBuffer);
-            Debug.WriteLine("Success?");
+            var dataReader = args.GetDataReader();
+            Packet packet;
+            try
+            {
+                packet = StandalonePacketDecoder.DecodePacket(dataReader);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                return;
+            }
+
+            if (packet.PacketType == PacketType.CONNACK)
+            {
+                var subscribePacket = new SubscribePacket(
+                    (int) CryptographicBuffer.GenerateRandomNumber(), 
+                    new SubscriptionRequest("/ig_message_sync", QualityOfService.AtMostOnce));
+            }
+
+            Debug.WriteLine(packet.PacketType);
         }
 
         private ulong Generate16DigitsRandom()

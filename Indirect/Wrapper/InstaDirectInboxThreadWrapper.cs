@@ -22,7 +22,7 @@ namespace Indirect.Wrapper
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
-        public new ObservableCollection<InstaUserShortWrapper> Users { get; } = new ObservableCollection<InstaUserShortWrapper>();
+        public new ObservableCollection<InstaUserShort> Users { get; } = new ObservableCollection<InstaUserShort>();
 
         /// <summary>
         /// Only use this constructor to make empty placeholder thread.
@@ -33,7 +33,7 @@ namespace Indirect.Wrapper
         {
             ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
             _instaApi = api;
-            Users.Add(new InstaUserShortWrapper(user, api));
+            Users.Add(user);
             Title = user.UserName;
         }
 
@@ -48,7 +48,7 @@ namespace Indirect.Wrapper
             ThreadId = rankedThread.ThreadId;
             ThreadType = InstaDirectThreadType.Private;
             ViewerId = rankedThread.ViewerId;
-            foreach (var user in rankedThread.Users.Select(x => new InstaUserShortWrapper(x, api)))
+            foreach (var user in rankedThread.Users)
             {
                 Users.Add(user);
             }
@@ -91,11 +91,8 @@ namespace Indirect.Wrapper
 
             foreach (var instaUserShortFriendship in source.Users)
             {
-                var user = new InstaUserShortFriendshipWrapper(instaUserShortFriendship, api);
-                Users.Add(user);
+                Users.Add(instaUserShortFriendship);
             }
-
-            // UpdateItemList(source.Items);
         }
 
         public void Update(InstaDirectInboxThread source)
@@ -199,24 +196,13 @@ namespace Indirect.Wrapper
         {
             var toBeAdded = users.Where(p2 => Users.All(p1 => !p1.Equals(p2)));
             var toBeDeleted = Users.Where(p1 => users.All(p2 => !p1.Equals(p2)));
-            foreach (var user in toBeAdded.Select(x => new InstaUserShortFriendshipWrapper(x, _instaApi)))
+            foreach (var user in toBeAdded)
             {
                 Users.Add(user);
             }
             foreach (var user in toBeDeleted)
             {
                 Users.Remove(user);
-            }
-        }
-
-        public async Task LoadOlderItems()
-        {
-            var pagination = PaginationParameters.MaxPagesToLoad(1);
-            pagination.StartFromMaxId(OldestCursor);
-            var result = await _instaApi.MessagingProcessor.GetThreadAsync(ThreadId, pagination);
-            if (result.Succeeded)
-            {
-                Update(result.Value);
             }
         }
 

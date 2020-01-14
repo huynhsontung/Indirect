@@ -23,7 +23,7 @@ namespace Indirect.Wrapper
         // public new InstaStoryShareWrapper StoryShare { get; set; }
         // public new InstaVisualMediaWrapper RavenMedia { get; set; }
         // public new InstaVisualMediaContainerWrapper VisualMedia { get; set; }
-        public new InstaUserShortWrapper ProfileMedia { get; set; }
+        // public new InstaUserShortWrapper ProfileMedia { get; set; }
         // public new List<InstaMediaWrapper> ProfileMediasPreview { get; set; }
         // public new InstaMediaWrapper FelixShareMedia { get; set; }
         // public new InstaReelShareWrapper ReelShareMedia { get; set; }
@@ -284,7 +284,7 @@ namespace Indirect.Wrapper
             RavenSeenCount = source.RavenSeenCount;
             RavenExpiringMediaActionSummary = source.RavenExpiringMediaActionSummary;
             ActionLog = source.ActionLog;
-            ProfileMedia = source.ProfileMedia != null ? new InstaUserShortWrapper(source.ProfileMedia, api) : null;
+            ProfileMedia = source.ProfileMedia;
             ProfileMediasPreview = source.ProfileMediasPreview;
             Placeholder = source.Placeholder;
             LinkMedia = source.LinkMedia;

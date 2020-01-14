@@ -53,7 +53,6 @@ namespace Indirect
         {
             var view = (ThreadDetailsView) d;
             view.Bindings.Update();
-            view.MessageTextBox.Focus(FocusState.Programmatic);
         }
 
 

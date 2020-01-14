@@ -139,6 +139,8 @@
     <Compile Include="Converters\LikeUnlikeStyleConverter.cs" />
     <Compile Include="Converters\LinkPreviewVisibilityConverter.cs" />
     <Compile Include="Converters\ReelShareTextVisibilityConverter.cs" />
+    <Compile Include="Notification\StandalonePacketDecoder.cs" />
+    <Compile Include="Notification\StandalonePacketEncoder.cs" />
     <Compile Include="Utilities\ChatListView.cs" />
     <Compile Include="Converters\FromMeBoolToGridColumnConverter.cs" />
     <Compile Include="Converters\OpenButtonStyleConverter.cs" />
@@ -174,23 +176,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\ReversedIncrementalLoadingCollection.cs" />
     <Compile Include="Utilities\VideoCache.cs" />
-    <Compile Include="Wrapper\InstaCurrentUserWrapper.cs" />
-    <Compile Include="Wrapper\InstaDirectBroadcastWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxItemWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxThreadWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectReactionsWrapper.cs" />
-    <Compile Include="Wrapper\InstaImageWrapper.cs" />
-    <Compile Include="Wrapper\InstaInboxMediaWrapper.cs" />
-    <Compile Include="Wrapper\InstaMediaWrapper.cs" />
-    <Compile Include="Wrapper\InstaReelShareWrapper.cs" />
-    <Compile Include="Wrapper\InstaStoryShareWrapper.cs" />
-    <Compile Include="Wrapper\InstaUserShortFriendshipWrapper.cs" />
-    <Compile Include="Wrapper\InstaUserShortWrapper.cs" />
-    <Compile Include="Wrapper\InstaUserWrapper.cs" />
-    <Compile Include="Wrapper\InstaVideoWrapper.cs" />
-    <Compile Include="Wrapper\InstaVisualMediaContainerWrapper.cs" />
-    <Compile Include="Wrapper\InstaVisualMediaWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -209,6 +198,7 @@
     <Content Include="Assets\LargeTile.scale-200.png" />
     <Content Include="Assets\LargeTile.scale-400.png" />
     <Content Include="Assets\NoSelectionGraphic.png" />
+    <Content Include="Assets\ProfilePicturePlaceholder.jpg" />
     <Content Include="Assets\SmallTile.scale-100.png" />
     <Content Include="Assets\SmallTile.scale-125.png" />
     <Content Include="Assets\SmallTile.scale-150.png" />

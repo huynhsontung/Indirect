@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using InstaSharper.Classes.Models.Direct;
+using InstaSharper.Classes.Models.User;
 
 namespace Indirect.Wrapper
 {
@@ -13,7 +14,7 @@ namespace Indirect.Wrapper
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ObservableCollection<InstaUserShortWrapper> Senders = new ObservableCollection<InstaUserShortWrapper>();
+        public ObservableCollection<InstaUserShort> Senders = new ObservableCollection<InstaUserShort>();
 
         public new bool MeLiked
         {
@@ -48,7 +49,7 @@ namespace Indirect.Wrapper
             _likesCount = source.LikesCount;
         }
 
-        public void Update(InstaDirectReactionsWrapper source, ICollection<InstaUserShortWrapper> usersList, long myId)
+        public void Update(InstaDirectReactionsWrapper source, ICollection<InstaUserShort> usersList, long myId)
         {
             LikesCount = source.LikesCount;
             MeLiked = source.MeLiked;
