@@ -138,7 +138,9 @@
     </Compile>
     <Compile Include="Converters\LikeUnlikeStyleConverter.cs" />
     <Compile Include="Converters\LinkPreviewVisibilityConverter.cs" />
+    <Compile Include="Converters\NullVisibilityConverter.cs" />
     <Compile Include="Converters\ReelShareTextVisibilityConverter.cs" />
+    <Compile Include="Notification\MessageSyncEventArgs.cs" />
     <Compile Include="Notification\StandalonePacketDecoder.cs" />
     <Compile Include="Notification\StandalonePacketEncoder.cs" />
     <Compile Include="Notification\SyncClient.cs" />

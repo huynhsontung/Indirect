@@ -10,6 +10,7 @@ using Windows.Storage.Streams;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
 using InstaSharper.API;
+using InstaSharper.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -17,20 +18,26 @@ namespace Indirect.Notification
 {
     class SyncClient
     {
-        public event Action MessageReceived;  
+        public event EventHandler<List<MessageSyncEventArgs>> MessageReceived;
 
+        private int _packetId = 1;
+        private CancellationTokenSource _wsClientPinging;
         private readonly InstaApi _instaApi;
-        public SyncClient(InstaApi api, Action messageReceivedHandler = null)
+        private int _seqId;
+        private DateTime _snapshotAt;
+
+        public SyncClient(InstaApi api)
         {
             _instaApi = api;
-            MessageReceived += messageReceivedHandler;
         }
 
         // Shutdown the client by stop pinging the server
         public void Shutdown() => _wsClientPinging.Cancel();
 
-        public async void Start()
+        public async void Start(int seqId, DateTime snapshotAt)
         {
+            _seqId = seqId;
+            _snapshotAt = snapshotAt;
             _wsClientPinging?.Cancel();
             _wsClientPinging = new CancellationTokenSource();
             _packetId = 1;
@@ -90,9 +97,6 @@ namespace Indirect.Notification
             }
         }
 
-
-        private int _packetId = 1;
-        private CancellationTokenSource _wsClientPinging;
         private async void SyncClientOnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
             var dataReader = args.GetDataReader();
@@ -129,8 +133,8 @@ namespace Indirect.Notification
                     await WriteAndFlushPacketAsync(subscribePacket, outStream);
                     var random = new Random();
                     var json = new JObject(
-                        new JProperty("seq_id", 23936 + random.Next(-50, 50)),  // Or Iris will return Overflow?
-                        new JProperty("snapshot_at_ms", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()),
+                        new JProperty("seq_id", _seqId),
+                        new JProperty("snapshot_at_ms", _snapshotAt.ToUnixTimeMiliSeconds()),
                         new JProperty("snapshot_app_version", "web"),
                         new JProperty("subscription_type", "message"));
                     var jsonBytes = GetJsonBytes(json);
@@ -192,7 +196,11 @@ namespace Indirect.Notification
                 case PacketType.PUBLISH:
                     var publishPacket = (PublishPacket)packet;
                     var payload = publishPacket.Payload.ReadString(publishPacket.Payload.ReadableBytes, Encoding.UTF8);
-                    if (publishPacket.TopicName == "/ig_message_sync") MessageReceived?.Invoke();
+                    if (publishPacket.TopicName == "/ig_message_sync")
+                    {
+                        var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(payload);
+                        MessageReceived?.Invoke(this, messageSyncPayload);
+                    }
                     Debug.WriteLine($"wsclient pub to {publishPacket.TopicName} payload: {payload}");
 
                     if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
@@ -200,6 +208,10 @@ namespace Indirect.Notification
                         await WriteAndFlushPacketAsync(PubAckPacket.InResponseTo(publishPacket), outStream);
                     }
                     return;
+
+                case PacketType.PINGRESP:
+                    Debug.WriteLine("Got pong from Sync Client");
+                    break;
 
                 default:
                     Debug.WriteLine(packet.PacketType);

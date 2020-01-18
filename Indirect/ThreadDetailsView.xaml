@@ -45,9 +45,9 @@
             <AppBarButton Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" Background="Transparent">
-                    <controls:ImageEx Source="{x:Bind Thread.Users[0].ProfilePictureUrl}" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg"
+                    <controls:ImageEx Source="{x:Bind Thread.Users[0].ProfilePictureUrl, Mode=OneWay}" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg"
                                       CornerRadius="99" Height="32" Width="32" Margin="12,0,16,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="{x:Bind Thread.Title}" 
+                    <TextBlock Text="{x:Bind Thread.Title, Mode=OneWay}" 
                                Style="{ThemeResource FluentTitleTextStyle}"
                                MaxLines="1" 
                                VerticalAlignment="Center"
@@ -57,7 +57,7 @@
         </CommandBar>
 
         <utilities:ChatListView x:Name="ItemsHolder" Grid.Row="0" Grid.RowSpan="3"
-                            ItemsSource="{x:Bind Thread.ObservableItems}"
+                            ItemsSource="{x:Bind Thread.ObservableItems, Mode=OneWay}"
                             IncrementalLoadingThreshold="1"
                             SelectionMode="None">
             <ListView.Header>
@@ -115,7 +115,8 @@
                      TextWrapping="Wrap"
                      PlaceholderText="Type a message"
                      Margin="4,0,4,0" MaxLength="2200" 
-                     KeyDown="MessageTextBox_KeyDown"/>
+                     AcceptsReturn="True"
+                     ProcessKeyboardAccelerators="MessageTextBox_OnProcessKeyboardAccelerators"/>
 
             <Button x:Name="SendButton" ToolTipService.ToolTip="Send"
                     HorizontalAlignment="Stretch"

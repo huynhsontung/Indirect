@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Indirect.Utilities;
@@ -95,9 +96,16 @@ namespace Indirect.Wrapper
             }
         }
 
-        public void Update(InstaDirectInboxThread source)
+        // This does not update thread's metadata. Better run Inbox.Update() after this.
+        public void AddItem(InstaDirectInboxItem item)
+        {
+            UpdateItemList(new List<InstaDirectInboxItem> {item});
+        }
+
+        public void Update(InstaDirectInboxThread source, bool fromInbox = false)
         {
             UpdateExcludeItemList(source);
+            if (fromInbox) return;  // Items from GetInbox request will interfere with GetPagedItemsAsync
             UpdateItemList(source.Items);
         }
 

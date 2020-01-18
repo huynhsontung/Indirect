@@ -223,7 +223,7 @@ namespace Indirect.Notification
         {
             var packet = PingReqPacket.Instance;
             await _context.WriteAndFlushAsync(packet);
-            Debug.WriteLine("PingReq sent");
+            Debug.WriteLine("Pinging Push server");
         }
 
         public enum TopicIds

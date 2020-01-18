@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using InstaSharper.API;
 using InstaSharper.Classes;
@@ -14,9 +15,14 @@ namespace Indirect.Wrapper
 {
     class InstaDirectInboxWrapper: InstaDirectInbox, IIncrementalSource<InstaDirectInboxThreadWrapper>
     {
+        public int PendingRequestsCount { get; set; }
+        public int SeqId { get; set; }
+        public DateTime SnapshotAt { get; set; }
+
         public new IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> Threads { get; }
 
         private readonly InstaApi _instaApi;
+        private bool _firstTime = true;
         public InstaDirectInboxWrapper(InstaApi api)
         {
             _instaApi = api ?? throw new NullReferenceException();
@@ -24,27 +30,61 @@ namespace Indirect.Wrapper
                 new IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper>(this);
         }
 
-        private void UpdateExcludeThreads(InstaDirectInbox source)
+        private void UpdateExcludeThreads(InstaDirectInboxContainer source)
         {
-            UnseenCount = source.UnseenCount;
-            UnseenCountTs = source.UnseenCountTs;
-            BlendedInboxEnabled = source.BlendedInboxEnabled;
+            PendingRequestsCount = source.PendingRequestsCount;
+            SeqId = source.SeqId;
+            SnapshotAt = source.SnapshotAt;
+            var inbox = source.Inbox;
+            UnseenCount = inbox.UnseenCount;
+            UnseenCountTs = inbox.UnseenCountTs;
+            BlendedInboxEnabled = inbox.BlendedInboxEnabled;
             if (string.IsNullOrEmpty(OldestCursor) ||
-                string.Compare(OldestCursor, source.OldestCursor, StringComparison.Ordinal) > 0)
+                string.Compare(OldestCursor, inbox.OldestCursor, StringComparison.Ordinal) > 0)
             {
-                OldestCursor = source.OldestCursor;
-                HasOlder = source.HasOlder;
+                OldestCursor = inbox.OldestCursor;
+                HasOlder = inbox.HasOlder;
             }
         }
 
         public async Task UpdateInbox()
         {
             var result = await _instaApi.MessagingProcessor.GetInboxAsync(PaginationParameters.MaxPagesToLoad(1));
-            InstaDirectInbox inbox;
+            InstaDirectInboxContainer container;
             if (result.Succeeded)
-                inbox = result.Value.Inbox;
+                container = result.Value;
             else return;
-            UpdateExcludeThreads(inbox);
+            UpdateExcludeThreads(container);
+            if (_firstTime)
+            {
+                // First batch of threads need to be loaded by GetPagedItemsAsync to avoid duplication
+                _firstTime = false;
+                return;
+            }
+
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                foreach (var thread in container.Inbox.Threads)
+                {
+                    var existed = false;
+                    for (var i = 0; i < Threads.Count; i++)
+                    {
+                        // if (i > 60) break;
+                        var existingThread = Threads[i];
+                        if (thread.ThreadId != existingThread.ThreadId) continue;
+                        existingThread.Update(thread, true);
+                        existed = true;
+                        break;
+                    }
+
+                    if (!existed)
+                    {
+                        Threads.Insert(0, new InstaDirectInboxThreadWrapper(thread, _instaApi));
+                    }
+                }
+
+                SortInboxThread();
+            });
         }
 
         public async Task<IEnumerable<InstaDirectInboxThreadWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
@@ -54,12 +94,39 @@ namespace Indirect.Wrapper
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(OldestCursor);
             var result = await _instaApi.MessagingProcessor.GetInboxAsync(pagination);
-            InstaDirectInbox inbox;
+            InstaDirectInboxContainer container;
             if (result.Succeeded)
-                inbox = result.Value.Inbox;
+                container = result.Value;
             else return new List<InstaDirectInboxThreadWrapper>(0);
-            UpdateExcludeThreads(inbox);
-            return inbox.Threads.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi));
+            UpdateExcludeThreads(container);
+            return container.Inbox.Threads.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi));
+        }
+
+        private void SortInboxThread()
+        {
+            var sorted = Threads.OrderByDescending(x => x.LastActivity).ToList();
+
+            bool satisfied = true;
+            for (var i = 0; i < Threads.Count; i++)
+            {
+                var thread = Threads[i];
+                var j = i;
+                for (; j < sorted.Count; j++)
+                {
+                    if (!thread.Equals(sorted[j]) || i == j) continue;
+                    satisfied = false;
+                    break;
+                }
+
+                if (satisfied) continue;
+                // Threads.Move(i,j);
+                // ObservableCollection.Move call ObservableCollection implementation of RemoveItem which is cause to refresh all items
+                var tmp = Threads[i];
+                Threads.RemoveAt(i);
+                Threads.Insert(j, tmp);
+                i--;
+                satisfied = true;
+            }
         }
     }
 }

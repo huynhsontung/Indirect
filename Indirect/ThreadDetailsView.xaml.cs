@@ -30,7 +30,7 @@ namespace Indirect
             nameof(Thread),
             typeof(InstaDirectInboxThreadWrapper),
             typeof(ThreadDetailsView),
-            new PropertyMetadata(null, OnThreadChanged));
+            new PropertyMetadata(null));
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
             nameof(ViewModel),
             typeof(ApiContainer),
@@ -52,7 +52,7 @@ namespace Indirect
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ThreadDetailsView) d;
-            view.Bindings.Update();
+            // view.Bindings.Update();
         }
 
 
@@ -77,14 +77,6 @@ namespace Indirect
             else
             {
                 ViewModel.SendMessage(message);
-            }
-        }
-
-        private void MessageTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            if (e.Key == Windows.System.VirtualKey.Enter && !string.IsNullOrEmpty(MessageTextBox.Text))
-            {
-                SendButton_Click(sender, e);
             }
         }
 
@@ -188,6 +180,17 @@ namespace Indirect
                     FilePickerFlyout.ShowAt(AddFilesButton);
                 }
             }
+        }
+
+        private void MessageTextBox_OnProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)
+        {
+            if (args.Key == VirtualKey.Enter && args.Modifiers == VirtualKeyModifiers.None)
+            {
+                args.Handled = true;
+                if (!string.IsNullOrEmpty(MessageTextBox.Text))
+                    SendButton_Click(sender, new RoutedEventArgs());
+            }
+
         }
     }
 }

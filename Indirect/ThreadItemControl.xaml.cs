@@ -56,7 +56,6 @@ namespace Indirect
             var view = (ThreadItemControl) d;
             var item = (InstaDirectInboxItemWrapper) e.NewValue;
             view.ProcessItem();
-            view.Bindings.Update();
             if (item.ItemType == InstaDirectThreadItemType.ActionLog)
                 view.ItemContainer.Visibility = Visibility.Collapsed;
             if (item.ItemType == InstaDirectThreadItemType.Text)

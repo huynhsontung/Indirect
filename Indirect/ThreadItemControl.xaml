@@ -48,6 +48,8 @@
                     </Style>
                 </converters:LikeUnlikeStyleConverter.UnlikeStyle>
             </converters:LikeUnlikeStyleConverter>
+
+            <converters:NullVisibilityConverter x:Key="NullVisibilityConverter"/>
             <converters:LinkPreviewVisibilityConverter x:Key="LinkPreviewVisibilityConverter"/>
             <converters:FromMeBoolToGridColumnConverter x:Key="FromMeBoolToGridColumnConverter"/>
             <converters:ReactionsFromMeConverter x:Key="ReactionsFromMeConverter"
@@ -143,8 +145,7 @@
                                Margin="6"
                                MaxWidth="250"
                                HorizontalAlignment="Center"
-                               TextWrapping="WrapWholeWords"
-                               IsTextSelectionEnabled="False"/>
+                               TextWrapping="WrapWholeWords"/>
                 </Border>
             </DataTemplate>
 
@@ -275,7 +276,8 @@
                                HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                                Margin="0,0,0,2"/>
                     <controls:ImageEx Source="{x:Bind PreviewImageUri}"
-                                      MaxWidth="100" MaxHeight="200"
+                                      Visibility="{Binding RelativeSource={RelativeSource Self}, Path=Source, Converter={StaticResource NullVisibilityConverter}}"
+                                      MaxWidth="100" Height="200"
                                       HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                                       CornerRadius="2" Tapped="ReelShareImage_Tapped"/>
                     <Border x:Name="MessageContentWithBorder"
@@ -288,8 +290,7 @@
                                    Margin="6"
                                    MaxWidth="250"
                                    HorizontalAlignment="Center"
-                                   TextWrapping="WrapWholeWords"
-                                   IsTextSelectionEnabled="True"/>
+                                   TextWrapping="WrapWholeWords"/>
                     </Border>
                 </StackPanel>
             </DataTemplate>
@@ -313,10 +314,11 @@
 
 
     <StackPanel x:Name="ItemContainer" Orientation="Vertical" 
-                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
                 Margin="0,2,0,2" DoubleTapped="ShowTimestamp">
-        
-        <ContentControl x:Name="MainContentControl" Content="{x:Bind Item}">
+
+        <ContentControl x:Name="MainContentControl" Content="{x:Bind Item, Mode=OneWay}" 
+                        HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}">
             <ContentControl.ContextFlyout>
                 <MenuFlyout x:Name="ItemContextMenu">
                     <MenuFlyoutItem Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
@@ -355,10 +357,10 @@
         </StackPanel>
         <TextBlock x:Name="Timestamp"
                    Style="{ThemeResource FluentCaptionTextStyle}"
-                   Text="{x:Bind Item.TimeStamp}" 
+                   Text="{x:Bind Item.TimeStamp, Mode=OneWay}" 
                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                    Margin="2"
-                   HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}"
+                   HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
                    Visibility="Collapsed" />
     </StackPanel>
 </UserControl>

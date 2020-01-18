@@ -28,6 +28,7 @@ using InstaSharper.Classes.Models.User;
 using InstaSharper.Classes.ResponseWrappers.Direct;
 using InstaSharper.Enums;
 using InstaSharper.Logger;
+using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.UI;
 
@@ -99,12 +100,14 @@ namespace Indirect
         {
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
             // CoreApplication.Properties.Add(INSTA_API_PROP_NAME, _instaApi);
-            SyncClient = new SyncClient(_instaApi, OnNotificationReceived);
+            SyncClient = new SyncClient(_instaApi);
+            SyncClient.MessageReceived += OnMessageSyncReceived;
             PushClient = new PushClient(_instaApi, _pushData);
             Inbox = new InstaDirectInboxWrapper(_instaApi);
             await UpdateLoggedInUser();
+            await Inbox.UpdateInbox();
             PushClient.Start();
-            SyncClient.Start();
+            SyncClient.Start(Inbox.SeqId, Inbox.SnapshotAt);
         }
 
         public void SetSelectedThreadNull()
@@ -177,6 +180,7 @@ namespace Indirect
         {
             // Instagram doesnt support logout anymore
             // var result = await _instaApi.LogoutAsync();
+            SyncClient.Shutdown();
             await PushClient.Shutdown();
             _pushData = new FbnsConnectionData();
             await ImageCache.Instance.ClearAsync();
@@ -196,11 +200,33 @@ namespace Indirect
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
         }
 
-        private void OnNotificationReceived()
+        private void OnMessageSyncReceived(object sender, List<MessageSyncEventArgs> data)
         {
-            Debug.WriteLine("Notification received.");
-            if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
-                UpdateInboxAndSelectedThread();
+            if (data.Count > 1 || !data[0].Realtime) return; // Old data. No need to process.
+            try
+            {
+                var itemData = data[0].Data[0];
+                if (itemData.Op == "add")   // todo: Handle "replace" op for handling seen items
+                {
+                    var segments = itemData.Path.Trim('/').Split('/');
+                    var threadId = segments[2];
+                    var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
+                    thread?.AddItem(itemData.Item);
+                    _ = Inbox.UpdateInbox();
+                }
+                else
+                {
+                    if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
+                        UpdateInboxAndSelectedThread();
+                }
+            }
+            catch (Exception e)
+            {
+                Crashes.TrackError(e);
+                if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
+                    UpdateInboxAndSelectedThread();
+            }
+            Debug.WriteLine("Sync(s) received.");
         }
 
         public async Task UpdateSelectedThread()
@@ -227,7 +253,9 @@ namespace Indirect
         public async void SendMessage(string content)
         {
             var selectedThread = SelectedThread;
+            content = content.Trim(' ', '\n', '\r');
             if (string.IsNullOrEmpty(content)) return;
+            content = content.Replace('\r', '\n');
             var tokens = content.Split("\t\n ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             var links = tokens.Where(x =>
                 x.StartsWith("http://") || x.StartsWith("https://") || x.StartsWith("www.")).ToList();

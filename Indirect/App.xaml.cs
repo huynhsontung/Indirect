@@ -37,7 +37,7 @@ namespace Indirect
             this.Resuming += OnResuming;
             this.EnteredBackground += OnEnteredBackground;
             ImageCache.Instance.CacheDuration = TimeSpan.FromDays(30);
-            VideoCache.Instance.CacheDuration = TimeSpan.FromDays(3);
+            VideoCache.Instance.CacheDuration = TimeSpan.FromDays(30);
         }
 
         protected override void OnActivated(IActivatedEventArgs args)
@@ -135,7 +135,7 @@ namespace Indirect
         private void OnResuming(object sender, object e)
         {
             ViewModel.PushClient.Start();
-            ViewModel.SyncClient.Start();
+            ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt);
         }
 
         private async void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)
