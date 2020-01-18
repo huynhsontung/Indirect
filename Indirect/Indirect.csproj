@@ -141,6 +141,7 @@
     <Compile Include="Converters\ReelShareTextVisibilityConverter.cs" />
     <Compile Include="Notification\StandalonePacketDecoder.cs" />
     <Compile Include="Notification\StandalonePacketEncoder.cs" />
+    <Compile Include="Notification\SyncClient.cs" />
     <Compile Include="Utilities\ChatListView.cs" />
     <Compile Include="Converters\FromMeBoolToGridColumnConverter.cs" />
     <Compile Include="Converters\OpenButtonStyleConverter.cs" />

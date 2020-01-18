@@ -320,7 +320,7 @@
             <ContentControl.ContextFlyout>
                 <MenuFlyout x:Name="ItemContextMenu">
                     <MenuFlyoutItem Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
-                                    Click="LikeUnlike_Click" Visibility="Collapsed"/>
+                                    Click="LikeUnlike_Click"/>
                     <MenuFlyoutItem x:Name="MenuCopyOption" Visibility="Collapsed" Text="Copy" Click="MenuCopyOption_Click">
                         <MenuFlyoutItem.Icon>
                             <SymbolIcon Symbol="Copy"/>

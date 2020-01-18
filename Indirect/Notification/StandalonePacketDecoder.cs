@@ -8,6 +8,7 @@ using Windows.Storage.Streams;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
 using InstaSharper.API.Push.PacketHelpers;
+using ByteOrder = Windows.Storage.Streams.ByteOrder;
 
 namespace Indirect.Notification
 {
@@ -27,7 +28,7 @@ namespace Indirect.Notification
             public const byte PingResp = 208;
             //            public const byte Disconnect = 224;
             //            public const byte Unsubscribe = 162;
-            //            public const byte UnsubAck = 176;
+            public const byte UnsubAck = 176;
 
             public static bool IsPublish(int signature)
             {
@@ -37,6 +38,7 @@ namespace Indirect.Notification
 
         public static Packet DecodePacket(DataReader reader)
         {
+            reader.ByteOrder = ByteOrder.BigEndian;
             int signature = reader.ReadByte();
             int remainingLength = DecodeRemainingLength(reader);
 
@@ -82,6 +84,10 @@ namespace Indirect.Notification
                     DecodePacketIdVariableHeader(reader, subAckPacket, ref remainingLength);
                     DecodeSubAckPayload(reader, subAckPacket, ref remainingLength);
                     return subAckPacket;
+                case Signatures.UnsubAck:
+                    var unsubAckPacket = new UnsubAckPacket();
+                    DecodePacketIdVariableHeader(reader, unsubAckPacket, ref remainingLength);
+                    return unsubAckPacket;
                 case Signatures.PingResp:
                     return PingRespPacket.Instance;
                 default:

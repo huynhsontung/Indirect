@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,10 +33,12 @@ namespace Indirect.Notification
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
         public FbnsConnectionData ConnectionData { get; set; }
         public StreamSocket Socket { get; private set; }
+        public override bool IsSharable { get; } = true;
 
         private const string HOST_NAME = "mqtt-mini.facebook.com";
         private const string BACKGROUND_TASK_NAME = "BackgroundPushClient";
         private const string BACKGROUND_TASK_ENTRY_POINT = "BackgroundPushClient.BackgroundPushClient";
+        private const string SOCKET_ID = "mqtt_fbns";
 
         private SingleThreadEventLoop _loopGroup;
         private readonly UserSessionData _user;
@@ -47,13 +51,13 @@ namespace Indirect.Notification
         private bool _waitingForPubAck;
         private CancellationTokenSource _timerResetToken;
         private IChannelHandlerContext _context;
-        private Task _timerTask;
+        private readonly InstaApi _instaApi;
 
         public PushClient(InstaApi api, FbnsConnectionData connectionData)
         {
+            _instaApi = api;
             ConnectionData = connectionData;
-
-            _user = api.GetLoggedUser();
+            _user = api.UserSession;
             _httpRequestProcessor = api.RequestProcessor;
             _device = api.DeviceInfo;
 
@@ -76,8 +80,8 @@ namespace Indirect.Notification
             {
                 if (task.Value.Name == BACKGROUND_TASK_NAME)
                 {
-                    _task = task.Value;
-                    return true;
+                    task.Value.Unregister(false);
+                    break;
                 }
             }
 
@@ -96,7 +100,59 @@ namespace Indirect.Notification
             return true;
         }
 
-        public async Task StartWithExistingSocket(StreamSocket socket)
+        /// <summary>
+        /// Transfer socket as well as necessary context for background push notification client. 
+        /// Transfer only happens if user is logged in.
+        /// </summary>
+        public async Task TransferPushSocket()
+        {
+            if (!_instaApi.IsUserAuthenticated) return;
+
+            // Hand over MQTT socket to socket broker
+            var memoryStream = new MemoryStream();
+            var formatter = new BinaryFormatter();
+            var state = _instaApi.GetStateData();
+            state.FbnsConnectionData = ConnectionData;
+            formatter.Serialize(memoryStream, state);
+            var buffer = CryptographicBuffer.CreateFromByteArray(memoryStream.ToArray());
+            await SendPing();
+            await Shutdown();
+            await Socket.CancelIOAsync();
+            Socket.TransferOwnership(
+                SOCKET_ID,
+                new SocketActivityContext(buffer),
+                TimeSpan.FromSeconds(KEEP_ALIVE - 60));
+        }
+
+        public async void Start()
+        {
+            if (!_instaApi.IsUserAuthenticated) return;
+            try
+            {
+                if (SocketActivityInformation.AllSockets.TryGetValue(SOCKET_ID, out var socketInformation))
+                {
+                    var dataStream = socketInformation.Context.Data.AsStream();
+                    var formatter = new BinaryFormatter();
+                    var stateData = (StateData)formatter.Deserialize(dataStream);
+                    ConnectionData = stateData.FbnsConnectionData;
+                    var socket = socketInformation.StreamSocket;
+                    if (string.IsNullOrEmpty(ConnectionData.FbnsToken)) // if we don't have any push data, start fresh
+                        await StartFresh();
+                    else
+                        await StartWithExistingSocket(socket);
+                }
+                else
+                {
+                    await StartFresh();
+                }
+            }
+            catch (Exception)
+            {
+                await StartFresh();
+            }
+        }
+
+        private async Task StartWithExistingSocket(StreamSocket socket)
         {
             Socket = socket;
             if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
@@ -107,10 +163,10 @@ namespace Indirect.Notification
 
             await _loopGroup.RegisterAsync(streamSocketChannel);
             await SendPing();
-            _timerTask = ResetTimer(_context);
+            ResetTimer(_context);
         }
 
-        public async Task Start()
+        private async Task StartFresh()
         {
             if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
             _loopGroup = new SingleThreadEventLoop();
@@ -185,7 +241,7 @@ namespace Indirect.Notification
                 Debug.WriteLine("Reconnecting.");
                 _waitingForPubAck = false;
                 _timerResetToken?.Cancel();
-                await Start();
+                await StartFresh();
             });
 
         }
@@ -220,7 +276,7 @@ namespace Indirect.Notification
                             break;
                         case TopicIds.RegResp:
                             OnRegisterResponse(json);
-                            _timerTask = ResetTimer(ctx);
+                            ResetTimer(ctx);
                             break;
                         default:
                             Debug.WriteLine($"Unknown topic received: {publishPacket.TopicName}", "Warning");
@@ -340,7 +396,7 @@ namespace Indirect.Notification
             });
         }
 
-        private async Task ResetTimer(IChannelHandlerContext ctx)
+        private async void ResetTimer(IChannelHandlerContext ctx)
         {
             _timerResetToken?.Cancel();
             _timerResetToken = new CancellationTokenSource();
@@ -348,12 +404,21 @@ namespace Indirect.Notification
             // Create new cancellation token for timer reset
             var cancellationToken = _timerResetToken.Token;
 
-            while (true)
+            try
             {
-                await Task.Delay(TimeSpan.FromSeconds(KEEP_ALIVE - 60), cancellationToken); // wait for _keepAliveDuration - 60 seconds
-                if (cancellationToken.IsCancellationRequested) break;
-                await SendPing();
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(KEEP_ALIVE - 60), cancellationToken); // wait for _keepAliveDuration - 60 seconds
+                    if (cancellationToken.IsCancellationRequested) break;
+                    await SendPing();
+                }
             }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            Debug.WriteLine("Stopped pinging push server");
         }
 
         private byte[] DecompressPayload(IByteBuffer payload)

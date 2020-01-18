@@ -65,13 +65,15 @@ namespace Indirect
 
             var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             coreTitleBar.ExtendViewIntoTitleBar = true;
-            ViewModel = await ApiContainer.Factory();
-            CoreApplication.Properties.Add(VIEW_MODEL_PROP_NAME, ViewModel);
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
             if (rootFrame == null)
             {
+                ViewModel = await ApiContainer.Factory();
+                if (!CoreApplication.Properties.ContainsKey(VIEW_MODEL_PROP_NAME))
+                    CoreApplication.Properties.Add(VIEW_MODEL_PROP_NAME, ViewModel);
+
                 // Create a Frame to act as the navigation context and navigate to the first page
                 rootFrame = new Frame();
 
@@ -79,7 +81,7 @@ namespace Indirect
 
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
-                    //TODO: Load state from previously suspended application
+                    // Handle different ExecutionStates
                 }
 
                 // Place the frame in the current Window
@@ -117,7 +119,8 @@ namespace Indirect
             var deferral = e.SuspendingOperation.GetDeferral();
             try
             {
-                await ViewModel.TransferPushSocket();
+                ViewModel.SyncClient.Shutdown();    // No need to wait. Shutdown cleanly is not important here.
+                await ViewModel.PushClient.TransferPushSocket();    // Has to wait for Dotnetty to shutdown
             }
             catch (Exception exception)
             {
@@ -129,9 +132,10 @@ namespace Indirect
             }
         }
 
-        private async void OnResuming(object sender, object e)
+        private void OnResuming(object sender, object e)
         {
-            await ViewModel.StartPushClient();
+            ViewModel.PushClient.Start();
+            ViewModel.SyncClient.Start();
         }
 
         private async void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)

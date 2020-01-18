@@ -9,18 +9,20 @@ using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Common;
 using DotNetty.Common.Utilities;
 using Buffer = Windows.Storage.Streams.Buffer;
+using ByteOrder = Windows.Storage.Streams.ByteOrder;
 
 namespace Indirect.Notification
 {
     class StandalonePacketEncoder
     {
-        const int PacketIdLength = 2;
-        const int StringSizeLength = 2;
-        const int MaxVariableLength = 4;
+        private const int PACKET_ID_LENGTH = 2;
+        private const int STRING_SIZE_LENGTH = 2;
+        private const int MAX_VARIABLE_LENGTH = 4;
 
-        public static async Task<IBuffer> EncodePacket(Packet packet)
+        public static IBuffer EncodePacket(Packet packet)
         {
             var writer = new DataWriter();
+            writer.ByteOrder = ByteOrder.BigEndian;
             switch (packet.PacketType)
             {
                 case PacketType.CONNECT:
@@ -57,7 +59,6 @@ namespace Indirect.Notification
                     throw new ArgumentException("Unknown packet type: " + packet.PacketType, nameof(packet));
             }
 
-            await writer.StoreAsync();
             return writer.DetachBuffer();
         }
 
@@ -69,7 +70,7 @@ namespace Indirect.Notification
             string clientId = packet.ClientId;
             if (string.IsNullOrEmpty(clientId)) throw new Exception("Client identifier is required.");
             byte[] clientIdBytes = EncodeStringInUtf8(clientId);
-            payloadBufferSize += StringSizeLength + clientIdBytes.Length;
+            payloadBufferSize += STRING_SIZE_LENGTH + clientIdBytes.Length;
 
             byte[] willTopicBytes;
             IByteBuffer willMessage;
@@ -79,7 +80,7 @@ namespace Indirect.Notification
                 string willTopic = packet.WillTopicName;
                 willTopicBytes = EncodeStringInUtf8(willTopic);
                 willMessage = packet.WillMessage;
-                payloadBufferSize += StringSizeLength + willTopicBytes.Length;
+                payloadBufferSize += STRING_SIZE_LENGTH + willTopicBytes.Length;
                 payloadBufferSize += 2 + willMessage.ReadableBytes;
             }
             else
@@ -88,18 +89,42 @@ namespace Indirect.Notification
                 willMessage = null;
             }
 
+            string userName = packet.Username;
+            byte[] userNameBytes;
+            if (packet.HasUsername)
+            {
+                userNameBytes = EncodeStringInUtf8(userName);
+                payloadBufferSize += STRING_SIZE_LENGTH + userNameBytes.Length;
+            }
+            else
+            {
+                userNameBytes = null;
+            }
+
+            byte[] passwordBytes;
+            if (packet.HasPassword)
+            {
+                string password = packet.Password;
+                passwordBytes = EncodeStringInUtf8(password);
+                payloadBufferSize += STRING_SIZE_LENGTH + passwordBytes.Length;
+            }
+            else
+            {
+                passwordBytes = null;
+            }
+
             // Fixed header
-            var protocolNameByteSize = (int) writer.MeasureString(packet.ProtocolName);
-            int variableHeaderBufferSize = StringSizeLength + protocolNameByteSize + 4;
+            byte[] protocolNameBytes = EncodeStringInUtf8(packet.ProtocolName);
+            int variableHeaderBufferSize = STRING_SIZE_LENGTH + protocolNameBytes.Length + 4;
             int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
-            int fixedHeaderBufferSize = 1 + MaxVariableLength;
+            int fixedHeaderBufferSize = 1 + STRING_SIZE_LENGTH;
             try
             {
                 writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
                 WriteVariableLengthInt(writer, variablePartSize);
 
-                writer.WriteInt16((short) writer.MeasureString(packet.ProtocolName));
-                writer.WriteString(packet.ProtocolName);
+                writer.WriteInt16((short) protocolNameBytes.Length);
+                writer.WriteBytes(protocolNameBytes);
 
                 writer.WriteByte((byte) packet.ProtocolLevel);
                 writer.WriteByte(CalculateConnectFlagsByte(packet));
@@ -115,26 +140,22 @@ namespace Indirect.Notification
                     writer.WriteInt16((short) willMessage.ReadableBytes);
                     if (willMessage.IsReadable())
                     {
-                        if (willMessage.ReadableBytes == willMessage.Array.Length)
-                            writer.WriteBytes(willMessage.Array);
-                        else
-                        {
-                            var willMessageBytes = new byte[willMessage.ReadableBytes];
-                            willMessage.ReadBytes(willMessageBytes);
-                            writer.WriteBytes(willMessageBytes);
-                        }
+                        var willMessageBytes = new byte[willMessage.ReadableBytes];
+                        willMessage.ReadBytes(willMessageBytes);
+                        writer.WriteBytes(willMessageBytes);
                     }
                     willMessage.Release();
+                    willMessage = null;
                 }
                 if (packet.HasUsername)
                 {
-                    writer.WriteInt16((short) writer.MeasureString(packet.Username));
-                    writer.WriteString(packet.Username);
+                    writer.WriteInt16((short) userNameBytes.Length);
+                    writer.WriteBytes(userNameBytes);
 
                     if (packet.HasPassword)
                     {
-                        writer.WriteInt16((short)writer.MeasureString(packet.Password));
-                        writer.WriteString(packet.Password);
+                        writer.WriteInt16((short) passwordBytes.Length);
+                        writer.WriteBytes(passwordBytes);
                     }
                 }
             }
@@ -194,11 +215,11 @@ namespace Indirect.Notification
             // Util.ValidateTopicName(topicName);
             byte[] topicNameBytes = EncodeStringInUtf8(topicName);
 
-            int variableHeaderBufferSize = StringSizeLength + topicNameBytes.Length +
-                (packet.QualityOfService > QualityOfService.AtMostOnce ? PacketIdLength : 0);
+            int variableHeaderBufferSize = STRING_SIZE_LENGTH + topicNameBytes.Length +
+                (packet.QualityOfService > QualityOfService.AtMostOnce ? PACKET_ID_LENGTH : 0);
             int payloadBufferSize = payload.ReadableBytes;
             int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
-            int fixedHeaderBufferSize = 1 + MaxVariableLength;
+            int fixedHeaderBufferSize = 1 + MAX_VARIABLE_LENGTH;
 
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             WriteVariableLengthInt(writer, variablePartSize);
@@ -211,14 +232,9 @@ namespace Indirect.Notification
 
             if (payload.IsReadable())
             {
-                if (payload.ReadableBytes == payload.Array.Length)
-                    writer.WriteBytes(payload.Array);
-                else
-                {
-                    var payloadBytes = new byte[payload.ReadableBytes];
-                    payload.ReadBytes(payloadBytes);
-                    writer.WriteBytes(payloadBytes);
-                }
+                var payloadBytes = new byte[payload.ReadableBytes];
+                payload.ReadBytes(payloadBytes);
+                writer.WriteBytes(payloadBytes);
             }
         }
 
@@ -226,8 +242,8 @@ namespace Indirect.Notification
         {
             int msgId = packet.PacketId;
 
-            const int VariableHeaderBufferSize = PacketIdLength; // variable part only has a packet id
-            int fixedHeaderBufferSize = 1 + MaxVariableLength;
+            const int VariableHeaderBufferSize = PACKET_ID_LENGTH; // variable part only has a packet id
+            int fixedHeaderBufferSize = 1 + MAX_VARIABLE_LENGTH;
             
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             WriteVariableLengthInt(writer, VariableHeaderBufferSize);
@@ -236,13 +252,21 @@ namespace Indirect.Notification
 
         static void EncodeSubscribeMessage(DataWriter writer, SubscribePacket packet)
         {
-            const int VariableHeaderSize = PacketIdLength;
+            const int VariableHeaderSize = PACKET_ID_LENGTH;
             int payloadBufferSize = 0;
 
-            int variablePartSize = VariableHeaderSize + payloadBufferSize;
-            int fixedHeaderBufferSize = 1 + MaxVariableLength;
+            var encodedTopicFilters = new List<byte[]>();
 
-            
+            foreach (var topic in packet.Requests)
+            {
+                byte[] topicFilterBytes = EncodeStringInUtf8(topic.TopicFilter);
+                payloadBufferSize += STRING_SIZE_LENGTH + topicFilterBytes.Length + 1; // length, value, QoS
+                encodedTopicFilters.Add(topicFilterBytes);
+            }
+
+            int variablePartSize = VariableHeaderSize + payloadBufferSize;
+            int fixedHeaderBufferSize = 1 + MAX_VARIABLE_LENGTH;
+
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             WriteVariableLengthInt(writer, variablePartSize);
 
@@ -250,19 +274,20 @@ namespace Indirect.Notification
             writer.WriteInt16((short) packet.PacketId); // todo: review: validate?
 
             // Payload
-            foreach (var subscriptionRequest in packet.Requests)
+            for (int i = 0; i < encodedTopicFilters.Count; i++)
             {
-                writer.WriteInt16((short)writer.MeasureString(subscriptionRequest.TopicFilter));
-                writer.WriteString(subscriptionRequest.TopicFilter);
-                writer.WriteByte((byte) subscriptionRequest.QualityOfService);
+                var topicFilterBytes = encodedTopicFilters[i];
+                writer.WriteInt16((short) topicFilterBytes.Length);
+                writer.WriteBytes(topicFilterBytes);
+                writer.WriteByte((byte)packet.Requests[i].QualityOfService);
             }
         }
 
         static void EncodeSubAckMessage(DataWriter writer, SubAckPacket message)
         {
             int payloadBufferSize = message.ReturnCodes.Count;
-            int variablePartSize = PacketIdLength + payloadBufferSize;
-            int fixedHeaderBufferSize = 1 + MaxVariableLength;
+            int variablePartSize = PACKET_ID_LENGTH + payloadBufferSize;
+            int fixedHeaderBufferSize = 1 + MAX_VARIABLE_LENGTH;
             
             writer.WriteByte(CalculateFirstByteOfFixedHeader(message));
             WriteVariableLengthInt(writer, variablePartSize);
@@ -278,16 +303,17 @@ namespace Indirect.Notification
             const int VariableHeaderSize = 2;
             int payloadBufferSize = 0;
 
+            var encodedTopicFilters = new List<byte[]>();
 
-            // foreach (string topic in packet.TopicFilters)
-            // {
-            //     byte[] topicFilterBytes = EncodeStringInUtf8(topic);
-            //     payloadBufferSize += StringSizeLength + topicFilterBytes.Length; // length, value
-            //     encodedTopicFilters.Add(topicFilterBytes);
-            // }
+            foreach (string topic in packet.TopicFilters)
+            {
+                byte[] topicFilterBytes = EncodeStringInUtf8(topic);
+                payloadBufferSize += STRING_SIZE_LENGTH + topicFilterBytes.Length; // length, value
+                encodedTopicFilters.Add(topicFilterBytes);
+            }
 
             int variablePartSize = VariableHeaderSize + payloadBufferSize;
-            int fixedHeaderBufferSize = 1 + MaxVariableLength;
+            int fixedHeaderBufferSize = 1 + MAX_VARIABLE_LENGTH;
 
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             WriteVariableLengthInt(writer, variablePartSize);
@@ -296,10 +322,10 @@ namespace Indirect.Notification
             writer.WriteInt16((short) packet.PacketId); // todo: review: validate?
 
             // Payload
-            foreach (var topic in packet.TopicFilters)
+            foreach (var topic in encodedTopicFilters)
             {
-                writer.WriteInt16((short) writer.MeasureString(topic));
-                writer.WriteString(topic);
+                writer.WriteInt16((short) topic.Length);
+                writer.WriteBytes(topic);
             }
         }
 

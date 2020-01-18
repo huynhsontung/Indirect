@@ -49,29 +49,20 @@ namespace Indirect.Wrapper
             _likesCount = source.LikesCount;
         }
 
-        public void Update(InstaDirectReactionsWrapper source, ICollection<InstaUserShort> usersList, long myId)
+        public void Update(InstaDirectReactionsWrapper source, ICollection<InstaUserShort> usersList)
         {
             LikesCount = source.LikesCount;
             MeLiked = source.MeLiked;
             Senders.Clear();
 
-            var set = false; 
-            foreach (var like in Likes)
+            foreach (var like in source.Likes)
             {
                 var user = usersList.SingleOrDefault(x => x.Pk == like.SenderId);
                 if (user != null)
                 {
                     Senders.Add(user);
                 }
-
-                if (like.SenderId == myId)
-                {
-                    set = true;
-                    MeLiked = true;
-                }
             }
-
-            if (!set) MeLiked = false;
         }
     }
 

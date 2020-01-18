@@ -171,7 +171,7 @@ namespace Indirect.Wrapper
                     {
                         if (item.Reactions != null)
                         {
-                            existingItem.Reactions.Update(item.Reactions, Users, ViewerId);
+                            existingItem.Reactions.Update(item.Reactions, Users);
                         }
                         continue;
                     }

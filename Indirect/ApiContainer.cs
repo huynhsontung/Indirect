@@ -15,16 +15,12 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
-using DotNetty.Buffers;
-using DotNetty.Codecs.Mqtt.Packets;
-using DotNetty.Transport.Channels.Embedded;
 using Indirect.Notification;
 using Indirect.Utilities;
 using Indirect.Wrapper;
 using InstaSharper.API;
 using InstaSharper.API.Builder;
 using InstaSharper.API.Push;
-using InstaSharper.API.Push.PacketHelpers;
 using InstaSharper.Classes;
 using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Classes.Models.Media;
@@ -34,8 +30,6 @@ using InstaSharper.Enums;
 using InstaSharper.Logger;
 using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.UI;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Indirect
 {
@@ -52,13 +46,14 @@ namespace Indirect
         private readonly StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
         private StorageFile _stateFile;
         private FbnsConnectionData _pushData;
-        private UserSessionData _userSession;
-        private PushClient _pushClient;
         private DateTime _lastUpdated = DateTime.Now;
         private CancellationTokenSource _searchCancellationToken;
+        private InstaDirectInboxThreadWrapper _selectedThread;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public PushClient PushClient { get; private set; }
+        public SyncClient SyncClient { get; private set; }
         public InstaDirectInboxWrapper Inbox { get; private set; }
 
         public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads =>
@@ -66,7 +61,6 @@ namespace Indirect
 
         public InstaCurrentUser LoggedInUser { get; private set; }
 
-        private InstaDirectInboxThreadWrapper _selectedThread;
         public InstaDirectInboxThreadWrapper SelectedThread
         {
             get => _selectedThread;
@@ -85,7 +79,7 @@ namespace Indirect
             {
                 var data = _instaApi?.GetStateData();
                 if (data == null) return new StateData();
-                data.FbnsConnectionData = _pushData;
+                data.FbnsConnectionData = PushClient?.ConnectionData;
                 return data;
             }
         }
@@ -104,10 +98,13 @@ namespace Indirect
         public async void OnLoggedIn()
         {
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
-            CoreApplication.Properties.Add(INSTA_API_PROP_NAME, _instaApi);
+            // CoreApplication.Properties.Add(INSTA_API_PROP_NAME, _instaApi);
+            SyncClient = new SyncClient(_instaApi, OnNotificationReceived);
+            PushClient = new PushClient(_instaApi, _pushData);
             Inbox = new InstaDirectInboxWrapper(_instaApi);
             await UpdateLoggedInUser();
-            await StartPushClient();
+            PushClient.Start();
+            SyncClient.Start();
         }
 
         public void SetSelectedThreadNull()
@@ -141,7 +138,6 @@ namespace Indirect
                             .UseLogger(new DebugLogger(LogLevel.All))
                             .Build();
                         IsUserAuthenticated = _instaApi.IsUserAuthenticated;
-                        if (IsUserAuthenticated) _userSession = _instaApi.GetLoggedUser();
                         _pushData = stateData.FbnsConnectionData;
                     }
                     else
@@ -165,28 +161,6 @@ namespace Indirect
             }
         }
 
-        /// <summary>
-        /// Transfer socket as well as necessary context for background push notification client. 
-        /// Transfer only happens if user is logged in.
-        /// </summary>
-        public async Task TransferPushSocket()
-        {
-            if (!_instaApi.IsUserAuthenticated) return;
-
-            // Hand over MQTT socket to socket broker
-            var memoryStream = new MemoryStream();
-            var formatter = new BinaryFormatter();
-            formatter.Serialize(memoryStream, StateData);
-            var buffer = CryptographicBuffer.CreateFromByteArray(memoryStream.ToArray());
-            await _pushClient.SendPing();
-            await _pushClient.Shutdown();
-            await _pushClient.Socket.CancelIOAsync();
-            _pushClient.Socket.TransferOwnership(
-                SOCKET_ID,
-                new SocketActivityContext(buffer),
-                TimeSpan.FromSeconds(PushClient.KEEP_ALIVE - 60));
-        }
-
         public async Task<IResult<InstaLoginResult>> Login(string username, string password)
         {
             var session = new UserSessionData {UserName = username, Password = password};
@@ -196,7 +170,6 @@ namespace Indirect
 
             var logInResult = await _instaApi.LoginAsync();
             await WriteStateToStorage();
-            _userSession = _instaApi.GetLoggedUser();
             return logInResult;
         }
 
@@ -204,7 +177,7 @@ namespace Indirect
         {
             // Instagram doesnt support logout anymore
             // var result = await _instaApi.LogoutAsync();
-            await _pushClient.Shutdown();
+            await PushClient.Shutdown();
             _pushData = new FbnsConnectionData();
             await ImageCache.Instance.ClearAsync();
             await VideoCache.Instance.ClearAsync();
@@ -223,43 +196,10 @@ namespace Indirect
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
         }
 
-        /// <summary>
-        /// Start foreground push notification client from existing socket (transferred from background task) or create a new one.
-        /// </summary>
-        public async Task StartPushClient()
-        {
-            if (!_instaApi.IsUserAuthenticated) return;
-            _pushClient = new PushClient(_instaApi, _pushData);
-            _pushClient.MessageReceived += OnNotificationReceived;
-            try
-            {
-                if (SocketActivityInformation.AllSockets.TryGetValue(SOCKET_ID, out var socketInformation))
-                {
-                    var dataStream = socketInformation.Context.Data.AsStream();
-                    var formatter = new BinaryFormatter();
-                    var stateData = (StateData) formatter.Deserialize(dataStream);
-                    _pushData = stateData.FbnsConnectionData;
-                    var socket = socketInformation.StreamSocket;
-                    if (string.IsNullOrEmpty(_pushData.FbnsToken)) // if we don't have any push data, start fresh
-                        await _pushClient.Start();
-                    else
-                        await _pushClient.StartWithExistingSocket(socket);
-                }
-                else
-                {
-                    await _pushClient.Start();
-                }
-            }
-            catch (Exception)
-            {
-                await _pushClient.Start();
-            }
-        }
-
-        private void OnNotificationReceived(object sender, MessageReceivedEventArgs args)
+        private void OnNotificationReceived()
         {
             Debug.WriteLine("Notification received.");
-            if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.1))
+            if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
                 UpdateInboxAndSelectedThread();
         }
 
@@ -404,12 +344,12 @@ namespace Indirect
 
         public async void UpdateInboxAndSelectedThread()
         {
+            _lastUpdated = DateTime.Now;
             var selected = SelectedThread;
             await Inbox.UpdateInbox();
             if (selected == null) return;
             if (InboxThreads.Contains(selected) && SelectedThread != selected) SelectedThread = selected;
             await UpdateSelectedThread();
-            _lastUpdated = DateTime.Now;
             MarkLatestItemSeen(selected);
         }
 
@@ -488,109 +428,6 @@ namespace Indirect
                 await _instaApi.MessagingProcessor.MarkItemSeenAsync(thread.ThreadId,
                     thread.LastPermanentItem.ItemId);
             }
-        }
-
-
-        private EmbeddedChannel _embedded = new EmbeddedChannel(new FbnsPacketEncoder(), new FbnsPacketDecoder());
-        private DataWriter _socketWriter;
-        public async void StartSyncClient()
-        {
-            var state = _instaApi.GetStateData();
-            var device = _instaApi.DeviceInfo;
-            var cookieHeader = state.Cookies.GetCookieHeader(new Uri("https://i.instagram.com"));
-            var connectPacket = new FbnsConnectPacket()
-            {
-                CleanSession = true,
-                ClientId = "mqttwsclient",
-                HasUsername = true,
-                HasPassword = false,
-                KeepAliveInSeconds = 10,
-                ProtocolLevel = 3,
-                ProtocolName = "MQIsdp"
-            };
-            var aid = Generate16DigitsRandom();
-            var userAgent =
-                $"Mozilla/5.0 (Linux; Android 10; {device.DeviceName}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.93 Mobile Safari/537.36";
-            var json = new JObject(
-                new JProperty("u", LoggedInUser.Pk),
-                new JProperty("s", Generate16DigitsRandom()),
-                new JProperty("cp", 1),
-                new JProperty("ecp", 0),
-                new JProperty("chat_on", true),
-                new JProperty("fg", true),
-                new JProperty("d", device.PhoneId.ToString()),
-                new JProperty("ct", "cookie_auth"),
-                new JProperty("mqtt_sid", ""),
-                new JProperty("aid", aid),
-                new JProperty("st", new JArray()),
-                new JProperty("pm", new JArray()),
-                new JProperty("dc", ""),
-                new JProperty("no_auto_fg", true),
-                new JProperty("a", userAgent)
-            );
-            var username = JsonConvert.SerializeObject(json, Formatting.None);
-            connectPacket.Username = username;
-            _embedded.WriteOutbound(connectPacket);
-            var buffer = _embedded.ReadOutbound<IByteBuffer>();
-            using (var stream = new ReadOnlyByteBufferStream(buffer, true))
-            {
-                var memoryStream = new MemoryStream();
-                stream.CopyTo(memoryStream);
-                var bytesToSend = memoryStream.ToArray();
-                var messageWebsocket = new MessageWebSocket();
-                messageWebsocket.Control.MessageType = SocketMessageType.Binary;
-                messageWebsocket.SetRequestHeader("Cookie", cookieHeader);
-                messageWebsocket.SetRequestHeader("User-Agent", userAgent);
-                messageWebsocket.SetRequestHeader("Origin", "https://www.instagram.com");
-                messageWebsocket.MessageReceived += SyncClientOnMessageReceived;
-                await messageWebsocket.ConnectAsync(new Uri("wss://edge-chat.instagram.com/chat"));
-                _socketWriter = new DataWriter(messageWebsocket.OutputStream);
-                _socketWriter.WriteBytes(bytesToSend);
-                try
-                {
-                    await _socketWriter.StoreAsync();
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine(e);
-                }
-            }
-        }
-
-        private void SyncClientOnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
-        {
-            var dataReader = args.GetDataReader();
-            Packet packet;
-            try
-            {
-                packet = StandalonePacketDecoder.DecodePacket(dataReader);
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e);
-                return;
-            }
-
-            if (packet.PacketType == PacketType.CONNACK)
-            {
-                var subscribePacket = new SubscribePacket(
-                    (int) CryptographicBuffer.GenerateRandomNumber(), 
-                    new SubscriptionRequest("/ig_message_sync", QualityOfService.AtMostOnce));
-            }
-
-            Debug.WriteLine(packet.PacketType);
-        }
-
-        private ulong Generate16DigitsRandom()
-        {
-            var result = "";
-            var random = new Random();
-            for (int i = 0; i < 16; i++)
-            {
-                result += random.Next(1, 9).ToString();
-            }
-
-            return ulong.Parse(result);
         }
     }
 }

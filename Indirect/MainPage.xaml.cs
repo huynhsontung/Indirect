@@ -75,11 +75,6 @@ namespace Indirect
             BackButtonPlaceholder.Visibility = BackButton.Visibility;
         }
 
-        private void RefreshThread_OnClick(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdateInboxAndSelectedThread();
-        }
-
         private void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count == 0 || e.AddedItems[0] == null)
@@ -140,9 +135,7 @@ namespace Indirect
 
         private void Magic_Click(object sender, RoutedEventArgs e)
         {
-#if DEBUG
-            _viewModel.StartSyncClient();
-#endif
+
         }
     }
 }
