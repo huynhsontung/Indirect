@@ -15,6 +15,8 @@ namespace Indirect.Wrapper
 {
     class InstaDirectInboxWrapper: InstaDirectInbox, IIncrementalSource<InstaDirectInboxThreadWrapper>
     {
+        public event Action<int, DateTime> FirstUpdated;    // callback to start SyncClient
+
         public int PendingRequestsCount { get; set; }
         public int SeqId { get; set; }
         public DateTime SnapshotAt { get; set; }
@@ -55,13 +57,6 @@ namespace Indirect.Wrapper
                 container = result.Value;
             else return;
             UpdateExcludeThreads(container);
-            if (_firstTime)
-            {
-                // First batch of threads need to be loaded by GetPagedItemsAsync to avoid duplication
-                _firstTime = false;
-                return;
-            }
-
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 foreach (var thread in container.Inbox.Threads)
@@ -96,7 +91,14 @@ namespace Indirect.Wrapper
             var result = await _instaApi.MessagingProcessor.GetInboxAsync(pagination);
             InstaDirectInboxContainer container;
             if (result.Succeeded)
+            {
                 container = result.Value;
+                if (_firstTime)
+                {
+                    _firstTime = false;
+                    FirstUpdated?.Invoke(container.SeqId, container.SnapshotAt);
+                }
+            }
             else return new List<InstaDirectInboxThreadWrapper>(0);
             UpdateExcludeThreads(container);
             return container.Inbox.Threads.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi));

@@ -271,7 +271,7 @@ namespace Indirect.Wrapper
             TimeStamp = source.TimeStamp;
             ItemId = source.ItemId;
             ItemType = source.ItemType;
-            Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions) : new InstaDirectReactionsWrapper();
+            Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions, parent.ViewerId) : new InstaDirectReactionsWrapper();
             Media = source.Media;
             MediaShare = source.MediaShare;
             ClientContext = source.ClientContext;

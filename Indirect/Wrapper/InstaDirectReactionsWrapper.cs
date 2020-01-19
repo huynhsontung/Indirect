@@ -42,11 +42,18 @@ namespace Indirect.Wrapper
             LikesCount = 0;
         }
 
-        public InstaDirectReactionsWrapper(InstaDirectReactions source)
+        public InstaDirectReactionsWrapper(InstaDirectReactions source, long viewerId)
         {
             Likes = source.Likes;
-            MeLiked = source.MeLiked;
-            _likesCount = source.LikesCount;
+            MeLiked = source.MeLiked ? source.MeLiked : source.Likes.Any(x => x.SenderId == viewerId);
+            LikesCount = source.LikesCount;
+        }
+
+        public void Clear()
+        {
+            LikesCount = 0;
+            MeLiked = false;
+            Senders.Clear();
         }
 
         public void Update(InstaDirectReactionsWrapper source, ICollection<InstaUserShort> usersList)

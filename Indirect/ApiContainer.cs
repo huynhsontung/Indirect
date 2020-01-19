@@ -104,10 +104,9 @@ namespace Indirect
             SyncClient.MessageReceived += OnMessageSyncReceived;
             PushClient = new PushClient(_instaApi, _pushData);
             Inbox = new InstaDirectInboxWrapper(_instaApi);
+            Inbox.FirstUpdated += (seqId, snapshotAt) => SyncClient.Start(seqId, snapshotAt);
             await UpdateLoggedInUser();
-            await Inbox.UpdateInbox();
             PushClient.Start();
-            SyncClient.Start(Inbox.SeqId, Inbox.SnapshotAt);
         }
 
         public void SetSelectedThreadNull()
@@ -200,29 +199,49 @@ namespace Indirect
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
         }
 
-        private void OnMessageSyncReceived(object sender, List<MessageSyncEventArgs> data)
+        private async void OnMessageSyncReceived(object sender, List<MessageSyncEventArgs> data)
         {
             if (data.Count > 1 || !data[0].Realtime) return; // Old data. No need to process.
             try
             {
                 var itemData = data[0].Data[0];
-                if (itemData.Op == "add")   // todo: Handle "replace" op for handling seen items
+                var segments = itemData.Path.Trim('/').Split('/');
+                var threadId = segments[2];
+                var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
+                if (thread == null) return;
+                if (itemData.Op == "add")
                 {
-                    var segments = itemData.Path.Trim('/').Split('/');
-                    var threadId = segments[2];
-                    var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
-                    thread?.AddItem(itemData.Item);
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                        () => thread.AddItem(itemData.Item));
                     _ = Inbox.UpdateInbox();
                 }
-                else
+
+                if (itemData.Op == "replace")
                 {
-                    if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
-                        UpdateInboxAndSelectedThread();
+                    // todo: Handle items seen
+                    if (itemData.Path.Contains("has_seen")) return;
+                    var incomingItem = itemData.Item;
+                    var item = thread.ObservableItems.SingleOrDefault(x => x.ItemId == incomingItem.ItemId);
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        if (incomingItem.Reactions == null)
+                        {
+                            item?.Reactions.Clear();
+                        }
+                        else
+                        {
+                            item?.Reactions?.Update(new InstaDirectReactionsWrapper(incomingItem.Reactions, thread.ViewerId),
+                                thread.Users);
+                        }
+                    });
                 }
             }
             catch (Exception e)
             {
+#if !DEBUG
                 Crashes.TrackError(e);
+#endif
+                Debug.WriteLine(e);
                 if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
                     UpdateInboxAndSelectedThread();
             }
