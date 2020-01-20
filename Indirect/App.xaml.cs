@@ -13,6 +13,7 @@ using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp.UI;
+using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 
 namespace Indirect
 {
@@ -22,8 +23,11 @@ namespace Indirect
     sealed partial class App : Application
     {
         public const string VIEW_MODEL_PROP_NAME = "ViewModel";
+        // public const string GLOBAL_EXCEPTION_HANDLER_NAME = "App.OnUnhandledException";
 
         private ApiContainer ViewModel { get; set; }
+        Windows.Storage.ApplicationDataContainer _localSettings =
+            Windows.Storage.ApplicationData.Current.LocalSettings;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -33,11 +37,59 @@ namespace Indirect
         {
             AppCenter.Start("9c5e2e07-388a-469f-bf69-327b5953dbce", typeof(Analytics), typeof(Crashes));
             this.InitializeComponent();
+            SetTheme();
+            this.UnhandledException += OnUnhandledException;
             this.Suspending += OnSuspending;
             this.Resuming += OnResuming;
             this.EnteredBackground += OnEnteredBackground;
             ImageCache.Instance.CacheDuration = TimeSpan.FromDays(7);
             VideoCache.Instance.CacheDuration = TimeSpan.FromDays(30);
+        }
+
+        private void SetTheme()
+        {
+            var requestedTheme = _localSettings.Values["Theme"] as string;
+            if (requestedTheme == null) return;
+            switch (requestedTheme)
+            {
+                case "Dark":
+                    RequestedTheme = ApplicationTheme.Dark;
+                    break;
+
+                case "Light":
+                    RequestedTheme = ApplicationTheme.Light;
+                    break;
+            }
+        }
+
+        public async void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+#if !DEBUG
+            Crashes.TrackError(e.Exception);
+#endif
+            var dialog = new ContentDialog()
+            {
+                Title = "An error occured",
+                Content = e.Exception.ToString(),
+                CloseButtonText = "Close Application",
+                DefaultButton = ContentDialogButton.Close
+            };
+            e.Handled = true;
+            try
+            {
+                await dialog.ShowAsync();
+            }
+            catch (Exception innerException)
+            {
+#if !DEBUG
+                Crashes.TrackError(innerException);
+#endif
+                Debug.WriteLine(innerException);
+            }
+            finally
+            {
+                Exit();
+            }
         }
 
         protected override void OnActivated(IActivatedEventArgs args)

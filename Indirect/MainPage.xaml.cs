@@ -19,6 +19,8 @@ namespace Indirect
     public sealed partial class MainPage : Page
     {
         private ApiContainer _viewModel;
+        private Windows.Storage.ApplicationDataContainer _localSettings =
+            Windows.Storage.ApplicationData.Current.LocalSettings;
 
         public MainPage()
         {
@@ -136,6 +138,35 @@ namespace Indirect
         private void Magic_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void ThemeItem_Click(object sender, RoutedEventArgs e)
+        {
+            var item = (MenuFlyoutItem) sender;
+            switch (item.Text)
+            {
+                case "System":
+                    _localSettings.Values["Theme"] = "System";
+                    break;
+
+                case "Dark":
+                    _localSettings.Values["Theme"] = "Dark";
+                    break;
+                
+                case "Light":
+                    _localSettings.Values["Theme"] = "Light";
+                    break;
+            }
+
+            var dialog = new ContentDialog
+            {
+                Title = "Saved",
+                Content = "Please relaunch the app to see the result.",
+                CloseButtonText = "Done",
+                DefaultButton = ContentDialogButton.Close
+            };
+
+            _ = dialog.ShowAsync();
         }
     }
 }

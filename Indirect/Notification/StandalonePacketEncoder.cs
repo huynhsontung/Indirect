@@ -117,7 +117,6 @@ namespace Indirect.Notification
             byte[] protocolNameBytes = EncodeStringInUtf8(packet.ProtocolName);
             int variableHeaderBufferSize = STRING_SIZE_LENGTH + protocolNameBytes.Length + 4;
             int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
-            int fixedHeaderBufferSize = 1 + STRING_SIZE_LENGTH;
             try
             {
                 writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
@@ -219,7 +218,6 @@ namespace Indirect.Notification
                 (packet.QualityOfService > QualityOfService.AtMostOnce ? PACKET_ID_LENGTH : 0);
             int payloadBufferSize = payload.ReadableBytes;
             int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
-            int fixedHeaderBufferSize = 1 + MAX_VARIABLE_LENGTH;
 
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             WriteVariableLengthInt(writer, variablePartSize);
@@ -243,8 +241,7 @@ namespace Indirect.Notification
             int msgId = packet.PacketId;
 
             const int VariableHeaderBufferSize = PACKET_ID_LENGTH; // variable part only has a packet id
-            int fixedHeaderBufferSize = 1 + MAX_VARIABLE_LENGTH;
-            
+
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             WriteVariableLengthInt(writer, VariableHeaderBufferSize);
             writer.WriteInt16((short) msgId);
@@ -265,7 +262,6 @@ namespace Indirect.Notification
             }
 
             int variablePartSize = VariableHeaderSize + payloadBufferSize;
-            int fixedHeaderBufferSize = 1 + MAX_VARIABLE_LENGTH;
 
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             WriteVariableLengthInt(writer, variablePartSize);
@@ -287,8 +283,7 @@ namespace Indirect.Notification
         {
             int payloadBufferSize = message.ReturnCodes.Count;
             int variablePartSize = PACKET_ID_LENGTH + payloadBufferSize;
-            int fixedHeaderBufferSize = 1 + MAX_VARIABLE_LENGTH;
-            
+
             writer.WriteByte(CalculateFirstByteOfFixedHeader(message));
             WriteVariableLengthInt(writer, variablePartSize);
             writer.WriteInt16((short) message.PacketId);
@@ -313,7 +308,6 @@ namespace Indirect.Notification
             }
 
             int variablePartSize = VariableHeaderSize + payloadBufferSize;
-            int fixedHeaderBufferSize = 1 + MAX_VARIABLE_LENGTH;
 
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             WriteVariableLengthInt(writer, variablePartSize);
