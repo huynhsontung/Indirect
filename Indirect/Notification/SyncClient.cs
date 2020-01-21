@@ -23,9 +23,11 @@ namespace Indirect.Notification
 
         private int _packetId = 1;
         private CancellationTokenSource _wsClientPinging;
+        private CancellationTokenSource _retry;
         private readonly InstaApi _instaApi;
-        private int _seqId;
+        private long _seqId;
         private DateTime _snapshotAt;
+        private MessageWebSocket _socket;
 
         public SyncClient(InstaApi api)
         {
@@ -33,10 +35,29 @@ namespace Indirect.Notification
         }
 
         // Shutdown the client by stop pinging the server
-        public void Shutdown() => _wsClientPinging.Cancel();
-
-        public async void Start(int seqId, DateTime snapshotAt)
+        public async void Shutdown()
         {
+            _wsClientPinging.Cancel();
+            _retry?.Cancel();
+            var disconnectPacket = DisconnectPacket.Instance;
+            var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
+            try
+            {
+                await _socket.OutputStream.WriteAsync(buffer);
+                await _socket.OutputStream.FlushAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
+            }
+        }
+
+        public async void Start(long seqId, DateTime snapshotAt)
+        {
+            Debug.WriteLine("Sync client starting");
             if (seqId == 0)
                 throw new ArgumentException("Invalid seqId. Have you fetched inbox for the for the first time?",
                     nameof(seqId));
@@ -87,27 +108,57 @@ namespace Indirect.Notification
             messageWebsocket.SetRequestHeader("User-Agent", userAgent);
             messageWebsocket.SetRequestHeader("Origin", "https://www.instagram.com");
             messageWebsocket.MessageReceived += OnMessageReceived;
-            messageWebsocket.Closed += OnClosed;
+            // messageWebsocket.Closed += OnClosed;
             var buffer = StandalonePacketEncoder.EncodePacket(connectPacket);
             try
             {
                 await messageWebsocket.ConnectAsync(new Uri("wss://edge-chat.instagram.com/chat"));
                 await messageWebsocket.OutputStream.WriteAsync(buffer);
                 await messageWebsocket.OutputStream.FlushAsync();
+                _socket = messageWebsocket;
             }
             catch (Exception e)
             {
                 Debug.WriteLine(e);
+                Debug.WriteLine("SyncClient: Failed to start.");
+                OnClosed();
             }
         }
 
-        private void OnClosed(IWebSocket sender, WebSocketClosedEventArgs args)
+        private async void OnClosed()
         {
-            Debug.WriteLine("wsclient closed");
+            if (_retry != null && !_retry.IsCancellationRequested) return;
+            try
+            {
+                _retry = new CancellationTokenSource();
+                try
+                {
+                    // Disconnect to make sure there is no duplicate 
+                    var disconnectPacket = DisconnectPacket.Instance;
+                    var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
+                    await _socket.OutputStream.WriteAsync(buffer);
+                    await _socket.OutputStream.FlushAsync();
+                }
+                catch (Exception)
+                {
+                    // pass
+                }
+                Debug.WriteLine("SyncClient closed");
+                while (!_retry.IsCancellationRequested && !_wsClientPinging.IsCancellationRequested)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(15), _retry.Token);
+                    Start(_seqId, _snapshotAt);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // pass
+            }
         }
 
         private async void OnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
+            if (_wsClientPinging?.IsCancellationRequested ?? false) return;
             try
             {
                 var dataReader = args.GetDataReader();
@@ -121,14 +172,16 @@ namespace Indirect.Notification
                 catch (Exception e)
                 {
                     Debug.WriteLine(e);
+                    Debug.WriteLine("SyncClient: Failed to decode packet.");
+                    OnClosed();
                     return;
                 }
 
                 switch (packet.PacketType)
                 {
                     case PacketType.CONNACK:
-                        Debug.WriteLine(packet.PacketType);
-
+                        Debug.WriteLine("SyncClient: " + packet.PacketType);
+                        _retry?.Cancel();
                         var subscribePacket = new SubscribePacket(
                             _packetId++,
                             new SubscriptionRequest("/ig_message_sync", QualityOfService.AtMostOnce),
@@ -182,7 +235,7 @@ namespace Indirect.Notification
                         await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
 
 
-                        Debug.WriteLine(packet.PacketType);
+                        Debug.WriteLine("SyncClient: " + packet.PacketType);
                         _ = Task.Run(async () =>
                         {
                             while (!_wsClientPinging.IsCancellationRequested)
@@ -210,9 +263,16 @@ namespace Indirect.Notification
                         if (publishPacket.TopicName == "/ig_message_sync")
                         {
                             var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(payload);
+                            var latest = messageSyncPayload.Last();
+                            if (latest.SeqId > _seqId ||
+                                latest.Data[0].Item.TimeStamp > _snapshotAt)
+                            {
+                                _seqId = latest.SeqId;
+                                _snapshotAt = latest.Data[0].Item.TimeStamp;
+                            }
                             MessageReceived?.Invoke(this, messageSyncPayload);
                         }
-                        Debug.WriteLine($"wsclient pub to {publishPacket.TopicName} payload: {payload}");
+                        Debug.WriteLine($"SyncClient pub to {publishPacket.TopicName} payload: {payload}");
 
                         if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
                         {
@@ -221,11 +281,12 @@ namespace Indirect.Notification
                         return;
 
                     case PacketType.PINGRESP:
+                        _retry?.Cancel();
                         Debug.WriteLine("Got pong from Sync Client");
                         break;
 
                     default:
-                        Debug.WriteLine(packet.PacketType);
+                        Debug.WriteLine("SyncClient: " + packet.PacketType);
                         break;
                 }
             }
@@ -236,6 +297,7 @@ namespace Indirect.Notification
 #endif
                 Debug.WriteLine("Exception occured when processing incoming sync message.");
                 Debug.WriteLine(e);
+                OnClosed();
             }
         }
 

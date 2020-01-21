@@ -43,14 +43,32 @@ namespace Indirect.Notification
         [JsonProperty("value")]
         public string RawValue { get; set; }
 
-        public InstaDirectInboxItemResponse Value => JsonConvert.DeserializeObject<InstaDirectInboxItemResponse>(RawValue);
+        private InstaDirectInboxItemResponse _value;
 
+        public InstaDirectInboxItemResponse Value
+        {
+            get
+            {
+                if (_value == null)
+                {
+                    _value = JsonConvert.DeserializeObject<InstaDirectInboxItemResponse>(RawValue);
+                }
+
+                return _value;
+            }
+        }
+
+        private InstaDirectInboxItem _item;
         public InstaDirectInboxItem Item
         {
             get
             {
-                var converter = new InstaDirectThreadItemConverter() {SourceObject = Value};
-                return converter.Convert();
+                if (_item == null)
+                {
+                    var converter = new InstaDirectThreadItemConverter() { SourceObject = Value };
+                    _item = converter.Convert();
+                }
+                return _item;
             }
         }
     }

@@ -50,6 +50,7 @@ namespace Indirect
         private DateTime _lastUpdated = DateTime.Now;
         private CancellationTokenSource _searchCancellationToken;
         private InstaDirectInboxThreadWrapper _selectedThread;
+        private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -99,7 +100,7 @@ namespace Indirect
         public async void OnLoggedIn()
         {
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
-            // CoreApplication.Properties.Add(INSTA_API_PROP_NAME, _instaApi);
+            _settings.Values["STATE_FILE_NAME"] = STATE_FILE_NAME;
             SyncClient = new SyncClient(_instaApi);
             SyncClient.MessageReceived += OnMessageSyncReceived;
             PushClient = new PushClient(_instaApi, _pushData);
@@ -107,6 +108,11 @@ namespace Indirect
             Inbox.FirstUpdated += (seqId, snapshotAt) => SyncClient.Start(seqId, snapshotAt);
             await UpdateLoggedInUser();
             PushClient.Start();
+            PushClient.MessageReceived += (sender, args) =>
+            {
+                Debug.Write("Background notification: ");
+                Debug.WriteLine(args.Json);
+            };
         }
 
         public void SetSelectedThreadNull()
@@ -184,6 +190,7 @@ namespace Indirect
             _pushData = new FbnsConnectionData();
             await ImageCache.Instance.ClearAsync();
             await VideoCache.Instance.ClearAsync();
+            _settings.Values.Clear();
             if (CoreApplication.Properties.ContainsKey(INSTA_API_PROP_NAME))
                 CoreApplication.Properties.Remove(INSTA_API_PROP_NAME);
             using (var stream = await _stateFile.OpenStreamForWriteAsync())
@@ -278,7 +285,6 @@ namespace Indirect
             var tokens = content.Split("\t\n ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             var links = tokens.Where(x =>
                 x.StartsWith("http://") || x.StartsWith("https://") || x.StartsWith("www.")).ToList();
-            // var hashtags = tokens.Where(x => x.StartsWith('#')).Select(x => x.Substring(1)).ToList();
             IResult<List<InstaDirectInboxThread>> result;
             IResult<ItemAckPayloadResponse> ackResult = new Result<ItemAckPayloadResponse>(false, new ItemAckPayloadResponse());   // for links and hashtags
             if (!string.IsNullOrEmpty(selectedThread.ThreadId))
@@ -286,17 +292,6 @@ namespace Indirect
                 if (links.Any())
                 {
                     ackResult = await _instaApi.MessagingProcessor.SendDirectLinkAsync(content, links, selectedThread.ThreadId);
-                }
-
-                // if (hashtags.Any())
-                // {
-                //     ackResult = await _instaApi.MessagingProcessor.SendDirectHashtagAsync(content, null,
-                //         selectedThread.ThreadId);
-                // }
-
-                if (ackResult.Succeeded)
-                {
-                    UpdateInboxAndSelectedThread();
                     return;
                 }
 
@@ -308,22 +303,17 @@ namespace Indirect
                 {
                     ackResult = await _instaApi.MessagingProcessor.SendDirectLinkToRecipientsAsync(content, links,
                         selectedThread.Users.Select(x => x.Pk.ToString()).ToArray());
-                    if (ackResult.Succeeded)
-                    {
-                        UpdateInboxAndSelectedThread();
-                        return;
-                    }
-
+                    return;
                 }
                 result = await _instaApi.MessagingProcessor.SendDirectTextAsync(selectedThread.Users.Select(x => x.Pk),
                     null, content);
             }
-
+            
             if (result.Succeeded && result.Value.Count > 0)
             {
+                // SyncClient will take care of updating. Update here is just for precaution.
                 selectedThread.Update(result.Value[0]);
-                await Inbox.UpdateInbox();
-                if (SelectedThread == null) SelectedThread = selectedThread;
+                // await Inbox.UpdateInbox();
             }
         }
 

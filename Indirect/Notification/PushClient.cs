@@ -154,6 +154,7 @@ namespace Indirect.Notification
 
         private async Task StartWithExistingSocket(StreamSocket socket)
         {
+            Debug.WriteLine("PushClient: Starting with existing socket.");
             Socket = socket;
             if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
             _loopGroup = new SingleThreadEventLoop();
@@ -168,6 +169,7 @@ namespace Indirect.Notification
 
         private async Task StartFresh()
         {
+            Debug.WriteLine("PushClient: Starting fresh.");
             if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
             _loopGroup = new SingleThreadEventLoop();
 
@@ -188,6 +190,7 @@ namespace Indirect.Notification
                 catch (Exception connectedStandby)
                 {
                     Debug.WriteLine(connectedStandby);
+                    Debug.WriteLine("PushClient: Connected standby not available.");
                     try
                     {
                         Socket.EnableTransferOwnership(_task.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
@@ -198,7 +201,7 @@ namespace Indirect.Notification
                         Crashes.TrackError(e);
 #endif
                         Debug.WriteLine(e);
-                        Debug.WriteLine("Failed to transfer socket completely!");
+                        Debug.WriteLine("PushClient: Failed to transfer socket completely!");
                     }
                 }
             }
@@ -216,7 +219,7 @@ namespace Indirect.Notification
         {
             _timerResetToken?.Cancel();
             if (_loopGroup != null) 
-                await _loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2));
+                await _loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1));
         }
 
         public async Task SendPing()
@@ -238,7 +241,7 @@ namespace Indirect.Notification
             // If connection is closed, reconnect
             Task.Delay(TimeSpan.FromSeconds(TIMEOUT)).ContinueWith(async task =>
             {
-                Debug.WriteLine("Reconnecting.");
+                Debug.WriteLine("PushClient: Reconnecting.");
                 _waitingForPubAck = false;
                 _timerResetToken?.Cancel();
                 await StartFresh();
@@ -252,13 +255,13 @@ namespace Indirect.Notification
             switch (msg.PacketType)
             {
                 case PacketType.CONNACK:
-                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tCONNACK received.");
+                    Debug.WriteLine($"PushClient:\tCONNACK received.");
                     ConnectionData.UpdateAuth(((FbnsConnAckPacket)msg).Authentication);
                     RegisterMqttClient(ctx);
                     break;
 
                 case PacketType.PUBLISH:
-                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tPUBLISH received.");
+                    Debug.WriteLine($"PushClient:\tPUBLISH received.");
                     var publishPacket = (PublishPacket)msg;
                     if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
                     {
@@ -266,7 +269,7 @@ namespace Indirect.Notification
                     }
                     var payload = DecompressPayload(publishPacket.Payload);
                     var json = Encoding.UTF8.GetString(payload);
-                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tMQTT json: {json}");
+                    Debug.WriteLine($"PushClient:\tMQTT json: {json}");
                     switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                     {
                         case TopicIds.Message:
@@ -285,13 +288,13 @@ namespace Indirect.Notification
                     break;
 
                 case PacketType.PUBACK:
-                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tPUBACK received.");
+                    Debug.WriteLine($"PushClient:\tPUBACK received.");
                     _waitingForPubAck = false;
                     break;
 
                 // todo: PingResp never arrives even though data was received. Decoder problem?
                 case PacketType.PINGRESP:
-                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tPINGRESP received.");
+                    Debug.WriteLine($"PushClient:\tPINGRESP received.");
                     //ResetTimer(ctx);
                     break;
 
@@ -310,7 +313,7 @@ namespace Indirect.Notification
 
             if (!string.IsNullOrEmpty(response["error"]))
             {
-                Debug.WriteLine("FBNS error: " + response["error"], "Error");
+                Debug.WriteLine("PushClient: " + response["error"], "Error");
                 return;
             }
 

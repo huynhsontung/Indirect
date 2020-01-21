@@ -26,7 +26,8 @@ namespace Indirect
         // public const string GLOBAL_EXCEPTION_HANDLER_NAME = "App.OnUnhandledException";
 
         private ApiContainer ViewModel { get; set; }
-        Windows.Storage.ApplicationDataContainer _localSettings =
+
+        private readonly Windows.Storage.ApplicationDataContainer _localSettings =
             Windows.Storage.ApplicationData.Current.LocalSettings;
 
         /// <summary>
@@ -122,9 +123,15 @@ namespace Indirect
             // just ensure that the window is active
             if (rootFrame == null)
             {
-                ViewModel = await ApiContainer.Factory();
-                if (!CoreApplication.Properties.ContainsKey(VIEW_MODEL_PROP_NAME))
+                if (CoreApplication.Properties.ContainsKey(VIEW_MODEL_PROP_NAME))
+                {
+                    ViewModel = (ApiContainer) CoreApplication.Properties[VIEW_MODEL_PROP_NAME];
+                }
+                else
+                {
+                    ViewModel = await ApiContainer.Factory();
                     CoreApplication.Properties.Add(VIEW_MODEL_PROP_NAME, ViewModel);
+                }
 
                 // Create a Frame to act as the navigation context and navigate to the first page
                 rootFrame = new Frame();

@@ -1,6 +1,7 @@
 ﻿using System;
 using Windows.Storage;
 using Windows.UI.Core;
+using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -84,6 +85,8 @@ namespace Indirect
                 return;
             }
             var inboxThread = (InstaDirectInboxThreadWrapper) e.AddedItems[0];
+            if (!string.IsNullOrEmpty(inboxThread.ThreadId)) 
+                ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
             DataContext = inboxThread.ObservableItems;
             _viewModel.MarkLatestItemSeen(inboxThread);
         }
@@ -133,11 +136,6 @@ namespace Indirect
         {
             var about = new AboutDialog();
             _ = about.ShowAsync();
-        }
-
-        private void Magic_Click(object sender, RoutedEventArgs e)
-        {
-
         }
 
         private void ThemeItem_Click(object sender, RoutedEventArgs e)
