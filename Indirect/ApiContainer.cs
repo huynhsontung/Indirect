@@ -73,7 +73,7 @@ namespace Indirect
             }
         }
 
-        public bool IsUserAuthenticated { get; private set; }
+        public bool IsUserAuthenticated => _instaApi?.IsUserAuthenticated ?? false;
 
         public StateData StateData
         {
@@ -121,13 +121,8 @@ namespace Indirect
 
         private async Task CreateStateFile()
         {
-            _stateFile = (StorageFile) await _localFolder.TryGetItemAsync(STATE_FILE_NAME);
-            if (_stateFile == null)
-            {
-                _stateFile =
-                    await _localFolder.CreateFileAsync(STATE_FILE_NAME, CreationCollisionOption.ReplaceExisting);
-                IsUserAuthenticated = false;
-            }
+            _stateFile = (StorageFile) await _localFolder.TryGetItemAsync(STATE_FILE_NAME) ??
+                         await _localFolder.CreateFileAsync(STATE_FILE_NAME, CreationCollisionOption.ReplaceExisting);
         }
 
         private async Task LoadStateFromStorage()
@@ -144,7 +139,6 @@ namespace Indirect
                         _instaApi = Builder.LoadStateData(stateData)
                             .UseLogger(new DebugLogger(LogLevel.All))
                             .Build();
-                        IsUserAuthenticated = _instaApi.IsUserAuthenticated;
                         _pushData = stateData.FbnsConnectionData;
                     }
                     else
@@ -184,18 +178,19 @@ namespace Indirect
         {
             // Instagram doesnt support logout anymore
             // var result = await _instaApi.LogoutAsync();
+            _instaApi.Logout();
             SyncClient.Shutdown();
-            await PushClient.Shutdown();
+            _ = PushClient.Shutdown();
             _pushData = new FbnsConnectionData();
-            await ImageCache.Instance.ClearAsync();
-            await VideoCache.Instance.ClearAsync();
-            _settings.Values.Clear();
-            if (CoreApplication.Properties.ContainsKey(INSTA_API_PROP_NAME))
-                CoreApplication.Properties.Remove(INSTA_API_PROP_NAME);
             using (var stream = await _stateFile.OpenStreamForWriteAsync())
             {
                 stream.SetLength(0);
             }
+            if (CoreApplication.Properties.ContainsKey(INSTA_API_PROP_NAME))
+                CoreApplication.Properties.Remove(INSTA_API_PROP_NAME);
+            _ = ImageCache.Instance.ClearAsync();
+            _ = VideoCache.Instance.ClearAsync();
+            // _settings.Values.Clear();
         }
 
         private async Task UpdateLoggedInUser()

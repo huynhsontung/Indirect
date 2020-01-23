@@ -23,8 +23,7 @@ namespace Indirect.Notification
         public event EventHandler<List<MessageSyncEventArgs>> MessageReceived;
 
         private int _packetId = 1;
-        private CancellationTokenSource _wsClientPinging;
-        private CancellationTokenSource _retry;
+        private CancellationTokenSource _pinging;
         private readonly InstaApi _instaApi;
         private long _seqId;
         private DateTime _snapshotAt;
@@ -39,8 +38,8 @@ namespace Indirect.Notification
         // Shutdown the client by stop pinging the server
         public async void Shutdown()
         {
-            _wsClientPinging.Cancel();
-            _retry?.Cancel();
+            if (_pinging?.IsCancellationRequested ?? true) return;
+            _pinging.Cancel();
             var disconnectPacket = DisconnectPacket.Instance;
             var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
             try
@@ -65,8 +64,8 @@ namespace Indirect.Notification
                     nameof(seqId));
             _seqId = seqId;
             _snapshotAt = snapshotAt;
-            _wsClientPinging?.Cancel();
-            _wsClientPinging = new CancellationTokenSource();
+            _pinging?.Cancel();
+            _pinging = new CancellationTokenSource();
             _packetId = 1;
             var state = _instaApi.GetStateData();
             var device = _instaApi.DeviceInfo;
@@ -130,7 +129,7 @@ namespace Indirect.Notification
         {
             var internetProfile = NetworkInformation.GetInternetConnectionProfile();
             if (internetProfile == null || _seqId == default || _snapshotAt == default ||
-                _wsClientPinging.IsCancellationRequested) return;
+                _pinging.IsCancellationRequested) return;
             try
             {
                 // Disconnect to make sure there is no duplicate 
@@ -149,7 +148,7 @@ namespace Indirect.Notification
 
         private async void OnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
-            if (_wsClientPinging?.IsCancellationRequested ?? false) return;
+            if (_pinging?.IsCancellationRequested ?? false) return;
             try
             {
                 var dataReader = args.GetDataReader();
@@ -171,7 +170,6 @@ namespace Indirect.Notification
                 {
                     case PacketType.CONNACK:
                         Debug.WriteLine($"{nameof(SyncClient)}: " + packet.PacketType);
-                        _retry?.Cancel();
                         var subscribePacket = new SubscribePacket(
                             _packetId++,
                             new SubscriptionRequest("/ig_message_sync", QualityOfService.AtMostOnce),
@@ -228,11 +226,11 @@ namespace Indirect.Notification
                         Debug.WriteLine($"{nameof(SyncClient)}: " + packet.PacketType);
                         _ = Task.Run(async () =>
                         {
-                            while (!_wsClientPinging.IsCancellationRequested)
+                            while (!_pinging.IsCancellationRequested)
                             {
                                 try
                                 {
-                                    await Task.Delay(TimeSpan.FromSeconds(8), _wsClientPinging.Token);
+                                    await Task.Delay(TimeSpan.FromSeconds(8), _pinging.Token);
                                     var pingPacket = PingReqPacket.Instance;
                                     var pingBuffer = StandalonePacketEncoder.EncodePacket(pingPacket);
                                     await sender.OutputStream.WriteAsync(pingBuffer);
@@ -271,7 +269,6 @@ namespace Indirect.Notification
                         return;
 
                     case PacketType.PINGRESP:
-                        _retry?.Cancel();
                         Debug.WriteLine("Got pong from Sync Client");
                         break;
 

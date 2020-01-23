@@ -44,7 +44,7 @@ namespace Indirect
         {
             var confirmDialog = new ContentDialog()
             {
-                Title = "Log out?",
+                Content = "Are you sure you want to logout?",
                 CloseButtonText = "Close",
                 PrimaryButtonText = "Logout", 
                 DefaultButton = ContentDialogButton.Close
