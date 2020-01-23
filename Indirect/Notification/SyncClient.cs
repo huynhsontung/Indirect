@@ -123,7 +123,6 @@ namespace Indirect.Notification
             {
                 Debug.WriteLine(e);
                 Debug.WriteLine($"{nameof(SyncClient)}: Failed to start.");
-                // OnClosed();
             }
         }
 
@@ -148,37 +147,6 @@ namespace Indirect.Notification
             Start(_seqId, _snapshotAt);
         }
 
-        // private async void OnClosed()
-        // {
-        //     if (_retry != null && !_retry.IsCancellationRequested) return;
-        //     try
-        //     {
-        //         _retry = new CancellationTokenSource();
-        //         try
-        //         {
-        //             // Disconnect to make sure there is no duplicate 
-        //             var disconnectPacket = DisconnectPacket.Instance;
-        //             var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
-        //             await _socket.OutputStream.WriteAsync(buffer);
-        //             await _socket.OutputStream.FlushAsync();
-        //         }
-        //         catch (Exception)
-        //         {
-        //             // pass
-        //         }
-        //         Debug.WriteLine($"{nameof(SyncClient)} closed");
-        //         while (!_retry.IsCancellationRequested && !_wsClientPinging.IsCancellationRequested)
-        //         {
-        //             await Task.Delay(TimeSpan.FromSeconds(15), _retry.Token);
-        //             Start(_seqId, _snapshotAt);
-        //         }
-        //     }
-        //     catch (TaskCanceledException)
-        //     {
-        //         // pass
-        //     }
-        // }
-
         private async void OnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
             if (_wsClientPinging?.IsCancellationRequested ?? false) return;
@@ -196,7 +164,6 @@ namespace Indirect.Notification
                 {
                     Debug.WriteLine(e);
                     Debug.WriteLine($"{nameof(SyncClient)}: Failed to decode packet.");
-                    // OnClosed();
                     return;
                 }
 
@@ -320,7 +287,6 @@ namespace Indirect.Notification
 #endif
                 Debug.WriteLine("Exception occured when processing incoming sync message.");
                 Debug.WriteLine(e);
-                // OnClosed();
             }
         }
 

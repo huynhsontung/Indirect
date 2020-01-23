@@ -197,7 +197,6 @@ namespace Indirect.Notification
             {
                 // pass
             }
-            // ResetTimer(_context);
         }
 
         private async Task StartFresh()
@@ -282,19 +281,6 @@ namespace Indirect.Notification
             RegResp = 80    // "/fbns_reg_resp"
         }
 
-        // public override void ExceptionCaught(IChannelHandlerContext ctx, Exception e)
-        // {
-        //     // If connection is closed, reconnect
-        //     Task.Delay(TimeSpan.FromSeconds(TIMEOUT)).ContinueWith(async task =>
-        //     {
-        //         Debug.WriteLine($"{nameof(PushClient)}: Reconnecting.");
-        //         _waitingForPubAck = false;
-        //         _timerResetToken?.Cancel();
-        //         await StartFresh();
-        //     });
-        //
-        // }
-
         protected override async void ChannelRead0(IChannelHandlerContext ctx, Packet msg)
         {
             _context = ctx; // Save context for manual Ping later
@@ -333,7 +319,6 @@ namespace Indirect.Notification
                             {
                                 // pass
                             }
-                            // ResetTimer(ctx);
                             break;
                         default:
                             Debug.WriteLine($"Unknown topic received: {publishPacket.TopicName}", "Warning");
@@ -349,7 +334,6 @@ namespace Indirect.Notification
                 // todo: PingResp never arrives even though data was received. Decoder problem?
                 case PacketType.PINGRESP:
                     Debug.WriteLine($"{nameof(PushClient)}:\tPINGRESP received.");
-                    //ResetTimer(ctx);
                     break;
 
                 default:
@@ -464,31 +448,6 @@ namespace Indirect.Notification
             {
                 // pass
             }
-        }
-
-        private async void ResetTimer(IChannelHandlerContext ctx)
-        {
-            _timerResetToken?.Cancel();
-            _timerResetToken = new CancellationTokenSource();
-
-            // Create new cancellation token for timer reset
-            var cancellationToken = _timerResetToken.Token;
-
-            try
-            {
-                while (true)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(KEEP_ALIVE - 60), cancellationToken); // wait for _keepAliveDuration - 60 seconds
-                    if (cancellationToken.IsCancellationRequested) break;
-                    await SendPing();
-                }
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-
-            Debug.WriteLine("Stopped pinging push server");
         }
 
         private byte[] DecompressPayload(IByteBuffer payload)
