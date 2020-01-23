@@ -11,8 +11,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking;
+using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
+using Windows.UI.WindowManagement;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Transport.Channels;
@@ -36,15 +38,18 @@ namespace Indirect.Notification
         public override bool IsSharable { get; } = true;
 
         private const string HOST_NAME = "mqtt-mini.facebook.com";
-        private const string BACKGROUND_TASK_NAME = "BackgroundPushClient";
-        private const string BACKGROUND_TASK_ENTRY_POINT = "BackgroundPushClient.BackgroundPushClient";
+        private const string BACKGROUND_SOCKET_ACTIVITY_NAME = "BackgroundPushClient.SocketActivity";
+        private const string BACKGROUND_INTERNET_AVAILABLE_NAME = "BackgroundPushClient.InternetAvailable";
+        private static readonly string SOCKET_ACTIVITY_ENTRY_POINT = typeof(BackgroundPushClient.SocketActivity).FullName;
+        private static readonly string INTERNET_AVAILABLE_ENTRY_POINT = typeof(BackgroundPushClient.InternetAvailable).FullName;
         private const string SOCKET_ID = "mqtt_fbns";
 
         private SingleThreadEventLoop _loopGroup;
         private readonly UserSessionData _user;
         private readonly IHttpRequestProcessor _httpRequestProcessor;
         private readonly AndroidDevice _device;
-        private IBackgroundTaskRegistration _task;
+        private IBackgroundTaskRegistration _socketActivityTask;
+        private IBackgroundTaskRegistration _internetAvailableTask;
 
         public const int KEEP_ALIVE = 900;    // seconds
         private const int TIMEOUT = 5;
@@ -67,6 +72,14 @@ namespace Indirect.Notification
             // Build user agent for first time setup
             if (string.IsNullOrEmpty(ConnectionData.UserAgent))
                 ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(_device);
+
+            NetworkInformation.NetworkStatusChanged += async sender =>
+            {
+                var internetProfile = NetworkInformation.GetInternetConnectionProfile();
+                if (internetProfile == null || _loopGroup == null) return;
+                await Shutdown();
+                await StartFresh();
+            };
         }
 
         public override void ChannelRegistered(IChannelHandlerContext context)
@@ -78,10 +91,14 @@ namespace Indirect.Notification
         {
             foreach (var task in BackgroundTaskRegistration.AllTasks)
             {
-                if (task.Value.Name == BACKGROUND_TASK_NAME)
+                switch (task.Value.Name)
                 {
-                    task.Value.Unregister(false);
-                    break;
+                    case BACKGROUND_SOCKET_ACTIVITY_NAME:
+                        task.Value.Unregister(false);
+                        break;
+                    case BACKGROUND_INTERNET_AVAILABLE_NAME:
+                        task.Value.Unregister(false);
+                        break;
                 }
             }
 
@@ -92,11 +109,19 @@ namespace Indirect.Notification
                 return false;
             var backgroundTaskBuilder = new BackgroundTaskBuilder
             {
-                Name = BACKGROUND_TASK_NAME,
-                TaskEntryPoint = BACKGROUND_TASK_ENTRY_POINT
+                Name = BACKGROUND_SOCKET_ACTIVITY_NAME,
+                TaskEntryPoint = SOCKET_ACTIVITY_ENTRY_POINT
             };
             backgroundTaskBuilder.SetTrigger(new SocketActivityTrigger());
-            _task = backgroundTaskBuilder.Register();
+            _socketActivityTask = backgroundTaskBuilder.Register();
+
+            backgroundTaskBuilder = new BackgroundTaskBuilder
+            {
+                Name = INTERNET_AVAILABLE_ENTRY_POINT,
+                TaskEntryPoint = INTERNET_AVAILABLE_ENTRY_POINT
+            };
+            backgroundTaskBuilder.SetTrigger(new SystemTrigger(SystemTriggerType.InternetAvailable, false));
+            _internetAvailableTask = backgroundTaskBuilder.Register();
             return true;
         }
 
@@ -154,7 +179,7 @@ namespace Indirect.Notification
 
         private async Task StartWithExistingSocket(StreamSocket socket)
         {
-            Debug.WriteLine("PushClient: Starting with existing socket.");
+            Debug.WriteLine($"{nameof(PushClient)}: Starting with existing socket.");
             Socket = socket;
             if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
             _loopGroup = new SingleThreadEventLoop();
@@ -164,12 +189,20 @@ namespace Indirect.Notification
 
             await _loopGroup.RegisterAsync(streamSocketChannel);
             await SendPing();
-            ResetTimer(_context);
+            try
+            {
+                await _context.Executor.Schedule(KeepAliveLoop, TimeSpan.FromSeconds(KEEP_ALIVE - 60));
+            }
+            catch (TaskCanceledException)
+            {
+                // pass
+            }
+            // ResetTimer(_context);
         }
 
         private async Task StartFresh()
         {
-            Debug.WriteLine("PushClient: Starting fresh.");
+            Debug.WriteLine($"{nameof(PushClient)}: Starting fresh.");
             if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
             _loopGroup = new SingleThreadEventLoop();
 
@@ -185,15 +218,15 @@ namespace Indirect.Notification
             {
                 try
                 {
-                    Socket.EnableTransferOwnership(_task.TaskId, SocketActivityConnectedStandbyAction.Wake);
+                    Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
                 }
                 catch (Exception connectedStandby)
                 {
                     Debug.WriteLine(connectedStandby);
-                    Debug.WriteLine("PushClient: Connected standby not available.");
+                    Debug.WriteLine($"{nameof(PushClient)}: Connected standby not available.");
                     try
                     {
-                        Socket.EnableTransferOwnership(_task.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
+                        Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
                     }
                     catch (Exception e)
                     {
@@ -201,7 +234,7 @@ namespace Indirect.Notification
                         Crashes.TrackError(e);
 #endif
                         Debug.WriteLine(e);
-                        Debug.WriteLine("PushClient: Failed to transfer socket completely!");
+                        Debug.WriteLine($"{nameof(PushClient)}: Failed to transfer socket completely!");
                     }
                 }
             }
@@ -218,15 +251,28 @@ namespace Indirect.Notification
         public async Task Shutdown()
         {
             _timerResetToken?.Cancel();
-            if (_loopGroup != null) 
-                await _loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1));
+            if (_loopGroup != null)
+            {
+                Debug.WriteLine("Stopped pinging push server");
+                var loopGroup = _loopGroup;
+                _loopGroup = null;
+                await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1));
+            }
         }
 
         public async Task SendPing()
         {
-            var packet = PingReqPacket.Instance;
-            await _context.WriteAndFlushAsync(packet);
-            Debug.WriteLine("Pinging Push server");
+            try
+            {
+                var packet = PingReqPacket.Instance;
+                await _context.WriteAndFlushAsync(packet);
+                Debug.WriteLine("Pinging Push server");
+            }
+            catch (Exception)
+            {
+                Debug.WriteLine("Failed to ping Push server. Shutting down.");
+                _ = Shutdown();
+            }
         }
 
         public enum TopicIds
@@ -236,18 +282,18 @@ namespace Indirect.Notification
             RegResp = 80    // "/fbns_reg_resp"
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception e)
-        {
-            // If connection is closed, reconnect
-            Task.Delay(TimeSpan.FromSeconds(TIMEOUT)).ContinueWith(async task =>
-            {
-                Debug.WriteLine("PushClient: Reconnecting.");
-                _waitingForPubAck = false;
-                _timerResetToken?.Cancel();
-                await StartFresh();
-            });
-
-        }
+        // public override void ExceptionCaught(IChannelHandlerContext ctx, Exception e)
+        // {
+        //     // If connection is closed, reconnect
+        //     Task.Delay(TimeSpan.FromSeconds(TIMEOUT)).ContinueWith(async task =>
+        //     {
+        //         Debug.WriteLine($"{nameof(PushClient)}: Reconnecting.");
+        //         _waitingForPubAck = false;
+        //         _timerResetToken?.Cancel();
+        //         await StartFresh();
+        //     });
+        //
+        // }
 
         protected override async void ChannelRead0(IChannelHandlerContext ctx, Packet msg)
         {
@@ -255,13 +301,13 @@ namespace Indirect.Notification
             switch (msg.PacketType)
             {
                 case PacketType.CONNACK:
-                    Debug.WriteLine($"PushClient:\tCONNACK received.");
+                    Debug.WriteLine($"{nameof(PushClient)}:\tCONNACK received.");
                     ConnectionData.UpdateAuth(((FbnsConnAckPacket)msg).Authentication);
                     RegisterMqttClient(ctx);
                     break;
 
                 case PacketType.PUBLISH:
-                    Debug.WriteLine($"PushClient:\tPUBLISH received.");
+                    Debug.WriteLine($"{nameof(PushClient)}:\tPUBLISH received.");
                     var publishPacket = (PublishPacket)msg;
                     if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
                     {
@@ -269,7 +315,7 @@ namespace Indirect.Notification
                     }
                     var payload = DecompressPayload(publishPacket.Payload);
                     var json = Encoding.UTF8.GetString(payload);
-                    Debug.WriteLine($"PushClient:\tMQTT json: {json}");
+                    Debug.WriteLine($"{nameof(PushClient)}:\tMQTT json: {json}");
                     switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                     {
                         case TopicIds.Message:
@@ -279,7 +325,15 @@ namespace Indirect.Notification
                             break;
                         case TopicIds.RegResp:
                             OnRegisterResponse(json);
-                            ResetTimer(ctx);
+                            try
+                            {
+                                await _context.Executor.Schedule(KeepAliveLoop, TimeSpan.FromSeconds(KEEP_ALIVE - 60));
+                            }
+                            catch (TaskCanceledException)
+                            {
+                                // pass
+                            }
+                            // ResetTimer(ctx);
                             break;
                         default:
                             Debug.WriteLine($"Unknown topic received: {publishPacket.TopicName}", "Warning");
@@ -288,13 +342,13 @@ namespace Indirect.Notification
                     break;
 
                 case PacketType.PUBACK:
-                    Debug.WriteLine($"PushClient:\tPUBACK received.");
+                    Debug.WriteLine($"{nameof(PushClient)}:\tPUBACK received.");
                     _waitingForPubAck = false;
                     break;
 
                 // todo: PingResp never arrives even though data was received. Decoder problem?
                 case PacketType.PINGRESP:
-                    Debug.WriteLine($"PushClient:\tPINGRESP received.");
+                    Debug.WriteLine($"{nameof(PushClient)}:\tPINGRESP received.");
                     //ResetTimer(ctx);
                     break;
 
@@ -313,7 +367,7 @@ namespace Indirect.Notification
 
             if (!string.IsNullOrEmpty(response["error"]))
             {
-                Debug.WriteLine("PushClient: " + response["error"], "Error");
+                Debug.WriteLine($"{nameof(PushClient)}: {response["error"]}", "Error");
                 return;
             }
 
@@ -397,6 +451,19 @@ namespace Indirect.Notification
                     RegisterMqttClient(ctx);
                 }
             });
+        }
+
+        private async void KeepAliveLoop()
+        {
+            await SendPing();
+            try
+            {
+                await _context.Executor.Schedule(KeepAliveLoop, TimeSpan.FromSeconds(KEEP_ALIVE - 60));
+            }
+            catch (TaskCanceledException)
+            {
+                // pass
+            }
         }
 
         private async void ResetTimer(IChannelHandlerContext ctx)

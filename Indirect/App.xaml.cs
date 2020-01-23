@@ -68,16 +68,16 @@ namespace Indirect
 #if !DEBUG
             Crashes.TrackError(e.Exception);
 #endif
-            var dialog = new ContentDialog()
-            {
-                Title = "An error occured",
-                Content = e.Exception.ToString(),
-                CloseButtonText = "Close Application",
-                DefaultButton = ContentDialogButton.Close
-            };
-            e.Handled = true;
             try
             {
+                var dialog = new ContentDialog()
+                {
+                    Title = "An error occured",
+                    Content = e.Exception.ToString(),
+                    CloseButtonText = "Close Application",
+                    DefaultButton = ContentDialogButton.Close
+                };
+                e.Handled = true;
                 await dialog.ShowAsync();
             }
             catch (Exception innerException)

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 using DotNetty.Buffers;
@@ -32,6 +33,7 @@ namespace Indirect.Notification
         public SyncClient(InstaApi api)
         {
             _instaApi = api;
+            NetworkInformation.NetworkStatusChanged += OnNetworkChanged;
         }
 
         // Shutdown the client by stop pinging the server
@@ -120,41 +122,62 @@ namespace Indirect.Notification
             catch (Exception e)
             {
                 Debug.WriteLine(e);
-                Debug.WriteLine("SyncClient: Failed to start.");
-                OnClosed();
+                Debug.WriteLine($"{nameof(SyncClient)}: Failed to start.");
+                // OnClosed();
             }
         }
 
-        private async void OnClosed()
+        private async void OnNetworkChanged(object sender)
         {
-            if (_retry != null && !_retry.IsCancellationRequested) return;
+            var internetProfile = NetworkInformation.GetInternetConnectionProfile();
+            if (internetProfile == null || _seqId == default || _snapshotAt == default ||
+                _wsClientPinging.IsCancellationRequested) return;
             try
             {
-                _retry = new CancellationTokenSource();
-                try
-                {
-                    // Disconnect to make sure there is no duplicate 
-                    var disconnectPacket = DisconnectPacket.Instance;
-                    var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
-                    await _socket.OutputStream.WriteAsync(buffer);
-                    await _socket.OutputStream.FlushAsync();
-                }
-                catch (Exception)
-                {
-                    // pass
-                }
-                Debug.WriteLine("SyncClient closed");
-                while (!_retry.IsCancellationRequested && !_wsClientPinging.IsCancellationRequested)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(15), _retry.Token);
-                    Start(_seqId, _snapshotAt);
-                }
+                // Disconnect to make sure there is no duplicate 
+                var disconnectPacket = DisconnectPacket.Instance;
+                var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
+                await _socket.OutputStream.WriteAsync(buffer);
+                await _socket.OutputStream.FlushAsync();
             }
-            catch (TaskCanceledException)
+            catch (Exception)
             {
-                // pass
+                // Ignore if fail
             }
+            Debug.WriteLine($"{nameof(SyncClient)}: Internet connection available. Reconnecting.");
+            Start(_seqId, _snapshotAt);
         }
+
+        // private async void OnClosed()
+        // {
+        //     if (_retry != null && !_retry.IsCancellationRequested) return;
+        //     try
+        //     {
+        //         _retry = new CancellationTokenSource();
+        //         try
+        //         {
+        //             // Disconnect to make sure there is no duplicate 
+        //             var disconnectPacket = DisconnectPacket.Instance;
+        //             var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
+        //             await _socket.OutputStream.WriteAsync(buffer);
+        //             await _socket.OutputStream.FlushAsync();
+        //         }
+        //         catch (Exception)
+        //         {
+        //             // pass
+        //         }
+        //         Debug.WriteLine($"{nameof(SyncClient)} closed");
+        //         while (!_retry.IsCancellationRequested && !_wsClientPinging.IsCancellationRequested)
+        //         {
+        //             await Task.Delay(TimeSpan.FromSeconds(15), _retry.Token);
+        //             Start(_seqId, _snapshotAt);
+        //         }
+        //     }
+        //     catch (TaskCanceledException)
+        //     {
+        //         // pass
+        //     }
+        // }
 
         private async void OnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
@@ -172,15 +195,15 @@ namespace Indirect.Notification
                 catch (Exception e)
                 {
                     Debug.WriteLine(e);
-                    Debug.WriteLine("SyncClient: Failed to decode packet.");
-                    OnClosed();
+                    Debug.WriteLine($"{nameof(SyncClient)}: Failed to decode packet.");
+                    // OnClosed();
                     return;
                 }
 
                 switch (packet.PacketType)
                 {
                     case PacketType.CONNACK:
-                        Debug.WriteLine("SyncClient: " + packet.PacketType);
+                        Debug.WriteLine($"{nameof(SyncClient)}: " + packet.PacketType);
                         _retry?.Cancel();
                         var subscribePacket = new SubscribePacket(
                             _packetId++,
@@ -235,7 +258,7 @@ namespace Indirect.Notification
                         await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
 
 
-                        Debug.WriteLine("SyncClient: " + packet.PacketType);
+                        Debug.WriteLine($"{nameof(SyncClient)}: " + packet.PacketType);
                         _ = Task.Run(async () =>
                         {
                             while (!_wsClientPinging.IsCancellationRequested)
@@ -272,7 +295,7 @@ namespace Indirect.Notification
                             }
                             MessageReceived?.Invoke(this, messageSyncPayload);
                         }
-                        Debug.WriteLine($"SyncClient pub to {publishPacket.TopicName} payload: {payload}");
+                        Debug.WriteLine($"{nameof(SyncClient)} pub to {publishPacket.TopicName} payload: {payload}");
 
                         if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
                         {
@@ -286,7 +309,7 @@ namespace Indirect.Notification
                         break;
 
                     default:
-                        Debug.WriteLine("SyncClient: " + packet.PacketType);
+                        Debug.WriteLine($"{nameof(SyncClient)}: " + packet.PacketType);
                         break;
                 }
             }
@@ -297,7 +320,7 @@ namespace Indirect.Notification
 #endif
                 Debug.WriteLine("Exception occured when processing incoming sync message.");
                 Debug.WriteLine(e);
-                OnClosed();
+                // OnClosed();
             }
         }
 

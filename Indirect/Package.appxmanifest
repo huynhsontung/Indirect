@@ -41,7 +41,12 @@
         <uap:LockScreen BadgeLogo="Assets\BadgeLogo.png" Notification="badge"/>
       </uap:VisualElements>
       <Extensions>
-        <Extension Category="windows.backgroundTasks" EntryPoint="BackgroundPushClient.BackgroundPushClient">
+        <Extension Category="windows.backgroundTasks" EntryPoint="BackgroundPushClient.SocketActivity">
+          <BackgroundTasks>
+            <Task Type="systemEvent"/>
+          </BackgroundTasks>
+        </Extension>
+        <Extension Category="windows.backgroundTasks" EntryPoint="BackgroundPushClient.InternetAvailable">
           <BackgroundTasks>
             <Task Type="systemEvent"/>
           </BackgroundTasks>

@@ -121,10 +121,12 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="BackgroundPushClient.cs" />
+    <Compile Include="SocketActivity.cs" />
+    <Compile Include="InternetAvailable.cs" />
     <Compile Include="PacketHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StreamSocketChannel.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DotNetty.Codecs.Mqtt">

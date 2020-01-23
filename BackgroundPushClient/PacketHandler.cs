@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography;
-using Windows.UI.Notifications;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Transport.Channels;
@@ -18,7 +16,6 @@ using InstaSharper.Classes.DeviceInfo;
 using InstaSharper.Helpers;
 using InstaSharper.Logger;
 using Ionic.Zlib;
-using Microsoft.Toolkit.Uwp.Notifications;
 using Newtonsoft.Json;
 
 namespace BackgroundPushClient
@@ -86,11 +83,13 @@ namespace BackgroundPushClient
             switch (msg.PacketType)
             {
                 case PacketType.CONNACK:
+                    Debug.WriteLine($"{typeof(PacketHandler).FullName}: CONNACK received.");
                     _fbnsConnectionData.UpdateAuth(((FbnsConnAckPacket)msg).Authentication);
                     RegisterMqttClient(ctx);
                     break;
 
                 case PacketType.PUBLISH:
+                    Debug.WriteLine($"{typeof(PacketHandler).FullName}: PUBLISH received.");
                     var publishPacket = (PublishPacket)msg;
                     if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
                     {
@@ -98,7 +97,7 @@ namespace BackgroundPushClient
                     }
                     var payload = DecompressPayload(publishPacket.Payload);
                     var json = Encoding.UTF8.GetString(payload);
-                    Debug.WriteLine($"{DateTime.Now.ToString(CultureInfo.CurrentCulture)}:\tMQTT json: {json}");
+                    Debug.WriteLine($"{typeof(PacketHandler).FullName}:\tMQTT json: {json}");
 
                     switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                     {
@@ -117,11 +116,13 @@ namespace BackgroundPushClient
                     break;
 
                 case PacketType.PUBACK:
+                    Debug.WriteLine($"{typeof(PacketHandler).FullName}: PUBACK received.");
                     _waitingForPubAck = false;
                     break;
 
                 // todo: PingResp never arrives even though data was received. Decoder problem?
                 case PacketType.PINGRESP:
+                    Debug.WriteLine($"{typeof(PacketHandler).FullName}: PINGRESP received.");
                     break;
             }
         }

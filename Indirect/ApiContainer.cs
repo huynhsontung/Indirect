@@ -100,7 +100,6 @@ namespace Indirect
         public async void OnLoggedIn()
         {
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
-            _settings.Values["STATE_FILE_NAME"] = STATE_FILE_NAME;
             SyncClient = new SyncClient(_instaApi);
             SyncClient.MessageReceived += OnMessageSyncReceived;
             PushClient = new PushClient(_instaApi, _pushData);
