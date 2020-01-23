@@ -65,6 +65,8 @@
             <converters:OpenButtonStyleConverter x:Key="OpenButtonStyleConverter" 
                                                  AvailableStyle="{StaticResource AvailableOpen}"
                                                  NotAvailableStyle="{StaticResource NotAvailableOpen}"/>
+            <converters:VariableMaxWidthConverter x:Key="VariableMaxWidthConverter"/>
+
 
             <Style x:Name="FromMeReaction" TargetType="FontIcon">
                 <Setter Property="Glyph" Value="&#xEB52;"/>
@@ -143,7 +145,7 @@
                     <TextBlock Style="{ThemeResource FluentBodyTextStyle}"
                                Text="{x:Bind Text}"
                                Margin="6"
-                               MaxWidth="250"
+                               MaxWidth="{x:Bind Text.Length, Converter={StaticResource VariableMaxWidthConverter}, FallbackValue=250}"
                                HorizontalAlignment="Center"
                                TextWrapping="WrapWholeWords"/>
                 </Border>
