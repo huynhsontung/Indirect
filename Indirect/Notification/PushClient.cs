@@ -87,7 +87,7 @@ namespace Indirect.Notification
             _context = context;
         }
 
-        private async Task<bool> RequestBackgroundAccess()
+        public void UnregisterTasks()
         {
             foreach (var task in BackgroundTaskRegistration.AllTasks)
             {
@@ -101,6 +101,11 @@ namespace Indirect.Notification
                         break;
                 }
             }
+        }
+
+        private async Task<bool> RequestBackgroundAccess()
+        {
+            UnregisterTasks();
 
             var permissionResult = await BackgroundExecutionManager.RequestAccessAsync();
             if (permissionResult == BackgroundAccessStatus.DeniedByUser ||

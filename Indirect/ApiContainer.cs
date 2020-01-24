@@ -181,7 +181,9 @@ namespace Indirect
             _instaApi.Logout();
             SyncClient.Shutdown();
             _ = PushClient.Shutdown();
+            PushClient.UnregisterTasks();
             _pushData = new FbnsConnectionData();
+
             using (var stream = await _stateFile.OpenStreamForWriteAsync())
             {
                 stream.SetLength(0);
