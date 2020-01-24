@@ -212,7 +212,7 @@ namespace Indirect
                 var threadId = segments[2];
                 var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
                 if (thread == null) return;
-                if (itemData.Op == "add")
+                if (itemData.Op == "add" && thread.ObservableItems.Count > 0)
                 {
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                         () => thread.AddItem(itemData.Item));

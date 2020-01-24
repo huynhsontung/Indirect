@@ -60,7 +60,8 @@ namespace Indirect.Notification
 
         public PushClient(InstaApi api, FbnsConnectionData connectionData)
         {
-            _instaApi = api;
+            _instaApi = api ?? throw new ArgumentException("Api can't be null", nameof(api));
+            if (connectionData == null) connectionData = new FbnsConnectionData();
             ConnectionData = connectionData;
             _user = api.UserSession;
             _httpRequestProcessor = api.RequestProcessor;
@@ -139,6 +140,7 @@ namespace Indirect.Notification
             if (!_instaApi.IsUserAuthenticated) return;
 
             // Hand over MQTT socket to socket broker
+            Debug.WriteLine($"{nameof(PushClient)}: Transferring sockets.");
             var memoryStream = new MemoryStream();
             var formatter = new BinaryFormatter();
             var state = _instaApi.GetStateData();
