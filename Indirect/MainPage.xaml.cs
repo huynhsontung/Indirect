@@ -1,10 +1,8 @@
 ﻿using System;
-using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using CoreWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
@@ -36,7 +34,6 @@ namespace Indirect
             base.OnNavigatedTo(e);
             _viewModel = (ApiContainer)e.Parameter;
             if (_viewModel == null) throw new NullReferenceException("No _viewModel created");
-            MainLayout.DataContext = _viewModel;
             _viewModel.OnLoggedIn();
         }
 
@@ -87,7 +84,6 @@ namespace Indirect
             var inboxThread = (InstaDirectInboxThreadWrapper) e.AddedItems[0];
             if (!string.IsNullOrEmpty(inboxThread.ThreadId)) 
                 ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
-            DataContext = inboxThread.ObservableItems;
             _viewModel.MarkLatestItemSeen(inboxThread);
         }
 

@@ -101,8 +101,7 @@
 
             <controls:MasterDetailsView.DetailsTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
-                    <local:ThreadDetailsView Thread="{x:Bind}"
-                                             ViewModel="{Binding ElementName=MainLayout, Path=DataContext}"/>
+                    <local:ThreadDetailsView Thread="{x:Bind}"/>
                 </DataTemplate>
             </controls:MasterDetailsView.DetailsTemplate>
 

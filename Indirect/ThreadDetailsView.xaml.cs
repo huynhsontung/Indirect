@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -31,11 +32,11 @@ namespace Indirect
             typeof(InstaDirectInboxThreadWrapper),
             typeof(ThreadDetailsView),
             new PropertyMetadata(null));
-        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
-            nameof(ViewModel),
-            typeof(ApiContainer),
-            typeof(ThreadDetailsView),
-            new PropertyMetadata(null));
+        // public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
+        //     nameof(ViewModel),
+        //     typeof(ApiContainer),
+        //     typeof(ThreadDetailsView),
+        //     new PropertyMetadata(null));
 
         public InstaDirectInboxThreadWrapper Thread
         {
@@ -43,10 +44,18 @@ namespace Indirect
             set => SetValue(ThreadProperty, value);
         }
 
+        private ApiContainer _viewModel;
         public ApiContainer ViewModel
         {
-            get => (ApiContainer) GetValue(ViewModelProperty);
-            set => SetValue(ViewModelProperty, value);
+            get
+            {
+                if (_viewModel == null && CoreApplication.Properties.ContainsKey(App.VIEW_MODEL_PROP_NAME))
+                {
+                    _viewModel = (ApiContainer) CoreApplication.Properties[App.VIEW_MODEL_PROP_NAME];
+                }
+
+                return _viewModel;
+            }
         }
 
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
