@@ -8,9 +8,17 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-        <TextBox x:Name="UsernameBox" Text="" Width="200" PlaceholderText="Username" Margin="0,0,0,20"/>
-        <PasswordBox x:Name="PasswordBox" PlaceholderText="Password" Margin="0,0,0,20" KeyDown="TextBox_KeyDown"/>
+        <TextBox x:Name="UsernameBox" Width="200" PlaceholderText="Username" Margin="0,0,0,20"/>
+        <PasswordBox x:Name="PasswordBox" Width="200" PlaceholderText="Password" Margin="0,0,0,20" KeyDown="TextBox_KeyDown"/>
         <Button x:Name="LoginButton" Content="Login" HorizontalAlignment="Center" Click="Button_Click"/>
+        <TextBlock Margin="16,48,16,8" MaxWidth="450" TextAlignment="Center" Style="{ThemeResource FluentCaptionTextStyle}" TextWrapping="Wrap" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}">
+            Indirect logs you in under the identity of a random phone. You might receive a notice from Instagram about suspicious login.
+        </TextBlock>
+        <RichTextBlock FontSize="12" TextAlignment="Center" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}">
+            <Paragraph>
+                Current identity: <Run FontWeight="Bold" Text="{x:Bind _viewModel.Device.DeviceName}"/>
+            </Paragraph>
+        </RichTextBlock>
     </StackPanel>
 
 

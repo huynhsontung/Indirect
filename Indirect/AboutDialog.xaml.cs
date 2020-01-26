@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -26,6 +27,8 @@ namespace Indirect
             var currentPackage = Package.Current;
             var version = currentPackage.Id.Version;
             VersionText.Text = "v" + version.Major + '.' + version.Minor + '.' + version.Build;
+            var viewModel = (ApiContainer) CoreApplication.Properties[App.VIEW_MODEL_PROP_NAME];
+            Identity.Text = viewModel.Device.DeviceName;
         }
 
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)

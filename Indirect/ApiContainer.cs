@@ -22,6 +22,7 @@ using InstaSharper.API;
 using InstaSharper.API.Builder;
 using InstaSharper.API.Push;
 using InstaSharper.Classes;
+using InstaSharper.Classes.DeviceInfo;
 using InstaSharper.Classes.Models.Direct;
 using InstaSharper.Classes.Models.Media;
 using InstaSharper.Classes.Models.User;
@@ -73,6 +74,7 @@ namespace Indirect
             }
         }
 
+        public AndroidDevice Device => _instaApi?.DeviceInfo;
         public bool IsUserAuthenticated => _instaApi?.IsUserAuthenticated ?? false;
 
         public StateData StateData

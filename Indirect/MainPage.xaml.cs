@@ -41,7 +41,8 @@ namespace Indirect
         {
             var confirmDialog = new ContentDialog()
             {
-                Content = "Are you sure you want to logout?",
+                Title = "Are you sure?",
+                Content = "Logging out will delete all session date, including cached images and videos.",
                 CloseButtonText = "Close",
                 PrimaryButtonText = "Logout", 
                 DefaultButton = ContentDialogButton.Close

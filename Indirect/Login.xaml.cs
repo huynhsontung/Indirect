@@ -35,13 +35,33 @@ namespace Indirect
             var result = await _viewModel.Login(username, password);
             if (!result.Succeeded || result.Value != InstaLoginResult.Success)
             {
-                var failDialog = new ContentDialog
+                ContentDialog failDialog;
+                if (result.Value == InstaLoginResult.ChallengeRequired)
                 {
-                    Title = "Login failed",
-                    Content = $"Reason: {result.Info.Message}",
-                    DefaultButton = ContentDialogButton.Close,
-                    CloseButtonText = "Close"
-                };
+                    failDialog = new ContentDialog
+                    {
+                        Title = "Login failed",
+                        Content = new TextBlock
+                        {
+                            Text = "Challenge required. Please login using the official Instagram website first then try again.",
+                            TextWrapping = TextWrapping.Wrap,
+                            MaxWidth = 250
+                        },
+                        DefaultButton = ContentDialogButton.Close,
+                        CloseButtonText = "Close"
+                    };
+                }
+                else
+                {
+                    failDialog = new ContentDialog
+                    {
+                        Title = "Login failed",
+                        Content = $"Reason: {result.Info.Message}",
+                        DefaultButton = ContentDialogButton.Close,
+                        CloseButtonText = "Close"
+                    };
+                }
+
                 var dialogResult = await failDialog.ShowAsync();
                 LoginButton.IsEnabled = true;
                 return;
@@ -53,6 +73,7 @@ namespace Indirect
         {
             base.OnNavigatedTo(e);
             _viewModel = e.Parameter as ApiContainer;
+            this.Bindings.Update();
         }
     }
 }

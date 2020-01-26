@@ -195,6 +195,7 @@ namespace Indirect
         {
             ViewModel.PushClient.Start();
             ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt);
+            ViewModel.UpdateInboxAndSelectedThread();
         }
 
         private async void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)

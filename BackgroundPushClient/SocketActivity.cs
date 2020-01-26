@@ -30,8 +30,8 @@ namespace BackgroundPushClient
             try
             {
                 var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
-                if (details.Reason != SocketActivityTriggerReason.KeepAliveTimerExpired ||
-                    details.Reason != SocketActivityTriggerReason.SocketActivity) return;
+                if (details.Reason == SocketActivityTriggerReason.SocketClosed) return;
+                Debug.WriteLine($"{typeof(SocketActivity).FullName}: {details.Reason}");
                 var dataStream = details.SocketInformation.Context.Data.AsStream();
                 var formatter = new BinaryFormatter();
                 var stateData = (StateData) formatter.Deserialize(dataStream);

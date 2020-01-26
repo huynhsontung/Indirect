@@ -12,8 +12,13 @@
     <StackPanel Orientation="Vertical">
         <TextBlock Style="{ThemeResource FluentHeaderTextStyle}" Text="Indirect" Margin="0,0,0,-2"/>
         <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" x:Name="VersionText" Text="Version" 
-                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                   Margin="0,0,0,16"/>
-        <TextBlock Style="{ThemeResource FluentBodyTextStyle}" Text="Developed by Tung Huynh"/>
+                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+        <RichTextBlock FontSize="12" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}">
+            <Paragraph>
+                Current identity:
+                <Run x:Name="Identity" FontWeight="Bold" Text="Android Phone"/>
+            </Paragraph>
+        </RichTextBlock>
+        <TextBlock Style="{ThemeResource FluentBodyTextStyle}" Text="Developed by Tung Huynh" Margin="0,16,0,0"/>
     </StackPanel>
 </ContentDialog>
