@@ -19,6 +19,8 @@
                 <Run x:Name="Identity" FontWeight="Bold" Text="Android Phone"/>
             </Paragraph>
         </RichTextBlock>
+        <HyperlinkButton Margin="0,12,0,0" Content="Data Policy" NavigateUri="https://help.instagram.com/519522125107875"/>
         <TextBlock Style="{ThemeResource FluentBodyTextStyle}" Text="Developed by Tung Huynh" Margin="0,16,0,0"/>
+
     </StackPanel>
 </ContentDialog>

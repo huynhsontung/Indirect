@@ -7,19 +7,58 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-        <TextBox x:Name="UsernameBox" Width="200" PlaceholderText="Username" Margin="0,0,0,20"/>
-        <PasswordBox x:Name="PasswordBox" Width="200" PlaceholderText="Password" Margin="0,0,0,20" KeyDown="TextBox_KeyDown"/>
-        <Button x:Name="LoginButton" Content="Login" HorizontalAlignment="Center" Click="Button_Click"/>
-        <TextBlock Margin="16,48,16,8" MaxWidth="450" TextAlignment="Center" Style="{ThemeResource FluentCaptionTextStyle}" TextWrapping="Wrap" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}">
-            Indirect logs you in under the identity of a random phone. You might receive a notice from Instagram about suspicious login.
-        </TextBlock>
-        <RichTextBlock FontSize="12" TextAlignment="Center" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}">
-            <Paragraph>
-                Current identity: <Run FontWeight="Bold" Text="{x:Bind _viewModel.Device.DeviceName}"/>
-            </Paragraph>
-        </RichTextBlock>
-    </StackPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="TitleBarElement" 
+              Grid.Row="0"
+              Background="Transparent" 
+              Canvas.ZIndex="2">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftPaddingColumn" Width="0"/>
+                <ColumnDefinition/>
+                <ColumnDefinition x:Name="RightPaddingColumn" Width="0"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="BackButtonPlaceholder" Style="{StaticResource NavigationBackButtonNormalStyle}"
+                        Height="32" Width="40" Opacity="0"
+                        Visibility="Collapsed">
+                </Button>
+                <TextBlock x:Name="AppTitleTextBlock"
+                           Text="Indirect" 
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource FluentCaptionTextStyle}" 
+                           Margin="13,0,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Grid.Row="0" Grid.RowSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBox x:Name="UsernameBox" Width="200" PlaceholderText="Username" Margin="0,0,0,20"/>
+            <PasswordBox x:Name="PasswordBox" Width="200" PlaceholderText="Password" Margin="0,0,0,20" KeyDown="TextBox_KeyDown"/>
+            <Button x:Name="LoginButton" Content="Login" HorizontalAlignment="Center" Click="Button_Click"/>
+            
+        </StackPanel>
+        
+        <StackPanel Grid.Row="2" Orientation="Vertical">
+            <TextBlock Margin="16,8,16,8" MaxWidth="450" TextAlignment="Center" Style="{ThemeResource FluentCaptionTextStyle}" TextWrapping="Wrap" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}">
+                Indirect logs you in under the identity of a random phone. You might receive a notice from Instagram about suspicious login.
+            </TextBlock>
+            <RichTextBlock FontSize="12" TextAlignment="Center" Margin="16,0,16,16"
+                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}">
+                <Paragraph>
+                    Current identity:
+                    <Run FontWeight="Bold" Text="{x:Bind _viewModel.Device.DeviceName}"/>
+                </Paragraph>
+            </RichTextBlock>
+        </StackPanel>
+    </Grid>
+    
 
 
 </Page>

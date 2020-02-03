@@ -1,4 +1,5 @@
 ﻿using System;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -18,6 +19,8 @@ namespace Indirect
         public Login()
         {
             this.InitializeComponent();
+            Window.Current.SetTitleBar(TitleBarElement);
+            Window.Current.Activated += OnWindowFocusChange;
         }
 
         private void TextBox_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -74,6 +77,19 @@ namespace Indirect
             base.OnNavigatedTo(e);
             _viewModel = e.Parameter as ApiContainer;
             this.Bindings.Update();
+        }
+
+        private void OnWindowFocusChange(object sender, WindowActivatedEventArgs e)
+        {
+            if (e.WindowActivationState == CoreWindowActivationState.Deactivated)
+            {
+                AppTitleTextBlock.Opacity = 0.5;
+            }
+            else
+            {
+
+                AppTitleTextBlock.Opacity = 1;
+            }
         }
     }
 }

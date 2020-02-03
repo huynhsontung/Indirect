@@ -40,8 +40,6 @@ namespace Indirect
         // Todo: handle exceptions thrown by _instaApi like no network connection
         public const string INSTA_API_PROP_NAME = "InstaApi";
         private const string STATE_FILE_NAME = "state.bin";
-        private const string SOCKET_ID = "mqtt_fbns";
-
         private static readonly InstaApiBuilder Builder = InstaApiBuilder.CreateBuilder();
 
         private InstaApi _instaApi;
@@ -51,7 +49,6 @@ namespace Indirect
         private DateTime _lastUpdated = DateTime.Now;
         private CancellationTokenSource _searchCancellationToken;
         private InstaDirectInboxThreadWrapper _selectedThread;
-        private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
