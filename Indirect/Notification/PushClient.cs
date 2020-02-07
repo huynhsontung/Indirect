@@ -54,7 +54,6 @@ namespace Indirect.Notification
         public const int KEEP_ALIVE = 900;    // seconds
         private const int TIMEOUT = 5;
         private bool _waitingForPubAck;
-        private CancellationTokenSource _timerResetToken;
         private IChannelHandlerContext _context;
         private readonly InstaApi _instaApi;
 
@@ -137,7 +136,7 @@ namespace Indirect.Notification
         /// </summary>
         public async Task TransferPushSocket()
         {
-            if (!_instaApi.IsUserAuthenticated) return;
+            if (!_instaApi.IsUserAuthenticated || _loopGroup == null) return;
 
             // Hand over MQTT socket to socket broker
             Debug.WriteLine($"{nameof(PushClient)}: Transferring sockets.");
@@ -256,13 +255,13 @@ namespace Indirect.Notification
 
         public async Task Shutdown()
         {
-            _timerResetToken?.Cancel();
             if (_loopGroup != null)
             {
                 Debug.WriteLine("Stopped pinging push server");
                 var loopGroup = _loopGroup;
                 _loopGroup = null;
-                await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1));
+                await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1))
+                    .ConfigureAwait(false);
             }
         }
 
@@ -354,17 +353,28 @@ namespace Indirect.Notification
         /// </summary>
         private async void OnRegisterResponse(string json)
         {
-            var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-
-            if (!string.IsNullOrEmpty(response["error"]))
+            try
             {
-                Debug.WriteLine($"{nameof(PushClient)}: {response["error"]}", "Error");
-                return;
+                var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+
+                if (!string.IsNullOrEmpty(response["error"]))
+                {
+                    Debug.WriteLine($"{nameof(PushClient)}: {response["error"]}");
+                    await Shutdown().ConfigureAwait(false);
+                }
+
+                var token = response["token"];
+
+                await RegisterClient(token);
             }
-
-            var token = response["token"];
-
-            await RegisterClient(token);
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
+                await Shutdown().ConfigureAwait(false);
+            }
         }
 
         private async Task RegisterClient(string token)

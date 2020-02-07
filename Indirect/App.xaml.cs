@@ -73,7 +73,18 @@ namespace Indirect
                 var dialog = new ContentDialog()
                 {
                     Title = "An error occured",
-                    Content = e.Exception.ToString(),
+                    Content = new ScrollViewer()
+                    {
+                        Content = new TextBlock()
+                        {
+                            Text = e.Exception.Message + Environment.NewLine + e.Exception.StackTrace,
+                            TextWrapping = TextWrapping.Wrap,
+                            IsTextSelectionEnabled = true
+                        },
+                        HorizontalScrollMode = ScrollMode.Disabled,
+                        VerticalScrollMode = ScrollMode.Auto,
+                        MaxWidth = 500
+                    },
                     CloseButtonText = "Close Application",
                     DefaultButton = ContentDialogButton.Close
                 };
