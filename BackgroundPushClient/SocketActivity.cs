@@ -10,8 +10,7 @@ using Windows.Security.Cryptography;
 using Windows.Storage;
 using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Transport.Channels;
-using InstaSharper.API.Push.PacketHelpers;
-using InstaSharper.Classes;
+using InstagramAPI.Push.Packets;
 
 namespace BackgroundPushClient
 {

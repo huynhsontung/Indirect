@@ -9,12 +9,11 @@ using Windows.Security.Cryptography;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Transport.Channels;
-using InstaSharper.API.Push;
-using InstaSharper.API.Push.PacketHelpers;
-using InstaSharper.Classes;
-using InstaSharper.Classes.DeviceInfo;
-using InstaSharper.Helpers;
-using InstaSharper.Logger;
+using InstagramAPI.Classes;
+using InstagramAPI.Classes.Android;
+using InstagramAPI.Push;
+using InstagramAPI.Push.Packets;
+using InstagramAPI.Utils;
 using Ionic.Zlib;
 using Newtonsoft.Json;
 
@@ -32,7 +31,7 @@ namespace BackgroundPushClient
         private const string BASE_INSTAGRAM_URL = "https://i.instagram.com";
         private const int TIMEOUT = 5;
 
-        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
+        public event EventHandler<PushReceivedEventArgs> MessageReceived;
 
         private bool _waitingForPubAck;
         private UserSessionData _user;
@@ -45,7 +44,7 @@ namespace BackgroundPushClient
             get
             {
                 _state.FbnsConnectionData = _fbnsConnectionData;
-                _state.Cookies = _httpRequestProcessor.HttpHandler.CookieContainer;
+                
                 return _state;
             }
         }
@@ -58,18 +57,18 @@ namespace BackgroundPushClient
 
         private void LoadData(StateData stateData)
         {
-            _user = stateData.UserSession;
-            _device = stateData.DeviceInfo;
+            _user = stateData.Session;
+            _device = stateData.Device;
             var httpHandler = new HttpClientHandler { CookieContainer = stateData.Cookies };
             var httpClient = new HttpClient(httpHandler) { BaseAddress = new Uri(BASE_INSTAGRAM_URL) };
             var requestMessage = new ApiRequestMessage
             {
-                PhoneId = stateData.DeviceInfo.PhoneId.ToString(),
-                Guid = stateData.DeviceInfo.Uuid,
-                Password = stateData.UserSession?.Password,
-                Username = stateData.UserSession?.UserName,
-                DeviceId = stateData.DeviceInfo.DeviceId,
-                AdId = stateData.DeviceInfo.AdId.ToString()
+                PhoneId = stateData.Device.PhoneId.ToString(),
+                Guid = stateData.Device.Uuid,
+                Password = stateData.Session?.Password,
+                Username = stateData.Session?.UserName,
+                DeviceId = stateData.Device.DeviceId,
+                AdId = stateData.Device.AdId.ToString()
             };
 
             _httpRequestProcessor = new HttpRequestProcessor(
@@ -102,7 +101,7 @@ namespace BackgroundPushClient
                     switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                     {
                         case TopicIds.Message:
-                            var message = JsonConvert.DeserializeObject<MessageReceivedEventArgs>(json);
+                            var message = JsonConvert.DeserializeObject<PushReceivedEventArgs>(json);
                             message.Json = json;
                             MessageReceived?.Invoke(this, message);
                             break;

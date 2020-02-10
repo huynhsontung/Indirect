@@ -5,8 +5,8 @@ using Windows.ApplicationModel.Background;
 using Windows.Networking;
 using Windows.Networking.Sockets;
 using DotNetty.Transport.Channels;
-using InstaSharper.API.Push;
-using InstaSharper.API.Push.PacketHelpers;
+using InstagramAPI.Push;
+using InstagramAPI.Push.Packets;
 
 namespace BackgroundPushClient
 {

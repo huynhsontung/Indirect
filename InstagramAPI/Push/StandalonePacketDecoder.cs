@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
 using ByteOrder = Windows.Storage.Streams.ByteOrder;
 
-namespace Indirect.Notification
+namespace InstagramAPI.Push
 {
     class StandalonePacketDecoder
     {

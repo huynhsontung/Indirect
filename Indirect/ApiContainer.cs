@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -18,17 +19,10 @@ using Windows.UI.Core;
 using Indirect.Notification;
 using Indirect.Utilities;
 using Indirect.Wrapper;
-using InstaSharper.API;
-using InstaSharper.API.Builder;
-using InstaSharper.API.Push;
-using InstaSharper.Classes;
-using InstaSharper.Classes.DeviceInfo;
-using InstaSharper.Classes.Models.Direct;
-using InstaSharper.Classes.Models.Media;
-using InstaSharper.Classes.Models.User;
-using InstaSharper.Classes.ResponseWrappers.Direct;
-using InstaSharper.Enums;
-using InstaSharper.Logger;
+using InstagramAPI;
+using InstagramAPI.Classes;
+using InstagramAPI.Classes.Android;
+using InstagramAPI.Utils;
 using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.UI;
@@ -40,9 +34,8 @@ namespace Indirect
         // Todo: handle exceptions thrown by _instaApi like no network connection
         public const string INSTA_API_PROP_NAME = "InstaApi";
         private const string STATE_FILE_NAME = "state.bin";
-        private static readonly InstaApiBuilder Builder = InstaApiBuilder.CreateBuilder();
 
-        private InstaApi _instaApi;
+        private Instagram _instaApi;
         private readonly StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
         private StorageFile _stateFile;
         private FbnsConnectionData _pushData;
@@ -71,7 +64,7 @@ namespace Indirect
             }
         }
 
-        public AndroidDevice Device => _instaApi?.DeviceInfo;
+        public AndroidDevice Device => _instaApi?.Device;
         public bool IsUserAuthenticated => _instaApi?.IsUserAuthenticated ?? false;
 
         public StateData StateData
@@ -135,7 +128,7 @@ namespace Indirect
                     var stateData = (StateData) formatter.Deserialize(stateStream);
                     if (stateData.Cookies != null)
                     {
-                        _instaApi = Builder.LoadStateData(stateData)
+                        _instaApi = ImmutableArray<>.Builder.LoadStateData(stateData)
                             .UseLogger(new DebugLogger(LogLevel.All))
                             .Build();
                         _pushData = stateData.FbnsConnectionData;
@@ -154,22 +147,17 @@ namespace Indirect
 
         public async Task WriteStateToStorage()
         {
-            using (var stateFileStream = await _stateFile.OpenStreamForWriteAsync())
+            using (var stateFileStream = await _stateFile.OpenStreamForWriteAsync().ConfigureAwait(false))
             {
                 var formatter = new BinaryFormatter();
                 formatter.Serialize(stateFileStream, StateData);
             }
         }
 
-        public async Task<IResult<InstaLoginResult>> Login(string username, string password)
+        public async Task<Result<LoginResult>> Login(string username, string password)
         {
-            var session = new UserSessionData {UserName = username, Password = password};
-            _instaApi = Builder.SetUser(session)
-                .UseLogger(new DebugLogger(LogLevel.All))
-                .Build();
-
-            var logInResult = await _instaApi.LoginAsync();
-            await WriteStateToStorage();
+            var logInResult = await _instaApi.LoginAsync(username, password).ConfigureAwait(false);
+            await WriteStateToStorage().ConfigureAwait(false);
             return logInResult;
         }
 

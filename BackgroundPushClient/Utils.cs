@@ -7,8 +7,7 @@ using Windows.Security.Cryptography;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Notifications;
-using InstaSharper.API.Push;
-using InstaSharper.Classes;
+using InstagramAPI.Push;
 using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace BackgroundPushClient
@@ -51,7 +50,7 @@ namespace BackgroundPushClient
             return buffer;
         }
 
-        public static void OnMessageReceived(object sender, MessageReceivedEventArgs args)
+        public static void OnMessageReceived(object sender, PushReceivedEventArgs args)
         {
             var notificationContent = args.NotificationContent;
             var igAction = notificationContent.IgAction;

@@ -1,48 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking;
 using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
-using Windows.UI.WindowManagement;
+using Windows.Web.Http;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Transport.Channels;
-using Indirect.API.Classes;
-using Indirect.API.Classes.Android;
+using InstagramAPI.Classes;
+using InstagramAPI.Classes.Android;
+using InstagramAPI.Push.Packets;
 using Ionic.Zlib;
-using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 
-namespace Indirect.Notification
+namespace InstagramAPI.Push
 {
-    class PushClient : SimpleChannelInboundHandler<Packet>
+    public class PushClient : SimpleChannelInboundHandler<Packet>
     {
-        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
-        public FbnsConnectionData ConnectionData { get; set; }
+        public event EventHandler<PushReceivedEventArgs> MessageReceived;
+        public FbnsConnectionData ConnectionData { get; private set; } = new FbnsConnectionData();
         public StreamSocket Socket { get; private set; }
         public override bool IsSharable { get; } = true;
 
         private const string HOST_NAME = "mqtt-mini.facebook.com";
         private const string BACKGROUND_SOCKET_ACTIVITY_NAME = "BackgroundPushClient.SocketActivity";
         private const string BACKGROUND_INTERNET_AVAILABLE_NAME = "BackgroundPushClient.InternetAvailable";
-        private static readonly string SOCKET_ACTIVITY_ENTRY_POINT = typeof(BackgroundPushClient.SocketActivity).FullName;
-        private static readonly string INTERNET_AVAILABLE_ENTRY_POINT = typeof(BackgroundPushClient.InternetAvailable).FullName;
+        private const string SOCKET_ACTIVITY_ENTRY_POINT = "BackgroundPushClient.SocketActivity";
+        private const string INTERNET_AVAILABLE_ENTRY_POINT = "BackgroundPushClient.InternetAvailable";
         private const string SOCKET_ID = "mqtt_fbns";
 
         private SingleThreadEventLoop _loopGroup;
         private readonly UserSessionData _user;
-        private readonly IHttpRequestProcessor _httpRequestProcessor;
         private readonly AndroidDevice _device;
         private IBackgroundTaskRegistration _socketActivityTask;
         private IBackgroundTaskRegistration _internetAvailableTask;
@@ -51,16 +48,13 @@ namespace Indirect.Notification
         private const int TIMEOUT = 5;
         private bool _waitingForPubAck;
         private IChannelHandlerContext _context;
-        private readonly InstaApi _instaApi;
+        private readonly Instagram _instaApi;
 
-        public PushClient(InstaApi api, FbnsConnectionData connectionData)
+        public PushClient(Instagram api)
         {
             _instaApi = api ?? throw new ArgumentException("Api can't be null", nameof(api));
-            if (connectionData == null) connectionData = new FbnsConnectionData();
-            ConnectionData = connectionData;
-            _user = api.UserSession;
-            _httpRequestProcessor = api.RequestProcessor;
-            _device = api.DeviceInfo;
+            _user = api.Session;
+            _device = api.Device;
 
             // If token is older than 24 hours then discard it
             if ((DateTime.Now - ConnectionData.FbnsTokenLastUpdated).TotalHours > 24) ConnectionData.FbnsToken = "";
@@ -96,6 +90,16 @@ namespace Indirect.Notification
                         task.Value.Unregister(false);
                         break;
                 }
+            }
+        }
+
+        public async void LoadState(FbnsConnectionData data)
+        {
+            ConnectionData = data;
+            if (_loopGroup != null)
+            {
+                await Shutdown().ConfigureAwait(false);
+                Start();
             }
         }
 
@@ -307,7 +311,7 @@ namespace Indirect.Notification
                     switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                     {
                         case TopicIds.Message:
-                            var message = JsonConvert.DeserializeObject<MessageReceivedEventArgs>(json);
+                            var message = JsonConvert.DeserializeObject<PushReceivedEventArgs>(json);
                             message.Json = json;
                             OnMessageReceived(message);
                             break;
@@ -394,9 +398,7 @@ namespace Indirect.Notification
                 {"_uuid", _device.Uuid.ToString() },
                 {"users", _user.LoggedInUser.Pk.ToString() }
             };
-            var request = HttpHelper.GetDefaultRequest(HttpMethod.Post, uri, _device);
-            request.Content = new FormUrlEncodedContent(fields);
-            var result = await _httpRequestProcessor.SendAsync(request);
+            var result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields));
 
             ConnectionData.FbnsToken = token;
         }
@@ -485,7 +487,7 @@ namespace Indirect.Notification
             return data;
         }
 
-        private void OnMessageReceived(MessageReceivedEventArgs args)
+        private void OnMessageReceived(PushReceivedEventArgs args)
         {
             MessageReceived?.Invoke(this, args);
         }

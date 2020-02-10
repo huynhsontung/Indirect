@@ -12,7 +12,7 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.18362.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <TargetPlatformMinVersion>10.0.17134.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -144,6 +144,7 @@
     <Compile Include="Converters\NullVisibilityConverter.cs" />
     <Compile Include="Converters\ReelShareTextVisibilityConverter.cs" />
     <Compile Include="Converters\VariableMaxWidthConverter.cs" />
+    <Compile Include="Notification\FbnsConnectionData.cs" />
     <Compile Include="Notification\MessageSyncEventArgs.cs" />
     <Compile Include="Notification\StandalonePacketDecoder.cs" />
     <Compile Include="Notification\StandalonePacketEncoder.cs" />
@@ -328,13 +329,13 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\InstaSharper\InstaSharper\InstaSharper.csproj">
-      <Project>{43e946c4-033c-409a-96ea-f79e01efef5f}</Project>
-      <Name>InstaSharper</Name>
-    </ProjectReference>
     <ProjectReference Include="..\BackgroundPushClient\BackgroundPushClient.csproj">
       <Project>{735cd24d-b618-47d6-ba20-26fde89ec579}</Project>
       <Name>BackgroundPushClient</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\InstagramAPI\InstagramAPI.csproj">
+      <Project>{FE3D65EC-791A-4E61-8816-A08C1050A8C5}</Project>
+      <Name>InstagramAPI</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
