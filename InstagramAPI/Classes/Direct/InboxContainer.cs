@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using Newtonsoft.Json;
@@ -22,8 +23,8 @@ namespace InstagramAPI.Classes.Direct
 
         [JsonProperty("pending_requests_users")] public List<UserShort> PendingUsers { get; set; } = new List<UserShort>(0);
 
-        [JsonProperty("snapshot_at_ms")] public long SnapshotAtMs { get; set; }
-
-        public DateTimeOffset SnapshotAt => DateTimeOffset.FromUnixTimeMilliseconds(SnapshotAtMs);
+        [JsonProperty("snapshot_at_ms")] 
+        [JsonConverter(typeof(MilliTimestampConverter))]
+        public DateTimeOffset SnapshotAt { get; set; }
     }
 }

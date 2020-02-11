@@ -128,6 +128,9 @@
     <Compile Include="Classes\Direct\Inbox.cs" />
     <Compile Include="Classes\Direct\InboxContainer.cs" />
     <Compile Include="Classes\Direct\InboxThread.cs" />
+    <Compile Include="Classes\Direct\LastSeen.cs" />
+    <Compile Include="Classes\JsonConverters\MilliTimestampConverter.cs" />
+    <Compile Include="Classes\JsonConverters\MicroTimestampConverter.cs" />
     <Compile Include="Classes\Media\ImageMeta.cs" />
     <Compile Include="Classes\PaginationParameters.cs" />
     <Compile Include="Classes\Responses\BaseStatusResponse.cs" />

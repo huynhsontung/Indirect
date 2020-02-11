@@ -1,4 +1,6 @@
-﻿namespace InstagramAPI.Classes.Responses
+﻿using Newtonsoft.Json;
+
+namespace InstagramAPI.Classes.Responses
 {
     internal class LoginBaseResponse
     {

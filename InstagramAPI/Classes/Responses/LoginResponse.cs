@@ -1,4 +1,5 @@
 ﻿using InstagramAPI.Classes.User;
+using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Responses
 {
