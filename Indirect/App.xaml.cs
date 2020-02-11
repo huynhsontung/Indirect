@@ -65,9 +65,6 @@ namespace Indirect
 
         public async void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-#if !DEBUG
-            Crashes.TrackError(e.Exception);
-#endif
             try
             {
                 var dialog = new ContentDialog()
@@ -88,7 +85,6 @@ namespace Indirect
                     CloseButtonText = "Close Application",
                     DefaultButton = ContentDialogButton.Close
                 };
-                e.Handled = true;
                 await dialog.ShowAsync();
             }
             catch (Exception innerException)
@@ -97,10 +93,6 @@ namespace Indirect
                 Crashes.TrackError(innerException);
 #endif
                 Debug.WriteLine(innerException);
-            }
-            finally
-            {
-                Exit();
             }
         }
 
