@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 
 namespace InstagramAPI.Push
 {
-    [Serializable]
     public sealed class FbnsConnectionData
     {
         private const int MESSAGE_TOPIC_ID = 76;
@@ -47,8 +46,6 @@ namespace InstagramAPI.Push
         public string DeviceId { get; private set; }
         public string DeviceSecret { get; private set; }
 
-        #endregion
-
         private string _fbnsToken;
         public string FbnsToken
         {
@@ -56,10 +53,12 @@ namespace InstagramAPI.Push
             set
             {
                 _fbnsToken = value;
-                FbnsTokenLastUpdated = DateTime.Now;
+                FbnsTokenLastUpdated = DateTimeOffset.Now;
             }
         }
-        public DateTime FbnsTokenLastUpdated { get; private set; }
+        public DateTimeOffset FbnsTokenLastUpdated { get; private set; }
+
+        #endregion
 
 
         public void UpdateAuth(string json)
@@ -90,6 +89,50 @@ namespace InstagramAPI.Push
                 DeviceSecret = ds;
 
             // TODO: sr, rc ?
+        }
+
+        public void SaveToAppSettings()
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var composite = new Windows.Storage.ApplicationDataCompositeValue
+            {
+                ["ClientId"] = ClientId,
+                ["UserAgent"] = UserAgent,
+                ["ClientMqttSessionId"] = ClientMqttSessionId,
+                ["UserId"] = UserId,
+                ["Password"] = Password,
+                ["DeviceId"] = DeviceId,
+                ["DeviceSecret"] = DeviceSecret,
+                ["_fbnsToken"] = _fbnsToken,
+                ["FbnsTokenLastUpdated"] = FbnsTokenLastUpdated
+            };
+            localSettings.Values["_fbnsConnectionData"] = composite;
+        }
+
+        public void LoadFromAppSettings()
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var composite = (Windows.Storage.ApplicationDataCompositeValue)localSettings.Values["_fbnsConnectionData"];
+            if (composite == null) return;
+            ClientId = (string) composite["ClientId"];
+            UserAgent = (string) composite["UserAgent"];
+            ClientMqttSessionId = (long) composite["ClientMqttSessionId"];
+            UserId = (long) composite["UserId"];
+            Password = (string) composite["Password"];
+            DeviceId = (string) composite["DeviceId"];
+            DeviceSecret = (string) composite["DeviceSecret"];
+            _fbnsToken = (string) composite["_fbnsToken"];
+            FbnsTokenLastUpdated = (DateTimeOffset) composite["FbnsTokenLastUpdated"];
+        }
+
+        public static FbnsConnectionData CreateFromAppSettings()
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var composite = (Windows.Storage.ApplicationDataCompositeValue) localSettings.Values["_fbnsConnectionData"];
+            if (composite == null) return null;
+            var data = new FbnsConnectionData();
+            data.LoadFromAppSettings();
+            return data;
         }
     }
 }

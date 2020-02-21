@@ -144,11 +144,6 @@
     <Compile Include="Converters\NullVisibilityConverter.cs" />
     <Compile Include="Converters\ReelShareTextVisibilityConverter.cs" />
     <Compile Include="Converters\VariableMaxWidthConverter.cs" />
-    <Compile Include="Notification\FbnsConnectionData.cs" />
-    <Compile Include="Notification\MessageSyncEventArgs.cs" />
-    <Compile Include="Notification\StandalonePacketDecoder.cs" />
-    <Compile Include="Notification\StandalonePacketEncoder.cs" />
-    <Compile Include="Notification\SyncClient.cs" />
     <Compile Include="Utilities\ChatListView.cs" />
     <Compile Include="Converters\FromMeBoolToGridColumnConverter.cs" />
     <Compile Include="Converters\OpenButtonStyleConverter.cs" />
@@ -179,8 +174,6 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Notification\PushClient.cs" />
-    <Compile Include="Notification\StreamSocketChannel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\ReversedIncrementalLoadingCollection.cs" />
     <Compile Include="Utilities\VideoCache.cs" />

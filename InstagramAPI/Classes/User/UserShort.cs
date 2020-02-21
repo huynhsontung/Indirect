@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.User
 {
-    [Serializable]
     public class UserShort : IEquatable<UserShort>
     {
         [JsonProperty("is_verified")] public bool IsVerified { get; set; }

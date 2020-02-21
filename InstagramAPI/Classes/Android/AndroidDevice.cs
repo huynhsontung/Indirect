@@ -2,7 +2,6 @@
 
 namespace InstagramAPI.Classes.Android
 {
-    [Serializable]
     public class AndroidDevice
     {
         public string DeviceId { get; internal set; } // format: android-{md5}
@@ -23,6 +22,7 @@ namespace InstagramAPI.Classes.Android
 
         public const string CPU_ABI = "armeabi-v7a:armeabi";
 
+        private string _deviceString;
         private static readonly string[] DEVICES =
         {
             "24/7.0; 380dpi; 1080x1920; OnePlus; ONEPLUS A3010; OnePlus3T; qcom",
@@ -32,6 +32,7 @@ namespace InstagramAPI.Classes.Android
             "23/6.0.1; 640dpi; 1440x2560; samsung; SM-G935F; hero2lte; samsungexynos8890",
             "23/6.0.1; 640dpi; 1440x2560; samsung; SM-G930F; herolte; samsungexynos8890"
         };
+
 
         /// <summary>
         ///     Build <see cref="AndroidDevice"/> from user agent string
@@ -57,6 +58,7 @@ namespace InstagramAPI.Classes.Android
                 device.DeviceName = components[5];
                 device.Cpu = components[6];
                 device.DeviceId = ApiRequestMessage.GenerateDeviceIdFromGuid(device.Uuid);
+                device._deviceString = userAgent;
             }
             catch (Exception e)
             {
@@ -81,6 +83,38 @@ namespace InstagramAPI.Classes.Android
             var random = new Random(DateTime.Now.Millisecond);
             var randomDeviceIndex = random.Next(0, DEVICES.Length);
             return BuildDeviceFromString(DEVICES[randomDeviceIndex]);
+        }
+
+        public void SaveToAppSettings()
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var composite = new Windows.Storage.ApplicationDataCompositeValue
+            {
+                ["DeviceId"] = DeviceId, 
+                ["PhoneId"] = PhoneId,
+                ["Uuid"] = Uuid,
+                ["GoogleAdId"] = GoogleAdId,
+                ["RankToken"] = RankToken,
+                ["AdId"] = AdId,
+                ["_deviceString"] = _deviceString
+            };
+            localSettings.Values["_androidDevice"] = composite;
+        }
+
+        public static AndroidDevice CreateFromAppSettings()
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var composite =
+                (Windows.Storage.ApplicationDataCompositeValue) localSettings.Values["_androidDevice"];
+            if (composite == null) return null;
+            var device = BuildDeviceFromString((string) composite["_deviceString"]);
+            device.DeviceId = (string) composite["DeviceId"];
+            device.PhoneId = (Guid) composite["PhoneId"];
+            device.Uuid = (Guid) composite["Uuid"];
+            device.GoogleAdId = (Guid) composite["GoogleAdId"];
+            device.RankToken = (Guid) composite["RankToken"];
+            device.AdId = (Guid) composite["AdId"];
+            return device;
         }
     }
 

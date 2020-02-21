@@ -13,6 +13,7 @@ using Windows.Web.Http.Filters;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
 using InstagramAPI.Push;
+using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -26,7 +27,7 @@ namespace InstagramAPI.Sync
         private CancellationTokenSource _pinging;
         private readonly Instagram _instaApi;
         private long _seqId;
-        private DateTime _snapshotAt;
+        private DateTimeOffset _snapshotAt;
         private MessageWebSocket _socket;
 
         public SyncClient(Instagram api)
@@ -56,7 +57,7 @@ namespace InstagramAPI.Sync
             }
         }
 
-        public async void Start(long seqId, DateTime snapshotAt)
+        public async void Start(long seqId, DateTimeOffset snapshotAt)
         {
             Debug.WriteLine("Sync client starting");
             if (seqId == 0)
@@ -67,8 +68,6 @@ namespace InstagramAPI.Sync
             _pinging?.Cancel();
             _pinging = new CancellationTokenSource();
             _packetId = 1;
-            var syncHost = new Uri("wss://edge-chat.instagram.com/chat");
-            var state = _instaApi.GetStateData();
             var device = _instaApi.Device;
             var baseHttpFilter = new HttpBaseProtocolFilter();
             var cookies = baseHttpFilter.CookieManager.GetCookies(new Uri("https://i.instagram.com"));
@@ -198,7 +197,7 @@ namespace InstagramAPI.Sync
                         var random = new Random();
                         var json = new JObject(
                             new JProperty("seq_id", _seqId),
-                            new JProperty("snapshot_at_ms", _snapshotAt.ToUnixTimeMiliSeconds()),
+                            new JProperty("snapshot_at_ms", _snapshotAt.ToUnixTimeMilliseconds()),
                             new JProperty("snapshot_app_version", "web"),
                             new JProperty("subscription_type", "message"));
                         var jsonBytes = GetJsonBytes(json);

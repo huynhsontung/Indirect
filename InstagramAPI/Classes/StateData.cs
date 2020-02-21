@@ -8,18 +8,17 @@ using InstagramAPI.Push;
 
 namespace InstagramAPI.Classes
 {
-    [Serializable]
-    public class StateData
-    {
-        public AndroidDevice Device { get; internal set; }
-
-        public UserSessionData Session { get; internal set; }
-
-        public bool IsAuthenticated { get; internal set; }
-
-        // public CookieContainer Cookies { get; set; }     // Cookies are managed by UWP
-
-        public FbnsConnectionData FbnsConnectionData { get; internal set; }
-
-    }
+    // public class StateData
+    // {
+    //     public AndroidDevice Device { get; internal set; }
+    //
+    //     public UserSessionData Session { get; internal set; }
+    //
+    //     public bool IsAuthenticated { get; internal set; }
+    //
+    //     // public CookieContainer Cookies { get; set; }     // Cookies are managed by UWP
+    //
+    //     public FbnsConnectionData FbnsConnectionData { get; internal set; }
+    //
+    // }
 }

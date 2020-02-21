@@ -18,8 +18,8 @@ namespace InstagramAPI
     public partial class Instagram
     {
         public bool IsUserAuthenticated { get; private set; }
-        public UserSessionData Session { get; private set; } = new UserSessionData();
-        public AndroidDevice Device { get; private set; } = AndroidDevice.GetRandomAndroidDevice();
+        public UserSessionData Session { get; } = new UserSessionData();
+        public AndroidDevice Device { get; } = AndroidDevice.GetRandomAndroidDevice();
         public PushClient PushClient { get; }
         public SyncClient SyncClient { get; }
 
@@ -29,11 +29,6 @@ namespace InstagramAPI
         private TwoFactorLoginInfo _twoFactorInfo;  // Only used when login returns two factor
         private ChallengeLoginInfo _challengeInfo;  // Only used when login returns challenge
 
-        public Instagram(StateData state) : this()
-        {
-            LoadStateData(state);
-        }
-
         public Instagram()
         {
 #if DEBUG
@@ -41,8 +36,15 @@ namespace InstagramAPI
 #endif
             SetDefaultRequestHeaders();
             _apiRequestMessage = new ApiRequestMessage(this);
-            PushClient = new PushClient(this);
+
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            IsUserAuthenticated = (bool) localSettings.Values["_isUserAuthenticated"];
+            PushClient = new PushClient(this, IsUserAuthenticated);
             SyncClient = new SyncClient(this);
+
+            if (!IsUserAuthenticated) return;
+            Session.LoadFromAppSettings();
+            Device = AndroidDevice.CreateFromAppSettings() ?? Device;
         }
 
         /// <summary>
@@ -153,6 +155,11 @@ namespace InstagramAPI
             }
         }
 
+
+        /// <summary>
+        /// No need to clear data. If IsUserAuthenticated is false, next time when constructor is called,
+        /// data will not be loaded.
+        /// </summary>
         public void Logout()
         {
             IsUserAuthenticated = false;
@@ -192,23 +199,32 @@ namespace InstagramAPI
             }
         }
 
-        public StateData GetStateData()
+        public void SaveToAppSettings()
         {
-            return new StateData()
-            {
-                Device = Device,
-                IsAuthenticated = IsUserAuthenticated,
-                Session = Session,
-                FbnsConnectionData = PushClient.ConnectionData
-            };
+            Device.SaveToAppSettings();
+            Session.SaveToAppSettings();
+            PushClient.ConnectionData.SaveToAppSettings();
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values["_isUserAuthenticated"] = IsUserAuthenticated;
         }
 
-        public void LoadStateData(StateData stateData)
-        {
-            Device = stateData.Device;
-            IsUserAuthenticated = stateData.IsAuthenticated;
-            Session = stateData.Session;
-            PushClient.LoadState(stateData.FbnsConnectionData);
-        }
+        // public StateData GetStateData()
+        // {
+        //     return new StateData()
+        //     {
+        //         Device = Device,
+        //         IsAuthenticated = IsUserAuthenticated,
+        //         Session = Session,
+        //         FbnsConnectionData = PushClient.ConnectionData
+        //     };
+        // }
+        //
+        // public void LoadStateData(StateData stateData)
+        // {
+        //     Device = stateData.Device;
+        //     IsUserAuthenticated = stateData.IsAuthenticated;
+        //     Session = stateData.Session;
+        //     PushClient.LoadState(stateData.FbnsConnectionData);
+        // }
     }
 }

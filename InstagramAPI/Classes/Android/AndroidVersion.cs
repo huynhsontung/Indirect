@@ -98,9 +98,14 @@ namespace InstagramAPI.Classes.Android
         private AndroidVersion()
         { }
 
-        public string Codename { get; set; }
-        public string VersionNumber { get; set; }
-        public string APILevel { get; set; }
+        public string Codename { get; private set; }
+        public string VersionNumber { get; private set; }
+        public string APILevel { get; private set; }
+
+        public override string ToString()
+        {
+            return VersionNumber;
+        }
 
         public static AndroidVersion FromString(string versionString)
         {

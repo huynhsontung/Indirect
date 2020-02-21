@@ -20,6 +20,7 @@ using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Push.Packets;
 using Ionic.Zlib;
+using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Push
@@ -27,7 +28,7 @@ namespace InstagramAPI.Push
     public class PushClient : SimpleChannelInboundHandler<Packet>
     {
         public event EventHandler<PushReceivedEventArgs> MessageReceived;
-        public FbnsConnectionData ConnectionData { get; private set; } = new FbnsConnectionData();
+        public FbnsConnectionData ConnectionData { get; } = new FbnsConnectionData();
         public StreamSocket Socket { get; private set; }
         public override bool IsSharable { get; } = true;
 
@@ -50,14 +51,16 @@ namespace InstagramAPI.Push
         private IChannelHandlerContext _context;
         private readonly Instagram _instaApi;
 
-        public PushClient(Instagram api)
+        public PushClient(Instagram api, bool tryLoadData = true)
         {
             _instaApi = api ?? throw new ArgumentException("Api can't be null", nameof(api));
             _user = api.Session;
             _device = api.Device;
 
+            if (tryLoadData) ConnectionData.LoadFromAppSettings();
+
             // If token is older than 24 hours then discard it
-            if ((DateTime.Now - ConnectionData.FbnsTokenLastUpdated).TotalHours > 24) ConnectionData.FbnsToken = "";
+            if ((DateTimeOffset.Now - ConnectionData.FbnsTokenLastUpdated).TotalHours > 24) ConnectionData.FbnsToken = "";
 
             // Build user agent for first time setup
             if (string.IsNullOrEmpty(ConnectionData.UserAgent))
@@ -90,16 +93,6 @@ namespace InstagramAPI.Push
                         task.Value.Unregister(false);
                         break;
                 }
-            }
-        }
-
-        public async void LoadState(FbnsConnectionData data)
-        {
-            ConnectionData = data;
-            if (_loopGroup != null)
-            {
-                await Shutdown().ConfigureAwait(false);
-                Start();
             }
         }
 
@@ -140,18 +133,12 @@ namespace InstagramAPI.Push
 
             // Hand over MQTT socket to socket broker
             Debug.WriteLine($"{nameof(PushClient)}: Transferring sockets.");
-            var memoryStream = new MemoryStream();
-            var formatter = new BinaryFormatter();
-            var state = _instaApi.GetStateData();
-            state.FbnsConnectionData = ConnectionData;
-            formatter.Serialize(memoryStream, state);
-            var buffer = CryptographicBuffer.CreateFromByteArray(memoryStream.ToArray());
             await SendPing();
             await Shutdown();
             await Socket.CancelIOAsync();
             Socket.TransferOwnership(
                 SOCKET_ID,
-                new SocketActivityContext(buffer),
+                null,
                 TimeSpan.FromSeconds(KEEP_ALIVE - 60));
         }
 
@@ -162,10 +149,6 @@ namespace InstagramAPI.Push
             {
                 if (SocketActivityInformation.AllSockets.TryGetValue(SOCKET_ID, out var socketInformation))
                 {
-                    var dataStream = socketInformation.Context.Data.AsStream();
-                    var formatter = new BinaryFormatter();
-                    var stateData = (StateData)formatter.Deserialize(dataStream);
-                    ConnectionData = stateData.FbnsConnectionData;
                     var socket = socketInformation.StreamSocket;
                     if (string.IsNullOrEmpty(ConnectionData.FbnsToken)) // if we don't have any push data, start fresh
                         await StartFresh();
