@@ -137,7 +137,6 @@
     <Compile Include="Classes\Responses\LoginBaseResponse.cs" />
     <Compile Include="Classes\Responses\LoginResponse.cs" />
     <Compile Include="Classes\Result.cs" />
-    <Compile Include="Classes\StateData.cs" />
     <Compile Include="Classes\TwoFactorLoginInfo.cs" />
     <Compile Include="Classes\UserSessionData.cs" />
     <Compile Include="Classes\User\CurrentUser.cs" />

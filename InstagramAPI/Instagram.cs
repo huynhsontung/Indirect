@@ -61,7 +61,8 @@ namespace InstagramAPI
         /// </returns>
         public async Task<Result<LoginResult>> LoginAsync(string username, string password, bool isNewLogin = true)
         {
-            ValidateUser();
+            Session.Username = username;
+            Session.Password = password;
             ValidateRequestMessage();
             try
             {
@@ -134,7 +135,6 @@ namespace InstagramAPI
                 }
                 IsUserAuthenticated = loginInfo.User != null;
                 Session.Username = loginInfo.User.Username;
-                Session.Password = password;
                 Session.LoggedInUser = loginInfo.User;
                 Session.RankToken = $"{loginInfo.User.Pk}_{_apiRequestMessage.PhoneId}";
                 if (string.IsNullOrEmpty(Session.CsrfToken))
@@ -207,24 +207,5 @@ namespace InstagramAPI
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             localSettings.Values["_isUserAuthenticated"] = IsUserAuthenticated;
         }
-
-        // public StateData GetStateData()
-        // {
-        //     return new StateData()
-        //     {
-        //         Device = Device,
-        //         IsAuthenticated = IsUserAuthenticated,
-        //         Session = Session,
-        //         FbnsConnectionData = PushClient.ConnectionData
-        //     };
-        // }
-        //
-        // public void LoadStateData(StateData stateData)
-        // {
-        //     Device = stateData.Device;
-        //     IsUserAuthenticated = stateData.IsAuthenticated;
-        //     Session = stateData.Session;
-        //     PushClient.LoadState(stateData.FbnsConnectionData);
-        // }
     }
 }
