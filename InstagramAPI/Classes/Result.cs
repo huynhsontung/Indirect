@@ -66,11 +66,13 @@ namespace InstagramAPI.Classes
 
         public static Result<T> Except(Exception exception, string message = null, string json = null)
         {
+            if (string.IsNullOrEmpty(message)) message = exception.Message;
             return new Result<T>(exception, message, json);
         }
 
         public static Result<T> Except(Exception exception, T passingValue, string message = null, string json = null)
         {
+            if (string.IsNullOrEmpty(message)) message = exception.Message;
             return new Result<T>(exception, passingValue, message, json);
         }
     }

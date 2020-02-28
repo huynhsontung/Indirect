@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using Windows.Web.Http;
 using Windows.Web.Http.Headers;
+using Newtonsoft.Json;
 
 namespace InstagramAPI.Utils
 {

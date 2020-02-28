@@ -18,8 +18,16 @@ namespace InstagramAPI
 {
     public partial class Instagram
     {
-        // Latest instance of Instagram class
-        public static Instagram Instance { get; private set; }
+        private static Instagram _instance;
+        public static Instagram Instance
+        {
+            get
+            {
+                if (_instance != null) return _instance;
+                _instance = new Instagram();
+                return _instance;
+            }
+        }
 
         public static bool IsUserAuthenticatedPersistent
         {
@@ -40,7 +48,7 @@ namespace InstagramAPI
         private ChallengeLoginInfo _challengeInfo;  // Only used when login returns challenge
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
 
-        public Instagram()
+        private Instagram()
         {
 #if DEBUG
             _logger = new DebugLogger(LogLevel.All);
@@ -55,7 +63,7 @@ namespace InstagramAPI
             if (!IsUserAuthenticated) return;
             Session.LoadFromAppSettings();
             Device = AndroidDevice.CreateFromAppSettings() ?? Device;
-            Instance = this;
+            SetDefaultRequestHeaders();
         }
 
         /// <summary>
@@ -154,11 +162,6 @@ namespace InstagramAPI
                 }
                 return Result<LoginResult>.Success(LoginResult.Success, json: json);
             }
-            catch (HttpRequestException httpException)
-            {
-                _logger?.LogException(httpException);
-                return Result<LoginResult>.Except(httpException, LoginResult.Exception);
-            }
             catch (Exception exception)
             {
                 _logger?.LogException(exception);
@@ -174,6 +177,10 @@ namespace InstagramAPI
         public void Logout()
         {
             IsUserAuthenticated = false;
+            SyncClient.Shutdown();
+            _ = PushClient.Shutdown();
+            PushClient.UnregisterTasks();
+            PushClient.ConnectionData.Clear();
             SaveToAppSettings();
         }
 
@@ -198,11 +205,6 @@ namespace InstagramAPI
                 if (user.Pk < 1)
                     Result<CurrentUser>.Fail(json, "Pk is incorrect");
                 return Result<CurrentUser>.Success(user, json);
-            }
-            catch (HttpRequestException httpException)
-            {
-                _logger?.LogException(httpException);
-                return Result<CurrentUser>.Except(httpException);
             }
             catch (Exception exception)
             {

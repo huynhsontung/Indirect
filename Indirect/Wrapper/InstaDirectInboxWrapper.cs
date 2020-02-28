@@ -5,34 +5,34 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
-using InstaSharper.API;
-using InstaSharper.Classes;
-using InstaSharper.Classes.Models.Direct;
+using InstagramAPI;
+using InstagramAPI.Classes;
+using InstagramAPI.Classes.Direct;
 using Microsoft.Toolkit.Collections;
 using Microsoft.Toolkit.Uwp;
 
 namespace Indirect.Wrapper
 {
-    class InstaDirectInboxWrapper: InstaDirectInbox, IIncrementalSource<InstaDirectInboxThreadWrapper>
+    class InstaDirectInboxWrapper: Inbox, IIncrementalSource<InstaDirectInboxThreadWrapper>
     {
         public event Action<int, DateTime> FirstUpdated;    // callback to start SyncClient
 
         public int PendingRequestsCount { get; set; }
         public int SeqId { get; set; }
-        public DateTime SnapshotAt { get; set; }
+        public DateTimeOffset SnapshotAt { get; set; }
 
         public new IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> Threads { get; }
 
-        private readonly InstaApi _instaApi;
+        private readonly Instagram _instaApi;
         private bool _firstTime = true;
-        public InstaDirectInboxWrapper(InstaApi api)
+        public InstaDirectInboxWrapper(Instagram api)
         {
             _instaApi = api ?? throw new NullReferenceException();
             Threads =
                 new IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper>(this);
         }
 
-        private void UpdateExcludeThreads(InstaDirectInboxContainer source)
+        private void UpdateExcludeThreads(InboxContainer source)
         {
             PendingRequestsCount = source.PendingRequestsCount;
             SeqId = source.SeqId;
@@ -51,9 +51,9 @@ namespace Indirect.Wrapper
 
         public async Task UpdateInbox()
         {
-            var result = await _instaApi.MessagingProcessor.GetInboxAsync(PaginationParameters.MaxPagesToLoad(1));
-            InstaDirectInboxContainer container;
-            if (result.Succeeded)
+            var result = await _instaApi.GetInboxAsync(PaginationParameters.MaxPagesToLoad(1)).ConfigureAwait(false);
+            InboxContainer container;
+            if (result.Status == ResultStatus.Succeeded)
                 container = result.Value;
             else return;
             UpdateExcludeThreads(container);

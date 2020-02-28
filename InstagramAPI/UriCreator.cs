@@ -21,5 +21,14 @@ namespace InstagramAPI
                 throw new Exception("Cant create URI for current user info");
             return instaUri;
         }
+
+        public static Uri GetDirectInboxUri(string NextId = "")
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/inbox/", out var instaUri))
+                throw new Exception("Cant create URI for get inbox");
+            return !string.IsNullOrEmpty(NextId)
+                ? new UriBuilder(instaUri) { Query = $"persistentBadging=true&use_unified_inbox=true&cursor={NextId}&direction=older" }.Uri
+                 : new UriBuilder(instaUri) { Query = "persistentBadging=true&use_unified_inbox=true" }.Uri;
+        }
     }
 }

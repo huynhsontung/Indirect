@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
+using Newtonsoft.Json;
 
 namespace InstagramAPI
 {
@@ -19,46 +20,57 @@ namespace InstagramAPI
                 if (paginationParameters == null)
                     paginationParameters = PaginationParameters.MaxPagesToLoad(1);
 
-                InstaDirectInboxContainer Convert(InstaDirectInboxContainerResponse inboxContainerResponse)
-                {
-                    return ConvertersFabric.Instance.GetDirectInboxConverter(inboxContainerResponse).Convert();
-                }
-
-                var inbox = await GetDirectInbox(paginationParameters.NextMaxId);
-                if (!inbox.Succeeded)
-                    return Result.Fail(inbox.Info, default(InstaDirectInboxContainer));
-                var inboxResponse = inbox.Value;
-                paginationParameters.NextMaxId = inboxResponse.Inbox.OldestCursor;
+                var inboxResult = await GetDirectInbox(paginationParameters.NextMaxId);
+                if (inboxResult.Status != ResultStatus.Succeeded)
+                    return inboxResult;
+                var inbox = inboxResult.Value;
+                paginationParameters.NextMaxId = inbox.Inbox.OldestCursor;
                 var pagesLoaded = 1;
-                while (inboxResponse.Inbox.HasOlder
-                      && !string.IsNullOrEmpty(inboxResponse.Inbox.OldestCursor)
+                while (inbox.Inbox.HasOlder
+                      && !string.IsNullOrEmpty(inbox.Inbox.OldestCursor)
                       && pagesLoaded < paginationParameters.MaximumPagesToLoad)
                 {
-                    var nextInbox = await GetDirectInbox(inboxResponse.Inbox.OldestCursor);
+                    var nextInbox = await GetDirectInbox(inbox.Inbox.OldestCursor);
 
-                    if (!nextInbox.Succeeded)
-                        return Result.Fail(nextInbox.Info, Convert(nextInbox.Value));
+                    if (nextInbox.Status != ResultStatus.Succeeded)
+                        return Result<InboxContainer>.Fail(inbox, nextInbox.Message, nextInbox.Json);
 
-                    inboxResponse.Inbox.OldestCursor = paginationParameters.NextMaxId = nextInbox.Value.Inbox.OldestCursor;
-                    inboxResponse.Inbox.HasOlder = nextInbox.Value.Inbox.HasOlder;
-                    inboxResponse.Inbox.BlendedInboxEnabled = nextInbox.Value.Inbox.BlendedInboxEnabled;
-                    inboxResponse.Inbox.UnseenCount = nextInbox.Value.Inbox.UnseenCount;
-                    inboxResponse.Inbox.UnseenCountTs = nextInbox.Value.Inbox.UnseenCountTs;
-                    inboxResponse.Inbox.Threads.AddRange(nextInbox.Value.Inbox.Threads);
+                    inbox.Inbox.OldestCursor = paginationParameters.NextMaxId = nextInbox.Value.Inbox.OldestCursor;
+                    inbox.Inbox.HasOlder = nextInbox.Value.Inbox.HasOlder;
+                    inbox.Inbox.BlendedInboxEnabled = nextInbox.Value.Inbox.BlendedInboxEnabled;
+                    inbox.Inbox.UnseenCount = nextInbox.Value.Inbox.UnseenCount;
+                    inbox.Inbox.UnseenCountTs = nextInbox.Value.Inbox.UnseenCountTs;
+                    inbox.Inbox.Threads.AddRange(nextInbox.Value.Inbox.Threads);
                     pagesLoaded++;
                 }
 
-                return Result.Success(ConvertersFabric.Instance.GetDirectInboxConverter(inboxResponse).Convert());
-            }
-            catch (HttpRequestException httpException)
-            {
-                _logger?.LogException(httpException);
-                return Result.Fail(httpException, default(InstaDirectInboxContainer), ResponseType.NetworkProblem);
+                return Result<InboxContainer>.Success(inbox);
             }
             catch (Exception exception)
             {
                 _logger?.LogException(exception);
-                return Result.Fail<InstaDirectInboxContainer>(exception);
+                return Result<InboxContainer>.Except(exception);
+            }
+        }
+
+        private async Task<Result<InboxContainer>> GetDirectInbox(string maxId = null)
+        {
+            try
+            {
+                var directInboxUri = UriCreator.GetDirectInboxUri(maxId);
+                var response = await _httpClient.GetAsync(directInboxUri);
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+
+                if (response.StatusCode != Windows.Web.Http.HttpStatusCode.Ok)
+                    return Result<InboxContainer>.Fail(json, response.ReasonPhrase);
+                var inbox = JsonConvert.DeserializeObject<InboxContainer>(json);
+                return Result<InboxContainer>.Success(inbox);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<InboxContainer>.Except(exception);
             }
         }
     }

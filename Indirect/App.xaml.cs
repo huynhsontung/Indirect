@@ -89,9 +89,6 @@ namespace Indirect
             }
             catch (Exception innerException)
             {
-#if !DEBUG
-                Crashes.TrackError(innerException);
-#endif
                 Debug.WriteLine(innerException);
             }
         }
@@ -132,7 +129,7 @@ namespace Indirect
                 }
                 else
                 {
-                    ViewModel = await ApiContainer.Factory();
+                    ViewModel = new ApiContainer();
                     CoreApplication.Properties.Add(VIEW_MODEL_PROP_NAME, ViewModel);
                 }
 

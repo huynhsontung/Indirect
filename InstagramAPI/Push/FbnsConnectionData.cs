@@ -134,5 +134,18 @@ namespace InstagramAPI.Push
             data.LoadFromAppSettings();
             return data;
         }
+
+        public void Clear()
+        {;
+            ClientId = Guid.NewGuid().ToString().Substring(0, 20);
+            UserAgent = default;
+            ClientMqttSessionId = default;
+            UserId = default;
+            Password = default;
+            DeviceId = default;
+            DeviceSecret = default;
+            _fbnsToken = default;
+            FbnsTokenLastUpdated = DateTimeOffset.Now;
+        }
     }
 }

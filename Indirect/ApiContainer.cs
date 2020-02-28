@@ -16,12 +16,15 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
-using Indirect.Notification;
 using Indirect.Utilities;
 using Indirect.Wrapper;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
+using InstagramAPI.Classes.Media;
+using InstagramAPI.Classes.User;
+using InstagramAPI.Push;
+using InstagramAPI.Sync;
 using InstagramAPI.Utils;
 using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp;
@@ -35,24 +38,22 @@ namespace Indirect
         public const string INSTA_API_PROP_NAME = "InstaApi";
         private const string STATE_FILE_NAME = "state.bin";
 
-        private Instagram _instaApi;
-        private readonly StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
-        private StorageFile _stateFile;
-        private FbnsConnectionData _pushData;
+        private Instagram _instaApi = Instagram.Instance;
         private DateTime _lastUpdated = DateTime.Now;
         private CancellationTokenSource _searchCancellationToken;
         private InstaDirectInboxThreadWrapper _selectedThread;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public PushClient PushClient { get; private set; }
-        public SyncClient SyncClient { get; private set; }
+        public PushClient PushClient => _instaApi.PushClient;
+        public SyncClient SyncClient => _instaApi.SyncClient;
+
         public InstaDirectInboxWrapper Inbox { get; private set; }
 
         public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads =>
             Inbox.Threads;
 
-        public InstaCurrentUser LoggedInUser { get; private set; }
+        public CurrentUser LoggedInUser { get; private set; }
 
         public InstaDirectInboxThreadWrapper SelectedThread
         {
@@ -67,36 +68,12 @@ namespace Indirect
         public AndroidDevice Device => _instaApi?.Device;
         public bool IsUserAuthenticated => _instaApi?.IsUserAuthenticated ?? false;
 
-        public StateData StateData
-        {
-            get
-            {
-                var data = _instaApi?.GetStateData();
-                if (data == null) return new StateData();
-                data.FbnsConnectionData = PushClient?.ConnectionData;
-                return data;
-            }
-        }
-
-
-        private ApiContainer() {}
-
-        public static async Task<ApiContainer> Factory()
-        {
-            var instance = new ApiContainer();
-            await instance.CreateStateFile();
-            await instance.LoadStateFromStorage();
-            return instance;
-        }
-
         public async void OnLoggedIn()
         {
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
-            SyncClient = new SyncClient(_instaApi);
-            SyncClient.MessageReceived += OnMessageSyncReceived;
-            PushClient = new PushClient(_instaApi, _pushData);
+            _instaApi.SyncClient.MessageReceived += OnMessageSyncReceived;
             Inbox = new InstaDirectInboxWrapper(_instaApi);
-            Inbox.FirstUpdated += (seqId, snapshotAt) => SyncClient.Start(seqId, snapshotAt);
+            Inbox.FirstUpdated += (seqId, snapshotAt) => _instaApi.SyncClient.Start(seqId, snapshotAt);
             await UpdateLoggedInUser();
             PushClient.Start();
             PushClient.MessageReceived += (sender, args) =>
@@ -111,70 +88,15 @@ namespace Indirect
             SelectedThread = null;
         }
 
-        private async Task CreateStateFile()
-        {
-            _stateFile = (StorageFile) await _localFolder.TryGetItemAsync(STATE_FILE_NAME) ??
-                         await _localFolder.CreateFileAsync(STATE_FILE_NAME, CreationCollisionOption.ReplaceExisting);
-        }
-
-        private async Task LoadStateFromStorage()
-        {
-            using (var stateStream = await _stateFile.OpenStreamForReadAsync())
-            {
-                if (stateStream.Length > 0)
-                {
-                    var formatter = new BinaryFormatter();
-                    stateStream.Seek(0, SeekOrigin.Begin);
-                    var stateData = (StateData) formatter.Deserialize(stateStream);
-                    if (stateData.Cookies != null)
-                    {
-                        _instaApi = ImmutableArray<>.Builder.LoadStateData(stateData)
-                            .UseLogger(new DebugLogger(LogLevel.All))
-                            .Build();
-                        _pushData = stateData.FbnsConnectionData;
-                    }
-                    else
-                    {
-                        _pushData = new FbnsConnectionData();
-                    }
-                }
-                else
-                {
-                    _pushData = new FbnsConnectionData();
-                }
-            }
-        }
-
-        public async Task WriteStateToStorage()
-        {
-            using (var stateFileStream = await _stateFile.OpenStreamForWriteAsync().ConfigureAwait(false))
-            {
-                var formatter = new BinaryFormatter();
-                formatter.Serialize(stateFileStream, StateData);
-            }
-        }
-
         public async Task<Result<LoginResult>> Login(string username, string password)
         {
             var logInResult = await _instaApi.LoginAsync(username, password).ConfigureAwait(false);
-            await WriteStateToStorage().ConfigureAwait(false);
             return logInResult;
         }
 
-        public async Task Logout()
+        public void Logout()
         {
-            // Instagram doesnt support logout anymore
-            // var result = await _instaApi.LogoutAsync();
             _instaApi.Logout();
-            SyncClient.Shutdown();
-            _ = PushClient.Shutdown();
-            PushClient.UnregisterTasks();
-            _pushData = new FbnsConnectionData();
-
-            using (var stream = await _stateFile.OpenStreamForWriteAsync())
-            {
-                stream.SetLength(0);
-            }
             if (CoreApplication.Properties.ContainsKey(INSTA_API_PROP_NAME))
                 CoreApplication.Properties.Remove(INSTA_API_PROP_NAME);
             _ = ImageCache.Instance.ClearAsync();
@@ -184,7 +106,7 @@ namespace Indirect
 
         private async Task UpdateLoggedInUser()
         {
-            var loggedInUser = await _instaApi.GetCurrentUserAsync();
+            var loggedInUser = await _instaApi.GetCurrentUserAsync().ConfigureAwait(false);
             LoggedInUser = loggedInUser.Value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
         }

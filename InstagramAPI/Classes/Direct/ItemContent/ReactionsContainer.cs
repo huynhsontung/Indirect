@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 
@@ -9,7 +10,7 @@ namespace InstagramAPI.Classes.Direct.ItemContent
     {
         [JsonProperty("likes")] public List<LikeReaction> Likes { get; set; }
         [JsonProperty("likes_count")] public uint LikesCount { get; set; }
-        public bool MeLiked { get; set; }
+        public bool MeLiked => Likes.Any(reaction => reaction.SenderId == Instagram.Instance.Session.LoggedInUser.Pk);
     }
 
     public class LikeReaction
