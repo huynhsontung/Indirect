@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Direct
@@ -15,7 +11,7 @@ namespace InstagramAPI.Classes.Direct
 
         [JsonProperty("unseen_count")] public long UnseenCount { get; set; }
 
-        [JsonProperty("threads")] public List<InboxThread> Threads { get; set; }
+        [JsonProperty("threads")] public List<DirectThread> Threads { get; set; }
 
         [JsonProperty("oldest_cursor")] public string OldestCursor { get; set; }
 

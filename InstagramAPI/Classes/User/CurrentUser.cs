@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.User
 {
-    public class CurrentUser : UserShort
+    public class CurrentUser : InstaUser
     {
         [JsonProperty("has_anonymous_profile_picture")]
         public bool HasAnonymousProfilePicture { get; set; }
@@ -31,10 +31,10 @@ namespace InstagramAPI.Classes.User
         [JsonProperty("email")] public string Email { get; set; }
 
         [JsonProperty("hd_profile_pic_versions")]
-        public List<ImageMeta> HdProfilePictureVersions { get; set; }
+        public List<InstaImage> HdProfilePictureVersions { get; set; }
 
         [JsonProperty("hd_profile_pic_url_info")]
-        public ImageMeta HdProfilePicture { get; set; }
+        public InstaImage HdProfilePicture { get; set; }
 
         [JsonProperty("external_url")] public string ExternalUrl { get; set; }
     }

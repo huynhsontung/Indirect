@@ -1,21 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.User;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Direct
 {
-    public class InboxThread : IEquatable<InboxThread>
+    public class DirectThread : IEquatable<DirectThread>
     {
         [JsonProperty("muted")] 
         public bool Muted { get; set; }
 
         [JsonProperty("users")] 
-        public List<UserShortFriendship> Users { get; set; } = new List<UserShortFriendship>();
+        public List<UserWithFriendship> Users { get; set; } = new List<UserWithFriendship>();
 
         [JsonProperty("thread_title")] 
         public string Title { get; set; }
@@ -41,7 +38,7 @@ namespace InstagramAPI.Classes.Direct
         public bool? HasOlder { get; set; }
 
         [JsonProperty("inviter")]
-        public UserShort Inviter { get; set; }
+        public InstaUser Inviter { get; set; }
 
         [JsonProperty("named")]
         public bool Named { get; set; }
@@ -58,14 +55,15 @@ namespace InstagramAPI.Classes.Direct
         [JsonProperty("is_spam")]
         public bool IsSpam { get; set; }
 
-        [JsonProperty("thread_type")]
-        public ThreadType ThreadType { get; set; }
+        [JsonProperty("thread_type")] 
+        public DirectThreadType ThreadType { get; set; } = DirectThreadType.Private;
 
-        [JsonProperty("items")]
-        public List<InstaDirectInboxItem> Items { get; set; }
+        [JsonProperty("items", ItemConverterType = typeof(DirectItemConverter))]
+        public List<DirectItem> Items { get; set; }
 
         [JsonProperty("last_permanent_item")]
-        public InstaDirectInboxItem LastPermanentItem { get; set; }
+        [JsonConverter(typeof(DirectItemConverter))]
+        public DirectItem LastPermanentItem { get; set; }
 
         [JsonProperty("is_pin")]
         public bool IsPin { get; set; }
@@ -101,7 +99,7 @@ namespace InstagramAPI.Classes.Direct
         public Dictionary<long, LastSeen> LastSeenAt { get; set; }
 
         [JsonProperty("left_users")]
-        public List<UserShortFriendship> LeftUsers { get; set; } = new List<UserShortFriendship>();
+        public List<UserWithFriendship> LeftUsers { get; set; } = new List<UserWithFriendship>();
 
         [JsonProperty("newest_cursor")]
         public string NewestCursor { get; set; }
@@ -123,14 +121,14 @@ namespace InstagramAPI.Classes.Direct
             }
         }
 
-        public bool Equals(InboxThread other)
+        public bool Equals(DirectThread other)
         {
             if (other == null) return false;
             return other.ThreadId == ThreadId;
         }
     }
 
-    public enum ThreadType
+    public enum DirectThreadType
     {
         Private = 0
     }

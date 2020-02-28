@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Windows.Storage;
 using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
@@ -17,6 +18,15 @@ namespace InstagramAPI
 {
     public partial class Instagram
     {
+        // Latest instance of Instagram class
+        public static Instagram Instance { get; private set; }
+
+        public static bool IsUserAuthenticatedPersistent
+        {
+            get => (bool?)LocalSettings.Values["_isUserAuthenticated"] ?? false;
+            private set => LocalSettings.Values["_isUserAuthenticated"] = value;
+        }
+
         public bool IsUserAuthenticated { get; private set; }
         public UserSessionData Session { get; } = new UserSessionData();
         public AndroidDevice Device { get; } = AndroidDevice.GetRandomAndroidDevice();
@@ -28,6 +38,7 @@ namespace InstagramAPI
         private readonly DebugLogger _logger;
         private TwoFactorLoginInfo _twoFactorInfo;  // Only used when login returns two factor
         private ChallengeLoginInfo _challengeInfo;  // Only used when login returns challenge
+        private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
 
         public Instagram()
         {
@@ -37,14 +48,14 @@ namespace InstagramAPI
             SetDefaultRequestHeaders();
             _apiRequestMessage = new ApiRequestMessage(this);
 
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            IsUserAuthenticated = (bool) localSettings.Values["_isUserAuthenticated"];
+            IsUserAuthenticated = IsUserAuthenticatedPersistent;
             PushClient = new PushClient(this, IsUserAuthenticated);
             SyncClient = new SyncClient(this);
 
             if (!IsUserAuthenticated) return;
             Session.LoadFromAppSettings();
             Device = AndroidDevice.CreateFromAppSettings() ?? Device;
+            Instance = this;
         }
 
         /// <summary>
@@ -163,6 +174,7 @@ namespace InstagramAPI
         public void Logout()
         {
             IsUserAuthenticated = false;
+            SaveToAppSettings();
         }
 
         public async Task<Result<CurrentUser>> GetCurrentUserAsync()
@@ -204,8 +216,7 @@ namespace InstagramAPI
             Device.SaveToAppSettings();
             Session.SaveToAppSettings();
             PushClient.ConnectionData.SaveToAppSettings();
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values["_isUserAuthenticated"] = IsUserAuthenticated;
+            IsUserAuthenticatedPersistent = IsUserAuthenticated;
         }
     }
 }

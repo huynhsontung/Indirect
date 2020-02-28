@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.User
 {
-    public class UserShortFriendship : UserShort
+    public class UserWithFriendship : InstaUser
     {
         [JsonProperty("friendship_status")] public FriendshipStatus FriendshipStatus { get; set; }
     }
@@ -23,5 +23,7 @@ namespace InstagramAPI.Classes.User
         [JsonProperty("outgoing_request")] public bool OutgoingRequest { get; set; }
 
         [JsonProperty("is_bestie")] public bool IsBestie { get; set; }
+
+        [JsonProperty("is_restricted")] public bool IsRestricted { get; set; }
     }
 }

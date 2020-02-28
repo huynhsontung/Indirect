@@ -7,8 +7,7 @@ using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Media
 {
-    [Serializable]
-    public class ImageMeta
+    public class InstaImage
     {
         [JsonProperty("url")] public string Url { get; set; }
 
