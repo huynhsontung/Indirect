@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using InstagramAPI.Classes.Direct;
-using InstagramAPI.Classes.Direct.Items;
 using InstagramAPI.Classes.Media;
+using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -22,95 +23,93 @@ namespace InstagramAPI.Classes.JsonConverters
             var itemType = itemJson["item_type"]?.ToObject<DirectItemType>(serializer) ?? DirectItemType.Unknown;
             var itemSender = itemJson["user_id"]?.ToObject<long>(serializer) ?? 0;
             var viewerPk = Instagram.Instance.Session.LoggedInUser.Pk;
-            var fromMe = itemSender == viewerPk;
-            DirectItem item;
-            switch (itemType)
+            var item = itemJson.ToObject<DirectItem>(serializer);
+            item.RawJson = rawJson;
+            item.FromMe = itemSender == viewerPk;
+            try
             {
-                case DirectItemType.ActionLog:
-                    item = itemJson.ToObject<ActionLogItem>(serializer);
-                    item.Description = ((ActionLogItem)item).ActionLog.Description;
-                    break;
+                switch (itemType)
+                {
+                    case DirectItemType.ActionLog:
+                        item.Description = item.ActionLog.Description;
+                        break;
 
-                case DirectItemType.AnimatedMedia:
-                    item = itemJson.ToObject<AnimatedMediaItem>(serializer);
-                    item.Description = fromMe ? "You sent a GIF" : "Sent you a GIF";
-                    break;
+                    case DirectItemType.AnimatedMedia:
+                        item.Description = item.FromMe ? "You sent a GIF" : "Sent you a GIF";
+                        break;
 
-                case DirectItemType.Hashtag:
-                    item = itemJson.ToObject<HashtagItem>(serializer);
-                    item.Description = "#" + ((HashtagItem) item).HashtagMedia.Name;
-                    break;
+                    case DirectItemType.Hashtag:
+                        item.Description = "#" + item.HashtagMedia.Name;
+                        break;
 
-                case DirectItemType.Like:
-                    item = itemJson.ToObject<LikeItem>(serializer);
-                    item.Description = ((LikeItem) item).Like;
-                    break;
+                    case DirectItemType.Like:
+                        item.Description = item.Like;
+                        break;
 
-                case DirectItemType.Link:
-                    item = itemJson.ToObject<LinkItem>(serializer);
-                    item.Description = ((LinkItem) item).Link.Text;
-                    break;
+                    case DirectItemType.Link:
+                        item.Description = item.Link.Text;
+                        break;
 
-                case DirectItemType.Media:
-                    item = itemJson.ToObject<DirectMediaItem>(serializer);
-                    if (((DirectMediaItem) item).Media.MediaType == InstaMediaType.Image)
-                        item.Description = fromMe ? "You sent them a photo" : "Sent you a photo";
-                    else
-                        item.Description = fromMe ? "You sent them a video" : "Sent you a video";
-                    break;
+                    case DirectItemType.Media:
+                        if (item.Media.MediaType == InstaMediaType.Image)
+                            item.Description = item.FromMe ? "You sent them a photo" : "Sent you a photo";
+                        else
+                            item.Description = item.FromMe ? "You sent them a video" : "Sent you a video";
+                        break;
 
-                case DirectItemType.MediaShare:
-                    item = itemJson.ToObject<MediaShareItem>(serializer);
-                    item.Description = fromMe ? "You shared a post" : "Shared a post";
-                    break;
+                    case DirectItemType.MediaShare:
+                        item.Description = item.FromMe ? "You shared a post" : "Shared a post";
+                        break;
 
-                case DirectItemType.RavenMedia:
-                    item = itemJson.ToObject<RavenMediaItem>(serializer);
-                    var mediaType = ((RavenMediaItem) item).RavenMedia?.MediaType ??
-                                    ((RavenMediaItem) item).VisualMedia.Media.MediaType;
-                    if (mediaType == InstaMediaType.Image)
-                        item.Description = fromMe ? "You sent them a photo" : "Sent you a photo";
-                    else
-                        item.Description = fromMe ? "You sent them a video" : "Sent you a video";
-                    break;
+                    case DirectItemType.RavenMedia:
+                        var mediaType = item.RavenMedia?.MediaType ??
+                                        item.VisualMedia.Media.MediaType;
+                        if (mediaType == InstaMediaType.Image)
+                            item.Description = item.FromMe ? "You sent them a photo" : "Sent you a photo";
+                        else
+                            item.Description = item.FromMe ? "You sent them a video" : "Sent you a video";
+                        break;
 
-                case DirectItemType.ReelShare:
-                    item = itemJson.ToObject<ReelShareItem>(serializer);
-                    var reelShareItem = ((ReelShareItem) item);
-                    switch (reelShareItem.ReelShareMedia.Type)
-                    {
-                        case "reaction":
-                            item.Description = fromMe
-                                ? $"You reacted to their story {reelShareItem.ReelShareMedia.Text}"
-                                : $"Reacted to your story {reelShareItem.ReelShareMedia.Text}";
-                            break;
-                        case "reply":
-                            item.Description = fromMe ? "You replied to their story" : "Replied to your story";
-                            break;
-                        case "mention":
-                            item.Description = fromMe ? "You mentioned them in your story" : "Mentioned you in their story";
-                            break;
-                    }
-                    break;
+                    case DirectItemType.ReelShare:
+                        switch (item.ReelShareMedia.Type)
+                        {
+                            case "reaction":
+                                item.Description = item.FromMe
+                                    ? $"You reacted to their story {item.ReelShareMedia.Text}"
+                                    : $"Reacted to your story {item.ReelShareMedia.Text}";
+                                break;
+                            case "reply":
+                                item.Description = item.FromMe ? "You replied to their story" : "Replied to your story";
+                                break;
+                            case "mention":
+                                item.Description = item.FromMe
+                                    ? "You mentioned them in your story"
+                                    : "Mentioned you in their story";
+                                break;
+                        }
 
-                case DirectItemType.Text:
-                    item = itemJson.ToObject<TextItem>(serializer);
-                    item.Description = ((TextItem) item).Text;
-                    break;
+                        break;
 
-                case DirectItemType.VoiceMedia:
-                    item = itemJson.ToObject<VoiceMediaItem>(serializer);
-                    item.Description = fromMe ? "You sent a voice clip" : "Sent you a voice clip";
-                    break;
+                    case DirectItemType.Text:
+                        item.Description = item.Text;
+                        break;
 
-                default:
-                    item = itemJson.ToObject<DirectItem>(serializer);
-                    item.Description = item.ItemType.ToString();
-                    break;
+                    case DirectItemType.VoiceMedia:
+                        item.Description = item.FromMe ? "You sent a voice clip" : "Sent you a voice clip";
+                        break;
+
+                    default:
+                        item = itemJson.ToObject<DirectItem>(serializer);
+                        item.Description = item.ItemType.ToString();
+                        break;
+                }
+            }
+            catch
+            {
+                Debug.WriteLine($"Failed to write item description. Json: {rawJson}");
+                // Not important enough to throw. Pass
             }
 
-            item.RawJson = rawJson;
-            item.FromMe = fromMe;
             return item;
         }
     }

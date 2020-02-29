@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Indirect.Utilities;
@@ -38,7 +37,7 @@ namespace Indirect.Wrapper
             Title = user.Username;
         }
 
-        public InstaDirectInboxThreadWrapper(InstaRankedRecipientThread rankedThread, Instagram api)
+        public InstaDirectInboxThreadWrapper(RankedRecipientThread rankedThread, Instagram api)
         {
             ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
             _instaApi = api;
@@ -88,7 +87,6 @@ namespace Indirect.Wrapper
             LastPermanentItem = source.LastPermanentItem;
             LeftUsers = source.LeftUsers;
             LastSeenAt = source.LastSeenAt;
-            HasUnreadMessage = source.HasUnreadMessage;
 
             foreach (var instaUserShortFriendship in source.Users)
             {
@@ -139,7 +137,6 @@ namespace Indirect.Wrapper
                 source.LastPermanentItem : LastPermanentItem;
             LeftUsers = source.LeftUsers;
             LastSeenAt = source.LastSeenAt;
-            HasUnreadMessage = source.HasUnreadMessage;
 
             if (string.IsNullOrEmpty(OldestCursor) || 
                 string.Compare(OldestCursor, source.OldestCursor, StringComparison.Ordinal) > 0)
@@ -226,7 +223,7 @@ namespace Indirect.Wrapper
             if (_loaded) pagination.StartFromMaxId(OldestCursor);
             else _loaded = true;
             var result = await _instaApi.GetThreadAsync(ThreadId, pagination);
-            if (!result.Succeeded || result.Value.Items == null) return new List<InstaDirectInboxItemWrapper>(0);
+            if (result.Status != ResultStatus.Succeeded || result.Value.Items == null) return new List<InstaDirectInboxItemWrapper>(0);
             UpdateExcludeItemList(result.Value);
             return result.Value.Items.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi));
         }

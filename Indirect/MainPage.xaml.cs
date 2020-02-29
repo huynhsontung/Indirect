@@ -32,8 +32,7 @@ namespace Indirect
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            _viewModel = (ApiContainer)e.Parameter;
-            if (_viewModel == null) throw new NullReferenceException("No _viewModel created");
+            _viewModel = ApiContainer.Instance;
             _viewModel.OnLoggedIn();
         }
 
@@ -42,14 +41,14 @@ namespace Indirect
             var confirmDialog = new ContentDialog()
             {
                 Title = "Are you sure?",
-                Content = "Logging out will delete all session date, including cached images and videos.",
+                Content = "Logging out will delete all session data, including cached images and videos.",
                 CloseButtonText = "Close",
                 PrimaryButtonText = "Logout", 
                 DefaultButton = ContentDialogButton.Close
             };
             var confirmation = await confirmDialog.ShowAsync();
             if (confirmation != ContentDialogResult.Primary) return;
-            await _viewModel.Logout();
+            _viewModel.Logout();
             Frame.Navigate(typeof(Login), _viewModel);
         }
         

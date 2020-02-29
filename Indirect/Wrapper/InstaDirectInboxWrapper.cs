@@ -15,7 +15,7 @@ namespace Indirect.Wrapper
 {
     class InstaDirectInboxWrapper: Inbox, IIncrementalSource<InstaDirectInboxThreadWrapper>
     {
-        public event Action<int, DateTime> FirstUpdated;    // callback to start SyncClient
+        public event Action<int, DateTimeOffset> FirstUpdated;    // callback to start SyncClient
 
         public int PendingRequestsCount { get; set; }
         public int SeqId { get; set; }
@@ -88,9 +88,9 @@ namespace Indirect.Wrapper
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(OldestCursor);
-            var result = await _instaApi.MessagingProcessor.GetInboxAsync(pagination);
-            InstaDirectInboxContainer container;
-            if (result.Succeeded)
+            var result = await _instaApi.GetInboxAsync(pagination).ConfigureAwait(false);
+            InboxContainer container;
+            if (result.Status == ResultStatus.Succeeded)
             {
                 container = result.Value;
                 if (_firstTime)

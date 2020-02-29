@@ -9,7 +9,7 @@ namespace InstagramAPI.Classes.Media
 {
     public class InstaImage
     {
-        [JsonProperty("url")] public string Url { get; set; }
+        [JsonProperty("url")] public Uri Url { get; set; }
 
         [JsonProperty("width")] public int Width { get; set; }
 

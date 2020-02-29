@@ -21,6 +21,7 @@ using Indirect.Wrapper;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
+using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
@@ -34,12 +35,25 @@ namespace Indirect
 {
     internal class ApiContainer : INotifyPropertyChanged
     {
+        private static ApiContainer _instance;
+        public static ApiContainer Instance
+        {
+            get
+            {
+                if (_instance != null) return _instance;
+                _instance = new ApiContainer();
+                return _instance;
+            }
+        }
+
+        private ApiContainer() { }
+
         // Todo: handle exceptions thrown by _instaApi like no network connection
         public const string INSTA_API_PROP_NAME = "InstaApi";
         private const string STATE_FILE_NAME = "state.bin";
 
-        private Instagram _instaApi = Instagram.Instance;
-        private DateTime _lastUpdated = DateTime.Now;
+        private readonly Instagram _instaApi = Instagram.Instance;
+        private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
         private CancellationTokenSource _searchCancellationToken;
         private InstaDirectInboxThreadWrapper _selectedThread;
 
@@ -66,7 +80,7 @@ namespace Indirect
         }
 
         public AndroidDevice Device => _instaApi?.Device;
-        public bool IsUserAuthenticated => _instaApi?.IsUserAuthenticated ?? false;
+        public bool IsUserAuthenticated => _instaApi.IsUserAuthenticated;
 
         public async void OnLoggedIn()
         {
@@ -97,8 +111,6 @@ namespace Indirect
         public void Logout()
         {
             _instaApi.Logout();
-            if (CoreApplication.Properties.ContainsKey(INSTA_API_PROP_NAME))
-                CoreApplication.Properties.Remove(INSTA_API_PROP_NAME);
             _ = ImageCache.Instance.ClearAsync();
             _ = VideoCache.Instance.ClearAsync();
             // _settings.Values.Clear();
@@ -131,7 +143,7 @@ namespace Indirect
                 if (itemData.Op == "replace")
                 {
                     // todo: Handle items seen
-                    if (itemData.Path.Contains("has_seen")) return;
+                    if (itemData.Path.Contains("has_seen", StringComparison.Ordinal)) return;
                     var incomingItem = itemData.Item;
                     var item = thread.ObservableItems.SingleOrDefault(x => x.ItemId == incomingItem.ItemId);
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -154,7 +166,7 @@ namespace Indirect
                 Crashes.TrackError(e);
 #endif
                 Debug.WriteLine(e);
-                if (DateTime.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
+                if (DateTimeOffset.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
                     UpdateInboxAndSelectedThread();
             }
             Debug.WriteLine("Sync(s) received.");
@@ -164,9 +176,9 @@ namespace Indirect
         {
             if (SelectedThread == null)
                 return;
-            var result = await _instaApi.MessagingProcessor.GetThreadAsync(SelectedThread.ThreadId,
-                PaginationParameters.MaxPagesToLoad(1));
-            if (result.Succeeded)
+            var result = await _instaApi.GetThreadAsync(SelectedThread.ThreadId, PaginationParameters.MaxPagesToLoad(1))
+                .ConfigureAwait(false);
+            if (result.IsSucceeded)
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
                     CoreDispatcherPriority.Normal,
                     () => { SelectedThread.Update(result.Value); });
@@ -176,8 +188,8 @@ namespace Indirect
         {
             var selectedThread = SelectedThread;
             if (string.IsNullOrEmpty(selectedThread.ThreadId)) return;
-            var result = await _instaApi.MessagingProcessor.SendDirectLikeAsync(selectedThread.ThreadId);
-            if (result.Succeeded) UpdateInboxAndSelectedThread();
+            var result = await _instaApi.SendLikeAsync(selectedThread.ThreadId).ConfigureAwait(false);
+            if (result.IsSucceeded) UpdateInboxAndSelectedThread();
         }
 
         // Send message to the current selected recipient
@@ -190,7 +202,7 @@ namespace Indirect
             var tokens = content.Split("\t\n ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             var links = tokens.Where(x =>
                 x.StartsWith("http://") || x.StartsWith("https://") || x.StartsWith("www.")).ToList();
-            IResult<List<InstaDirectInboxThread>> result;
+            Result<List<InstaDirectInboxThread>> result;
             IResult<ItemAckPayloadResponse> ackResult = new Result<ItemAckPayloadResponse>(false, new ItemAckPayloadResponse());   // for links and hashtags
             if (!string.IsNullOrEmpty(selectedThread.ThreadId))
             {
@@ -353,7 +365,7 @@ namespace Indirect
 
             if (thread.LastPermanentItem == null)
             {
-                thread.LastPermanentItem = new InstaDirectInboxItem {Text = thread.Users[0].FullName};
+                thread.LastPermanentItem = new DirectItem() {Description = thread.Users[0].FullName};
             }
 
             SelectedThread = thread;

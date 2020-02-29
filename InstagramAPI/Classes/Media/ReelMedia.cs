@@ -113,5 +113,14 @@ namespace InstagramAPI.Classes.Media
         [JsonProperty("imported_taken_at", NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(TimestampConverter))]
         public DateTimeOffset? ImportedTakenAt { get; set; }
+
+        [JsonProperty("video_versions", NullValueHandling = NullValueHandling.Ignore)]
+        public List<InstaVideo> VideoVersions { get; set; }
+
+        [JsonProperty("has_audio", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? HasAudio { get; set; }
+
+        [JsonProperty("video_duration", NullValueHandling = NullValueHandling.Ignore)]
+        public double? VideoDuration { get; set; }
     }
 }

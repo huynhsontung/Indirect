@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using InstagramAPI.Classes.JsonConverters;
+using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Direct
 {
-    public class DirectThread : IEquatable<DirectThread>
+    public class DirectThread : BaseStatusResponse, IEquatable<DirectThread>
     {
         [JsonProperty("muted")] 
         public bool Muted { get; set; }

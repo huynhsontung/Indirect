@@ -4,7 +4,8 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
-using InstaSharper.Enums;
+using InstagramAPI;
+using InstagramAPI.Classes;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -35,11 +36,11 @@ namespace Indirect
             var username = UsernameBox.Text;
             var password = PasswordBox.Password;
             if (username.Length <= 0 || password.Length <= 0) return;
-            var result = await _viewModel.Login(username, password);
-            if (!result.Succeeded || result.Value != InstaLoginResult.Success)
+            var result = await _viewModel.Login(username, password).ConfigureAwait(false);
+            if (result.Status != ResultStatus.Succeeded || result.Value != LoginResult.Success)
             {
                 ContentDialog failDialog;
-                if (result.Value == InstaLoginResult.ChallengeRequired)
+                if (result.Value == LoginResult.ChallengeRequired)
                 {
                     failDialog = new ContentDialog
                     {
@@ -59,7 +60,7 @@ namespace Indirect
                     failDialog = new ContentDialog
                     {
                         Title = "Login failed",
-                        Content = $"Reason: {result.Info.Message}",
+                        Content = $"Reason: {result.Message}",
                         DefaultButton = ContentDialogButton.Close,
                         CloseButtonText = "Close"
                     };
@@ -75,7 +76,7 @@ namespace Indirect
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            _viewModel = e.Parameter as ApiContainer;
+            _viewModel = ApiContainer.Instance;
             this.Bindings.Update();
         }
 

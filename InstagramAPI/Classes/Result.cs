@@ -11,6 +11,7 @@ namespace InstagramAPI.Classes
 
     public class Result<T>
     {
+        public bool IsSucceeded => Status == ResultStatus.Succeeded;
         public ResultStatus Status { get; }
         public T Value { get; }
         public string Message { get; }

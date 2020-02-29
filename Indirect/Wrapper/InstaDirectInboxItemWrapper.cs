@@ -42,7 +42,7 @@ namespace Indirect.Wrapper
                         return new Uri("https://www.instagram.com/explore/tags/" + MediaTypeNames.Text.Substring(1));
 
                     case DirectItemType.Link:
-                        return Uri.TryCreate(LinkMedia.LinkContext.LinkUrl, UriKind.Absolute, out var uri) ? uri : null;
+                        return Uri.TryCreate(Link.LinkContext.LinkUrl, UriKind.Absolute, out var uri) ? uri : null;
 
                     case DirectItemType.MediaShare:
                         return new Uri("https://www.instagram.com/p/" + MediaShare.Code);
@@ -72,10 +72,10 @@ namespace Indirect.Wrapper
                         return GetPreviewImage(VisualMedia.Media.Images)?.Height ?? 0;
 
                     case DirectItemType.ReelShare:
-                        return GetPreviewImage(ReelShareMedia.Media.ImageList)?.Height ?? 0;
+                        return GetPreviewImage(ReelShareMedia.Media.Images)?.Height ?? 0;
 
                     case DirectItemType.AnimatedMedia:
-                        return AnimatedMedia.Media.Height;
+                        return AnimatedMedia.Image.Height;
 
                     default:
                         return 0;
@@ -99,10 +99,10 @@ namespace Indirect.Wrapper
                         return GetPreviewImage(VisualMedia.Media.Images)?.Width ?? 0;
 
                     case DirectItemType.ReelShare:
-                        return GetPreviewImage(ReelShareMedia.Media.ImageList)?.Width ?? 0;
+                        return GetPreviewImage(ReelShareMedia.Media.Images)?.Width ?? 0;
 
                     case DirectItemType.AnimatedMedia:
-                        return AnimatedMedia.Media.Width;
+                        return AnimatedMedia.Image.Width;
 
                     default:
                         return 0;
@@ -126,10 +126,10 @@ namespace Indirect.Wrapper
                         return GetFullImage(VisualMedia.Media.Images)?.Height ?? 0;
 
                     case DirectItemType.ReelShare:
-                        return GetFullImage(ReelShareMedia.Media.ImageList)?.Height ?? 0;
+                        return GetFullImage(ReelShareMedia.Media.Images)?.Height ?? 0;
 
                     case DirectItemType.AnimatedMedia:
-                        return AnimatedMedia.Media.Height;
+                        return AnimatedMedia.Image.Height;
 
                     default:
                         return 0;
@@ -153,10 +153,10 @@ namespace Indirect.Wrapper
                         return GetFullImage(VisualMedia.Media.Images)?.Width ?? 0;
 
                     case DirectItemType.ReelShare:
-                        return GetFullImage(ReelShareMedia.Media.ImageList)?.Width ?? 0;
+                        return GetFullImage(ReelShareMedia.Media.Images)?.Width ?? 0;
 
                     case DirectItemType.AnimatedMedia:
-                        return AnimatedMedia.Media.Width;
+                        return AnimatedMedia.Image.Width;
 
                     default:
                         return 0;
@@ -168,31 +168,25 @@ namespace Indirect.Wrapper
         {
             get
             {
-                string url;
                 switch (ItemType)
                 {
                     case DirectItemType.Media:
-                        url = GetPreviewImage(Media.Images)?.Url;
-                        return url != null ? new Uri(url) : null;
+                        return GetPreviewImage(Media.Images)?.Url;
 
                     case DirectItemType.MediaShare:
-                        url = GetPreviewImage(MediaShare.Images)?.Url;
-                        return url != null ? new Uri(url) : null;
+                        return GetPreviewImage(MediaShare.Images)?.Url;
 
                     case DirectItemType.RavenMedia when RavenMedia != null:
-                        url = GetPreviewImage(RavenMedia.Images)?.Url;
-                        return url != null ? new Uri(url) : null;
+                        return GetPreviewImage(RavenMedia.Images)?.Url;
 
                     case DirectItemType.RavenMedia when VisualMedia != null:
-                        url = GetPreviewImage(VisualMedia.Media.Images)?.Url;
-                        return url != null ? new Uri(url) : null;
+                        return GetPreviewImage(VisualMedia.Media.Images)?.Url;
 
                     case DirectItemType.ReelShare:
-                        url = GetPreviewImage(ReelShareMedia.Media.ImageList)?.Url;
-                        return url != null ? new Uri(url) : null;
+                        return GetPreviewImage(ReelShareMedia.Media.Images)?.Url;
 
                     case DirectItemType.AnimatedMedia:
-                        return new Uri(AnimatedMedia.Media.Url);
+                        return AnimatedMedia.Image.Url;
 
                     default:
                         return null;
@@ -219,7 +213,7 @@ namespace Indirect.Wrapper
                         return GetFullImageUri(VisualMedia.Media.Images);
 
                     case DirectItemType.ReelShare:
-                        return GetFullImageUri(ReelShareMedia.Media.ImageList);
+                        return GetFullImageUri(ReelShareMedia.Media.Images);
 
                     case DirectItemType.AnimatedMedia:
                         return PreviewImageUri;
@@ -230,8 +224,8 @@ namespace Indirect.Wrapper
             }
         }
 
-        public int VideoWidth => (int) (RavenMedia?.Width ?? VisualMedia?.Media?.Width ?? Media?.OriginalWidth ?? ReelShareMedia.Media.OriginalWidth);
-        public int VideoHeight => (int) (RavenMedia?.Height ?? VisualMedia?.Media?.Height ?? Media?.OriginalHeight ?? ReelShareMedia.Media.OriginalHeight);
+        public int VideoWidth => (int) (RavenMedia?.Width ?? VisualMedia?.Media.Width ?? Media?.OriginalWidth ?? ReelShareMedia.Media.OriginalWidth ?? 0);
+        public int VideoHeight => (int) (RavenMedia?.Height ?? VisualMedia?.Media?.Height ?? Media?.OriginalHeight ?? ReelShareMedia.Media.OriginalHeight ?? 0);
 
         public Uri VideoUri
         {
@@ -240,22 +234,22 @@ namespace Indirect.Wrapper
                 switch (ItemType)
                 {
                     case DirectItemType.Media when Media.Videos.Count > 0:
-                        return new Uri(Media.Videos.First().Url);
+                        return Media.Videos.First().Url;
 
                     case DirectItemType.MediaShare when MediaShare.Videos.Count > 0:
-                        return new Uri(MediaShare.Videos.First().Url);
+                        return MediaShare.Videos.First().Url;
 
                     case DirectItemType.RavenMedia when RavenMedia != null && RavenMedia.Videos.Count > 0:
-                        return new Uri(RavenMedia.Videos.First().Url);
+                        return RavenMedia.Videos.First().Url;
         
                     case DirectItemType.RavenMedia when VisualMedia != null && VisualMedia.Media.Videos.Count > 0:
-                        return new Uri(VisualMedia.Media.Videos.First().Url);
+                        return VisualMedia.Media.Videos.First().Url;
 
                     case DirectItemType.ReelShare:
-                        return new Uri(ReelShareMedia.Media.VideoList.First().Url);
+                        return ReelShareMedia.Media.VideoVersions.First().Url;
 
                     case DirectItemType.VoiceMedia:
-                        return new Uri(VoiceMedia.Media.Audio.AudioSource);
+                        return VoiceMedia.Media.Audio.AudioSrc;
         
                     default:
                         return null;
@@ -298,7 +292,7 @@ namespace Indirect.Wrapper
         {
             if (imageCandidates == null || imageCandidates.Count == 0) return null;
             var image = imageCandidates.OrderByDescending(x => x.Height + x.Width).First();
-            return new Uri(image.Url);
+            return image.Url;
         }
 
         public void LikeItem()
