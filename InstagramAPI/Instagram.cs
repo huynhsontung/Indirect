@@ -87,7 +87,7 @@ namespace InstagramAPI
             {
                 if (isNewLogin)
                 {
-                    var firstResponse = await GetAsync(UriCreator.BaseInstagramUri).ConfigureAwait(false);
+                    var firstResponse = await _httpClient.GetAsync(UriCreator.BaseInstagramUri);
                     _logger?.LogResponse(firstResponse);
                 }
 
@@ -196,8 +196,9 @@ namespace InstagramAPI
                     {"_uid", Session.LoggedInUser.Pk.ToString()},
                     {"_csrftoken", Session.CsrfToken}
                 };
-                var response = await PostAsync(instaUri, new HttpFormUrlEncodedContent(fields));
+                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(fields));
                 var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<CurrentUser>.Fail(json, response.ReasonPhrase);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Storage.Streams;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Media
@@ -14,5 +15,7 @@ namespace InstagramAPI.Classes.Media
         [JsonProperty("width")] public int Width { get; set; }
 
         [JsonProperty("height")] public int Height { get; set; }
+
+        [JsonIgnore] public IBuffer UploadBuffer { get; set; }
     }
 }

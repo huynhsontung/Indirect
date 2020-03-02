@@ -1,15 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.Web.Http;
+using Windows.Web.Http.Headers;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.Direct.ItemContent;
+using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Responses;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using HttpMethod = System.Net.Http.HttpMethod;
+using HttpRequestMessage = Windows.Web.Http.HttpRequestMessage;
+using HttpResponseMessage = Windows.Web.Http.HttpResponseMessage;
 
 namespace InstagramAPI
 {
@@ -173,6 +183,69 @@ namespace InstagramAPI
             }
         }
 
+        public async Task<Result<DirectThread>> GetThreadByParticipantsAsync(IEnumerable<long> userIds)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var threadUri = UriCreator.GetThreadByRecipientsUri(userIds);
+                var response = await _httpClient.GetAsync(threadUri);
+                var json = await response.Content.ReadAsStringAsync();
+                _logger.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<DirectThread>.Fail(json, response.ReasonPhrase);
+
+                if (string.IsNullOrEmpty(json)) return Result<DirectThread>.Success(null, json);
+
+                var threadResponse = JsonConvert.DeserializeObject<DirectThread>(json);
+
+                threadResponse.Items?.Reverse();
+
+                return Result<DirectThread>.Success(threadResponse, json);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<DirectThread>.Except(exception);
+            }
+        }
+
+        /// <summary>
+        ///     Get ranked recipients (threads and users) asynchronously
+        ///     <para>Note: Some recipient has User, some recipient has Thread</para>
+        /// </summary>
+        /// <param name="username">Username to search</param>
+        /// <returns>
+        ///     <see cref="RankedRecipientsResponse" />
+        /// </returns>
+        public async Task<Result<RankedRecipientsResponse>> GetRankedRecipientsByUsernameAsync(string username)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                Uri instaUri;
+                if (string.IsNullOrEmpty(username))
+                    instaUri = UriCreator.GetRankedRecipientsUri();
+                else
+                    instaUri = UriCreator.GetRankRecipientsByUserUri(username);
+
+                var response = await _httpClient.GetAsync(instaUri);
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<RankedRecipientsResponse>.Fail(json, response.ReasonPhrase);
+                var responseRecipients = JsonConvert.DeserializeObject<RankedRecipientsResponse>(json);
+                return Result<RankedRecipientsResponse>.Success(responseRecipients, json);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<RankedRecipientsResponse>.Except(exception);
+            }
+        }
+
         /// <summary>
         ///     Send a like to the conversation
         /// </summary>
@@ -206,6 +279,167 @@ namespace InstagramAPI
             {
                 _logger?.LogException(exception);
                 return Result<ItemAckPayloadResponse>.Except(exception);
+            }
+        }
+
+        /// <summary>
+        ///     Send direct text message to provided users OR thread. 
+        /// You have to provide either a list of recipients or a thread id. One of them can be null.
+        /// </summary>
+        /// <param name="recipients">users PKs</param>
+        /// <param name="threadId"></param>
+        /// <param name="text">Message text</param>
+        /// <returns>List of threads</returns>
+        public async Task<Result<List<DirectThread>>> SendTextAsync(IEnumerable<long> recipients,
+            string threadId,
+            string text)
+        {
+            ValidateLoggedIn();
+            var threads = new List<DirectThread>();
+            try
+            {
+                if (string.IsNullOrEmpty(text)) throw new ArgumentException("Message text is empty", nameof(text));
+                var recipientsString = recipients != null ? string.Join(",", recipients) : string.Empty;
+                var directSendMessageUri = UriCreator.GetDirectSendMessageUri();
+                var fields = new Dictionary<string, string> { { "text", text } };
+                if (!string.IsNullOrEmpty(threadId))
+                    fields.Add("thread_ids", "[" + threadId + "]");
+                else if (!string.IsNullOrEmpty(recipientsString))
+                    fields.Add("recipient_users", "[[" + recipientsString + "]]");
+                else throw new ArgumentException("You have to provide either a thread id or a list of users' PKs");
+
+                var response = await _httpClient.PostAsync(directSendMessageUri, new HttpFormUrlEncodedContent(fields));
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<List<DirectThread>>.Fail(json);
+                var result = JsonConvert.DeserializeObject<TextSentResponse>(json);
+                return result.IsOk()
+                    ? Result<List<DirectThread>>.Success(threads, json)
+                    : Result<List<DirectThread>>.Fail(json, response.ReasonPhrase);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<List<DirectThread>>.Except(exception);
+            }
+        }
+
+        /// <summary>
+        ///     Send link address to direct thread
+        /// </summary>
+        /// <param name="text">Text to send</param>
+        /// <param name="link">Link to send</param>
+        /// <param name="threadIds">Thread ids</param>
+        public async Task<Result<ItemAckPayloadResponse>> SendLinkAsync(string text, IEnumerable<string> link,
+            params string[] threadIds)
+        {
+            return await SendDirectLink(text, link, threadIds, null);
+        }
+
+        /// <summary>
+        ///     Send link address to direct thread
+        /// </summary>
+        /// <param name="text">Text to send</param>
+        /// <param name="link">Link to send</param>
+        /// <param name="recipients">Recipients ids</param>
+        public async Task<Result<ItemAckPayloadResponse>> SendLinkToRecipientsAsync(string text,
+            IEnumerable<string> link,
+            params long[] recipients)
+        {
+            return await SendDirectLink(text, link, null, recipients);
+        }
+
+        /// <summary>
+        ///     Send link address to direct thread
+        /// </summary>
+        /// <param name="text">Text to send</param>
+        /// <param name="link">Link to send</param>
+        /// <param name="threadIds">Thread ids</param>
+        /// <param name="recipients">Recipients ids</param>
+        private async Task<Result<ItemAckPayloadResponse>> SendDirectLink(string text, IEnumerable<string> link,
+            string[] threadIds,
+            long[] recipients)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var instaUri = UriCreator.GetSendDirectLinkUri();
+                var clientContext = Guid.NewGuid().ToString();
+                var data = new Dictionary<string, string>
+                {
+                    {"link_text", text ?? string.Empty},
+                    {"link_urls", JsonConvert.SerializeObject(link, Formatting.None)},
+                    {"action", "send_item"},
+                    {"client_context", clientContext},
+                    {"_csrftoken", Session.CsrfToken},
+                    {"_uuid", Device.Uuid.ToString()}
+                };
+                if (threadIds?.Length > 0)
+                {
+                    data.Add("thread_ids", JsonConvert.SerializeObject(threadIds, Formatting.None));
+                }
+                if (recipients?.Length > 0)
+                {
+                    var recipientString = string.Join(",", recipients);
+                    data.Add("recipient_users", $"[[{recipientString}]]");
+                }
+
+                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<ItemAckPayloadResponse>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
+                return obj.IsOk()
+                    ? Result<ItemAckPayloadResponse>.Success(obj.Payload, json, obj.Message)
+                    : Result<ItemAckPayloadResponse>.Fail(json, obj.Message);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<ItemAckPayloadResponse>.Except(exception);
+            }
+        }
+
+        /// <summary>
+        ///     Mark direct message as seen
+        /// </summary>
+        /// <param name="threadId">Thread id</param>
+        /// <param name="itemId">Message id (item id)</param>
+        public async Task<Result<bool>> MarkItemSeenAsync(string threadId, string itemId)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var instaUri = UriCreator.GetDirectThreadSeenUri(threadId, itemId);
+
+                var data = new Dictionary<string, string>
+                {
+                    {"thread_id", threadId},
+                    {"action", "mark_seen"},
+                    {"_csrftoken", Session.CsrfToken},
+                    {"_uuid", Device.Uuid.ToString()},
+                    {"item_id", itemId},
+                    {"use_unified_inbox", "true"},
+                };
+                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<bool>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<DefaultResponse>(json);
+                return obj.IsOk()
+                    ? Result<bool>.Success(true, json, obj.Message)
+                    : Result<bool>.Fail(json, obj.Message);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<bool>.Except(exception);
             }
         }
     }

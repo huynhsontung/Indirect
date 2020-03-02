@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Networking.Sockets;
-using Windows.Security.Cryptography;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
@@ -23,13 +18,14 @@ using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
+using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
 using InstagramAPI.Sync;
-using InstagramAPI.Utils;
 using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.UI;
+using Buffer = Windows.Storage.Streams.Buffer;
 
 namespace Indirect
 {
@@ -201,32 +197,36 @@ namespace Indirect
             content = content.Replace('\r', '\n');
             var tokens = content.Split("\t\n ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             var links = tokens.Where(x =>
-                x.StartsWith("http://") || x.StartsWith("https://") || x.StartsWith("www.")).ToList();
-            Result<List<InstaDirectInboxThread>> result;
-            IResult<ItemAckPayloadResponse> ackResult = new Result<ItemAckPayloadResponse>(false, new ItemAckPayloadResponse());   // for links and hashtags
+                x.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
+                x.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase) || 
+                x.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase)).ToList();
+            Result<List<DirectThread>> result;
+            Result<ItemAckPayloadResponse> ackResult;   // for links and hashtags
             if (!string.IsNullOrEmpty(selectedThread.ThreadId))
             {
                 if (links.Any())
                 {
-                    ackResult = await _instaApi.MessagingProcessor.SendDirectLinkAsync(content, links, selectedThread.ThreadId);
+                    ackResult = await _instaApi.SendLinkAsync(content, links, selectedThread.ThreadId).ConfigureAwait(false);
                     return;
                 }
 
-                result = await _instaApi.MessagingProcessor.SendDirectTextAsync(null, selectedThread.ThreadId, content);
+                result = await _instaApi.SendTextAsync(null, selectedThread.ThreadId, content)
+                    .ConfigureAwait(false);
             }
             else
             {
                 if (links.Any())
                 {
-                    ackResult = await _instaApi.MessagingProcessor.SendDirectLinkToRecipientsAsync(content, links,
-                        selectedThread.Users.Select(x => x.Pk.ToString()).ToArray());
+                    ackResult = await _instaApi.SendLinkToRecipientsAsync(content, links,
+                        selectedThread.Users.Select(x => x.Pk).ToArray()).ConfigureAwait(false);
                     return;
                 }
-                result = await _instaApi.MessagingProcessor.SendDirectTextAsync(selectedThread.Users.Select(x => x.Pk),
-                    null, content);
+
+                result = await _instaApi.SendTextAsync(selectedThread.Users.Select(x => x.Pk),
+                    null, content).ConfigureAwait(false);
             }
             
-            if (result.Succeeded && result.Value.Count > 0)
+            if (result.IsSucceeded && result.Value.Count > 0)
             {
                 // SyncClient will take care of updating. Update here is just for precaution.
                 selectedThread.Update(result.Value[0]);
@@ -234,17 +234,17 @@ namespace Indirect
             }
         }
 
-        public async void SendFile(StorageFile file, Action<InstaUploaderProgress> progress)
+        public async void SendFile(StorageFile file, Action<UploaderProgress> progress)
         {
-            if (file.ContentType.Contains("image"))
+            if (file.ContentType.Contains("image", StringComparison.OrdinalIgnoreCase))
             {
                 var properties = await file.Properties.GetImagePropertiesAsync();
                 int imageHeight = (int) properties.Height;
                 int imageWidth = (int) properties.Width;
-                byte[] bytes;
+                IBuffer buffer;
                 if (properties.Width > 1080 || properties.Height > 1080)
                 {
-                    bytes = await Helpers.CompressImage(file, 1080, 1080);
+                    buffer = await Helpers.CompressImage(file, 1080, 1080).ConfigureAwait(false);
                     double widthRatio = (double)1080 / imageWidth;
                     double heightRatio = (double)1080 / imageHeight;
                     double scaleRatio = Math.Min(widthRatio, heightRatio);
@@ -253,46 +253,42 @@ namespace Indirect
                 }
                 else
                 {
-                    var buffer = await FileIO.ReadBufferAsync(file);
-                    bytes = buffer.ToArray();
+                    buffer = await FileIO.ReadBufferAsync(file);
                 }
                 var instaImage = new InstaImage
                 {
-                    ImageBytes = bytes, 
+                    UploadBuffer = buffer, 
                     Width = imageWidth, 
-                    Height = imageHeight, 
-                    Url = file.Path
+                    Height = imageHeight
                 };
-                if (string.IsNullOrEmpty(SelectedThread.ThreadId) || SelectedThread.PendingScore == 0) return;
-                await _instaApi.MessagingProcessor.SendDirectPhotoAsync(instaImage, SelectedThread.ThreadId,
-                    SelectedThread.PendingScore, progress);
+                if (string.IsNullOrEmpty(SelectedThread.ThreadId) || SelectedThread.PendingScore == null) return;
+                await _instaApi.SendDirectPhotoAsync(instaImage, SelectedThread.ThreadId,
+                    SelectedThread.PendingScore ?? 0, progress).ConfigureAwait(false);
                 return;
             }
 
-            if (file.ContentType.Contains("video"))
+            if (file.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))
             {
                 var properties = await file.Properties.GetVideoPropertiesAsync();
+                if (properties.Duration > TimeSpan.FromMinutes(1)) return;
                 var buffer = await FileIO.ReadBufferAsync(file);
-                var bytes = buffer.ToArray();
                 var instaVideo = new InstaVideo()
                 {
-                    VideoBytes = bytes,
+                    UploadBuffer = buffer,
                     Width = (int) properties.Width,
                     Height = (int) properties.Height,
-                    Url = file.Path
                 };
                 var thumbnail = await file.GetThumbnailAsync(ThumbnailMode.VideosView);
-                var thumbnailBytes = new byte[thumbnail.Size];
-                await thumbnail.ReadAsync(thumbnailBytes.AsBuffer(), (uint) thumbnail.Size, InputStreamOptions.None);
+                var thumbnailBuffer = new Buffer((uint) thumbnail.Size);
+                await thumbnail.ReadAsync(thumbnailBuffer, (uint) thumbnail.Size, InputStreamOptions.None);
                 var thumbnailImage = new InstaImage()
                 {
-                    ImageBytes = thumbnailBytes,
+                    UploadBuffer = thumbnailBuffer,
                     Width = (int) thumbnail.OriginalWidth,
                     Height = (int) thumbnail.OriginalHeight
                 };
-                await _instaApi.MessagingProcessor.SendDirectVideoAsync(progress,
-                    new InstaVideoUpload(instaVideo, thumbnailImage), SelectedThread.ThreadId);
-                return;
+                await _instaApi.SendDirectVideoAsync(progress,
+                    new InstaVideoUpload(instaVideo, thumbnailImage), SelectedThread.ThreadId).ConfigureAwait(false);
             }
         }
 
@@ -300,10 +296,10 @@ namespace Indirect
         {
             _lastUpdated = DateTime.Now;
             var selected = SelectedThread;
-            await Inbox.UpdateInbox();
+            await Inbox.UpdateInbox().ConfigureAwait(true);
             if (selected == null) return;
             if (InboxThreads.Contains(selected) && SelectedThread != selected) SelectedThread = selected;
-            await UpdateSelectedThread();
+            await UpdateSelectedThread().ConfigureAwait(true);
             MarkLatestItemSeen(selected);
         }
 
@@ -315,7 +311,7 @@ namespace Indirect
             var cancellationToken = _searchCancellationToken.Token;
             try
             {
-                await Task.Delay(500, cancellationToken);   // Delay so we don't search something mid typing
+                await Task.Delay(500, cancellationToken).ConfigureAwait(false);   // Delay so we don't search something mid typing
             }
             catch (Exception)
             {
@@ -323,8 +319,8 @@ namespace Indirect
             }
             if (cancellationToken.IsCancellationRequested) return;
 
-            var result = await _instaApi.MessagingProcessor.GetRankedRecipientsByUsernameAsync(query);
-            if (!result.Succeeded) return;
+            var result = await _instaApi.GetRankedRecipientsByUsernameAsync(query).ConfigureAwait(false);
+            if (!result.IsSucceeded) return;
             var recipients = result.Value;
             var threadsFromUser = recipients.Users.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi)).ToList();
             var threadsFromRankedThread = recipients.Threads.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi)).ToList();
@@ -333,7 +329,7 @@ namespace Indirect
             list.AddRange(threadsFromUser);
             var decoratedList = list.Select(x =>
             {
-                if (x.LastPermanentItem == null) x.LastPermanentItem = new InstaDirectInboxItem();
+                if (x.LastPermanentItem == null) x.LastPermanentItem = new DirectItem();
                 x.LastPermanentItem.Text = x.Users.Count == 1 ? x.Users[0].FullName : $"{x.Users.Count} participants";
                 return x;
             }).ToList();
@@ -346,8 +342,8 @@ namespace Indirect
             if (string.IsNullOrEmpty(placeholderThread.ThreadId))
             {
                 var userIds = placeholderThread.Users.Select(x => x.Pk);
-                var result = await _instaApi.MessagingProcessor.GetThreadByParticipantsAsync(userIds);
-                if (!result.Succeeded) return;
+                var result = await _instaApi.GetThreadByParticipantsAsync(userIds).ConfigureAwait(false);
+                if (!result.IsSucceeded) return;
                 thread = result.Value != null && result.Value.Users.Count > 0 ? 
                     new InstaDirectInboxThreadWrapper(result.Value, _instaApi) : new InstaDirectInboxThreadWrapper(placeholderThread.Users[0], _instaApi);
             }
@@ -379,8 +375,8 @@ namespace Indirect
                 if (string.IsNullOrEmpty(thread.LastPermanentItem?.ItemId) || 
                     lastSeen.ItemId == thread.LastPermanentItem.ItemId ||
                     thread.LastPermanentItem.FromMe) return;
-                await _instaApi.MessagingProcessor.MarkItemSeenAsync(thread.ThreadId,
-                    thread.LastPermanentItem.ItemId);
+                await _instaApi.MarkItemSeenAsync(thread.ThreadId,
+                    thread.LastPermanentItem.ItemId).ConfigureAwait(false);
             }
         }
     }

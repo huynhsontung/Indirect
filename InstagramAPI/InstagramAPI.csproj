@@ -142,6 +142,7 @@
     <Compile Include="Classes\Direct\ItemContent\VisualMediaContainer.cs" />
     <Compile Include="Classes\Direct\ItemContent\VoiceShare.cs" />
     <Compile Include="Classes\Direct\RankedRecipientThread.cs" />
+    <Compile Include="Classes\UploaderProgress.cs" />
     <Compile Include="Classes\JsonConverters\DirectItemConverter.cs" />
     <Compile Include="Classes\JsonConverters\JsonPathConverter.cs" />
     <Compile Include="Classes\JsonConverters\TimestampConverter.cs" />
@@ -153,7 +154,9 @@
     <Compile Include="Classes\JsonConverters\MilliTimestampConverter.cs" />
     <Compile Include="Classes\JsonConverters\MicroTimestampConverter.cs" />
     <Compile Include="Classes\Media\InstaImage.cs" />
+    <Compile Include="Classes\Media\InstaStoryType.cs" />
     <Compile Include="Classes\Media\InstaVideo.cs" />
+    <Compile Include="Classes\Media\InstaVideoUpload.cs" />
     <Compile Include="Classes\Media\MediaCaption.cs" />
     <Compile Include="Classes\Media\ReelMedia.cs" />
     <Compile Include="Classes\PaginationParameters.cs" />
@@ -162,7 +165,10 @@
     <Compile Include="Classes\Responses\ItemAckResponse.cs" />
     <Compile Include="Classes\Responses\LoginBaseResponse.cs" />
     <Compile Include="Classes\Responses\LoginResponse.cs" />
+    <Compile Include="Classes\Responses\RankedRecipientsResponse.cs" />
+    <Compile Include="Classes\Responses\TextSentResponse.cs" />
     <Compile Include="Classes\Result.cs" />
+    <Compile Include="Classes\StoryUploadOptions.cs" />
     <Compile Include="Classes\TwoFactorLoginInfo.cs" />
     <Compile Include="Classes\UserSessionData.cs" />
     <Compile Include="Classes\User\CurrentUser.cs" />
@@ -172,6 +178,7 @@
     <Compile Include="Instagram.cs" />
     <Compile Include="Instagram.Direct.cs" />
     <Compile Include="Instagram.Http.cs" />
+    <Compile Include="Instagram.MediaUpload.cs" />
     <Compile Include="Instagram.Utils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Push\FbnsConnectionData.cs" />

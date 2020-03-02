@@ -1,13 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
 using Windows.Web.Http.Filters;
 using Windows.Web.Http.Headers;
+using InstagramAPI.Classes;
+using InstagramAPI.Classes.Android;
 using InstagramAPI.Utils;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using HttpMethod = Windows.Web.Http.HttpMethod;
+using HttpRequestMessage = Windows.Web.Http.HttpRequestMessage;
 using HttpResponseMessage = Windows.Web.Http.HttpResponseMessage;
 
 namespace InstagramAPI
@@ -51,6 +59,31 @@ namespace InstagramAPI
             var response = await _httpClient.PostAsync(requestUri, content);
             _logger?.LogResponse(response);
             return response;
+        }
+
+        public static HttpRequestMessage GetSignedRequest(Uri uri,
+            AndroidDevice deviceInfo,
+            JObject data)
+        {
+            var hash = CryptoHelper.CalculateHash(ApiVersion.CurrentApiVersion.SignatureKey,
+                data.ToString(Formatting.None));
+            var payload = data.ToString(Formatting.None);
+            return GetSignedRequest(uri, deviceInfo, hash, payload);
+        }
+
+        public static HttpRequestMessage GetSignedRequest(Uri uri, AndroidDevice deviceInfo, string hash, string payload)
+        {
+            var signature = $"{hash}.{payload}";
+            var fields = new Dictionary<string, string>
+            {
+                {"signed_body", signature},
+                {"ig_sig_key_version", "4"}
+            };
+            var request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = new HttpFormUrlEncodedContent(fields);
+            request.Properties.Add("signed_body", signature);
+            request.Properties.Add("ig_sig_key_version", "4");
+            return request;
         }
 
         // private static async Task<IHttpContent> DecompressHttpContent(IHttpContent content)
