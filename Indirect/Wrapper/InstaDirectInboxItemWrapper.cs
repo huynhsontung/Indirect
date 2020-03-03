@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
 using Windows.Media.Core;
@@ -38,8 +39,8 @@ namespace Indirect.Wrapper
             get {
                 switch (ItemType)
                 {
-                    case DirectItemType.Text when !string.IsNullOrEmpty(MediaTypeNames.Text) && Text[0] == '#' && !MediaTypeNames.Text.Contains(' '):
-                        return new Uri("https://www.instagram.com/explore/tags/" + MediaTypeNames.Text.Substring(1));
+                    case DirectItemType.Text when !string.IsNullOrEmpty(Text) && Text[0] == '#' && !Text.Contains(' '):
+                        return new Uri("https://www.instagram.com/explore/tags/" + Text.Substring(1));
 
                     case DirectItemType.Link:
                         return Uri.TryCreate(Link.LinkContext.LinkUrl, UriKind.Absolute, out var uri) ? uri : null;
@@ -48,7 +49,7 @@ namespace Indirect.Wrapper
                         return new Uri("https://www.instagram.com/p/" + MediaShare.Code);
 
                     case DirectItemType.Hashtag:
-                        return new Uri("https://www.instagram.com/explore/tags/" + HashtagMedia.Name.ToLower());
+                        return new Uri("https://www.instagram.com/explore/tags/" + HashtagMedia.Name.ToLower(CultureInfo.CurrentCulture));
                     
                     default:
                         return null;

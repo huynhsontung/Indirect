@@ -62,16 +62,15 @@ namespace InstagramAPI
         }
 
         public static HttpRequestMessage GetSignedRequest(Uri uri,
-            AndroidDevice deviceInfo,
             JObject data)
         {
             var hash = CryptoHelper.CalculateHash(ApiVersion.CurrentApiVersion.SignatureKey,
                 data.ToString(Formatting.None));
             var payload = data.ToString(Formatting.None);
-            return GetSignedRequest(uri, deviceInfo, hash, payload);
+            return GetSignedRequest(uri, hash, payload);
         }
 
-        public static HttpRequestMessage GetSignedRequest(Uri uri, AndroidDevice deviceInfo, string hash, string payload)
+        public static HttpRequestMessage GetSignedRequest(Uri uri, string hash, string payload)
         {
             var signature = $"{hash}.{payload}";
             var fields = new Dictionary<string, string>

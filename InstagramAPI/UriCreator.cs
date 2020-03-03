@@ -130,6 +130,13 @@ namespace InstagramAPI
             return instaUri;
         }
 
+        public static Uri GetVideoStoryConfigureUri(bool isVideo = false)
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, isVideo ? API_SUFFIX + "/media/configure_to_story/?video=1" : API_SUFFIX + "/media/configure_to_story/", out var instaUri))
+                throw new Exception("Can't create URI for configuring story media");
+            return instaUri;
+        }
+
         public static Uri GetDirectThreadSeenUri(string threadId, string itemId)
         {
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/{threadId}/items/{itemId}/seen/", out var instaUri))

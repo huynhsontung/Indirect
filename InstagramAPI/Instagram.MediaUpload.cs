@@ -190,7 +190,7 @@ namespace InstagramAPI
                             }
                         }
                     };
-                    request = GetSignedRequest(UriCreator.GetStoryMediaInfoUploadUri(), Device, videoUploadParamsObj);
+                    request = GetSignedRequest(UriCreator.GetStoryMediaInfoUploadUri(), videoUploadParamsObj);
                     response = await _httpClient.SendRequestAsync(request);
                     json = await response.Content.ReadAsStringAsync();
                     _logger?.LogResponse(response);
@@ -489,7 +489,7 @@ namespace InstagramAPI
                             {
                                 var hashtagArr = new JArray();
                                 foreach (var item in uploadOptions.Hashtags)
-                                    hashtagArr.Add(item.ConvertToJson());
+                                    hashtagArr.Add(item.ToJson());
 
                                 data.Add("story_hashtags", hashtagArr.ToString(Formatting.None));
                             }
@@ -498,7 +498,7 @@ namespace InstagramAPI
                             {
                                 var locationArr = new JArray();
                                 foreach (var item in uploadOptions.Locations)
-                                    locationArr.Add(item.ConvertToJson());
+                                    locationArr.Add(item.ToJson());
 
                                 data.Add("story_locations", locationArr.ToString(Formatting.None));
                             }
@@ -506,7 +506,7 @@ namespace InstagramAPI
                             {
                                 var sliderArr = new JArray
                                 {
-                                    uploadOptions.Slider.ConvertToJson()
+                                    uploadOptions.Slider.ToJson()
                                 };
 
                                 data.Add("story_sliders", sliderArr.ToString(Formatting.None));
@@ -519,7 +519,7 @@ namespace InstagramAPI
                                 {
                                     var pollArr = new JArray();
                                     foreach (var item in uploadOptions.Polls)
-                                        pollArr.Add(item.ConvertToJson());
+                                        pollArr.Add(item.ToJson());
 
                                     data.Add("story_polls", pollArr.ToString(Formatting.None));
                                 }
@@ -527,7 +527,7 @@ namespace InstagramAPI
                                 {
                                     var questionArr = new JArray();
                                     foreach (var item in uploadOptions.Questions)
-                                        questionArr.Add(item.ConvertToJson());
+                                        questionArr.Add(item.ToJson());
 
                                     data.Add("story_questions", questionArr.ToString(Formatting.None));
                                 }
@@ -536,7 +536,7 @@ namespace InstagramAPI
                             {
                                 var countdownArr = new JArray
                                 {
-                                    uploadOptions.Countdown.ConvertToJson()
+                                    uploadOptions.Countdown.ToJson()
                                 };
 
                                 data.Add("story_countdowns", countdownArr.ToString(Formatting.None));
@@ -545,17 +545,18 @@ namespace InstagramAPI
                         }
                     }
                     instaUri = UriCreator.GetVideoStoryConfigureUri(true);
-                    var request = HttpHelper.GetSignedRequest(instaUri, _deviceInfo, data);
+                    var request = GetSignedRequest(instaUri, data);
 
                     request.Headers.Add("retry_context", retryContext);
-                    var response = await _httpRequestProcessor.SendAsync(request);
+                    var response = await _httpClient.SendRequestAsync(request);
                     var json = await response.Content.ReadAsStringAsync();
+                    _logger?.LogResponse(response);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var mediaResponse = JsonConvert.DeserializeObject<InstaDefault>(json);
+                        var mediaResponse = JsonConvert.DeserializeObject<DefaultResponse>(json);
 
-                        if (mediaResponse.Status.ToLower() == "ok")
+                        if (mediaResponse.IsOk())
                         {
                             upProgress.UploadState = InstaUploadState.Configured;
                             progress?.Invoke(upProgress);
@@ -565,11 +566,11 @@ namespace InstagramAPI
                             upProgress.UploadState = InstaUploadState.Completed;
                             progress?.Invoke(upProgress);
                         }
-                        return mediaResponse.Status.ToLower() == "ok" ? Result.Success(true) : Result.UnExpectedResponse<bool>(response, json);
+                        return mediaResponse.IsOk() ? Result<bool>.Success(true) : Result<bool>.Fail(json, mediaResponse.Message);
                     }
                     upProgress.UploadState = InstaUploadState.Error;
                     progress?.Invoke(upProgress);
-                    return Result.UnExpectedResponse<bool>(response, json);
+                    return Result<bool>.Fail(json, response.ReasonPhrase);
                 }
             }
             catch (Exception exception)
