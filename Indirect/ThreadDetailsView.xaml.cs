@@ -44,19 +44,7 @@ namespace Indirect
             set => SetValue(ThreadProperty, value);
         }
 
-        private ApiContainer _viewModel;
-        public ApiContainer ViewModel
-        {
-            get
-            {
-                if (_viewModel == null && CoreApplication.Properties.ContainsKey(App.VIEW_MODEL_PROP_NAME))
-                {
-                    _viewModel = (ApiContainer) CoreApplication.Properties[App.VIEW_MODEL_PROP_NAME];
-                }
-
-                return _viewModel;
-            }
-        }
+        private static ApiContainer ViewModel => ApiContainer.Instance;
 
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -102,7 +90,7 @@ namespace Indirect
 
             var file = await picker.PickSingleFileAsync();
             if (file == null) return;
-            if (file.ContentType.Contains("image"))
+            if (file.ContentType.Contains("image", StringComparison.OrdinalIgnoreCase))
             {
                 var properties = await file.GetBasicPropertiesAsync();
                 if (properties.Size >= 5e7)
@@ -120,7 +108,7 @@ namespace Indirect
                 }
             }
 
-            if (file.ContentType.Contains("video"))
+            if (file.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))
             {
                 var properties = await file.Properties.GetVideoPropertiesAsync();
                 if (properties.Duration > TimeSpan.FromMinutes(1))

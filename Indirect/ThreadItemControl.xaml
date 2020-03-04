@@ -7,7 +7,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:core="using:FluiFramework.UWP.Core" 
-    xmlns:utils="using:Indirect.Utilities"
     xmlns:converters="using:Indirect.Converters"
     xmlns:wrappers="using:Indirect.Wrapper"
     mc:Ignorable="d"
@@ -178,12 +177,12 @@
                             CornerRadius="2" Padding="8,6,8,6" Tapped="OpenWebLink"
                             BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
                         <StackPanel Orientation="Vertical">
-                            <controls:ImageEx Source="{x:Bind LinkMedia.LinkContext.LinkImageUrl}" IsCacheEnabled="False" 
+                            <controls:ImageEx Source="{x:Bind Link.LinkContext.LinkImageUrl}" IsCacheEnabled="False" 
                                               Margin="-8,-6,-8,8" 
                                               CornerRadius="0"/>
-                            <TextBlock Text="{x:Bind LinkMedia.LinkContext.LinkTitle}" Style="{ThemeResource FluentBaseTextStyle}"/>
+                            <TextBlock Text="{x:Bind Link.LinkContext.LinkTitle}" Style="{ThemeResource FluentBaseTextStyle}"/>
                             <NavigationViewItemSeparator/>
-                            <TextBlock Text="{x:Bind LinkMedia.LinkContext.LinkSummary}" 
+                            <TextBlock Text="{x:Bind Link.LinkContext.LinkSummary}" 
                                        Style="{ThemeResource FluentCaptionTextStyle}"
                                        Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" TextWrapping="WrapWholeWords"/>
                         </StackPanel>
@@ -252,7 +251,7 @@
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,6,8,6">
                         <PersonPicture ProfilePicture="{x:Bind MediaShare.User.ProfilePictureUrl}" Height="24" Width="24" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="{x:Bind MediaShare.User.UserName}" 
+                        <TextBlock Text="{x:Bind MediaShare.User.Username}" 
                                    Style="{ThemeResource FluentBaseTextStyle}"
                                    MaxLines="1" 
                                    VerticalAlignment="Center"/>
@@ -359,7 +358,7 @@
         </StackPanel>
         <TextBlock x:Name="Timestamp"
                    Style="{ThemeResource FluentCaptionTextStyle}"
-                   Text="{x:Bind Item.TimeStamp, Mode=OneWay}" 
+                   Text="{x:Bind Item.Timestamp, Mode=OneWay}" 
                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                    Margin="2"
                    HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"

@@ -7,19 +7,28 @@ using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.JsonConverters
 {
-    class MicroTimestampConverter : JsonConverter<DateTimeOffset>
+    class MicroTimestampConverter : JsonConverter
     {
-        public override void WriteJson(JsonWriter writer, DateTimeOffset value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            writer.WriteValue(value.ToUnixTimeMilliseconds() + "000");
+            if (value == null)
+            {
+                writer.WriteNull();
+                return;
+            }
+            writer.WriteValue(((DateTimeOffset)value).ToUnixTimeMilliseconds() + "000");
         }
 
-        public override DateTimeOffset ReadJson(JsonReader reader, Type objectType, DateTimeOffset existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            if (!(reader.Value is string unixTime)) 
+            if (!(reader.Value is string unixTime))
                 unixTime = reader.Value.ToString();
             return string.IsNullOrEmpty(unixTime) ? default : TimestampConverter.ReadTimestampJson(unixTime);
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?);
         }
     }
 }

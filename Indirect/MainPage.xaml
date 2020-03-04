@@ -4,13 +4,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:direct="using:InstaSharper.Classes.Models.Direct"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:flui="using:FluiFramework.UWP.Core"
     xmlns:local="using:Indirect" 
     xmlns:converters="using:Indirect.Converters" 
     xmlns:indirect="using:Indirect" 
     xmlns:wrapper="using:Indirect.Wrapper"
+    xmlns:Windows10version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -91,7 +91,7 @@
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Style="{ThemeResource FluentTitleTextStyle}" Text="{x:Bind Title}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                             <TextBlock Style="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}" 
-                                       Text="{x:Bind LastPermanentItem.Text, Mode=OneWay}" MaxLines="1" 
+                                       Text="{x:Bind LastPermanentItem.Description, Mode=OneWay}" MaxLines="1" 
                                        HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                         </StackPanel>
                     </StackPanel>
@@ -165,7 +165,7 @@
                                         <TextBlock Text="{x:Bind Title}" 
                                                    Style="{ThemeResource FluentBaseTextStyle}"
                                                    MaxLines="1"/>
-                                        <TextBlock Text="{x:Bind LastPermanentItem.Text}"
+                                        <TextBlock Text="{x:Bind LastPermanentItem.Description}"
                                                    Style="{ThemeResource FluentCaptionTextStyle}"
                                                    MaxLines="1"/>
                                     </StackPanel>

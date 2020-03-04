@@ -36,7 +36,7 @@ namespace Indirect
             var username = UsernameBox.Text;
             var password = PasswordBox.Password;
             if (username.Length <= 0 || password.Length <= 0) return;
-            var result = await _viewModel.Login(username, password).ConfigureAwait(false);
+            var result = await _viewModel.Login(username, password);
             if (result.Status != ResultStatus.Succeeded || result.Value != LoginResult.Success)
             {
                 ContentDialog failDialog;

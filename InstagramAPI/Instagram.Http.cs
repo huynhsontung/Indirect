@@ -25,15 +25,15 @@ namespace InstagramAPI
         private void SetDefaultRequestHeaders()
         {
             var defaultHeaders = _httpClient.DefaultRequestHeaders;
-            defaultHeaders.Connection.ParseAdd("Keep-Alive");
-            defaultHeaders.UserAgent.ParseAdd(Device.UserAgent);
-            defaultHeaders.AcceptEncoding.ParseAdd("gzip, deflate");
-            defaultHeaders.Accept.ParseAdd("*/*");
-            defaultHeaders.AcceptLanguage.ParseAdd("en-US");
-            defaultHeaders.Add("X-IG-Capabilities", "3brTBw==");
-            defaultHeaders.Add("X-IG-Connection-Type", "WIFI");
-            defaultHeaders.Add("X-IG-App-ID", "567067343352427");
-            defaultHeaders.Add("X-FB-HTTP-Engine", "Liger");
+            defaultHeaders.Connection.TryParseAdd("Keep-Alive");
+            defaultHeaders.UserAgent.TryParseAdd(Device.UserAgent);
+            defaultHeaders.AcceptEncoding.TryParseAdd("gzip, deflate");
+            defaultHeaders.Accept.TryParseAdd("*/*");
+            defaultHeaders.AcceptLanguage.TryParseAdd("en-US");
+            defaultHeaders.TryAdd("X-IG-Capabilities", "3brTBw==");
+            defaultHeaders.TryAdd("X-IG-Connection-Type", "WIFI");
+            defaultHeaders.TryAdd("X-IG-App-ID", "567067343352427");
+            defaultHeaders.TryAdd("X-FB-HTTP-Engine", "Liger");
         }
 
         public static string GetCsrfToken()

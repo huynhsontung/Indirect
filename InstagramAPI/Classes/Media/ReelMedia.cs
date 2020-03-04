@@ -18,7 +18,7 @@ namespace InstagramAPI.Classes.Media
 
         [JsonProperty("taken_at", NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(TimestampConverter))]
-        public long? TakenAt { get; set; }
+        public DateTimeOffset? TakenAt { get; set; }
 
         [JsonProperty("pk", NullValueHandling = NullValueHandling.Ignore)]
         public long? Pk { get; set; }

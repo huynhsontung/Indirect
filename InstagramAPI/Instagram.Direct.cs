@@ -172,9 +172,13 @@ namespace InstagramAPI
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<DirectThread>.Fail(json, response.ReasonPhrase);
-                var threadResponse = JsonConvert.DeserializeObject<DirectThread>(json);
 
-                return Result<DirectThread>.Success(threadResponse);
+                var statusResponse = JObject.Parse(json);
+                if (statusResponse["status"].ToObject<string>() != "ok")
+                    Result<DirectThread>.Fail(json);
+                var thread = statusResponse["thread"].ToObject<DirectThread>();
+
+                return Result<DirectThread>.Success(thread);
             }
             catch (Exception exception)
             {
@@ -440,6 +444,88 @@ namespace InstagramAPI
             {
                 _logger?.LogException(exception);
                 return Result<bool>.Except(exception);
+            }
+        }
+
+        /// <summary>
+        ///     Like direct message in a thread
+        /// </summary>
+        /// <param name="threadId">Thread id</param>
+        /// <param name="itemId">Item id (message id)</param>
+        public async Task<Result<ItemAckResponse>> LikeItemAsync(string threadId, string itemId)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var instaUri = UriCreator.GetLikeUnlikeDirectMessageUri();
+
+                var data = new Dictionary<string, string>
+                {
+                    {"item_type", "reaction"},
+                    {"reaction_type", "like"},
+                    {"action", "send_item"},
+                    {"_csrftoken", Session.CsrfToken},
+                    {"_uuid", Device.Uuid.ToString()},
+                    {"thread_ids", $"[{threadId}]"},
+                    {"client_context", Guid.NewGuid().ToString()},
+                    {"node_type", "item"},
+                    {"reaction_status", "created"},
+                    {"item_id", itemId}
+                };
+                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<ItemAckResponse>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
+                return obj.IsOk() ? Result<ItemAckResponse>.Success(obj, json, obj.Message) : Result<ItemAckResponse>.Fail(json, obj.Message);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<ItemAckResponse>.Except(exception);
+            }
+        }
+
+        /// <summary>
+        ///     UnLike direct message in a thread
+        /// </summary>
+        /// <param name="threadId">Thread id</param>
+        /// <param name="itemId">Item id (message id)</param>
+        public async Task<Result<ItemAckResponse>> UnlikeItemAsync(string threadId, string itemId)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var instaUri = UriCreator.GetLikeUnlikeDirectMessageUri();
+
+                var data = new Dictionary<string, string>
+                {
+                    {"item_type", "reaction"},
+                    {"reaction_type", "like"},
+                    {"action", "send_item"},
+                    {"_csrftoken", Session.CsrfToken},
+                    {"_uuid", Device.Uuid.ToString()},
+                    {"thread_ids", $"[{threadId}]"},
+                    {"client_context", Guid.NewGuid().ToString()},
+                    {"node_type", "item"},
+                    {"reaction_status", "deleted"},
+                    {"item_id", itemId}
+                };
+                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<ItemAckResponse>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
+                return obj.IsOk() ? Result<ItemAckResponse>.Success(obj, json, obj.Message) : Result<ItemAckResponse>.Fail(json, obj.Message);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<ItemAckResponse>.Except(exception);
             }
         }
     }

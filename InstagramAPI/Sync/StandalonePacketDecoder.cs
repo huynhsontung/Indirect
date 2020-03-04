@@ -7,7 +7,7 @@ using DotNetty.Codecs.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
 using ByteOrder = Windows.Storage.Streams.ByteOrder;
 
-namespace InstagramAPI.Push
+namespace InstagramAPI.Sync
 {
     class StandalonePacketDecoder
     {

@@ -23,9 +23,6 @@ namespace Indirect
     /// </summary>
     sealed partial class App : Application
     {
-        public const string VIEW_MODEL_PROP_NAME = "ViewModel";
-        // public const string GLOBAL_EXCEPTION_HANDLER_NAME = "App.OnUnhandledException";
-
         private readonly Windows.Storage.ApplicationDataContainer _localSettings =
             Windows.Storage.ApplicationData.Current.LocalSettings;
 

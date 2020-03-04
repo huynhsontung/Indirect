@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net.Http;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
@@ -20,7 +17,6 @@ using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Push.Packets;
 using Ionic.Zlib;
-using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Push
@@ -166,7 +162,7 @@ namespace InstagramAPI.Push
             }
         }
 
-        private async Task StartWithExistingSocket(StreamSocket socket)
+        public async Task StartWithExistingSocket(StreamSocket socket)
         {
             Debug.WriteLine($"{nameof(PushClient)}: Starting with existing socket.");
             Socket = socket;
@@ -188,7 +184,7 @@ namespace InstagramAPI.Push
             }
         }
 
-        private async Task StartFresh()
+        public async Task StartFresh()
         {
             Debug.WriteLine($"{nameof(PushClient)}: Starting fresh.");
             if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
@@ -243,8 +239,7 @@ namespace InstagramAPI.Push
                 Debug.WriteLine("Stopped pinging push server");
                 var loopGroup = _loopGroup;
                 _loopGroup = null;
-                await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1))
-                    .ConfigureAwait(false);
+                await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1));
             }
         }
 
@@ -343,7 +338,7 @@ namespace InstagramAPI.Push
                 if (!string.IsNullOrEmpty(response["error"]))
                 {
                     Debug.WriteLine($"{nameof(PushClient)}: {response["error"]}");
-                    await Shutdown().ConfigureAwait(false);
+                    await Shutdown();
                 }
 
                 var token = response["token"];
@@ -356,7 +351,7 @@ namespace InstagramAPI.Push
 #if !DEBUG
                 Crashes.TrackError(e);
 #endif
-                await Shutdown().ConfigureAwait(false);
+                await Shutdown();
             }
         }
 

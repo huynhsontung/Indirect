@@ -26,6 +26,8 @@ namespace InstagramAPI.Classes.Direct.ItemContent
         // [JsonProperty("expiring_media_action_summary")] public Dictionary<string,string> RavenExpiringMediaActionSummary { get; set; }
 
         [JsonProperty("seen_user_ids")] public long[] SeenUserIds { get; set; }
+
+        [JsonIgnore] public bool IsExpired => Media == null || Media.IsExpired;
     }
 
     [JsonConverter(typeof(StringEnumConverter))]

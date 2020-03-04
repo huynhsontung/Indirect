@@ -123,9 +123,7 @@
   <ItemGroup>
     <Compile Include="SocketActivity.cs" />
     <Compile Include="InternetAvailable.cs" />
-    <Compile Include="PacketHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StreamSocketChannel.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -147,6 +145,11 @@
       <Project>{fe3d65ec-791a-4e61-8816-a08c1050a8c5}</Project>
       <Name>InstagramAPI</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.editorconfig">
+      <Link>.editorconfig</Link>
+    </None>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

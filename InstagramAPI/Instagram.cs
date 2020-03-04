@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Windows.Networking;
 using Windows.Storage;
 using Windows.Web.Http;
 using InstagramAPI.Classes;
@@ -12,7 +13,10 @@ using InstagramAPI.Push;
 using InstagramAPI.Sync;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using HttpClient = Windows.Web.Http.HttpClient;
+using HttpMethod = Windows.Web.Http.HttpMethod;
+using HttpRequestMessage = Windows.Web.Http.HttpRequestMessage;
 
 namespace InstagramAPI
 {
@@ -103,9 +107,10 @@ namespace InstagramAPI
                     {"signed_body", signature},
                     {"ig_sig_key_version", "4"}
                 };
-                var httpContent = new HttpFormUrlEncodedContent(fields);
-                httpContent.Headers.Add("Host", "i.instagram.com");
-                var response = await _httpClient.PostAsync(loginUri, httpContent);
+                var request = new HttpRequestMessage(HttpMethod.Post, loginUri);
+                request.Headers.Host = new HostName("i.instagram.com");
+                request.Content = new HttpFormUrlEncodedContent(fields);
+                var response = await _httpClient.SendRequestAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
 
                 if (response.StatusCode != HttpStatusCode.Ok)
@@ -160,6 +165,7 @@ namespace InstagramAPI
                 {
                     Session.CsrfToken = GetCsrfToken();
                 }
+                SaveToAppSettings();
                 return Result<LoginResult>.Success(LoginResult.Success, json: json);
             }
             catch (Exception exception)
@@ -202,7 +208,11 @@ namespace InstagramAPI
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<CurrentUser>.Fail(json, response.ReasonPhrase);
-                var user = JsonConvert.DeserializeObject<CurrentUser>(json);
+                var statusResponse = JObject.Parse(json);
+                if (statusResponse["status"].ToObject<string>() != "ok")
+                    Result<CurrentUser>.Fail(json);
+
+                var user = statusResponse["user"].ToObject<CurrentUser>();
                 if (user.Pk < 1)
                     Result<CurrentUser>.Fail(json, "Pk is incorrect");
                 return Result<CurrentUser>.Success(user, json);

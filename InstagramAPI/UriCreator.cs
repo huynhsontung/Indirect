@@ -137,6 +137,13 @@ namespace InstagramAPI
             return instaUri;
         }
 
+        public static Uri GetLikeUnlikeDirectMessageUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/threads/broadcast/reaction/", out var instaUri))
+                throw new Exception("Cant create URI for like direct message");
+            return instaUri;
+        }
+
         public static Uri GetDirectThreadSeenUri(string threadId, string itemId)
         {
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/{threadId}/items/{itemId}/seen/", out var instaUri))

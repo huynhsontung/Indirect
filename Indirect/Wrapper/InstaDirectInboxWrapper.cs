@@ -51,7 +51,7 @@ namespace Indirect.Wrapper
 
         public async Task UpdateInbox()
         {
-            var result = await _instaApi.GetInboxAsync(PaginationParameters.MaxPagesToLoad(1)).ConfigureAwait(false);
+            var result = await _instaApi.GetInboxAsync(PaginationParameters.MaxPagesToLoad(1));
             InboxContainer container;
             if (result.Status == ResultStatus.Succeeded)
                 container = result.Value;
@@ -88,7 +88,7 @@ namespace Indirect.Wrapper
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(OldestCursor);
-            var result = await _instaApi.GetInboxAsync(pagination).ConfigureAwait(false);
+            var result = await _instaApi.GetInboxAsync(pagination);
             InboxContainer container;
             if (result.Status == ResultStatus.Succeeded)
             {

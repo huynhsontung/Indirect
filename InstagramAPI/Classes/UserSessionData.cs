@@ -22,6 +22,7 @@ namespace InstagramAPI.Classes
 
         public void SaveToAppSettings()
         {
+            if (LoggedInUser == null) return;
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             var composite = new Windows.Storage.ApplicationDataCompositeValue
             {

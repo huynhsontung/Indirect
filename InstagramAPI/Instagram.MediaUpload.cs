@@ -156,7 +156,7 @@ namespace InstagramAPI
                     };
 
                     videoUploadParams = JsonConvert.SerializeObject(videoUploadParamsObj);
-                    request = new HttpRequestMessage(Windows.Web.Http.HttpMethod.Get, videoUri);
+                    request = new HttpRequestMessage(HttpMethod.Get, videoUri);
                     request.Headers.Add("X_FB_VIDEO_WATERFALL_ID", waterfallId);
                     request.Headers.Add("X-Instagram-Rupload-Params", videoUploadParams);
                     response = await _httpClient.SendRequestAsync(request);

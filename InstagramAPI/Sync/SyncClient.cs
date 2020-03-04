@@ -73,7 +73,7 @@ namespace InstagramAPI.Sync
             var cookies = baseHttpFilter.CookieManager.GetCookies(new Uri("https://i.instagram.com"));
             foreach (var cookie in cookies)
             {
-                var copyCookie = new HttpCookie(cookie.Name, "wss://edge-chat.instagram.com/", "chat")
+                var copyCookie = new HttpCookie(cookie.Name, "edge-chat.instagram.com", "/chat")
                 {
                     Value = cookie.Value,
                     Expires = cookie.Expires,

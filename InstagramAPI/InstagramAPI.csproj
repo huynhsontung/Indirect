@@ -190,8 +190,8 @@
     <Compile Include="Push\PayloadProcessor.cs" />
     <Compile Include="Push\PushClient.cs" />
     <Compile Include="Push\PushReceivedEventArgs.cs" />
-    <Compile Include="Push\StandalonePacketDecoder.cs" />
-    <Compile Include="Push\StandalonePacketEncoder.cs" />
+    <Compile Include="Sync\StandalonePacketDecoder.cs" />
+    <Compile Include="Sync\StandalonePacketEncoder.cs" />
     <Compile Include="Push\StreamSocketChannel.cs" />
     <Compile Include="Sync\MessageSyncEventArgs.cs" />
     <Compile Include="Sync\SyncClient.cs" />

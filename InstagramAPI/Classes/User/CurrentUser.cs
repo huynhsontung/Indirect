@@ -10,9 +10,6 @@ namespace InstagramAPI.Classes.User
 {
     public class CurrentUser : InstaUser
     {
-        [JsonProperty("has_anonymous_profile_picture")]
-        public bool HasAnonymousProfilePicture { get; set; }
-
         [JsonProperty("show_conversion_edit_entry")]
         public bool ShowConversationEditEntry { get; set; }
 

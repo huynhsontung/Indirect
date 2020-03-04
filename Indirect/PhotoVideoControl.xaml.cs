@@ -72,7 +72,7 @@ namespace Indirect
                 }
                 _source = uri;
 
-                if (uri.IsFile && uri.Segments.Last().Contains(".mp4"))
+                if (uri.IsFile && uri.Segments.Last().Contains(".mp4", StringComparison.OrdinalIgnoreCase))
                 {
                     if (Helpers.IsHttpUri(uri))
                     {
@@ -86,7 +86,7 @@ namespace Indirect
             }
             else
             {
-                if (storageFile.ContentType.Contains("video"))
+                if (storageFile.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))
                 {
                     _source = MediaSource.CreateFromStorageFile(storageFile);
                 }

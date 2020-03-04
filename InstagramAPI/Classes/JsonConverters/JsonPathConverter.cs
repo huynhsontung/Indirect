@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -40,6 +41,25 @@ namespace InstagramAPI.Classes.JsonConverters
                 if (!Regex.IsMatch(jsonPath, @"^[a-zA-Z0-9_.-]+$"))
                 {
                     throw new InvalidOperationException($"JProperties of JsonPathConverter can have only letters, numbers, underscores, hiffens and dots but name was ${jsonPath}."); // Array operations not permitted
+                }
+
+                var jsonConverters = new List<JsonConverter>();
+                if (att != null && att.ItemConverterType != null &&
+                    serializer.Converters.All(c => c.GetType() != att.ItemConverterType))
+                {
+                    jsonConverters.Add((JsonConverter) Activator.CreateInstance(att.ItemConverterType));
+                }
+
+                var converter =
+                    prop.GetCustomAttributes(true).OfType<JsonConverterAttribute>().FirstOrDefault();
+                if (converter != null && serializer.Converters.All(c => c.GetType() != converter.ConverterType))
+                {
+                    jsonConverters.Add((JsonConverter) Activator.CreateInstance(converter.ConverterType));
+                }
+
+                foreach (var jsonConverter in jsonConverters)
+                {
+                    serializer.Converters.Add(jsonConverter);
                 }
 
                 JToken token = jo.SelectToken(jsonPath);

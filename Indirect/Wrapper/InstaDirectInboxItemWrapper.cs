@@ -266,11 +266,25 @@ namespace Indirect.Wrapper
             _instaApi = api;
             _sourceItem = source;
             Parent = parent;
+            RawJson = source.RawJson;
+            Description = source.Description;
             UserId = source.UserId;
             Timestamp = source.Timestamp;
             ItemId = source.ItemId;
             ItemType = source.ItemType;
             Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions, parent.ViewerId) : new InstaDirectReactionsWrapper();
+            Like = source.Like;
+            Link = source.Link;
+            Media = source.Media;
+            MediaShare = source.MediaShare;
+            RavenMedia = source.RavenMedia;
+            VisualMedia = source.VisualMedia;
+            ActionLog = source.ActionLog;
+            ReelShareMedia = source.ReelShareMedia;
+            VoiceMedia = source.VoiceMedia;
+            AnimatedMedia = source.AnimatedMedia;
+            HashtagMedia = source.HashtagMedia;
+            Text = source.Text;
             ClientContext = source.ClientContext;
             FromMe = source.FromMe;
         }
@@ -299,13 +313,13 @@ namespace Indirect.Wrapper
         public void LikeItem()
         {
             if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId)) return;
-            _instaApi.MessagingProcessor.LikeItemAsync(Parent.ThreadId, ItemId);
+            _instaApi.LikeItemAsync(Parent.ThreadId, ItemId);
         }
 
         public void UnlikeItem()
         {
             if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId)) return;
-            _instaApi.MessagingProcessor.UnlikeItemAsync(Parent.ThreadId, ItemId);
+            _instaApi.UnlikeItemAsync(Parent.ThreadId, ItemId);
         }
     }
 }

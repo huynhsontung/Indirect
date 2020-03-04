@@ -45,8 +45,6 @@ namespace Indirect
         private ApiContainer() { }
 
         // Todo: handle exceptions thrown by _instaApi like no network connection
-        public const string INSTA_API_PROP_NAME = "InstaApi";
-        private const string STATE_FILE_NAME = "state.bin";
 
         private readonly Instagram _instaApi = Instagram.Instance;
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
@@ -100,7 +98,7 @@ namespace Indirect
 
         public async Task<Result<LoginResult>> Login(string username, string password)
         {
-            var logInResult = await _instaApi.LoginAsync(username, password).ConfigureAwait(false);
+            var logInResult = await _instaApi.LoginAsync(username, password);
             return logInResult;
         }
 
@@ -114,7 +112,7 @@ namespace Indirect
 
         private async Task UpdateLoggedInUser()
         {
-            var loggedInUser = await _instaApi.GetCurrentUserAsync().ConfigureAwait(false);
+            var loggedInUser = await _instaApi.GetCurrentUserAsync();
             LoggedInUser = loggedInUser.Value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
         }
@@ -172,8 +170,7 @@ namespace Indirect
         {
             if (SelectedThread == null)
                 return;
-            var result = await _instaApi.GetThreadAsync(SelectedThread.ThreadId, PaginationParameters.MaxPagesToLoad(1))
-                .ConfigureAwait(false);
+            var result = await _instaApi.GetThreadAsync(SelectedThread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
             if (result.IsSucceeded)
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
                     CoreDispatcherPriority.Normal,
@@ -184,7 +181,7 @@ namespace Indirect
         {
             var selectedThread = SelectedThread;
             if (string.IsNullOrEmpty(selectedThread.ThreadId)) return;
-            var result = await _instaApi.SendLikeAsync(selectedThread.ThreadId).ConfigureAwait(false);
+            var result = await _instaApi.SendLikeAsync(selectedThread.ThreadId);
             if (result.IsSucceeded) UpdateInboxAndSelectedThread();
         }
 
@@ -206,24 +203,23 @@ namespace Indirect
             {
                 if (links.Any())
                 {
-                    ackResult = await _instaApi.SendLinkAsync(content, links, selectedThread.ThreadId).ConfigureAwait(false);
+                    ackResult = await _instaApi.SendLinkAsync(content, links, selectedThread.ThreadId);
                     return;
                 }
 
-                result = await _instaApi.SendTextAsync(null, selectedThread.ThreadId, content)
-                    .ConfigureAwait(false);
+                result = await _instaApi.SendTextAsync(null, selectedThread.ThreadId, content);
             }
             else
             {
                 if (links.Any())
                 {
                     ackResult = await _instaApi.SendLinkToRecipientsAsync(content, links,
-                        selectedThread.Users.Select(x => x.Pk).ToArray()).ConfigureAwait(false);
+                        selectedThread.Users.Select(x => x.Pk).ToArray());
                     return;
                 }
 
                 result = await _instaApi.SendTextAsync(selectedThread.Users.Select(x => x.Pk),
-                    null, content).ConfigureAwait(false);
+                    null, content);
             }
             
             if (result.IsSucceeded && result.Value.Count > 0)
@@ -244,7 +240,7 @@ namespace Indirect
                 IBuffer buffer;
                 if (properties.Width > 1080 || properties.Height > 1080)
                 {
-                    buffer = await Helpers.CompressImage(file, 1080, 1080).ConfigureAwait(false);
+                    buffer = await Helpers.CompressImage(file, 1080, 1080);
                     double widthRatio = (double)1080 / imageWidth;
                     double heightRatio = (double)1080 / imageHeight;
                     double scaleRatio = Math.Min(widthRatio, heightRatio);
@@ -263,7 +259,7 @@ namespace Indirect
                 };
                 if (string.IsNullOrEmpty(SelectedThread.ThreadId) || SelectedThread.PendingScore == null) return;
                 await _instaApi.SendDirectPhotoAsync(instaImage, SelectedThread.ThreadId,
-                    SelectedThread.PendingScore ?? 0, progress).ConfigureAwait(false);
+                    SelectedThread.PendingScore ?? 0, progress);
                 return;
             }
 
@@ -288,7 +284,7 @@ namespace Indirect
                     Height = (int) thumbnail.OriginalHeight
                 };
                 await _instaApi.SendDirectVideoAsync(progress,
-                    new InstaVideoUpload(instaVideo, thumbnailImage), SelectedThread.ThreadId).ConfigureAwait(false);
+                    new InstaVideoUpload(instaVideo, thumbnailImage), SelectedThread.ThreadId);
             }
         }
 
@@ -296,10 +292,10 @@ namespace Indirect
         {
             _lastUpdated = DateTime.Now;
             var selected = SelectedThread;
-            await Inbox.UpdateInbox().ConfigureAwait(true);
+            await Inbox.UpdateInbox();
             if (selected == null) return;
             if (InboxThreads.Contains(selected) && SelectedThread != selected) SelectedThread = selected;
-            await UpdateSelectedThread().ConfigureAwait(true);
+            await UpdateSelectedThread();
             MarkLatestItemSeen(selected);
         }
 
@@ -311,7 +307,7 @@ namespace Indirect
             var cancellationToken = _searchCancellationToken.Token;
             try
             {
-                await Task.Delay(500, cancellationToken).ConfigureAwait(false);   // Delay so we don't search something mid typing
+                await Task.Delay(500, cancellationToken); // Delay so we don't search something mid typing
             }
             catch (Exception)
             {
@@ -319,7 +315,7 @@ namespace Indirect
             }
             if (cancellationToken.IsCancellationRequested) return;
 
-            var result = await _instaApi.GetRankedRecipientsByUsernameAsync(query).ConfigureAwait(false);
+            var result = await _instaApi.GetRankedRecipientsByUsernameAsync(query);
             if (!result.IsSucceeded) return;
             var recipients = result.Value;
             var threadsFromUser = recipients.Users.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi)).ToList();
@@ -342,7 +338,7 @@ namespace Indirect
             if (string.IsNullOrEmpty(placeholderThread.ThreadId))
             {
                 var userIds = placeholderThread.Users.Select(x => x.Pk);
-                var result = await _instaApi.GetThreadByParticipantsAsync(userIds).ConfigureAwait(false);
+                var result = await _instaApi.GetThreadByParticipantsAsync(userIds);
                 if (!result.IsSucceeded) return;
                 thread = result.Value != null && result.Value.Users.Count > 0 ? 
                     new InstaDirectInboxThreadWrapper(result.Value, _instaApi) : new InstaDirectInboxThreadWrapper(placeholderThread.Users[0], _instaApi);
@@ -375,8 +371,7 @@ namespace Indirect
                 if (string.IsNullOrEmpty(thread.LastPermanentItem?.ItemId) || 
                     lastSeen.ItemId == thread.LastPermanentItem.ItemId ||
                     thread.LastPermanentItem.FromMe) return;
-                await _instaApi.MarkItemSeenAsync(thread.ThreadId,
-                    thread.LastPermanentItem.ItemId).ConfigureAwait(false);
+                await _instaApi.MarkItemSeenAsync(thread.ThreadId, thread.LastPermanentItem.ItemId);
             }
         }
     }

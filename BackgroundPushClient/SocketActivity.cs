@@ -10,6 +10,7 @@ using Windows.Security.Cryptography;
 using Windows.Storage;
 using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Transport.Channels;
+using InstagramAPI;
 using InstagramAPI.Push.Packets;
 
 namespace BackgroundPushClient
@@ -28,36 +29,25 @@ namespace BackgroundPushClient
             var deferral = taskInstance.GetDeferral();
             try
             {
+                var instagram = Instagram.Instance;
                 var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
                 if (details.Reason == SocketActivityTriggerReason.SocketClosed) return;
                 Debug.WriteLine($"{typeof(SocketActivity).FullName}: {details.Reason}");
-                var dataStream = details.SocketInformation.Context.Data.AsStream();
-                var formatter = new BinaryFormatter();
-                var stateData = (StateData) formatter.Deserialize(dataStream);
-                var loopGroup = new SingleThreadEventLoop();
+                
                 var socket = details.SocketInformation.StreamSocket;
-                var streamSocketChannel = new StreamSocketChannel(socket);
-                var packetHandler = new PacketHandler(stateData);
-                packetHandler.MessageReceived += Utils.OnMessageReceived;
-                streamSocketChannel.Pipeline.AddLast(new FbnsPacketEncoder(), new FbnsPacketDecoder(), packetHandler);
-                await loopGroup.RegisterAsync(streamSocketChannel);
+                instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
+                await instagram.PushClient.StartWithExistingSocket(socket);
 
                 // We don't need to handle SocketActivity event. PacketHandler will take care of that.
                 if (details.Reason == SocketActivityTriggerReason.KeepAliveTimerExpired)
                 {
-                    var packet = PingReqPacket.Instance;
-                    await streamSocketChannel.WriteAndFlushAsync(packet);
+                    await instagram.PushClient.SendPing();
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
-                var updatedState = packetHandler.CurrentState;
-                var memoryStream = new MemoryStream();
-                formatter.Serialize(memoryStream, updatedState);
-                var buffer = CryptographicBuffer.CreateFromByteArray(memoryStream.ToArray());
-                await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4));
-                await socket.CancelIOAsync();
-                socket.TransferOwnership(
-                    details.SocketInformation.Id, new SocketActivityContext(buffer), TimeSpan.FromSeconds(KEEP_ALIVE - 60));
+                instagram.PushClient.ConnectionData.SaveToAppSettings();
+                await instagram.PushClient.Shutdown();
+                await instagram.PushClient.TransferPushSocket();
             }
             catch (Exception e)
             {
