@@ -72,12 +72,6 @@ namespace InstagramAPI.Classes.Direct
         [JsonProperty("valued_request")]
         public bool ValuedRequest { get; set; }
 
-        /// <summary>
-        /// Media upload id. Example: /rupload_igphoto/direct_{PendingScore}
-        /// </summary>
-        [JsonProperty("pending_score")]
-        public long? PendingScore { get; set; }
-
         [JsonProperty("vc_muted")]
         public bool VCMuted { get; set; }
 

@@ -139,7 +139,6 @@ namespace InstagramAPI
                     threadResponse.IsSpam = nextThread.Value.IsSpam;
                     threadResponse.IsPin = nextThread.Value.IsPin;
                     threadResponse.Muted = nextThread.Value.Muted;
-                    threadResponse.PendingScore = nextThread.Value.PendingScore;
                     threadResponse.Pending = nextThread.Value.Pending;
                     threadResponse.Users = nextThread.Value.Users;
                     threadResponse.ValuedRequest = nextThread.Value.ValuedRequest;

@@ -142,6 +142,7 @@
     <Compile Include="Classes\Direct\ItemContent\VisualMediaContainer.cs" />
     <Compile Include="Classes\Direct\ItemContent\VoiceShare.cs" />
     <Compile Include="Classes\Direct\RankedRecipientThread.cs" />
+    <Compile Include="Classes\Responses\RuploadResponse.cs" />
     <Compile Include="Classes\UploaderProgress.cs" />
     <Compile Include="Classes\JsonConverters\DirectItemConverter.cs" />
     <Compile Include="Classes\JsonConverters\JsonPathConverter.cs" />

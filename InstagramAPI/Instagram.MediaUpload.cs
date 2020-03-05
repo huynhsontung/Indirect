@@ -43,13 +43,13 @@ namespace InstagramAPI
                     new JProperty("upload_id", uploadId.ToString()),
                     new JProperty("upload_media_height", image.Height),
                     new JProperty("upload_media_width", image.Width));
-                var requestMessage = new Windows.Web.Http.HttpRequestMessage(Windows.Web.Http.HttpMethod.Post, uri);
+                var requestMessage = new HttpRequestMessage(HttpMethod.Post, uri);
                 requestMessage.Headers.Add("X-Entity-Name", entityName);
                 requestMessage.Headers.Add("X-Instagram-Rupload-Params", ruploadParams.ToString(Formatting.None));
+                requestMessage.Headers.Add("Offset", "0");
                 var uploadBuffer = image.UploadBuffer;
                 var content = new HttpBufferContent(uploadBuffer);
                 content.Headers.ContentType = HttpMediaTypeHeaderValue.Parse("image/jpeg");
-                content.Headers.Add("Offset", "0");
                 requestMessage.Headers.Add("X-Entity-Length", uploadBuffer.Length.ToString());
                 requestMessage.Content = content;
                 upProgress.UploadState = InstaUploadState.Uploading;
@@ -58,14 +58,15 @@ namespace InstagramAPI
                 var json = await response.Content.ReadAsStringAsync();
                 _logger?.LogResponse(response);
 
-                var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
-                if (response.StatusCode != HttpStatusCode.Ok || obj.IsOk())
+                var ruploadResp = JsonConvert.DeserializeObject<RuploadResponse>(json);
+                if (response.StatusCode != HttpStatusCode.Ok || !ruploadResp.IsOk())
                 {
                     upProgress.UploadState = InstaUploadState.Error;
                     progress?.Invoke(upProgress);
-                    return Result<ItemAckPayloadResponse>.Fail(json, obj.Message);
+                    return Result<ItemAckPayloadResponse>.Fail(json);
                 }
 
+                var uploadIdResp = ruploadResp.UploadId;
                 upProgress.UploadState = InstaUploadState.Uploaded;
                 progress?.Invoke(upProgress);
                 var configUri = UriCreator.GetDirectConfigPhotoUri();
@@ -77,13 +78,13 @@ namespace InstagramAPI
                     ["mutation_token"] = Guid.NewGuid().ToString(),
                     ["sampled"] = "1",
                     ["thread_id"] = threadId,
-                    ["upload_id"] = uploadId.ToString()
+                    ["upload_id"] = uploadIdResp
                 };
                 response = await _httpClient.PostAsync(configUri, new HttpFormUrlEncodedContent(config));
                 json = await response.Content.ReadAsStringAsync();
                 _logger?.LogResponse(response);
-                obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
-                if (response.StatusCode != HttpStatusCode.Ok || obj.IsOk())
+                var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
+                if (response.StatusCode != HttpStatusCode.Ok || !obj.IsOk())
                 {
                     upProgress.UploadState = InstaUploadState.Error;
                     progress?.Invoke(upProgress);

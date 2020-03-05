@@ -72,7 +72,6 @@ namespace Indirect.Wrapper
             IsGroup = source.IsGroup;
             IsPin = source.IsPin;
             ValuedRequest = source.ValuedRequest;
-            PendingScore = source.PendingScore;
             VCMuted = source.VCMuted;
             ReshareReceiveCount = source.ReshareReceiveCount;
             ReshareSendCount = source.ReshareSendCount;
@@ -122,7 +121,6 @@ namespace Indirect.Wrapper
             IsGroup = source.IsGroup;
             IsPin = source.IsPin;
             ValuedRequest = source.ValuedRequest;
-            PendingScore = source.PendingScore;
             VCMuted = source.VCMuted;
             ReshareReceiveCount = source.ReshareReceiveCount;
             ReshareSendCount = source.ReshareSendCount;

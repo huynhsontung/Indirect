@@ -252,16 +252,8 @@ namespace Indirect
                 {
                     buffer = await FileIO.ReadBufferAsync(file);
                 }
-                var instaImage = new InstaImage
-                {
-                    UploadBuffer = buffer, 
-                    Width = imageWidth, 
-                    Height = imageHeight
-                };
-                if (string.IsNullOrEmpty(SelectedThread.ThreadId) || SelectedThread.PendingScore == null) return;
-                await _instaApi.SendDirectPhotoAsync(instaImage, SelectedThread.ThreadId,
-                    SelectedThread.PendingScore ?? 0, progress);
-                return;
+
+                await SendBuffer(buffer, imageWidth, imageHeight, progress);
             }
 
             if (file.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))
@@ -318,15 +310,20 @@ namespace Indirect
                 await stream.WriteAsync(buffer);
             }
 
+            await SendBuffer(buffer, imageWidth, imageHeight, progress);
+        }
+
+        private async Task SendBuffer(IBuffer buffer, int imageWidth, int imageHeight, Action<UploaderProgress> progress)
+        {
             var instaImage = new InstaImage
             {
                 UploadBuffer = buffer,
                 Width = imageWidth,
                 Height = imageHeight
             };
-            if (string.IsNullOrEmpty(SelectedThread.ThreadId) || SelectedThread.PendingScore == null) return;
-            await _instaApi.SendDirectPhotoAsync(instaImage, SelectedThread.ThreadId,
-                SelectedThread.PendingScore ?? 0, progress);
+            if (string.IsNullOrEmpty(SelectedThread.ThreadId)) return;
+            var uploadId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            await _instaApi.SendDirectPhotoAsync(instaImage, SelectedThread.ThreadId, uploadId, progress);
         }
 
         public async void UpdateInboxAndSelectedThread()
