@@ -9,6 +9,7 @@ using Windows.Foundation.Collections;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -56,6 +57,15 @@ namespace Indirect
 
         private async void OnSourceChanged()
         {
+            if (Source is IRandomAccessStreamWithContentType stream)   // screenshot
+            {
+                var image = new BitmapImage();
+                await image.SetSourceAsync(stream);
+                _source = image;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(_source)));
+                return;
+            }
+
             if (!(Source is IStorageFile storageFile))
             {
                 var uri = Source as Uri;
@@ -72,7 +82,7 @@ namespace Indirect
                 }
                 _source = uri;
 
-                if (uri.IsFile && uri.Segments.Last().Contains(".mp4"))
+                if (uri.IsFile && uri.Segments.Last().Contains(".mp4", StringComparison.OrdinalIgnoreCase))
                 {
                     if (Helpers.IsHttpUri(uri))
                     {
@@ -86,7 +96,7 @@ namespace Indirect
             }
             else
             {
-                if (storageFile.ContentType.Contains("video"))
+                if (storageFile.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))
                 {
                     _source = MediaSource.CreateFromStorageFile(storageFile);
                 }

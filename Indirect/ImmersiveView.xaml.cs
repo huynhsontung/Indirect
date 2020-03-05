@@ -5,7 +5,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Indirect.Wrapper;
-using InstaSharper.Enums;
+using InstagramAPI.Classes.Media;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using ScrollViewer = Windows.UI.Xaml.Controls.ScrollViewer;
 

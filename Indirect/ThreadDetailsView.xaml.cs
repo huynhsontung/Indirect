@@ -9,6 +9,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Security.Cryptography;
 using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -19,7 +20,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Wrapper;
-using InstaSharper.Enums;
+using InstagramAPI.Classes;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -44,19 +45,7 @@ namespace Indirect
             set => SetValue(ThreadProperty, value);
         }
 
-        private ApiContainer _viewModel;
-        public ApiContainer ViewModel
-        {
-            get
-            {
-                if (_viewModel == null && CoreApplication.Properties.ContainsKey(App.VIEW_MODEL_PROP_NAME))
-                {
-                    _viewModel = (ApiContainer) CoreApplication.Properties[App.VIEW_MODEL_PROP_NAME];
-                }
-
-                return _viewModel;
-            }
-        }
+        private static ApiContainer ViewModel => ApiContainer.Instance;
 
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -102,7 +91,7 @@ namespace Indirect
 
             var file = await picker.PickSingleFileAsync();
             if (file == null) return;
-            if (file.ContentType.Contains("image"))
+            if (file.ContentType.Contains("image", StringComparison.OrdinalIgnoreCase))
             {
                 var properties = await file.GetBasicPropertiesAsync();
                 if (properties.Size >= 5e7)
@@ -120,7 +109,7 @@ namespace Indirect
                 }
             }
 
-            if (file.ContentType.Contains("video"))
+            if (file.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))
             {
                 var properties = await file.Properties.GetVideoPropertiesAsync();
                 if (properties.Duration > TimeSpan.FromMinutes(1))
@@ -152,8 +141,8 @@ namespace Indirect
         private void SendFileButton_OnClick(object sender, RoutedEventArgs e)
         {
             UploadProgress.Visibility = Visibility.Visible;
-            var file = (StorageFile) FilePickerPreview.Source;
-            ViewModel.SendFile(file, progress =>
+
+            void UploadAction(UploaderProgress progress)
             {
                 if (progress.UploadState != InstaUploadState.Completed &&
                     progress.UploadState != InstaUploadState.Error) return;
@@ -171,7 +160,17 @@ namespace Indirect
                 {
                     ViewModel.UpdateInboxAndSelectedThread();
                 }
-            });
+            }
+
+            if (FilePickerPreview.Source is StorageFile file)
+            {
+                ViewModel.SendFile(file, UploadAction);
+            }
+
+            if (FilePickerPreview.Source is IRandomAccessStreamWithContentType stream)
+            {
+                ViewModel.SendStream(stream, UploadAction);
+            }
             FilePickerFlyout.Hide();
         }
 
@@ -183,9 +182,7 @@ namespace Indirect
                 if (dataPackage.Contains(StandardDataFormats.Bitmap))
                 {
                     var imageStream = await dataPackage.GetBitmapAsync();
-                    var bitmapImage = new BitmapImage();
-                    await bitmapImage.SetSourceAsync(await imageStream.OpenReadAsync());
-                    FilePickerPreview.Source = bitmapImage;
+                    FilePickerPreview.Source = await imageStream.OpenReadAsync();
                     FilePickerFlyout.ShowAt(AddFilesButton);
                 }
             }

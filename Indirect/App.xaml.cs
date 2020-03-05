@@ -9,6 +9,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Utilities;
+using InstagramAPI;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
@@ -22,11 +23,6 @@ namespace Indirect
     /// </summary>
     sealed partial class App : Application
     {
-        public const string VIEW_MODEL_PROP_NAME = "ViewModel";
-        // public const string GLOBAL_EXCEPTION_HANDLER_NAME = "App.OnUnhandledException";
-
-        private ApiContainer ViewModel { get; set; }
-
         private readonly Windows.Storage.ApplicationDataContainer _localSettings =
             Windows.Storage.ApplicationData.Current.LocalSettings;
 
@@ -89,9 +85,6 @@ namespace Indirect
             }
             catch (Exception innerException)
             {
-#if !DEBUG
-                Crashes.TrackError(innerException);
-#endif
                 Debug.WriteLine(innerException);
             }
         }
@@ -111,7 +104,7 @@ namespace Indirect
             OnLaunchedOrActivated(e);
         }
 
-        private async void OnLaunchedOrActivated(IActivatedEventArgs e)
+        private void OnLaunchedOrActivated(IActivatedEventArgs e)
         {
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(380,300));
             Frame rootFrame = Window.Current.Content as Frame;
@@ -126,16 +119,6 @@ namespace Indirect
             // just ensure that the window is active
             if (rootFrame == null)
             {
-                if (CoreApplication.Properties.ContainsKey(VIEW_MODEL_PROP_NAME))
-                {
-                    ViewModel = (ApiContainer) CoreApplication.Properties[VIEW_MODEL_PROP_NAME];
-                }
-                else
-                {
-                    ViewModel = await ApiContainer.Factory();
-                    CoreApplication.Properties.Add(VIEW_MODEL_PROP_NAME, ViewModel);
-                }
-
                 // Create a Frame to act as the navigation context and navigate to the first page
                 rootFrame = new Frame();
 
@@ -152,7 +135,7 @@ namespace Indirect
 
             if (rootFrame.Content == null)
             {
-                rootFrame.Navigate(ViewModel.IsUserAuthenticated ? typeof(MainPage) : typeof(Login), ViewModel);
+                rootFrame.Navigate(Instagram.IsUserAuthenticatedPersistent ? typeof(MainPage) : typeof(Login));
             }
             // Ensure the current window is active
             Window.Current.Activate();
@@ -177,12 +160,13 @@ namespace Indirect
         /// <param name="e">Details about the suspend request.</param>
         private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
-            if (!ViewModel.IsUserAuthenticated) return;
+            var viewModel = ApiContainer.Instance;
+            if (!viewModel.IsUserAuthenticated) return;
             var deferral = e.SuspendingOperation.GetDeferral();
             try
             {
-                ViewModel.SyncClient.Shutdown();    // No need to wait. Shutdown cleanly is not important here.
-                await ViewModel.PushClient.TransferPushSocket();    // Has to wait for Dotnetty to shutdown
+                viewModel.SyncClient.Shutdown();    // No need to wait. Shutdown cleanly is not important here.
+                await viewModel.PushClient.TransferPushSocket();    // Has to wait for Dotnetty to shutdown
             }
             catch (Exception exception)
             {
@@ -196,16 +180,15 @@ namespace Indirect
 
         private void OnResuming(object sender, object e)
         {
-            ViewModel.PushClient.Start();
-            ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt);
-            ViewModel.UpdateInboxAndSelectedThread();
+            var viewModel = ApiContainer.Instance;
+            viewModel.PushClient.Start();
+            viewModel.SyncClient.Start(viewModel.Inbox.SeqId, viewModel.Inbox.SnapshotAt);
+            viewModel.UpdateInboxAndSelectedThread();
         }
 
-        private async void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)
+        private void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)
         {
-            var deferral = e.GetDeferral();
-            await ViewModel.WriteStateToStorage();
-            deferral.Complete();
+            Instagram.Instance.SaveToAppSettings();
         }
     }
 }

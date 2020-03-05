@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
-using DotNetty.Common;
 using DotNetty.Common.Utilities;
-using Buffer = Windows.Storage.Streams.Buffer;
 using ByteOrder = Windows.Storage.Streams.ByteOrder;
 
-namespace Indirect.Notification
+namespace InstagramAPI.Sync
 {
     class StandalonePacketEncoder
     {

@@ -18,7 +18,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid ProcessKeyboardAccelerators="Details_OnProcessKeyboardAccelerators">
+    <Grid ProcessKeyboardAccelerators="Details_OnProcessKeyboardAccelerators" Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="Auto"/>

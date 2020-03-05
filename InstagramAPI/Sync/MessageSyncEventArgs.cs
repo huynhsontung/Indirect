@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using InstaSharper.Classes.Models.Direct;
-using InstaSharper.Classes.ResponseWrappers.Direct;
-using InstaSharper.Converters.Directs;
+using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 
-namespace Indirect.Notification
+namespace InstagramAPI.Sync
 {
 
     public class MessageSyncEventArgs : EventArgs
@@ -41,35 +40,7 @@ namespace Indirect.Notification
         public string Path { get; set; }
 
         [JsonProperty("value")]
-        public string RawValue { get; set; }
-
-        private InstaDirectInboxItemResponse _value;
-
-        public InstaDirectInboxItemResponse Value
-        {
-            get
-            {
-                if (_value == null)
-                {
-                    _value = JsonConvert.DeserializeObject<InstaDirectInboxItemResponse>(RawValue);
-                }
-
-                return _value;
-            }
-        }
-
-        private InstaDirectInboxItem _item;
-        public InstaDirectInboxItem Item
-        {
-            get
-            {
-                if (_item == null)
-                {
-                    var converter = new InstaDirectThreadItemConverter() { SourceObject = Value };
-                    _item = converter.Convert();
-                }
-                return _item;
-            }
-        }
+        [JsonConverter(typeof(DirectItemConverter))]
+        public DirectItem Item { get; set; }
     }
 }

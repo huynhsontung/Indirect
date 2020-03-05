@@ -8,28 +8,29 @@ using System.Threading.Tasks;
 using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
+using Windows.Web.Http;
+using Windows.Web.Http.Filters;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
-using InstaSharper.API;
-using InstaSharper.Helpers;
+using InstagramAPI.Push;
 using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Indirect.Notification
+namespace InstagramAPI.Sync
 {
-    class SyncClient
+    public class SyncClient
     {
         public event EventHandler<List<MessageSyncEventArgs>> MessageReceived;
 
         private int _packetId = 1;
         private CancellationTokenSource _pinging;
-        private readonly InstaApi _instaApi;
+        private readonly Instagram _instaApi;
         private long _seqId;
-        private DateTime _snapshotAt;
+        private DateTimeOffset _snapshotAt;
         private MessageWebSocket _socket;
 
-        public SyncClient(InstaApi api)
+        public SyncClient(Instagram api)
         {
             _instaApi = api;
             NetworkInformation.NetworkStatusChanged += OnNetworkChanged;
@@ -56,20 +57,31 @@ namespace Indirect.Notification
             }
         }
 
-        public async void Start(long seqId, DateTime snapshotAt)
+        public async void Start(long seqId, DateTimeOffset snapshotAt)
         {
             Debug.WriteLine("Sync client starting");
             if (seqId == 0)
-                throw new ArgumentException("Invalid seqId. Have you fetched inbox for the for the first time?",
+                throw new ArgumentException("Invalid seqId. Have you fetched inbox for the first time?",
                     nameof(seqId));
             _seqId = seqId;
             _snapshotAt = snapshotAt;
             _pinging?.Cancel();
             _pinging = new CancellationTokenSource();
             _packetId = 1;
-            var state = _instaApi.GetStateData();
-            var device = _instaApi.DeviceInfo;
-            var cookieHeader = state.Cookies.GetCookieHeader(new Uri("https://i.instagram.com"));
+            var device = _instaApi.Device;
+            var baseHttpFilter = new HttpBaseProtocolFilter();
+            var cookies = baseHttpFilter.CookieManager.GetCookies(new Uri("https://i.instagram.com"));
+            foreach (var cookie in cookies)
+            {
+                var copyCookie = new HttpCookie(cookie.Name, "edge-chat.instagram.com", "/chat")
+                {
+                    Value = cookie.Value,
+                    Expires = cookie.Expires,
+                    HttpOnly = cookie.HttpOnly,
+                    Secure = cookie.Secure
+                };
+                baseHttpFilter.CookieManager.SetCookie(copyCookie);
+            }
             var connectPacket = new ConnectPacket
             {
                 CleanSession = true,
@@ -84,7 +96,7 @@ namespace Indirect.Notification
             var userAgent =
                 $"Mozilla/5.0 (Linux; Android 10; {device.DeviceName}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.93 Mobile Safari/537.36";
             var json = new JObject(
-                new JProperty("u", _instaApi.UserSession.LoggedInUser.Pk),
+                new JProperty("u", _instaApi.Session.LoggedInUser.Pk),
                 new JProperty("s", GenerateDigitsRandom(16)),
                 new JProperty("cp", 1),
                 new JProperty("ecp", 0),
@@ -105,7 +117,6 @@ namespace Indirect.Notification
             // var buffer = StandalonePacketEncoder.EncodePacket(connectPacket);
             var messageWebsocket = new MessageWebSocket();
             messageWebsocket.Control.MessageType = SocketMessageType.Binary;
-            messageWebsocket.SetRequestHeader("Cookie", cookieHeader);
             messageWebsocket.SetRequestHeader("User-Agent", userAgent);
             messageWebsocket.SetRequestHeader("Origin", "https://www.instagram.com");
             messageWebsocket.MessageReceived += OnMessageReceived;
@@ -153,7 +164,7 @@ namespace Indirect.Notification
             {
                 var dataReader = args.GetDataReader();
                 var outStream = sender.OutputStream;
-                var loggedInUser = _instaApi.UserSession.LoggedInUser;
+                var loggedInUser = _instaApi.Session.LoggedInUser;
                 Packet packet;
                 try
                 {
@@ -186,7 +197,7 @@ namespace Indirect.Notification
                         var random = new Random();
                         var json = new JObject(
                             new JProperty("seq_id", _seqId),
-                            new JProperty("snapshot_at_ms", _snapshotAt.ToUnixTimeMiliSeconds()),
+                            new JProperty("snapshot_at_ms", _snapshotAt.ToUnixTimeMilliseconds()),
                             new JProperty("snapshot_app_version", "web"),
                             new JProperty("subscription_type", "message"));
                         var jsonBytes = GetJsonBytes(json);
@@ -253,10 +264,10 @@ namespace Indirect.Notification
                             var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(payload);
                             var latest = messageSyncPayload.Last();
                             if (latest.SeqId > _seqId ||
-                                latest.Data[0].Item.TimeStamp > _snapshotAt)
+                                latest.Data[0].Item.Timestamp > _snapshotAt)
                             {
                                 _seqId = latest.SeqId;
-                                _snapshotAt = latest.Data[0].Item.TimeStamp;
+                                _snapshotAt = latest.Data[0].Item.Timestamp;
                             }
                             MessageReceived?.Invoke(this, messageSyncPayload);
                         }

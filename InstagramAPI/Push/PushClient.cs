@@ -1,52 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Net.Http;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking;
 using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
-using Windows.UI.WindowManagement;
+using Windows.Web.Http;
 using DotNetty.Buffers;
 using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Transport.Channels;
-using InstaSharper.API;
-using InstaSharper.API.Push;
-using InstaSharper.API.Push.PacketHelpers;
-using InstaSharper.Classes;
-using InstaSharper.Classes.DeviceInfo;
-using InstaSharper.Helpers;
+using InstagramAPI.Classes;
+using InstagramAPI.Classes.Android;
+using InstagramAPI.Push.Packets;
 using Ionic.Zlib;
-using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 
-namespace Indirect.Notification
+namespace InstagramAPI.Push
 {
-    class PushClient : SimpleChannelInboundHandler<Packet>
+    public class PushClient : SimpleChannelInboundHandler<Packet>
     {
-        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
-        public FbnsConnectionData ConnectionData { get; set; }
+        public event EventHandler<PushReceivedEventArgs> MessageReceived;
+        public FbnsConnectionData ConnectionData { get; } = new FbnsConnectionData();
         public StreamSocket Socket { get; private set; }
         public override bool IsSharable { get; } = true;
 
         private const string HOST_NAME = "mqtt-mini.facebook.com";
         private const string BACKGROUND_SOCKET_ACTIVITY_NAME = "BackgroundPushClient.SocketActivity";
         private const string BACKGROUND_INTERNET_AVAILABLE_NAME = "BackgroundPushClient.InternetAvailable";
-        private static readonly string SOCKET_ACTIVITY_ENTRY_POINT = typeof(BackgroundPushClient.SocketActivity).FullName;
-        private static readonly string INTERNET_AVAILABLE_ENTRY_POINT = typeof(BackgroundPushClient.InternetAvailable).FullName;
+        private const string SOCKET_ACTIVITY_ENTRY_POINT = "BackgroundPushClient.SocketActivity";
+        private const string INTERNET_AVAILABLE_ENTRY_POINT = "BackgroundPushClient.InternetAvailable";
         private const string SOCKET_ID = "mqtt_fbns";
 
         private SingleThreadEventLoop _loopGroup;
         private readonly UserSessionData _user;
-        private readonly IHttpRequestProcessor _httpRequestProcessor;
         private readonly AndroidDevice _device;
         private IBackgroundTaskRegistration _socketActivityTask;
         private IBackgroundTaskRegistration _internetAvailableTask;
@@ -55,19 +45,18 @@ namespace Indirect.Notification
         private const int TIMEOUT = 5;
         private bool _waitingForPubAck;
         private IChannelHandlerContext _context;
-        private readonly InstaApi _instaApi;
+        private readonly Instagram _instaApi;
 
-        public PushClient(InstaApi api, FbnsConnectionData connectionData)
+        public PushClient(Instagram api, bool tryLoadData = true)
         {
             _instaApi = api ?? throw new ArgumentException("Api can't be null", nameof(api));
-            if (connectionData == null) connectionData = new FbnsConnectionData();
-            ConnectionData = connectionData;
-            _user = api.UserSession;
-            _httpRequestProcessor = api.RequestProcessor;
-            _device = api.DeviceInfo;
+            _user = api.Session;
+            _device = api.Device;
+
+            if (tryLoadData) ConnectionData.LoadFromAppSettings();
 
             // If token is older than 24 hours then discard it
-            if ((DateTime.Now - ConnectionData.FbnsTokenLastUpdated).TotalHours > 24) ConnectionData.FbnsToken = "";
+            if ((DateTimeOffset.Now - ConnectionData.FbnsTokenLastUpdated).TotalHours > 24) ConnectionData.FbnsToken = "";
 
             // Build user agent for first time setup
             if (string.IsNullOrEmpty(ConnectionData.UserAgent))
@@ -140,18 +129,12 @@ namespace Indirect.Notification
 
             // Hand over MQTT socket to socket broker
             Debug.WriteLine($"{nameof(PushClient)}: Transferring sockets.");
-            var memoryStream = new MemoryStream();
-            var formatter = new BinaryFormatter();
-            var state = _instaApi.GetStateData();
-            state.FbnsConnectionData = ConnectionData;
-            formatter.Serialize(memoryStream, state);
-            var buffer = CryptographicBuffer.CreateFromByteArray(memoryStream.ToArray());
             await SendPing();
             await Shutdown();
             await Socket.CancelIOAsync();
             Socket.TransferOwnership(
                 SOCKET_ID,
-                new SocketActivityContext(buffer),
+                null,
                 TimeSpan.FromSeconds(KEEP_ALIVE - 60));
         }
 
@@ -162,10 +145,6 @@ namespace Indirect.Notification
             {
                 if (SocketActivityInformation.AllSockets.TryGetValue(SOCKET_ID, out var socketInformation))
                 {
-                    var dataStream = socketInformation.Context.Data.AsStream();
-                    var formatter = new BinaryFormatter();
-                    var stateData = (StateData)formatter.Deserialize(dataStream);
-                    ConnectionData = stateData.FbnsConnectionData;
                     var socket = socketInformation.StreamSocket;
                     if (string.IsNullOrEmpty(ConnectionData.FbnsToken)) // if we don't have any push data, start fresh
                         await StartFresh();
@@ -183,7 +162,7 @@ namespace Indirect.Notification
             }
         }
 
-        private async Task StartWithExistingSocket(StreamSocket socket)
+        public async Task StartWithExistingSocket(StreamSocket socket)
         {
             Debug.WriteLine($"{nameof(PushClient)}: Starting with existing socket.");
             Socket = socket;
@@ -205,7 +184,7 @@ namespace Indirect.Notification
             }
         }
 
-        private async Task StartFresh()
+        public async Task StartFresh()
         {
             Debug.WriteLine($"{nameof(PushClient)}: Starting fresh.");
             if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
@@ -260,8 +239,7 @@ namespace Indirect.Notification
                 Debug.WriteLine("Stopped pinging push server");
                 var loopGroup = _loopGroup;
                 _loopGroup = null;
-                await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1))
-                    .ConfigureAwait(false);
+                await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1));
             }
         }
 
@@ -311,7 +289,7 @@ namespace Indirect.Notification
                     switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                     {
                         case TopicIds.Message:
-                            var message = JsonConvert.DeserializeObject<MessageReceivedEventArgs>(json);
+                            var message = JsonConvert.DeserializeObject<PushReceivedEventArgs>(json);
                             message.Json = json;
                             OnMessageReceived(message);
                             break;
@@ -360,7 +338,7 @@ namespace Indirect.Notification
                 if (!string.IsNullOrEmpty(response["error"]))
                 {
                     Debug.WriteLine($"{nameof(PushClient)}: {response["error"]}");
-                    await Shutdown().ConfigureAwait(false);
+                    await Shutdown();
                 }
 
                 var token = response["token"];
@@ -373,7 +351,7 @@ namespace Indirect.Notification
 #if !DEBUG
                 Crashes.TrackError(e);
 #endif
-                await Shutdown().ConfigureAwait(false);
+                await Shutdown();
             }
         }
 
@@ -398,9 +376,7 @@ namespace Indirect.Notification
                 {"_uuid", _device.Uuid.ToString() },
                 {"users", _user.LoggedInUser.Pk.ToString() }
             };
-            var request = HttpHelper.GetDefaultRequest(HttpMethod.Post, uri, _device);
-            request.Content = new FormUrlEncodedContent(fields);
-            var result = await _httpRequestProcessor.SendAsync(request);
+            var result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields));
 
             ConnectionData.FbnsToken = token;
         }
@@ -489,7 +465,7 @@ namespace Indirect.Notification
             return data;
         }
 
-        private void OnMessageReceived(MessageReceivedEventArgs args)
+        private void OnMessageReceived(PushReceivedEventArgs args)
         {
             MessageReceived?.Invoke(this, args);
         }

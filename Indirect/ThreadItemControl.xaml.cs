@@ -12,8 +12,8 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Indirect.Wrapper;
-using InstaSharper.Classes.Models.Direct;
-using InstaSharper.Enums;
+using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.Media;
 using Microsoft.Toolkit.Uwp.UI;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
@@ -56,9 +56,9 @@ namespace Indirect
             var view = (ThreadItemControl) d;
             var item = (InstaDirectInboxItemWrapper) e.NewValue;
             view.ProcessItem();
-            if (item.ItemType == InstaDirectThreadItemType.ActionLog)
+            if (item.ItemType == DirectItemType.ActionLog)
                 view.ItemContainer.Visibility = Visibility.Collapsed;
-            if (item.ItemType == InstaDirectThreadItemType.Text)
+            if (item.ItemType == DirectItemType.Text)
                 view.MenuCopyOption.Visibility = Visibility.Visible;
         }
 
@@ -69,9 +69,9 @@ namespace Indirect
 
         private void ProcessItem()
         {
-            Item.TimeStamp = Item.TimeStamp.ToLocalTime();
-            if (Item.ItemType == InstaDirectThreadItemType.Link)
-                Item.Text = Item.LinkMedia.Text;
+            Item.Timestamp = Item.Timestamp.ToLocalTime();
+            if (Item.ItemType == DirectItemType.Link)
+                Item.Text = Item.Link.Text;
         }
 
         private void ShowTimestamp(object sender, DoubleTappedRoutedEventArgs e)
@@ -83,7 +83,7 @@ namespace Indirect
 
         private void ImageFrame_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (Item.ItemType == InstaDirectThreadItemType.AnimatedMedia) return;
+            if (Item.ItemType == DirectItemType.AnimatedMedia) return;
             var uri = Item.FullImageUri;
             if (uri == null) return;
             var immersive = new ImmersiveView(Item, InstaMediaType.Image);

@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Indirect.Wrapper;
-using InstaSharper.Classes.Models.Direct;
-using InstaSharper.Enums;
+using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.Direct.ItemContent;
+using InstagramAPI.Classes.Media;
 
 namespace Indirect
 {
@@ -36,46 +37,46 @@ namespace Indirect
 
                 switch (inboxItem.ItemType)
                 {
-                    case InstaDirectThreadItemType.Like:
+                    case DirectItemType.Like:
                         return LikeTemplate;
 
-                    case InstaDirectThreadItemType.Hashtag:
-                    case InstaDirectThreadItemType.Text when !string.IsNullOrEmpty(inboxItem.NavigateUri?.ToString()):
+                    case DirectItemType.Hashtag:
+                    case DirectItemType.Text when !string.IsNullOrEmpty(inboxItem.NavigateUri?.ToString()):
                         return HyperlinkTemplate;
 
-                    case InstaDirectThreadItemType.Text:
+                    case DirectItemType.Text:
                         return TextTemplate;
 
-                    case InstaDirectThreadItemType.Link:
+                    case DirectItemType.Link:
                         return HyperlinkWithPreviewTemplate;
 
-                    case InstaDirectThreadItemType.ActionLog:
+                    case DirectItemType.ActionLog:
                         return EmptyTemplate;
 
-                    case InstaDirectThreadItemType.MediaShare:
+                    case DirectItemType.MediaShare:
                         return MediaShareTemplate;
 
-                    case InstaDirectThreadItemType.RavenMedia when inboxItem.VisualMedia.ViewMode != InstaViewMode.Permanent:
+                    case DirectItemType.RavenMedia when inboxItem.VisualMedia.ViewMode != VisualMediaViewMode.Permanent:
                         return HiddenMediaTemplate;
 
-                    case InstaDirectThreadItemType.AnimatedMedia:
-                    case InstaDirectThreadItemType.Media when inboxItem.Media.MediaType == InstaMediaType.Image:
-                    case InstaDirectThreadItemType.RavenMedia when
+                    case DirectItemType.AnimatedMedia:
+                    case DirectItemType.Media when inboxItem.Media.MediaType == InstaMediaType.Image:
+                    case DirectItemType.RavenMedia when
                         inboxItem.RavenMedia?.MediaType == InstaMediaType.Image || inboxItem.VisualMedia?.Media.MediaType == InstaMediaType.Image:
                         return ImageTemplate;
 
-                    case InstaDirectThreadItemType.Media when inboxItem.Media.MediaType == InstaMediaType.Video:
-                    case InstaDirectThreadItemType.RavenMedia when
+                    case DirectItemType.Media when inboxItem.Media.MediaType == InstaMediaType.Video:
+                    case DirectItemType.RavenMedia when
                         inboxItem.RavenMedia?.MediaType == InstaMediaType.Video || inboxItem.VisualMedia.Media.MediaType == InstaMediaType.Video:
                         return VideoTemplate;
 
-                    case InstaDirectThreadItemType.ReelShare:
+                    case DirectItemType.ReelShare:
                         return ReelShareTemplate;
 
-                    case InstaDirectThreadItemType.VoiceMedia:
+                    case DirectItemType.VoiceMedia:
                         return AudioTemplate;
 
-                    case InstaDirectThreadItemType.Unknown:
+                    case DirectItemType.Unknown:
                         return UnexpectedTemplate;
 
                     default:

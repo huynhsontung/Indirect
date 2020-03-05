@@ -1,0 +1,253 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FE3D65EC-791A-4E61-8816-A08C1050A8C5}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>InstagramAPI</RootNamespace>
+    <AssemblyName>InstagramAPI</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.18362.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17134.0</TargetPlatformMinVersion>
+    <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <PlatformTarget>x86</PlatformTarget>
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <PlatformTarget>ARM</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <PlatformTarget>ARM</PlatformTarget>
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM64'">
+    <PlatformTarget>ARM64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM64'">
+    <PlatformTarget>ARM64</PlatformTarget>
+    <OutputPath>bin\ARM64\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Classes\Android\AndroidDevice.cs" />
+    <Compile Include="Classes\Android\AndroidVersion.cs" />
+    <Compile Include="Classes\ApiRequestMessage.cs" />
+    <Compile Include="Classes\ApiVersion.cs" />
+    <Compile Include="Classes\ChallengeLoginInfo.cs" />
+    <Compile Include="Classes\Direct\DirectItem.cs" />
+    <Compile Include="Classes\Direct\DirectItemType.cs" />
+    <Compile Include="Classes\Direct\ItemContent\AnimatedMedia.cs" />
+    <Compile Include="Classes\Direct\ItemContent\DirectActionLog.cs" />
+    <Compile Include="Classes\Direct\ItemContent\DirectMedia.cs" />
+    <Compile Include="Classes\Direct\ItemContent\DirectMediaShare.cs" />
+    <Compile Include="Classes\Direct\Inbox.cs" />
+    <Compile Include="Classes\Direct\InboxContainer.cs" />
+    <Compile Include="Classes\Direct\DirectThread.cs" />
+    <Compile Include="Classes\Direct\ItemContent\Hashtag.cs" />
+    <Compile Include="Classes\Direct\ItemContent\LocationContainer.cs" />
+    <Compile Include="Classes\Direct\ItemContent\ReelShare.cs" />
+    <Compile Include="Classes\Direct\ItemContent\VisualMedia.cs" />
+    <Compile Include="Classes\Direct\ItemContent\LinkShare.cs" />
+    <Compile Include="Classes\Direct\ItemContent\VisualMediaContainer.cs" />
+    <Compile Include="Classes\Direct\ItemContent\VoiceShare.cs" />
+    <Compile Include="Classes\Direct\RankedRecipientThread.cs" />
+    <Compile Include="Classes\Responses\RuploadResponse.cs" />
+    <Compile Include="Classes\UploaderProgress.cs" />
+    <Compile Include="Classes\JsonConverters\DirectItemConverter.cs" />
+    <Compile Include="Classes\JsonConverters\JsonPathConverter.cs" />
+    <Compile Include="Classes\JsonConverters\TimestampConverter.cs" />
+    <Compile Include="Classes\Media\InstaAnimatedImage.cs" />
+    <Compile Include="Classes\Media\InstaAudio.cs" />
+    <Compile Include="Classes\Media\InstaMediaType.cs" />
+    <Compile Include="Classes\Direct\LastSeen.cs" />
+    <Compile Include="Classes\Direct\ItemContent\ReactionsContainer.cs" />
+    <Compile Include="Classes\JsonConverters\MilliTimestampConverter.cs" />
+    <Compile Include="Classes\JsonConverters\MicroTimestampConverter.cs" />
+    <Compile Include="Classes\Media\InstaImage.cs" />
+    <Compile Include="Classes\Media\InstaStoryType.cs" />
+    <Compile Include="Classes\Media\InstaVideo.cs" />
+    <Compile Include="Classes\Media\InstaVideoUpload.cs" />
+    <Compile Include="Classes\Media\MediaCaption.cs" />
+    <Compile Include="Classes\Media\ReelMedia.cs" />
+    <Compile Include="Classes\PaginationParameters.cs" />
+    <Compile Include="Classes\Responses\BaseStatusResponse.cs" />
+    <Compile Include="Classes\Responses\DefaultResponse.cs" />
+    <Compile Include="Classes\Responses\ItemAckResponse.cs" />
+    <Compile Include="Classes\Responses\LoginBaseResponse.cs" />
+    <Compile Include="Classes\Responses\LoginResponse.cs" />
+    <Compile Include="Classes\Responses\RankedRecipientsResponse.cs" />
+    <Compile Include="Classes\Responses\TextSentResponse.cs" />
+    <Compile Include="Classes\Result.cs" />
+    <Compile Include="Classes\StoryUploadOptions.cs" />
+    <Compile Include="Classes\TwoFactorLoginInfo.cs" />
+    <Compile Include="Classes\UserSessionData.cs" />
+    <Compile Include="Classes\User\CurrentUser.cs" />
+    <Compile Include="Classes\User\InstaUser.cs" />
+    <Compile Include="Classes\User\UserWithFriendship.cs" />
+    <Compile Include="Enums.cs" />
+    <Compile Include="Instagram.cs" />
+    <Compile Include="Instagram.Direct.cs" />
+    <Compile Include="Instagram.Http.cs" />
+    <Compile Include="Instagram.MediaUpload.cs" />
+    <Compile Include="Instagram.Utils.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Push\FbnsConnectionData.cs" />
+    <Compile Include="Push\FbnsUserAgent.cs" />
+    <Compile Include="Push\Packets\FbnsConnAckPacket.cs" />
+    <Compile Include="Push\Packets\FbnsConnectPacket.cs" />
+    <Compile Include="Push\Packets\FbnsPacketDecoder.cs" />
+    <Compile Include="Push\Packets\FbnsPacketEncoder.cs" />
+    <Compile Include="Push\PayloadProcessor.cs" />
+    <Compile Include="Push\PushClient.cs" />
+    <Compile Include="Push\PushReceivedEventArgs.cs" />
+    <Compile Include="Sync\StandalonePacketDecoder.cs" />
+    <Compile Include="Sync\StandalonePacketEncoder.cs" />
+    <Compile Include="Push\StreamSocketChannel.cs" />
+    <Compile Include="Sync\MessageSyncEventArgs.cs" />
+    <Compile Include="Sync\SyncClient.cs" />
+    <Compile Include="Utils\CryptoHelper.cs" />
+    <Compile Include="Utils\DebugLogger.cs" />
+    <Compile Include="UriCreator.cs" />
+    <EmbeddedResource Include="Properties\InstagramAPI.rd.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="DotNetty.Codecs.Mqtt">
+      <Version>0.6.0</Version>
+    </PackageReference>
+    <PackageReference Include="DotNetty.Common">
+      <Version>0.6.0</Version>
+    </PackageReference>
+    <PackageReference Include="DotNetty.Handlers">
+      <Version>0.6.0</Version>
+    </PackageReference>
+    <PackageReference Include="DotNetZip">
+      <Version>1.13.5</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AppCenter">
+      <Version>3.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AppCenter.Analytics">
+      <Version>3.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AppCenter.Crashes">
+      <Version>3.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
+      <Version>6.2.9</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.3</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.AppCenter.Crashes">
+      <HintPath>..\..\..\..\.nuget\packages\microsoft.appcenter.crashes\3.0.0\lib\uap10.0\Microsoft.AppCenter.Crashes.dll</HintPath>
+    </Reference>
+    <Reference Include="Thrift">
+      <HintPath>..\Thrift\Thrift.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup />
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
+    <VisualStudioVersion>14.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

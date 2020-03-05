@@ -2,19 +2,19 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using InstaSharper.Classes.Models.Direct;
-using InstaSharper.Classes.Models.User;
+using InstagramAPI.Classes.Direct.ItemContent;
+using InstagramAPI.Classes.User;
 
 namespace Indirect.Wrapper
 {
-    class InstaDirectReactionsWrapper : InstaDirectReactions, INotifyPropertyChanged
+    class InstaDirectReactionsWrapper : ReactionsContainer, INotifyPropertyChanged
     {
         private uint _likesCount;
         private bool _meLiked;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ObservableCollection<InstaUserShort> Senders = new ObservableCollection<InstaUserShort>();
+        public ObservableCollection<InstaUser> Senders = new ObservableCollection<InstaUser>();
 
         public new bool MeLiked
         {
@@ -37,12 +37,12 @@ namespace Indirect.Wrapper
 
         public InstaDirectReactionsWrapper()
         {
-            Likes = new List<InstaDirectLikeReaction>(0);
+            Likes = new List<LikeReaction>(0);
             MeLiked = false;
             LikesCount = 0;
         }
 
-        public InstaDirectReactionsWrapper(InstaDirectReactions source, long viewerId)
+        public InstaDirectReactionsWrapper(ReactionsContainer source, long viewerId)
         {
             Likes = source.Likes;
             MeLiked = source.MeLiked ? source.MeLiked : source.Likes.Any(x => x.SenderId == viewerId);
@@ -56,7 +56,7 @@ namespace Indirect.Wrapper
             Senders.Clear();
         }
 
-        public void Update(InstaDirectReactionsWrapper source, ICollection<InstaUserShort> usersList)
+        public void Update(InstaDirectReactionsWrapper source, ICollection<InstaUser> usersList)
         {
             LikesCount = source.LikesCount;
             MeLiked = source.MeLiked;
