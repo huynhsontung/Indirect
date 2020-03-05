@@ -8,6 +8,7 @@ using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace Indirect.Utilities
 {
@@ -25,40 +26,45 @@ namespace Indirect.Utilities
             //open file as stream
             using (IRandomAccessStream fileStream = await imagefile.OpenAsync(FileAccessMode.ReadWrite))
             {
-                var decoder = await BitmapDecoder.CreateAsync(fileStream);
-
-                var resizedStream = new InMemoryRandomAccessStream();
-
-                var propertySet = new BitmapPropertySet();
-                propertySet.Add("ImageQuality", new BitmapTypedValue(0.7, PropertyType.Single));
-                BitmapEncoder encoder =
-                    await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, resizedStream, propertySet);
-                encoder.SetSoftwareBitmap(await decoder.GetSoftwareBitmapAsync());
-                double widthRatio = (double) reqWidth / decoder.PixelWidth;
-                double heightRatio = (double) reqHeight / decoder.PixelHeight;
-
-                double scaleRatio = Math.Min(widthRatio, heightRatio);
-
-                if (reqWidth == 0)
-                    scaleRatio = heightRatio;
-
-                if (reqHeight == 0)
-                    scaleRatio = widthRatio;
-
-                uint aspectHeight = (uint) Math.Floor(decoder.PixelHeight * scaleRatio);
-                uint aspectWidth = (uint) Math.Floor(decoder.PixelWidth * scaleRatio);
-
-                encoder.BitmapTransform.InterpolationMode = BitmapInterpolationMode.Linear;
-
-                encoder.BitmapTransform.ScaledHeight = aspectHeight;
-                encoder.BitmapTransform.ScaledWidth = aspectWidth;
-                await encoder.FlushAsync();
-                resizedStream.Seek(0);
-                var outBuffer = new Windows.Storage.Streams.Buffer((uint) resizedStream.Size);
-                await resizedStream.ReadAsync(outBuffer, (uint) resizedStream.Size, InputStreamOptions.None);
-
-                return outBuffer;
+                return await CompressImage(fileStream, reqWidth, reqHeight).ConfigureAwait(false);
             }
+        }
+
+        public static async Task<IBuffer> CompressImage(IRandomAccessStream stream, int reqWidth, int reqHeight)
+        {
+            var decoder = await BitmapDecoder.CreateAsync(stream);
+
+            var resizedStream = new InMemoryRandomAccessStream();
+
+            var propertySet = new BitmapPropertySet();
+            propertySet.Add("ImageQuality", new BitmapTypedValue(0.7, PropertyType.Single));
+            BitmapEncoder encoder =
+                await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, resizedStream, propertySet);
+            encoder.SetSoftwareBitmap(await decoder.GetSoftwareBitmapAsync());
+            double widthRatio = (double)reqWidth / decoder.PixelWidth;
+            double heightRatio = (double)reqHeight / decoder.PixelHeight;
+
+            double scaleRatio = Math.Min(widthRatio, heightRatio);
+
+            if (reqWidth == 0)
+                scaleRatio = heightRatio;
+
+            if (reqHeight == 0)
+                scaleRatio = widthRatio;
+
+            uint aspectHeight = (uint)Math.Floor(decoder.PixelHeight * scaleRatio);
+            uint aspectWidth = (uint)Math.Floor(decoder.PixelWidth * scaleRatio);
+
+            encoder.BitmapTransform.InterpolationMode = BitmapInterpolationMode.Linear;
+
+            encoder.BitmapTransform.ScaledHeight = aspectHeight;
+            encoder.BitmapTransform.ScaledWidth = aspectWidth;
+            await encoder.FlushAsync();
+            resizedStream.Seek(0);
+            var outBuffer = new Windows.Storage.Streams.Buffer((uint)resizedStream.Size);
+            await resizedStream.ReadAsync(outBuffer, (uint)resizedStream.Size, InputStreamOptions.None);
+            
+            return outBuffer;
         }
     }
 }

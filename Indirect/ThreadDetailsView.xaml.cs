@@ -9,6 +9,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Security.Cryptography;
 using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -140,8 +141,8 @@ namespace Indirect
         private void SendFileButton_OnClick(object sender, RoutedEventArgs e)
         {
             UploadProgress.Visibility = Visibility.Visible;
-            var file = (StorageFile) FilePickerPreview.Source;
-            ViewModel.SendFile(file, progress =>
+
+            void UploadAction(UploaderProgress progress)
             {
                 if (progress.UploadState != InstaUploadState.Completed &&
                     progress.UploadState != InstaUploadState.Error) return;
@@ -159,7 +160,17 @@ namespace Indirect
                 {
                     ViewModel.UpdateInboxAndSelectedThread();
                 }
-            });
+            }
+
+            if (FilePickerPreview.Source is StorageFile file)
+            {
+                ViewModel.SendFile(file, UploadAction);
+            }
+
+            if (FilePickerPreview.Source is IRandomAccessStreamWithContentType stream)
+            {
+                ViewModel.SendStream(stream, UploadAction);
+            }
             FilePickerFlyout.Hide();
         }
 
@@ -171,9 +182,7 @@ namespace Indirect
                 if (dataPackage.Contains(StandardDataFormats.Bitmap))
                 {
                     var imageStream = await dataPackage.GetBitmapAsync();
-                    var bitmapImage = new BitmapImage();
-                    await bitmapImage.SetSourceAsync(await imageStream.OpenReadAsync());
-                    FilePickerPreview.Source = bitmapImage;
+                    FilePickerPreview.Source = await imageStream.OpenReadAsync();
                     FilePickerFlyout.ShowAt(AddFilesButton);
                 }
             }

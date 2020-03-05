@@ -33,7 +33,7 @@ namespace InstagramAPI
                 if (paginationParameters == null)
                     paginationParameters = PaginationParameters.MaxPagesToLoad(1);
 
-                var inboxResult = await GetDirectInbox(paginationParameters.NextMaxId);
+                var inboxResult = await GetDirectInbox(paginationParameters.NextMaxId).ConfigureAwait(false);
                 if (!inboxResult.IsSucceeded)
                     return inboxResult;
                 var inbox = inboxResult.Value;
@@ -43,7 +43,7 @@ namespace InstagramAPI
                       && !string.IsNullOrEmpty(inbox.Inbox.OldestCursor)
                       && pagesLoaded < paginationParameters.MaximumPagesToLoad)
                 {
-                    var nextInbox = await GetDirectInbox(inbox.Inbox.OldestCursor);
+                    var nextInbox = await GetDirectInbox(inbox.Inbox.OldestCursor).ConfigureAwait(false);
 
                     if (!nextInbox.IsSucceeded)
                         return Result<InboxContainer>.Fail(inbox, nextInbox.Message, nextInbox.Json);
@@ -103,7 +103,7 @@ namespace InstagramAPI
                 if (paginationParameters == null)
                     paginationParameters = PaginationParameters.MaxPagesToLoad(1);
 
-                var thread = await GetDirectThread(threadId, paginationParameters.NextMaxId);
+                var thread = await GetDirectThread(threadId, paginationParameters.NextMaxId).ConfigureAwait(false);
                 if (!thread.IsSucceeded)
                     return thread;
 
@@ -115,7 +115,7 @@ namespace InstagramAPI
                       && !string.IsNullOrEmpty(threadResponse.OldestCursor)
                       && pagesLoaded < paginationParameters.MaximumPagesToLoad)
                 {
-                    var nextThread = await GetDirectThread(threadId, threadResponse.OldestCursor);
+                    var nextThread = await GetDirectThread(threadId, threadResponse.OldestCursor).ConfigureAwait(false);
 
                     if (!nextThread.IsSucceeded)
                     {
@@ -336,10 +336,10 @@ namespace InstagramAPI
         /// <param name="text">Text to send</param>
         /// <param name="link">Link to send</param>
         /// <param name="threadIds">Thread ids</param>
-        public async Task<Result<ItemAckPayloadResponse>> SendLinkAsync(string text, IEnumerable<string> link,
+        public Task<Result<ItemAckPayloadResponse>> SendLinkAsync(string text, IEnumerable<string> link,
             params string[] threadIds)
         {
-            return await SendDirectLink(text, link, threadIds, null);
+            return SendDirectLink(text, link, threadIds, null);
         }
 
         /// <summary>
@@ -348,11 +348,11 @@ namespace InstagramAPI
         /// <param name="text">Text to send</param>
         /// <param name="link">Link to send</param>
         /// <param name="recipients">Recipients ids</param>
-        public async Task<Result<ItemAckPayloadResponse>> SendLinkToRecipientsAsync(string text,
+        public Task<Result<ItemAckPayloadResponse>> SendLinkToRecipientsAsync(string text,
             IEnumerable<string> link,
             params long[] recipients)
         {
-            return await SendDirectLink(text, link, null, recipients);
+            return SendDirectLink(text, link, null, recipients);
         }
 
         /// <summary>

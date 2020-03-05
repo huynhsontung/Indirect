@@ -180,14 +180,14 @@ namespace InstagramAPI
         /// No need to clear data. If IsUserAuthenticated is false, next time when constructor is called,
         /// data will not be loaded.
         /// </summary>
-        public void Logout()
+        public async void Logout()
         {
             IsUserAuthenticated = false;
             SyncClient.Shutdown();
-            _ = PushClient.Shutdown();
             PushClient.UnregisterTasks();
-            PushClient.ConnectionData.Clear();
             SaveToAppSettings();
+            await PushClient.Shutdown();    // long task
+            PushClient.ConnectionData.Clear();
         }
 
         public async Task<Result<CurrentUser>> GetCurrentUserAsync()

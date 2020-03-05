@@ -56,7 +56,7 @@ namespace InstagramAPI
                 progress?.Invoke(upProgress);
                 var response = await _httpClient.SendRequestAsync(requestMessage);
                 var json = await response.Content.ReadAsStringAsync();
-                _logger.LogResponse(response);
+                _logger?.LogResponse(response);
 
                 var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
                 if (response.StatusCode != HttpStatusCode.Ok || obj.IsOk())
@@ -81,6 +81,7 @@ namespace InstagramAPI
                 };
                 response = await _httpClient.PostAsync(configUri, new HttpFormUrlEncodedContent(config));
                 json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
                 obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
                 if (response.StatusCode != HttpStatusCode.Ok || obj.IsOk())
                 {

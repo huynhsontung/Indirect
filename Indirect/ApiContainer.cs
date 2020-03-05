@@ -11,6 +11,7 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
+using Windows.UI.Xaml.Media.Imaging;
 using Indirect.Utilities;
 using Indirect.Wrapper;
 using InstagramAPI;
@@ -286,6 +287,46 @@ namespace Indirect
                 await _instaApi.SendDirectVideoAsync(progress,
                     new InstaVideoUpload(instaVideo, thumbnailImage), SelectedThread.ThreadId);
             }
+        }
+
+
+        /// <summary>
+        /// For screenshot in clipboard
+        /// </summary>
+        /// <param name="stream"></param>
+        public async void SendStream(IRandomAccessStream stream, Action<UploaderProgress> progress)
+        {
+            stream.Seek(0);
+            var bitmap = new BitmapImage();
+            await bitmap.SetSourceAsync(stream);
+            int imageHeight = bitmap.PixelHeight;
+            int imageWidth = bitmap.PixelWidth;
+
+            IBuffer buffer;
+            if (imageWidth > 1080 || imageHeight > 1080)
+            {
+                buffer = await Helpers.CompressImage(stream, 1080, 1080);
+                double widthRatio = (double)1080 / imageWidth;
+                double heightRatio = (double)1080 / imageHeight;
+                double scaleRatio = Math.Min(widthRatio, heightRatio);
+                imageHeight = (int)Math.Floor(imageHeight * scaleRatio);
+                imageWidth = (int)Math.Floor(imageWidth * scaleRatio);
+            }
+            else
+            {
+                buffer = new Buffer((uint) stream.Size);
+                await stream.WriteAsync(buffer);
+            }
+
+            var instaImage = new InstaImage
+            {
+                UploadBuffer = buffer,
+                Width = imageWidth,
+                Height = imageHeight
+            };
+            if (string.IsNullOrEmpty(SelectedThread.ThreadId) || SelectedThread.PendingScore == null) return;
+            await _instaApi.SendDirectPhotoAsync(instaImage, SelectedThread.ThreadId,
+                SelectedThread.PendingScore ?? 0, progress);
         }
 
         public async void UpdateInboxAndSelectedThread()

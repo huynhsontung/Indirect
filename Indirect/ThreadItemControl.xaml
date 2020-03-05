@@ -129,7 +129,7 @@
             <DataTemplate x:Key="LikeTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
                 <TextBlock x:Name="MessageContentNoBorder" 
                            Style="{ThemeResource FluentBodyTextStyle}"
-                           Text="{x:Bind Text}"
+                           Text="{x:Bind Like}"
                            FontSize="24"
                            MaxWidth="250"
                            HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
@@ -271,7 +271,7 @@
             <DataTemplate x:Key="ReelShareTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
                 <StackPanel Orientation="Vertical" 
                             HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
-                    <TextBlock Text="{x:Bind Text}"
+                    <TextBlock Text="{x:Bind Description}"
                                Style="{ThemeResource FluentCaptionTextStyle}"
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                                HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
