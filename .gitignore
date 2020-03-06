@@ -269,3 +269,4 @@ __pycache__/
 **/*.txt
 /InstantMessaging/MqttHelpers/Thrift
 /InstantMessaging/Notification/Thrift
+/Indirect/SECRETS.cs

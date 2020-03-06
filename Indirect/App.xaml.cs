@@ -32,7 +32,7 @@ namespace Indirect
         /// </summary>
         public App()
         {
-            AppCenter.Start("9c5e2e07-388a-469f-bf69-327b5953dbce", typeof(Analytics), typeof(Crashes));
+            AppCenter.Start(APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
             this.InitializeComponent();
             SetTheme();
             this.UnhandledException += OnUnhandledException;
