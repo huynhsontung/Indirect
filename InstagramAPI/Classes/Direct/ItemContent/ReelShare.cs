@@ -14,7 +14,7 @@ namespace InstagramAPI.Classes.Direct.ItemContent
         [JsonProperty("reel_owner_id")]
         public long ReelOwnerId { get; set; }
 
-        [JsonProperty("is_reel_persisted")]
+        [JsonProperty("is_reel_persisted", NullValueHandling = NullValueHandling.Ignore)]
         public bool IsReelPersisted { get; set; }
 
         [JsonProperty("reel_type")]

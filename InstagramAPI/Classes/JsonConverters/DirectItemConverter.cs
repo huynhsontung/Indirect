@@ -18,6 +18,7 @@ namespace InstagramAPI.Classes.JsonConverters
         public override DirectItem ReadJson(JsonReader reader, Type objectType, DirectItem existingValue, bool hasExistingValue,
             JsonSerializer serializer)
         {
+            serializer.NullValueHandling = NullValueHandling.Ignore;
             var itemJson = reader.TokenType == JsonToken.String
                 ? JObject.Parse((string) reader.Value)
                 : JObject.Load(reader);

@@ -17,6 +17,7 @@ using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Push.Packets;
 using Ionic.Zlib;
+using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Push
