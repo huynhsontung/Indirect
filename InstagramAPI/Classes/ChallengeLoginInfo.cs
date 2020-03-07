@@ -1,11 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes
 {
     public class ChallengeLoginInfo
     {
         [JsonProperty("url")]
-        public string Url { get; set; }
+        public Uri Url { get; set; }
 
         [JsonProperty("api_path")]
         public string ApiPath { get; set; }

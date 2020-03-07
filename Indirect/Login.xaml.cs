@@ -22,15 +22,24 @@ namespace Indirect
             this.InitializeComponent();
             Window.Current.SetTitleBar(TitleBarElement);
             Window.Current.Activated += OnWindowFocusChange;
+            Window.Current.SizeChanged += OnWindowSizeChanged;
+            ChallengeWebview.Height = Window.Current.Bounds.Height * 0.8;
+            ChallengePopup.VerticalOffset = -(ChallengeWebview.Height / 2);
+        }
+
+        private void OnWindowSizeChanged(object sender, WindowSizeChangedEventArgs e)
+        {
+            ChallengeWebview.Height = e.Size.Height * 0.8;
+            ChallengePopup.VerticalOffset = -(ChallengeWebview.Height / 2);
         }
 
         private void TextBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             if(e.Key == Windows.System.VirtualKey.Enter)
-                Button_Click(sender, e);
+                LoginButton_Click(sender, e);
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             LoginButton.IsEnabled = false;
             var username = UsernameBox.Text;
@@ -39,34 +48,34 @@ namespace Indirect
             var result = await _viewModel.Login(username, password);
             if (result.Status != ResultStatus.Succeeded || result.Value != LoginResult.Success)
             {
-                ContentDialog failDialog;
                 if (result.Value == LoginResult.ChallengeRequired)
                 {
-                    failDialog = new ContentDialog
+                    if (Instagram.Instance.ChallengeInfo != null && !ChallengePopup.IsOpen)
                     {
-                        Title = "Login failed",
-                        Content = new TextBlock
+                        ChallengeWebview.Navigate(Instagram.Instance.ChallengeInfo.Url);
+                        ChallengeWebview.NavigationStarting += (view, args) =>
                         {
-                            Text = "Challenge required. Please login using the official Instagram website first then try again.",
-                            TextWrapping = TextWrapping.Wrap,
-                            MaxWidth = 250
-                        },
-                        DefaultButton = ContentDialogButton.Close,
-                        CloseButtonText = "Close"
-                    };
+                            if (args.Uri.PathAndQuery == "/" || string.IsNullOrEmpty(args.Uri.PathAndQuery))
+                            {
+                                ChallengePopup.IsOpen = false;
+                            }
+                        };
+                        ChallengePopup.IsOpen = true;
+                    }
+
                 }
                 else
                 {
-                    failDialog = new ContentDialog
+                    var failDialog = new ContentDialog
                     {
                         Title = "Login failed",
                         Content = $"Reason: {result.Message}",
                         DefaultButton = ContentDialogButton.Close,
                         CloseButtonText = "Close"
                     };
+                    var dialogResult = await failDialog.ShowAsync();
                 }
 
-                var dialogResult = await failDialog.ShowAsync();
                 LoginButton.IsEnabled = true;
                 return;
             }
@@ -91,6 +100,11 @@ namespace Indirect
 
                 AppTitleTextBlock.Opacity = 1;
             }
+        }
+
+        private void PopupCloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            ChallengePopup.IsOpen = false;
         }
     }
 }

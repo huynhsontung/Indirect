@@ -97,11 +97,7 @@ namespace Indirect
             SelectedThread = null;
         }
 
-        public async Task<Result<LoginResult>> Login(string username, string password)
-        {
-            var logInResult = await _instaApi.LoginAsync(username, password);
-            return logInResult;
-        }
+        public Task<Result<LoginResult>> Login(string username, string password) => _instaApi.LoginAsync(username, password);
 
         public void Logout()
         {
@@ -171,11 +167,20 @@ namespace Indirect
         {
             if (SelectedThread == null)
                 return;
-            var result = await _instaApi.GetThreadAsync(SelectedThread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
-            if (result.IsSucceeded)
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                    CoreDispatcherPriority.Normal,
-                    () => { SelectedThread.Update(result.Value); });
+            try
+            {
+                var result = await _instaApi.GetThreadAsync(SelectedThread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
+                if (result.IsSucceeded)
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+                        CoreDispatcherPriority.Normal,
+                        () => { SelectedThread.Update(result.Value); });
+            }
+            catch (Exception e)
+            {
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
+            }
         }
 
         public async void SendLike()
@@ -403,7 +408,7 @@ namespace Indirect
 
         public async void MarkLatestItemSeen(InstaDirectInboxThreadWrapper thread)
         {
-            if (string.IsNullOrEmpty(thread?.ThreadId)) return;
+            if (thread == null || string.IsNullOrEmpty(thread?.ThreadId)) return;
             if (thread.LastSeenAt.TryGetValue(thread.ViewerId, out var lastSeen))
             {
                 if (string.IsNullOrEmpty(thread.LastPermanentItem?.ItemId) || 

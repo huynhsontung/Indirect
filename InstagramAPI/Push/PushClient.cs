@@ -130,8 +130,8 @@ namespace InstagramAPI.Push
 
             // Hand over MQTT socket to socket broker
             Debug.WriteLine($"{nameof(PushClient)}: Transferring sockets.");
-            await SendPing();
-            await Shutdown();
+            await SendPing().ConfigureAwait(false);
+            await Shutdown().ConfigureAwait(false);
             await Socket.CancelIOAsync();
             Socket.TransferOwnership(
                 SOCKET_ID,
@@ -148,89 +148,109 @@ namespace InstagramAPI.Push
                 {
                     var socket = socketInformation.StreamSocket;
                     if (string.IsNullOrEmpty(ConnectionData.FbnsToken)) // if we don't have any push data, start fresh
-                        await StartFresh();
+                        await StartFresh().ConfigureAwait(false);
                     else
-                        await StartWithExistingSocket(socket);
+                        await StartWithExistingSocket(socket).ConfigureAwait(false);
                 }
                 else
                 {
-                    await StartFresh();
+                    await StartFresh().ConfigureAwait(false);
                 }
             }
             catch (Exception)
             {
-                await StartFresh();
+                await StartFresh().ConfigureAwait(false);
             }
         }
 
         public async Task StartWithExistingSocket(StreamSocket socket)
         {
-            Debug.WriteLine($"{nameof(PushClient)}: Starting with existing socket.");
-            Socket = socket;
-            if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
-            _loopGroup = new SingleThreadEventLoop();
-
-            var streamSocketChannel = new StreamSocketChannel(Socket);
-            streamSocketChannel.Pipeline.AddLast(new FbnsPacketEncoder(), new FbnsPacketDecoder(), this);
-
-            await _loopGroup.RegisterAsync(streamSocketChannel);
-            await SendPing();
             try
             {
+                Debug.WriteLine($"{nameof(PushClient)}: Starting with existing socket.");
+                Socket = socket;
+                if (_loopGroup != null) await Shutdown().ConfigureAwait(false);
+                _loopGroup = new SingleThreadEventLoop();
+
+                var streamSocketChannel = new StreamSocketChannel(Socket);
+                streamSocketChannel.Pipeline.AddLast(new FbnsPacketEncoder(), new FbnsPacketDecoder(), this);
+
+                await _loopGroup.RegisterAsync(streamSocketChannel).ConfigureAwait(false);
+                await SendPing().ConfigureAwait(false);
                 await _context.Executor.Schedule(KeepAliveLoop, TimeSpan.FromSeconds(KEEP_ALIVE - 60));
             }
             catch (TaskCanceledException)
             {
                 // pass
             }
+            catch (Exception e)
+            {
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
+                await Shutdown().ConfigureAwait(false);
+            }
         }
 
         public async Task StartFresh()
         {
-            Debug.WriteLine($"{nameof(PushClient)}: Starting fresh.");
-            if (_loopGroup != null) await _loopGroup.ShutdownGracefullyAsync();
-            _loopGroup = new SingleThreadEventLoop();
-
-            var connectPacket = new FbnsConnectPacket
+            try
             {
-                Payload = await PayloadProcessor.BuildPayload(ConnectionData)
-            };
+                Debug.WriteLine($"{nameof(PushClient)}: Starting fresh.");
+                if (_loopGroup != null) await Shutdown();
+                _loopGroup = new SingleThreadEventLoop();
 
-            Socket = new StreamSocket();
-            Socket.Control.KeepAlive = true;
-            Socket.Control.NoDelay = true;
-            if (await RequestBackgroundAccess())
-            {
-                try
+                var connectPacket = new FbnsConnectPacket
                 {
-                    Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
-                }
-                catch (Exception connectedStandby)
+                    Payload = await PayloadProcessor.BuildPayload(ConnectionData)
+                };
+
+                Socket = new StreamSocket();
+                Socket.Control.KeepAlive = true;
+                Socket.Control.NoDelay = true;
+                if (await RequestBackgroundAccess())
                 {
-                    Debug.WriteLine(connectedStandby);
-                    Debug.WriteLine($"{nameof(PushClient)}: Connected standby not available.");
                     try
                     {
-                        Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
+                        Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
                     }
-                    catch (Exception e)
+                    catch (Exception connectedStandby)
                     {
+                        Debug.WriteLine(connectedStandby);
+                        Debug.WriteLine($"{nameof(PushClient)}: Connected standby not available.");
+                        try
+                        {
+                            Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
+                        }
+                        catch (Exception e)
+                        {
 #if !DEBUG
-                        Crashes.TrackError(e);
+                            Crashes.TrackError(e);
 #endif
-                        Debug.WriteLine(e);
-                        Debug.WriteLine($"{nameof(PushClient)}: Failed to transfer socket completely!");
+                            Debug.WriteLine(e);
+                            Debug.WriteLine($"{nameof(PushClient)}: Failed to transfer socket completely!");
+                            await Shutdown().ConfigureAwait(false);
+                            return;
+                        }
                     }
                 }
+
+                await Socket.ConnectAsync(new HostName(HOST_NAME), "443", SocketProtectionLevel.Tls12);
+
+                var streamSocketChannel = new StreamSocketChannel(Socket);
+                streamSocketChannel.Pipeline.AddLast(new FbnsPacketEncoder(), new FbnsPacketDecoder(), this);
+
+                await _loopGroup.RegisterAsync(streamSocketChannel).ConfigureAwait(false);
+                await streamSocketChannel.WriteAndFlushAsync(connectPacket).ConfigureAwait(false);
             }
-
-            await Socket.ConnectAsync(new HostName(HOST_NAME), "443", SocketProtectionLevel.Tls12);
-
-            var streamSocketChannel = new StreamSocketChannel(Socket);
-            streamSocketChannel.Pipeline.AddLast(new FbnsPacketEncoder(), new FbnsPacketDecoder(), this);
-
-            await _loopGroup.RegisterAsync(streamSocketChannel);
-            await streamSocketChannel.WriteAndFlushAsync(connectPacket);
+            catch (Exception e)
+            {
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
+                await Shutdown().ConfigureAwait(false);
+            }
+            
         }
 
         public async Task Shutdown()
@@ -240,7 +260,17 @@ namespace InstagramAPI.Push
                 Debug.WriteLine("Stopped pinging push server");
                 var loopGroup = _loopGroup;
                 _loopGroup = null;
-                await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1));
+                try
+                {
+                    await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1))
+                        .ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+#if !DEBUG
+                    Crashes.TrackError(e);
+#endif
+                }
             }
         }
 
@@ -268,61 +298,76 @@ namespace InstagramAPI.Push
 
         protected override async void ChannelRead0(IChannelHandlerContext ctx, Packet msg)
         {
-            _context = ctx; // Save context for manual Ping later
-            switch (msg.PacketType)
+            try
             {
-                case PacketType.CONNACK:
-                    Debug.WriteLine($"{nameof(PushClient)}:\tCONNACK received.");
-                    ConnectionData.UpdateAuth(((FbnsConnAckPacket)msg).Authentication);
-                    RegisterMqttClient(ctx);
-                    break;
+                _context = ctx; // Save context for manual Ping later
+                switch (msg.PacketType)
+                {
+                    case PacketType.CONNACK:
+                        Debug.WriteLine($"{nameof(PushClient)}:\tCONNACK received.");
+                        ConnectionData.UpdateAuth(((FbnsConnAckPacket) msg).Authentication);
+                        RegisterMqttClient(ctx);
+                        break;
 
-                case PacketType.PUBLISH:
-                    Debug.WriteLine($"{nameof(PushClient)}:\tPUBLISH received.");
-                    var publishPacket = (PublishPacket)msg;
-                    if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
-                    {
-                        await ctx.WriteAndFlushAsync(PubAckPacket.InResponseTo(publishPacket));
-                    }
-                    var payload = DecompressPayload(publishPacket.Payload);
-                    var json = Encoding.UTF8.GetString(payload);
-                    Debug.WriteLine($"{nameof(PushClient)}:\tMQTT json: {json}");
-                    switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
-                    {
-                        case TopicIds.Message:
-                            var message = JsonConvert.DeserializeObject<PushReceivedEventArgs>(json);
-                            message.Json = json;
-                            OnMessageReceived(message);
-                            break;
-                        case TopicIds.RegResp:
-                            OnRegisterResponse(json);
-                            try
-                            {
-                                await _context.Executor.Schedule(KeepAliveLoop, TimeSpan.FromSeconds(KEEP_ALIVE - 60));
-                            }
-                            catch (TaskCanceledException)
-                            {
-                                // pass
-                            }
-                            break;
-                        default:
-                            Debug.WriteLine($"Unknown topic received: {publishPacket.TopicName}", "Warning");
-                            break;
-                    }
-                    break;
+                    case PacketType.PUBLISH:
+                        Debug.WriteLine($"{nameof(PushClient)}:\tPUBLISH received.");
+                        var publishPacket = (PublishPacket) msg;
+                        if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
+                        {
+                            await ctx.WriteAndFlushAsync(PubAckPacket.InResponseTo(publishPacket));
+                        }
 
-                case PacketType.PUBACK:
-                    Debug.WriteLine($"{nameof(PushClient)}:\tPUBACK received.");
-                    _waitingForPubAck = false;
-                    break;
+                        var payload = DecompressPayload(publishPacket.Payload);
+                        var json = Encoding.UTF8.GetString(payload);
+                        Debug.WriteLine($"{nameof(PushClient)}:\tMQTT json: {json}");
+                        switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
+                        {
+                            case TopicIds.Message:
+                                var message = JsonConvert.DeserializeObject<PushReceivedEventArgs>(json);
+                                message.Json = json;
+                                OnMessageReceived(message);
+                                break;
+                            case TopicIds.RegResp:
+                                OnRegisterResponse(json);
+                                try
+                                {
+                                    await _context.Executor.Schedule(KeepAliveLoop,
+                                        TimeSpan.FromSeconds(KEEP_ALIVE - 60));
+                                }
+                                catch (TaskCanceledException)
+                                {
+                                    // pass
+                                }
 
-                // todo: PingResp never arrives even though data was received. Decoder problem?
-                case PacketType.PINGRESP:
-                    Debug.WriteLine($"{nameof(PushClient)}:\tPINGRESP received.");
-                    break;
+                                break;
+                            default:
+                                Debug.WriteLine($"Unknown topic received: {publishPacket.TopicName}", "Warning");
+                                break;
+                        }
 
-                default:
-                    throw new NotSupportedException($"Packet type {msg.PacketType} is not supported.");
+                        break;
+
+                    case PacketType.PUBACK:
+                        Debug.WriteLine($"{nameof(PushClient)}:\tPUBACK received.");
+                        _waitingForPubAck = false;
+                        break;
+
+                    // todo: PingResp never arrives even though data was received. Decoder problem?
+                    case PacketType.PINGRESP:
+                        Debug.WriteLine($"{nameof(PushClient)}:\tPINGRESP received.");
+                        break;
+
+                    default:
+                        throw new NotSupportedException($"Packet type {msg.PacketType} is not supported.");
+                }
+            }
+            catch (Exception e)
+            {
+                // Something went wrong with Push client. Shutting down.
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
+                await Shutdown().ConfigureAwait(false);
             }
         }
 

@@ -48,8 +48,8 @@ namespace InstagramAPI
         private readonly HttpClient _httpClient = new HttpClient();
         private readonly ApiRequestMessage _apiRequestMessage;
         private readonly DebugLogger _logger;
-        private TwoFactorLoginInfo _twoFactorInfo;  // Only used when login returns two factor
-        private ChallengeLoginInfo _challengeInfo;  // Only used when login returns challenge
+        public TwoFactorLoginInfo TwoFactorInfo { get; private set; }  // Only used when login returns two factor
+        public ChallengeLoginInfo ChallengeInfo { get; private set; }  // Only used when login returns challenge
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
 
         private Instagram()
@@ -127,15 +127,15 @@ namespace InstagramAPI
                     {
                         if (loginFailReason.TwoFactorLoginInfo != null)
                             Session.Username = loginFailReason.TwoFactorLoginInfo.Username;
-                        _twoFactorInfo = loginFailReason.TwoFactorLoginInfo;
+                        TwoFactorInfo = loginFailReason.TwoFactorLoginInfo;
                         //2FA is required!
                         return Result<LoginResult>.Fail(LoginResult.TwoFactorRequired, "Two Factor Authentication is required", json);
                     }
                     if (loginFailReason.ErrorType == "checkpoint_challenge_required"
                        /* || !string.IsNullOrEmpty(loginFailReason.Message) && loginFailReason.Message == "challenge_required"*/)
                     {
-                        _challengeInfo = loginFailReason.Challenge;
-
+                        ChallengeInfo = loginFailReason.Challenge;
+                        
                         return Result<LoginResult>.Fail(LoginResult.ChallengeRequired, "Challenge is required", json);
                     }
                     if (loginFailReason.ErrorType == "rate_limit_error")
@@ -186,7 +186,7 @@ namespace InstagramAPI
             SyncClient.Shutdown();
             PushClient.UnregisterTasks();
             SaveToAppSettings();
-            await PushClient.Shutdown();    // long task
+            await PushClient.Shutdown().ConfigureAwait(false);    // long task
             PushClient.ConnectionData.Clear();
         }
 

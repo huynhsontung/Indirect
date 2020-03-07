@@ -131,7 +131,7 @@ namespace Indirect.Wrapper
             MentionsMuted = source.MentionsMuted;
 
             Inviter = source.Inviter;
-            LastPermanentItem = source.LastPermanentItem.Timestamp > LastPermanentItem.Timestamp ?
+            LastPermanentItem = source.LastPermanentItem?.Timestamp > LastPermanentItem?.Timestamp ?
                 source.LastPermanentItem : LastPermanentItem;
             LeftUsers = source.LeftUsers;
             LastSeenAt = source.LastSeenAt;
@@ -198,6 +198,7 @@ namespace Indirect.Wrapper
 
         private void UpdateUserList(List<UserWithFriendship> users)
         {
+            if (users == null || users.Count == 0) return;
             var toBeAdded = users.Where(p2 => Users.All(p1 => !p1.Equals(p2)));
             var toBeDeleted = Users.Where(p1 => users.All(p2 => !p1.Equals(p2)));
             foreach (var user in toBeAdded)
