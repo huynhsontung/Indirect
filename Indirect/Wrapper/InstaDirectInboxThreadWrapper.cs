@@ -35,6 +35,7 @@ namespace Indirect.Wrapper
             _instaApi = api;
             Users.Add(user);
             Title = user.Username;
+            if (Users.Count == 0) Users.Add(new InstaUser());
         }
 
         public InstaDirectInboxThreadWrapper(RankedRecipientThread rankedThread, Instagram api)
@@ -52,6 +53,7 @@ namespace Indirect.Wrapper
             {
                 Users.Add(user);
             }
+            if (Users.Count == 0) Users.Add(new InstaUser());
         }
 
         public InstaDirectInboxThreadWrapper(DirectThread source, Instagram api)
@@ -91,6 +93,8 @@ namespace Indirect.Wrapper
             {
                 Users.Add(instaUserShortFriendship);
             }
+
+            if (Users.Count == 0) Users.Add(new InstaUser());
         }
 
         // This does not update thread's metadata. Better run Inbox.Update() after this.

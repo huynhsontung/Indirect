@@ -16,12 +16,12 @@
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="FromThemItemBackground" Color="{StaticResource SystemBaseLowColor}"></SolidColorBrush>
+                    <SolidColorBrush x:Key="FromThemItemBackground" Color="#333333"></SolidColorBrush>
                     <SolidColorBrush x:Key="FromMeItemBackground" Color="{ThemeResource SystemAccentColorDark1}"></SolidColorBrush>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="FromThemItemBackground" Color="{StaticResource SystemBaseLowColor}"></SolidColorBrush>
-                    <SolidColorBrush x:Key="FromMeItemBackground" Color="{ThemeResource SystemAccentColorLight1}"></SolidColorBrush>
+                    <SolidColorBrush x:Key="FromThemItemBackground" Color="#e0e0e0"></SolidColorBrush>
+                    <SolidColorBrush x:Key="FromMeItemBackground" Color="{ThemeResource SystemAccentColorLight3}"></SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
@@ -278,7 +278,7 @@
                                Margin="0,0,0,2"/>
                     <controls:ImageEx Source="{x:Bind PreviewImageUri}"
                                       Visibility="{Binding RelativeSource={RelativeSource Self}, Path=Source, Converter={StaticResource NullVisibilityConverter}}"
-                                      MaxWidth="100" Height="200" Stretch="UniformToFill"
+                                      MaxWidth="100" Height="200" Stretch="UniformToFill" Margin="0,0,0,-12"
                                       HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                                       CornerRadius="2" Tapped="ReelShareImage_Tapped"/>
                     <Border x:Name="MessageContentWithBorder"

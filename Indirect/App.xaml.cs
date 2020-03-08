@@ -35,7 +35,6 @@ namespace Indirect
             AppCenter.Start(APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
             this.InitializeComponent();
             SetTheme();
-            this.UnhandledException += OnUnhandledException;
             this.Suspending += OnSuspending;
             this.Resuming += OnResuming;
             this.EnteredBackground += OnEnteredBackground;
@@ -56,36 +55,6 @@ namespace Indirect
                 case "Light":
                     RequestedTheme = ApplicationTheme.Light;
                     break;
-            }
-        }
-
-        public async void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            try
-            {
-                var dialog = new ContentDialog()
-                {
-                    Title = "An error occured",
-                    Content = new ScrollViewer()
-                    {
-                        Content = new TextBlock()
-                        {
-                            Text = e.Exception.Message + Environment.NewLine + e.Exception.StackTrace,
-                            TextWrapping = TextWrapping.Wrap,
-                            IsTextSelectionEnabled = true
-                        },
-                        HorizontalScrollMode = ScrollMode.Disabled,
-                        VerticalScrollMode = ScrollMode.Auto,
-                        MaxWidth = 500
-                    },
-                    CloseButtonText = "Close Application",
-                    DefaultButton = ContentDialogButton.Close
-                };
-                await dialog.ShowAsync();
-            }
-            catch (Exception innerException)
-            {
-                Debug.WriteLine(innerException);
             }
         }
 

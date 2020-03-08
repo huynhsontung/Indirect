@@ -20,6 +20,7 @@
             </Paragraph>
         </RichTextBlock>
         <HyperlinkButton Margin="0,12,0,0" Content="Data Policy" NavigateUri="https://help.instagram.com/519522125107875"/>
+        <HyperlinkButton Margin="0,8,0,0" Content="GitHub page" NavigateUri="https://github.com/huynhsontung/Indirect"/>
         <TextBlock Style="{ThemeResource FluentBodyTextStyle}" Text="Developed by Tung Huynh" Margin="0,16,0,0"/>
 
     </StackPanel>

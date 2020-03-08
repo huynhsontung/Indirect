@@ -57,7 +57,7 @@ namespace InstagramAPI.Sync
             }
         }
 
-        public async void Start(long seqId, DateTimeOffset snapshotAt)
+        public async Task Start(long seqId, DateTimeOffset snapshotAt)
         {
             Debug.WriteLine("Sync client starting");
             if (seqId == 0)
