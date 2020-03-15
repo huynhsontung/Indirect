@@ -79,7 +79,11 @@ namespace Indirect
             LoginButton.IsEnabled = false;
             var username = UsernameBox.Text;
             var password = PasswordBox.Password;
-            if (username.Length <= 0 || password.Length <= 0) return;
+            if (username.Length <= 0 || password.Length <= 0)
+            {
+                LoginButton.IsEnabled = true;
+                return;
+            }
             var result = await _viewModel.Login(username, password);
             if (result.Status != ResultStatus.Succeeded || result.Value != LoginResult.Success)
             {
@@ -143,6 +147,7 @@ namespace Indirect
         private void FbLoginButton_OnClick(object sender, RoutedEventArgs e)
         {
             WebviewPopup.IsOpen = true;
+            // https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/#login
             LoginWebview.Navigate(new Uri("https://m.facebook.com/v6.0/dialog/oauth?client_id=124024574287414&scope=email&response_type=token&redirect_uri=https%3A%2F%2Fwww.instagram.com%2Faccounts%2Fsignup%2F"));
         }
     }

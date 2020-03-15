@@ -15,6 +15,15 @@
 
     <Page.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="MainBackground" Color="#1a1a1a"></SolidColorBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="MainBackground" Color="#fafafa"></SolidColorBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
             <converters:HasNewMessageStyleConverter x:Key="HasNewMessageStyleConverter"
                                                     NothingNew="{StaticResource NothingNew}"
                                                     HasNewMessage="{StaticResource HasNewMessage}"/>
@@ -66,6 +75,7 @@
         </Button>
 
         <controls:MasterDetailsView x:Name="MainLayout"
+                                    Background="{ThemeResource MainBackground}"
                                     Grid.Row="0"
                                     Grid.RowSpan="2"
                                     BackButtonBehavior="Manual"
