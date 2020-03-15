@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.Networking;
@@ -48,6 +49,7 @@ namespace InstagramAPI
         private readonly HttpClient _httpClient = new HttpClient();
         private readonly ApiRequestMessage _apiRequestMessage;
         private readonly DebugLogger _logger;
+        private string _fbAccessToken;
         public TwoFactorLoginInfo TwoFactorInfo { get; private set; }  // Only used when login returns two factor
         public ChallengeLoginInfo ChallengeInfo { get; private set; }  // Only used when login returns challenge
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
@@ -175,6 +177,131 @@ namespace InstagramAPI
             }
         }
 
+        /// <summary>
+        ///     Login with Facebook access token
+        /// </summary>
+        /// <param name="fbAccessToken">Facebook access token</param>
+        /// <param name="cookiesContainer">Cookies</param>
+        /// <returns>
+        ///     Success --> is succeed
+        ///     TwoFactorRequired --> requires 2FA login.
+        ///     BadPassword --> Password is wrong
+        ///     InvalidUser --> User/phone number is wrong
+        ///     Exception --> Something wrong happened
+        ///     ChallengeRequired --> You need to pass Instagram challenge
+        /// </returns>
+        public async Task<Result<LoginResult>> LoginWithFacebookAsync(string fbAccessToken)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(fbAccessToken)) throw new ArgumentNullException(nameof(fbAccessToken));
+                if (GetCsrfToken() == string.Empty)
+                {
+                    var firstResponse = await _httpClient.GetAsync(UriCreator.BaseInstagramUri);
+                    _logger?.LogResponse(firstResponse);
+                }
+
+                var instaUri = UriCreator.GetFacebookSignUpUri();
+
+                var data = new JObject
+                {
+                    {"dryrun", "true"},
+                    {"phone_id", Device.PhoneId.ToString()},
+                    {"_csrftoken", GetCsrfToken()},
+                    {"adid", Guid.NewGuid().ToString()},
+                    {"guid",  Device.Uuid.ToString()},
+                    {"_uuid",  Device.Uuid.ToString()},
+                    {"device_id", Device.DeviceId},
+                    {"waterfall_id", Guid.NewGuid().ToString()},
+                    {"fb_access_token", fbAccessToken},
+                };
+
+                _fbAccessToken = fbAccessToken;
+                var request = GetSignedRequest(instaUri, data);
+                var response = await _httpClient.SendRequestAsync(request);
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                {
+                    var loginFailReason = JsonConvert.DeserializeObject<LoginBaseResponse>(json);
+
+                    if (loginFailReason.InvalidCredentials)
+                        return Result<LoginResult>.Fail(loginFailReason.ErrorType == "bad_password"
+                            ? LoginResult.BadPassword
+                            : LoginResult.InvalidUser, "Invalid Credentials", json);
+                    if (loginFailReason.TwoFactorRequired)
+                    {
+                        if (loginFailReason.TwoFactorLoginInfo != null)
+                            Session.Username = loginFailReason.TwoFactorLoginInfo.Username;
+                        TwoFactorInfo = loginFailReason.TwoFactorLoginInfo;
+                        return Result<LoginResult>.Fail(LoginResult.TwoFactorRequired, "Two Factor Authentication is required", json);
+                    }
+                    if (loginFailReason.ErrorType == "checkpoint_challenge_required")
+                    {
+                        ChallengeInfo = loginFailReason.Challenge;
+
+                        return Result<LoginResult>.Fail(LoginResult.ChallengeRequired, "Challenge is required", json);
+                    }
+                    if (loginFailReason.ErrorType == "rate_limit_error")
+                    {
+                        return Result<LoginResult>.Fail(LoginResult.LimitError, "Please wait a few minutes before you try again.", json);
+                    }
+                    if (loginFailReason.ErrorType == "inactive user" || loginFailReason.ErrorType == "inactive_user")
+                    {
+                        return Result<LoginResult>.Fail(LoginResult.InactiveUser, $"{loginFailReason.Message}\r\nHelp url: {loginFailReason.HelpUrl}");
+                    }
+                    if (loginFailReason.ErrorType == "checkpoint_logged_out")
+                    {
+                        return Result<LoginResult>.Fail(LoginResult.CheckpointLoggedOut, $"{loginFailReason.ErrorType} {loginFailReason.CheckpointUrl}");
+                    }
+                    return Result<LoginResult>.Fail(LoginResult.Exception, json: json);
+                }
+
+                var fbUserId = string.Empty;
+                InstaUser loginInfoUser = null;
+                if (json.Contains("\"account_created\""))
+                {
+                    var rmt = JsonConvert.DeserializeObject<FacebookRegistrationResponse>(json);
+                    if (rmt?.AccountCreated != null)
+                    {
+                        fbUserId = rmt?.FbUserId;
+                        if (rmt.AccountCreated.Value)
+                        {
+                            loginInfoUser = JsonConvert.DeserializeObject<FacebookLoginResponse>(json)?.CreatedUser;
+                        }
+                        else
+                        {
+                            return Result<LoginResult>.Fail(LoginResult.Exception, "Facebook account is not linked", json);
+                        }
+                    }
+                }
+
+                if (loginInfoUser == null)
+                {
+                    var obj = JsonConvert.DeserializeObject<FacebookLoginResponse>(json);
+                    fbUserId = obj?.FbUserId;
+                    loginInfoUser = obj?.LoggedInUser;
+                }
+
+                if (loginInfoUser == null) return Result<LoginResult>.Fail(LoginResult.Exception, json: json);
+
+                IsUserAuthenticated = true;
+                Session.LoggedInUser = loginInfoUser;
+                Session.RankToken = $"{Session.LoggedInUser.Pk}_{Device.PhoneId}";
+                Session.CsrfToken = GetCsrfToken();
+                Session.FacebookUserId = fbUserId;
+                Session.Username = loginInfoUser.Username;
+                Session.FacebookAccessToken = fbAccessToken;
+                Session.Password = "LOGGED_IN_THROUGH_FB";
+                return Result<LoginResult>.Success(LoginResult.Success, json);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<LoginResult>.Except(exception, LoginResult.Exception);
+            }
+        }
 
         /// <summary>
         /// No need to clear data. If IsUserAuthenticated is false, next time when constructor is called,

@@ -117,6 +117,9 @@ namespace Indirect
 
         public Task<Result<LoginResult>> Login(string username, string password) => _instaApi.LoginAsync(username, password);
 
+        public Task<Result<LoginResult>> LoginWithFacebook(string fbAccessToken) =>
+            _instaApi.LoginWithFacebookAsync(fbAccessToken);
+
         public void Logout()
         {
             _instaApi.Logout();

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+using Windows.Foundation;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -23,14 +25,47 @@ namespace Indirect
             Window.Current.SetTitleBar(TitleBarElement);
             Window.Current.Activated += OnWindowFocusChange;
             Window.Current.SizeChanged += OnWindowSizeChanged;
-            ChallengeWebview.Height = Window.Current.Bounds.Height * 0.8;
-            ChallengePopup.VerticalOffset = -(ChallengeWebview.Height / 2);
+            LoginWebview.Height = Window.Current.Bounds.Height * 0.8;
+            WebviewPopup.VerticalOffset = -(LoginWebview.Height / 2);
+            LoginWebview.NavigationStarting += async (view, args) =>
+            {
+                // Clearing challenge
+                if (args.Uri.PathAndQuery == "/" || string.IsNullOrEmpty(args.Uri.PathAndQuery))
+                {
+                    WebviewPopup.IsOpen = false;
+                }
+
+                // Facebook OAuth Login
+                if (args.Uri.PathAndQuery.Contains("accounts/signup", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Uri looks like this: https://www.instagram.com/accounts/signup/?#access_token=...
+                    WebviewPopup.IsOpen = false;
+                    FbLoginButton.IsEnabled = false;
+                    var query = args.Uri.Fragment.Substring(1); // turn fragment into query (remove the '#')
+                    var urlParams = new WwwFormUrlDecoder(query);
+                    var fbToken = urlParams.GetFirstValueByName("access_token");
+                    if (string.IsNullOrEmpty(fbToken))
+                    {
+                        await ShowLoginErrorDialog("Failed to acquire access token");
+                        FbLoginButton.IsEnabled = true;
+                        return;
+                    }
+                    var result = await _viewModel.LoginWithFacebook(fbToken).ConfigureAwait(true);
+                    if (!result.IsSucceeded)
+                    {
+                        await ShowLoginErrorDialog(result.Message);
+                        FbLoginButton.IsEnabled = true;
+                        return;
+                    }
+                    Frame.Navigate(typeof(MainPage));
+                }
+            };
         }
 
         private void OnWindowSizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
-            ChallengeWebview.Height = e.Size.Height * 0.8;
-            ChallengePopup.VerticalOffset = -(ChallengeWebview.Height / 2);
+            LoginWebview.Height = e.Size.Height * 0.8;
+            WebviewPopup.VerticalOffset = -(LoginWebview.Height / 2);
         }
 
         private void TextBox_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -50,36 +85,34 @@ namespace Indirect
             {
                 if (result.Value == LoginResult.ChallengeRequired)
                 {
-                    if (Instagram.Instance.ChallengeInfo != null && !ChallengePopup.IsOpen)
+                    if (Instagram.Instance.ChallengeInfo != null && !WebviewPopup.IsOpen)
                     {
-                        ChallengeWebview.Navigate(Instagram.Instance.ChallengeInfo.Url);
-                        ChallengeWebview.NavigationStarting += (view, args) =>
-                        {
-                            if (args.Uri.PathAndQuery == "/" || string.IsNullOrEmpty(args.Uri.PathAndQuery))
-                            {
-                                ChallengePopup.IsOpen = false;
-                            }
-                        };
-                        ChallengePopup.IsOpen = true;
+                        LoginWebview.Navigate(Instagram.Instance.ChallengeInfo.Url);
+                        WebviewPopup.IsOpen = true;
                     }
 
                 }
                 else
                 {
-                    var failDialog = new ContentDialog
-                    {
-                        Title = "Login failed",
-                        Content = $"Reason: {result.Message}",
-                        DefaultButton = ContentDialogButton.Close,
-                        CloseButtonText = "Close"
-                    };
-                    var dialogResult = await failDialog.ShowAsync();
+                    await ShowLoginErrorDialog(result.Message);
                 }
 
                 LoginButton.IsEnabled = true;
                 return;
             }
-            Frame.Navigate(typeof(MainPage), _viewModel);
+            Frame.Navigate(typeof(MainPage));
+        }
+
+        private async Task ShowLoginErrorDialog(string message)
+        {
+            var failDialog = new ContentDialog
+            {
+                Title = "Login failed",
+                Content = $"Reason: {message}",
+                DefaultButton = ContentDialogButton.Close,
+                CloseButtonText = "Close"
+            };
+            var dialogResult = await failDialog.ShowAsync();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -104,7 +137,13 @@ namespace Indirect
 
         private void PopupCloseButton_Click(object sender, RoutedEventArgs e)
         {
-            ChallengePopup.IsOpen = false;
+            WebviewPopup.IsOpen = false;
+        }
+
+        private void FbLoginButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            WebviewPopup.IsOpen = true;
+            LoginWebview.Navigate(new Uri("https://m.facebook.com/v6.0/dialog/oauth?client_id=124024574287414&scope=email&response_type=token&redirect_uri=https%3A%2F%2Fwww.instagram.com%2Faccounts%2Fsignup%2F"));
         }
     }
 }

@@ -16,6 +16,13 @@ namespace InstagramAPI
             return instaUri;
         }
 
+        public static Uri GetFacebookSignUpUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/fb/facebook_signup/", out var instaUri))
+                throw new Exception("Cant create URI for facebook sign up url");
+            return instaUri;
+        }
+
         public static Uri GetCurrentUserUri()
         {
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/accounts/current_user?edit=true", out var instaUri))

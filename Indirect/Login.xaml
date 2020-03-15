@@ -41,8 +41,14 @@
         <StackPanel Grid.Row="0" Grid.RowSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBox x:Name="UsernameBox" Width="200" PlaceholderText="Username" Margin="0,0,0,20"/>
             <PasswordBox x:Name="PasswordBox" Width="200" PlaceholderText="Password" Margin="0,0,0,20" KeyDown="TextBox_KeyDown"/>
-            <Button x:Name="LoginButton" Content="Login" HorizontalAlignment="Center" Click="LoginButton_Click"/>
-            
+            <Button x:Name="LoginButton" Content="Log in" HorizontalAlignment="Center" Margin="0,0,0,10" Click="LoginButton_Click"/>
+            <NavigationViewItemSeparator/>
+            <Button x:Name="FbLoginButton" HorizontalAlignment="Center" Margin="0,10,0,0" Click="FbLoginButton_OnClick" Style="{ThemeResource ButtonRevealStyle}" Background="#1877f2">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="Assets/facebook-logo.svg" Height="36" Width="36" Margin="-8" VerticalAlignment="Center"/>
+                    <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Foreground="White">Log in With Facebook</TextBlock>
+                </StackPanel>
+            </Button>
         </StackPanel>
         
         <StackPanel Grid.Row="2" Orientation="Vertical">
@@ -58,10 +64,10 @@
             </RichTextBlock>
         </StackPanel>
 
-        <Popup Grid.Row="1" x:Name="ChallengePopup" IsOpen="False" HorizontalAlignment="Center" VerticalAlignment="Center" HorizontalOffset="-190" VerticalOffset="-200">
+        <Popup Grid.Row="1" x:Name="WebviewPopup" IsOpen="False" HorizontalAlignment="Center" VerticalAlignment="Center" HorizontalOffset="-190" VerticalOffset="-200">
             <StackPanel>
                 <Button Content="Close" Click="PopupCloseButton_Click" Canvas.ZIndex="1" VerticalAlignment="Top" HorizontalAlignment="Right"/>
-                <WebView x:Name="ChallengeWebview" MinWidth="380" Height="400"/>
+                <WebView x:Name="LoginWebview" MinWidth="380" Height="400"/>
             </StackPanel>
         </Popup>
     </Grid>
