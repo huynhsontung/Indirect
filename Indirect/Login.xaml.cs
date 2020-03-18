@@ -8,6 +8,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using InstagramAPI;
 using InstagramAPI.Classes;
+using Microsoft.AppCenter.Crashes;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -41,23 +42,36 @@ namespace Indirect
                     // Uri looks like this: https://www.instagram.com/accounts/signup/?#access_token=...
                     WebviewPopup.IsOpen = false;
                     FbLoginButton.IsEnabled = false;
-                    var query = args.Uri.Fragment.Substring(1); // turn fragment into query (remove the '#')
-                    var urlParams = new WwwFormUrlDecoder(query);
-                    var fbToken = urlParams.GetFirstValueByName("access_token");
-                    if (string.IsNullOrEmpty(fbToken))
+                    try
                     {
-                        await ShowLoginErrorDialog("Failed to acquire access token");
-                        FbLoginButton.IsEnabled = true;
-                        return;
+                        var query = args.Uri.Fragment.Substring(1); // turn fragment into query (remove the '#')
+                        var urlParams = new WwwFormUrlDecoder(query);
+                        var fbToken = urlParams.GetFirstValueByName("access_token");
+                        if (string.IsNullOrEmpty(fbToken))
+                        {
+                            await ShowLoginErrorDialog("Failed to acquire access token");
+                            FbLoginButton.IsEnabled = true;
+                            return;
+                        }
+
+                        var result = await _viewModel.LoginWithFacebook(fbToken).ConfigureAwait(true);
+                        if (!result.IsSucceeded)
+                        {
+                            await ShowLoginErrorDialog(result.Message);
+                            FbLoginButton.IsEnabled = true;
+                            return;
+                        }
+
+                        Frame.Navigate(typeof(MainPage));
                     }
-                    var result = await _viewModel.LoginWithFacebook(fbToken).ConfigureAwait(true);
-                    if (!result.IsSucceeded)
+                    catch (Exception e)
                     {
-                        await ShowLoginErrorDialog(result.Message);
-                        FbLoginButton.IsEnabled = true;
-                        return;
+                        await ShowLoginErrorDialog(
+                            "Unexpected error occured while logging in with Facebook. Please try again later or log in with Instagram account instead.");
+#if !DEBUG
+                        Crashes.TrackError(e);
+#endif
                     }
-                    Frame.Navigate(typeof(MainPage));
                 }
             };
         }
@@ -114,9 +128,17 @@ namespace Indirect
                 Title = "Login failed",
                 Content = $"Reason: {message}",
                 DefaultButton = ContentDialogButton.Close,
-                CloseButtonText = "Close"
+                CloseButtonText = "Close",
+                MaxWidth = 400
             };
-            var dialogResult = await failDialog.ShowAsync();
+            try
+            {
+                await failDialog.ShowAsync();
+            }
+            catch (Exception)
+            {
+                // pass
+            }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
