@@ -24,24 +24,26 @@ namespace Indirect.Wrapper
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
         public new ObservableCollection<InstaUser> Users { get; } = new ObservableCollection<InstaUser>();
 
+        private InstaDirectInboxThreadWrapper(Instagram api)
+        {
+            ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
+            _instaApi = api;
+        }
+
         /// <summary>
         /// Only use this constructor to make empty placeholder thread.
         /// </summary>
         /// <param name="user"></param>
         /// <param name="api"></param>
-        public InstaDirectInboxThreadWrapper(InstaUser user, Instagram api)
+        public InstaDirectInboxThreadWrapper(InstaUser user, Instagram api) : this(api)
         {
-            ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
-            _instaApi = api;
             Users.Add(user);
             Title = user.Username;
             if (Users.Count == 0) Users.Add(new InstaUser());
         }
 
-        public InstaDirectInboxThreadWrapper(RankedRecipientThread rankedThread, Instagram api)
+        public InstaDirectInboxThreadWrapper(RankedRecipientThread rankedThread, Instagram api) : this(api)
         {
-            ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
-            _instaApi = api;
             Canonical = rankedThread.Canonical;
             Named = rankedThread.Named;
             Pending = rankedThread.Pending;
@@ -56,10 +58,8 @@ namespace Indirect.Wrapper
             if (Users.Count == 0) Users.Add(new InstaUser());
         }
 
-        public InstaDirectInboxThreadWrapper(DirectThread source, Instagram api)
+        public InstaDirectInboxThreadWrapper(DirectThread source, Instagram api) : this(api)
         {
-            ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
-            _instaApi = api;
             Canonical = source.Canonical;
             HasNewer = source.HasNewer;
             HasOlder = source.HasOlder;
