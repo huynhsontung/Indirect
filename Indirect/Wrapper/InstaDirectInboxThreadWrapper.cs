@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.UI.Xaml;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes;
@@ -226,9 +227,28 @@ namespace Indirect.Wrapper
             if (_loaded) pagination.StartFromMaxId(OldestCursor);
             else _loaded = true;
             var result = await _instaApi.GetThreadAsync(ThreadId, pagination);
-            if (result.Status != ResultStatus.Succeeded || result.Value.Items == null) return new List<InstaDirectInboxItemWrapper>(0);
+            if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0) return new List<InstaDirectInboxItemWrapper>(0);
             UpdateExcludeItemList(result.Value);
-            return result.Value.Items.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi));
+            var wrappedItems = result.Value.Items.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
+            var lastItem = ObservableItems.FirstOrDefault();
+
+            if (lastItem != null && !IsCloseEnough(lastItem.Timestamp, wrappedItems.Last().Timestamp))
+                lastItem.ShowTimestampHeader = true;
+
+            for (int i = wrappedItems.Count - 1; i >= 1; i--)
+            {
+                if (!IsCloseEnough(wrappedItems[i].Timestamp, wrappedItems[i - 1].Timestamp))
+                    wrappedItems[i].ShowTimestampHeader = true;
+            }
+
+            return wrappedItems;
+        }
+
+        private const int TimestampClosenessThreshold = 3; // hours
+        private bool IsCloseEnough(DateTimeOffset x, DateTimeOffset y)
+        {
+            return TimeSpan.FromHours(-TimestampClosenessThreshold) < x - y &&
+                   x - y < TimeSpan.FromHours(TimestampClosenessThreshold);
         }
     }
 }

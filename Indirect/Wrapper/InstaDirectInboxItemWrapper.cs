@@ -23,16 +23,8 @@ namespace Indirect.Wrapper
 
         public InstaDirectInboxThreadWrapper Parent { get; }
         public new InstaDirectReactionsWrapper Reactions { get; }
-        // public new InstaInboxMediaWrapper Media { get; set; }
-        // public new InstaMediaWrapper MediaShare { get; set; }
-        // public new InstaStoryShareWrapper StoryShare { get; set; }
-        // public new InstaVisualMediaWrapper RavenMedia { get; set; }
-        // public new InstaVisualMediaContainerWrapper VisualMedia { get; set; }
-        // public new InstaUserShortWrapper ProfileMedia { get; set; }
-        // public new List<InstaMediaWrapper> ProfileMediasPreview { get; set; }
-        // public new InstaMediaWrapper FelixShareMedia { get; set; }
-        // public new InstaReelShareWrapper ReelShareMedia { get; set; }
-        // public new InstaDirectBroadcastWrapper LiveViewerInvite { get; set; }
+        
+        public bool ShowTimestampHeader { get; set; }
 
         public Uri NavigateUri
         {

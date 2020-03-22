@@ -32,9 +32,7 @@ namespace InstagramAPI.Classes.JsonConverters
             var length = unixTime.Length;
             if (length >= 13)
             {
-                var dateTimeOffset =
-                    DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(unixTime.Substring(0, 13)));
-                return dateTimeOffset.DateTime;
+                return DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(unixTime.Substring(0, 13)));
             }
             else if (length >= 10)
             {

@@ -11,7 +11,8 @@
     xmlns:wrappers="using:Indirect.Wrapper"
     mc:Ignorable="d"
     d:DesignHeight="300"
-    d:DesignWidth="400">
+    d:DesignWidth="400"
+    HorizontalAlignment="Stretch">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
@@ -49,7 +50,7 @@
             </converters:LikeUnlikeStyleConverter>
 
             <converters:NullVisibilityConverter x:Key="NullVisibilityConverter"/>
-            <converters:LinkPreviewVisibilityConverter x:Key="LinkPreviewVisibilityConverter"/>
+            <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
             <converters:FromMeBoolToGridColumnConverter x:Key="FromMeBoolToGridColumnConverter"/>
             <converters:ReactionsFromMeConverter x:Key="ReactionsFromMeConverter"
                                                  FromMe="{StaticResource FromMeReaction}"
@@ -66,6 +67,7 @@
                                                  NotAvailableStyle="{StaticResource NotAvailableOpen}"/>
             <converters:VariableMaxWidthConverter x:Key="VariableMaxWidthConverter"/>
             <converters:ReelShareImageMarginConverter x:Key="ReelShareImageMarginConverter"/>
+            <converters:HumanizedDateTimeConverter x:Key="HumanizedDateTimeConverter"/>
 
 
             <Style x:Name="FromMeReaction" TargetType="FontIcon">
@@ -171,7 +173,7 @@
                         <HyperlinkButton Content="{x:Bind Text}" NavigateUri="{x:Bind NavigateUri}" Foreground="{StaticResource SystemControlForegroundBaseHighBrush}"/>
                     </Border>
 
-                    <Border x:Name="HyperlinkPreview" Visibility="{x:Bind IsNavigateUriValid, Converter={StaticResource LinkPreviewVisibilityConverter}}"
+                    <Border x:Name="HyperlinkPreview" Visibility="{x:Bind IsNavigateUriValid, Converter={StaticResource BooleanVisibilityConverter}}"
                             Background="Transparent" 
                             MaxWidth="250"
                             HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
@@ -315,9 +317,16 @@
     </UserControl.Resources>
 
 
-    <StackPanel x:Name="ItemContainer" Orientation="Vertical" 
-                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
+    <StackPanel x:Name="ItemContainer" Orientation="Vertical"
+                HorizontalAlignment="Stretch"
                 Margin="0,2,0,2" DoubleTapped="ShowTimestamp">
+
+        <TextBlock HorizontalAlignment="Center" 
+                   Text="{x:Bind Item.Timestamp, Converter={StaticResource HumanizedDateTimeConverter}, Mode=OneWay}" 
+                   Visibility="{x:Bind Item.ShowTimestampHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" 
+                   Style="{ThemeResource FluentCaptionTextStyle}"
+                   Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                   Margin="8,14,8,8"/>
 
         <ContentControl x:Name="MainContentControl" Content="{x:Bind Item, Mode=OneWay}" 
                         HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}">
@@ -349,7 +358,7 @@
         </ContentControl>
 
         <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="8,2,8,0"
-                    HorizontalAlignment="Left"
+                    HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
                     Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
                     Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>

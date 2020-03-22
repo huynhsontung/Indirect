@@ -8,7 +8,7 @@ using Windows.UI.Xaml.Data;
 
 namespace Indirect.Converters
 {
-    class LinkPreviewVisibilityConverter : IValueConverter
+    class BooleanVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
