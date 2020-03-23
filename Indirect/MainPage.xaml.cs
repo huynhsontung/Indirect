@@ -17,8 +17,8 @@ namespace Indirect
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private ApiContainer _viewModel;
-        private Windows.Storage.ApplicationDataContainer _localSettings =
+        private readonly ApiContainer _viewModel = ApiContainer.Instance;
+        private readonly Windows.Storage.ApplicationDataContainer _localSettings =
             Windows.Storage.ApplicationData.Current.LocalSettings;
 
         public MainPage()
@@ -32,7 +32,6 @@ namespace Indirect
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            _viewModel = ApiContainer.Instance;
             _viewModel.OnLoggedIn();
         }
 
@@ -161,6 +160,13 @@ namespace Indirect
             };
 
             _ = dialog.ShowAsync();
+        }
+
+        private async void Profile_Click(object sender, RoutedEventArgs e)
+        {
+            var username = _viewModel.LoggedInUser.Username;
+            var uri = new Uri("https://www.instagram.com/" + username);
+            await Windows.System.Launcher.LaunchUriAsync(uri);
         }
     }
 }

@@ -134,6 +134,8 @@
                                           CornerRadius="99" Height="32" Width="32" />
                         <Button.Flyout>
                             <MenuFlyout Placement="Bottom">
+                                <MenuFlyoutItem Text="Profile" Click="Profile_Click"></MenuFlyoutItem>
+                                <MenuFlyoutSeparator/>
                                 <MenuFlyoutSubItem Text="Theme">
                                     <MenuFlyoutItem Text="System" Click="ThemeItem_Click"/>
                                     <MenuFlyoutItem Text="Dark" Click="ThemeItem_Click"/>
