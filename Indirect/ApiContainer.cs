@@ -25,6 +25,7 @@ using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
 using InstagramAPI.Sync;
+using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.UI;
 using Buffer = Windows.Storage.Streams.Buffer;

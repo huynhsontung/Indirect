@@ -7,8 +7,7 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:flui="using:FluiFramework.UWP.Core"
     xmlns:local="using:Indirect" 
-    xmlns:converters="using:Indirect.Converters" 
-    xmlns:indirect="using:Indirect" 
+    xmlns:converters="using:Indirect.Converters"
     xmlns:wrapper="using:Indirect.Wrapper"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -95,8 +94,7 @@
             <controls:MasterDetailsView.ItemTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <StackPanel Orientation="Horizontal">
-                        <controls:ImageEx Source="{x:Bind Users[0].ProfilePictureUrl}" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg"
-                                          Height="48" Width="48" CornerRadius="99" Margin="4,8,16,8"/>
+                        <local:ProfilePicture Source="{x:Bind Users}" Height="48" Width="48" Margin="4,8,16,8"/>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Style="{ThemeResource FluentTitleTextStyle}" Text="{x:Bind Title}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                             <TextBlock Style="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}" 

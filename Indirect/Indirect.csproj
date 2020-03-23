@@ -135,6 +135,9 @@
     <Compile Include="Converters\HumanizedDateTimeConverter.cs" />
     <Compile Include="Converters\ReelShareImageMarginConverter.cs" />
     <Compile Include="Converters\VisibleWhenZeroConverter.cs" />
+    <Compile Include="ProfilePicture.xaml.cs">
+      <DependentUpon>ProfilePicture.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SECRETS.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
@@ -245,6 +248,7 @@
     <Content Include="Assets\Wide310x150Logo.scale-125.png" />
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
+    <None Include="Package.StoreAssociation.xml" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -274,6 +278,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="ProfilePicture.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ThreadDetailsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -297,9 +305,6 @@
     </PackageReference>
     <PackageReference Include="FluiFramework.UWP">
       <Version>0.0.33</Version>
-    </PackageReference>
-    <PackageReference Include="Humanizer.Core">
-      <Version>2.7.9</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AppCenter.Analytics">
       <Version>3.0.0</Version>

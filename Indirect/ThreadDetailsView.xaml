@@ -47,8 +47,7 @@
             <AppBarButton Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" Background="Transparent">
-                    <controls:ImageEx Source="{x:Bind Thread.Users[0].ProfilePictureUrl, Mode=OneWay}" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg"
-                                      CornerRadius="99" Height="32" Width="32" Margin="12,0,16,0" VerticalAlignment="Center"/>
+                    <local:ProfilePicture Source="{x:Bind Thread.Users, Mode=OneWay}" Height="32" Width="32" Margin="12,0,16,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{x:Bind Thread.Title, Mode=OneWay}" 
                                Style="{ThemeResource FluentTitleTextStyle}"
                                MaxLines="1" 
