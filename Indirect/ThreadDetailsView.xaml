@@ -24,6 +24,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <FlyoutBase.AttachedFlyout>
@@ -84,7 +85,11 @@
             </ListView.ItemTemplate>
         </utilities:ChatListView>
 
-        <Grid x:Name="MessageInputGrid" Grid.Row="3" HorizontalAlignment="Stretch" Margin="0,2,0,2">
+        <!--<Frame Grid.Row="3" HorizontalAlignment="Right" Visibility="{x:Bind Thread.ObservableItems, Converter={StaticResource LastItemSeenVisibilityConverter}, Mode=OneWay}">
+            <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Margin="0,4,10,8">Seen</TextBlock>
+        </Frame>-->
+
+        <Grid x:Name="MessageInputGrid" Grid.Row="4" HorizontalAlignment="Stretch" Margin="0,2,0,2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="44"/>
                 <ColumnDefinition Width="*"/>

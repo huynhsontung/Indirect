@@ -328,6 +328,13 @@
                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                    Margin="8,14,8,8"/>
 
+        <TextBlock HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}" 
+                   Text="{x:Bind Item.Sender.Username, Mode=OneWay}" 
+                   Visibility="{x:Bind Item.ShowNameHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" 
+                   Style="{ThemeResource FluentCaptionTextStyle}"
+                   Foreground="{StaticResource SystemControlForegroundBaseLowBrush}"
+                   Margin="0,0,0,2"/>
+
         <ContentControl x:Name="MainContentControl" Content="{x:Bind Item, Mode=OneWay}" 
                         HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}">
             <ContentControl.ContextFlyout>
@@ -357,7 +364,7 @@
             </ContentControl.ContentTemplateSelector>
         </ContentControl>
 
-        <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="8,2,8,0"
+        <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="10,2,10,0"
                     HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
                     Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
@@ -132,6 +131,19 @@ namespace Indirect.Wrapper
                 Threads.Insert(j, tmp);
                 i--;
                 satisfied = true;
+            }
+        }
+
+        public void FixThreadList()
+        {
+            // Somehow thread list got messed up and threads are not unique anymore
+            var duplicates = Threads.GroupBy(x => x.ThreadId).Where(g => g.Count() > 1)
+                .Select(y => y);
+            foreach (var duplicateGroup in duplicates)
+            {
+                var duplicate = duplicateGroup.First();
+                if (string.IsNullOrEmpty(duplicate.ThreadId)) continue;
+                Threads.Remove(duplicate);
             }
         }
     }

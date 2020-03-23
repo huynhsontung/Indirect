@@ -1,30 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using System.Net.Mime;
-using Windows.Media.Core;
-using Windows.Security.Cryptography;
-using Windows.Storage.Streams;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Media.Imaging;
 using InstagramAPI;
 using InstagramAPI.Classes.Direct;
-using InstagramAPI.Classes.Direct.ItemContent;
 using InstagramAPI.Classes.Media;
+using InstagramAPI.Classes.User;
 
 namespace Indirect.Wrapper
 {
-    class InstaDirectInboxItemWrapper : DirectItem
+    class InstaDirectInboxItemWrapper : DirectItem, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         private readonly Instagram _instaApi;
 
         private readonly DirectItem _sourceItem;
 
         public InstaDirectInboxThreadWrapper Parent { get; }
         public new InstaDirectReactionsWrapper Reactions { get; }
-        
-        public bool ShowTimestampHeader { get; set; }
+        public InstaUser Sender { get; }
+
+        private bool _showTimestampHeader;
+        public bool ShowTimestampHeader
+        {
+            get => _showTimestampHeader;
+            set
+            {
+                _showTimestampHeader = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowTimestampHeader)));
+            }
+        }
+
+        private bool _showNameHeader;
+        public bool ShowNameHeader
+        {
+            get => _showNameHeader;
+            set
+            {
+                _showNameHeader = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowNameHeader)));
+            }
+        }
 
         public Uri NavigateUri
         {
@@ -279,6 +297,16 @@ namespace Indirect.Wrapper
             Text = source.Text;
             ClientContext = source.ClientContext;
             FromMe = source.FromMe;
+
+            // Lookup InstaUser from user id
+            var userExist = api.CentralUserRegistry.TryGetValue(UserId, out var sender);
+            Sender = userExist
+                ? sender
+                : new InstaUser
+                {
+                    Username = "UNKNOWN_USER",
+                    FullName = "UNKNOWN_USER"
+                };
         }
 
         private static InstaImage GetPreviewImage(List<InstaImage> imageCandidates)
@@ -302,16 +330,16 @@ namespace Indirect.Wrapper
             return image.Url;
         }
 
-        public void LikeItem()
+        public async void LikeItem()
         {
             if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId)) return;
-            _instaApi.LikeItemAsync(Parent.ThreadId, ItemId);
+            await _instaApi.LikeItemAsync(Parent.ThreadId, ItemId).ConfigureAwait(false);
         }
 
-        public void UnlikeItem()
+        public async void UnlikeItem()
         {
             if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId)) return;
-            _instaApi.UnlikeItemAsync(Parent.ThreadId, ItemId);
+            await _instaApi.UnlikeItemAsync(Parent.ThreadId, ItemId).ConfigureAwait(false);
         }
     }
 }

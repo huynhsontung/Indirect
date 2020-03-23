@@ -12,7 +12,7 @@ namespace InstagramAPI.Classes.Direct
         [JsonProperty("muted")] 
         public bool Muted { get; set; }
 
-        [JsonProperty("users")] 
+        [JsonProperty("users", NullValueHandling = NullValueHandling.Ignore)] 
         public List<UserWithFriendship> Users { get; set; } = new List<UserWithFriendship>();
 
         [JsonProperty("thread_title")] 

@@ -45,6 +45,7 @@ namespace InstagramAPI
         public AndroidDevice Device { get; } = AndroidDevice.GetRandomAndroidDevice();
         public PushClient PushClient { get; }
         public SyncClient SyncClient { get; }
+        public Dictionary<long, InstaUser> CentralUserRegistry { get; } = new Dictionary<long, InstaUser>();
 
         private readonly HttpClient _httpClient = new HttpClient();
         private readonly ApiRequestMessage _apiRequestMessage;
@@ -342,6 +343,7 @@ namespace InstagramAPI
                 var user = statusResponse["user"].ToObject<CurrentUser>();
                 if (user.Pk < 1)
                     Result<CurrentUser>.Fail(json, "Pk is incorrect");
+                CentralUserRegistry.Add(user.Pk, user);
                 return Result<CurrentUser>.Success(user, json);
             }
             catch (Exception exception)

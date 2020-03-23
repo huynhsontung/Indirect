@@ -122,7 +122,7 @@ namespace Indirect
             FilePickerFlyout.ShowAt(AddFilesButton);
         }
 
-        private async void DisplayFailDialog(string reason)
+        private static async void DisplayFailDialog(string reason)
         {
             var dialog = new ContentDialog()
             {

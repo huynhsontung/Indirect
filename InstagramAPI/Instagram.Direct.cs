@@ -37,6 +37,10 @@ namespace InstagramAPI
                 if (!inboxResult.IsSucceeded)
                     return inboxResult;
                 var inbox = inboxResult.Value;
+                foreach (var directThread in inboxResult.Value.Inbox.Threads)
+                {
+                    AddToUserRegistry(directThread.Users);
+                }
                 paginationParameters.NextMaxId = inbox.Inbox.OldestCursor;
                 var pagesLoaded = 1;
                 while (inbox.Inbox.HasOlder
@@ -54,6 +58,10 @@ namespace InstagramAPI
                     inbox.Inbox.UnseenCount = nextInbox.Value.Inbox.UnseenCount;
                     inbox.Inbox.UnseenCountTs = nextInbox.Value.Inbox.UnseenCountTs;
                     inbox.Inbox.Threads.AddRange(nextInbox.Value.Inbox.Threads);
+                    foreach (var directThread in nextInbox.Value.Inbox.Threads)
+                    {
+                        AddToUserRegistry(directThread.Users);
+                    }
                     pagesLoaded++;
                 }
 

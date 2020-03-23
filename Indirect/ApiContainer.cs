@@ -50,8 +50,6 @@ namespace Indirect
 
         private ApiContainer() { }
 
-        // Todo: handle exceptions thrown by _instaApi like no network connection
-
         private readonly Instagram _instaApi = Instagram.Instance;
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
         private CancellationTokenSource _searchCancellationToken;
@@ -143,8 +141,10 @@ namespace Indirect
                 var itemData = data[0].Data[0];
                 var segments = itemData.Path.Trim('/').Split('/');
                 var threadId = segments[2];
+                if (string.IsNullOrEmpty(threadId)) return;
                 var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
                 if (thread == null) return;
+
                 if (itemData.Op == "add" && thread.ObservableItems.Count > 0)
                 {
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
@@ -154,19 +154,27 @@ namespace Indirect
 
                 if (itemData.Op == "replace")
                 {
-                    // todo: Handle items seen
-                    if (itemData.Path.Contains("has_seen", StringComparison.Ordinal)) return;
-                    var incomingItem = itemData.Item;
-                    var item = thread.ObservableItems.SingleOrDefault(x => x.ItemId == incomingItem.ItemId);
+                    var item = thread.ObservableItems.SingleOrDefault(x => x.ItemId == itemData.Item.ItemId);
+                    if (item == null) return;
+                    if (itemData.Path.Contains("has_seen", StringComparison.Ordinal))
+                    {
+                        // todo: handle seen event
+                        // var args = itemData.Path.Split('/');
+                        // if (long.TryParse(args[args.Length - 1], out var userId))
+                        // {
+                        // }
+                        return;
+                    }
+
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        if (incomingItem.Reactions == null)
+                        if (itemData.Item.Reactions == null)
                         {
-                            item?.Reactions.Clear();
+                            item.Reactions.Clear();
                         }
                         else
                         {
-                            item?.Reactions?.Update(new InstaDirectReactionsWrapper(incomingItem.Reactions, thread.ViewerId),
+                            item.Reactions?.Update(new InstaDirectReactionsWrapper(itemData.Item.Reactions, thread.ViewerId),
                                 thread.Users);
                         }
                     });
@@ -206,10 +214,17 @@ namespace Indirect
 
         public async void SendLike()
         {
-            var selectedThread = SelectedThread;
-            if (string.IsNullOrEmpty(selectedThread.ThreadId)) return;
-            var result = await _instaApi.SendLikeAsync(selectedThread.ThreadId);
-            if (result.IsSucceeded) UpdateInboxAndSelectedThread();
+            try
+            {
+                var selectedThread = SelectedThread;
+                if (string.IsNullOrEmpty(selectedThread.ThreadId)) return;
+                var result = await _instaApi.SendLikeAsync(selectedThread.ThreadId);
+                if (result.IsSucceeded) UpdateInboxAndSelectedThread();
+            }
+            catch (Exception)
+            {
+                await HandleException("Failed to send like");
+            }
         }
 
         // Send message to the current selected recipient
@@ -226,27 +241,35 @@ namespace Indirect
                 x.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase)).ToList();
             Result<List<DirectThread>> result;
             Result<ItemAckPayloadResponse> ackResult;   // for links and hashtags
-            if (!string.IsNullOrEmpty(selectedThread.ThreadId))
+            try
             {
-                if (links.Any())
+                if (!string.IsNullOrEmpty(selectedThread.ThreadId))
                 {
-                    ackResult = await _instaApi.SendLinkAsync(content, links, selectedThread.ThreadId);
-                    return;
-                }
+                    if (links.Any())
+                    {
+                        ackResult = await _instaApi.SendLinkAsync(content, links, selectedThread.ThreadId);
+                        return;
+                    }
 
-                result = await _instaApi.SendTextAsync(null, selectedThread.ThreadId, content);
+                    result = await _instaApi.SendTextAsync(null, selectedThread.ThreadId, content);
+                }
+                else
+                {
+                    if (links.Any())
+                    {
+                        ackResult = await _instaApi.SendLinkToRecipientsAsync(content, links,
+                            selectedThread.Users.Select(x => x.Pk).ToArray());
+                        return;
+                    }
+
+                    result = await _instaApi.SendTextAsync(selectedThread.Users.Select(x => x.Pk),
+                        null, content);
+                }
             }
-            else
+            catch (Exception)
             {
-                if (links.Any())
-                {
-                    ackResult = await _instaApi.SendLinkToRecipientsAsync(content, links,
-                        selectedThread.Users.Select(x => x.Pk).ToArray());
-                    return;
-                }
-
-                result = await _instaApi.SendTextAsync(selectedThread.Users.Select(x => x.Pk),
-                    null, content);
+                await HandleException("Failed to send message");
+                return;
             }
             
             if (result.IsSucceeded && result.Value.Count > 0)
@@ -431,7 +454,7 @@ namespace Indirect
         {
             try
             {
-                if (thread == null || string.IsNullOrEmpty(thread?.ThreadId)) return;
+                if (thread == null || string.IsNullOrEmpty(thread.ThreadId)) return;
                 if (thread.LastSeenAt.TryGetValue(thread.ViewerId, out var lastSeen))
                 {
                     if (string.IsNullOrEmpty(thread.LastPermanentItem?.ItemId) || 
