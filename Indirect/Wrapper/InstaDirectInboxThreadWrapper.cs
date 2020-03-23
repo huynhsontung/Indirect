@@ -235,23 +235,27 @@ namespace Indirect.Wrapper
         {
             var lastItem = ObservableItems.FirstOrDefault();
             var itemList = wrappedItems.ToList();
-
+            var refItem = itemList.Last();
             if (lastItem != null)
             {
-                if (!IsCloseEnough(lastItem.Timestamp, itemList.Last().Timestamp))
-                    lastItem.ShowTimestampHeader = true;
-
-                if (lastItem.UserId != itemList.Last().UserId && !lastItem.FromMe && Users.Count > 1)
-                    lastItem.ShowNameHeader = true;
+                if (refItem.Timestamp <= lastItem.Timestamp)
+                {
+                    lastItem.ShowTimestampHeader = !IsCloseEnough(lastItem.Timestamp, refItem.Timestamp);
+                    lastItem.ShowNameHeader = lastItem.UserId != refItem.UserId && !lastItem.FromMe && Users.Count > 1;
+                }
+                else
+                {
+                    // New item added to the top
+                    var latestItem = ObservableItems.Last();
+                    refItem.ShowTimestampHeader = !IsCloseEnough(latestItem.Timestamp, refItem.Timestamp);
+                    refItem.ShowNameHeader = latestItem.UserId != refItem.UserId && !latestItem.FromMe && Users.Count > 1;
+                }
             }
 
             for (int i = itemList.Count - 1; i >= 1; i--)
             {
-                if (!IsCloseEnough(itemList[i].Timestamp, itemList[i - 1].Timestamp))
-                    itemList[i].ShowTimestampHeader = true;
-
-                if (itemList[i].UserId != itemList[i - 1].UserId && !itemList[i].FromMe && Users.Count > 1)
-                    itemList[i].ShowNameHeader = true;
+                itemList[i].ShowTimestampHeader = !IsCloseEnough(itemList[i].Timestamp, itemList[i - 1].Timestamp);
+                itemList[i].ShowNameHeader = itemList[i].UserId != itemList[i - 1].UserId && !itemList[i].FromMe && Users.Count > 1;
             }
         }
 

@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
-using Windows.Services.Store;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
@@ -27,11 +25,9 @@ using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
 using InstagramAPI.Sync;
-using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.UI;
 using Buffer = Windows.Storage.Streams.Buffer;
-using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 
 namespace Indirect
 {

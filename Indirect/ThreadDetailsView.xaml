@@ -15,6 +15,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <converters:SendButtonGlyphConverter x:Key="SendButtonGlyphConverter"/>
+            <converters:VisibleWhenZeroConverter x:Key="VisibleWhenZeroConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -63,7 +64,7 @@
                             SelectionMode="None">
             <ListView.Header>
                 <!-- Title bar height + command bar height = 32 + 48 = 80 -->
-                <Border Height="80"/>
+                <Frame Height="80"/>
             </ListView.Header>
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -85,9 +86,9 @@
             </ListView.ItemTemplate>
         </utilities:ChatListView>
 
-        <!--<Frame Grid.Row="3" HorizontalAlignment="Right" Visibility="{x:Bind Thread.ObservableItems, Converter={StaticResource LastItemSeenVisibilityConverter}, Mode=OneWay}">
-            <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Margin="0,4,10,8">Seen</TextBlock>
-        </Frame>-->
+        <Frame Grid.Row="3" HorizontalAlignment="Center" Visibility="{x:Bind Thread.ObservableItems.Count, Converter={StaticResource VisibleWhenZeroConverter}, Mode=OneWay}">
+            <TextBlock Margin="0,0,0,16" Text="Send your first message to start chatting" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+        </Frame>
 
         <Grid x:Name="MessageInputGrid" Grid.Row="4" HorizontalAlignment="Stretch" Margin="0,2,0,2">
             <Grid.ColumnDefinitions>
