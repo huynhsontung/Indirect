@@ -69,7 +69,6 @@
             <converters:ReelShareImageMarginConverter x:Key="ReelShareImageMarginConverter"/>
             <converters:HumanizedDateTimeConverter x:Key="HumanizedDateTimeConverter"/>
 
-
             <Style x:Name="FromMeReaction" TargetType="FontIcon">
                 <Setter Property="Glyph" Value="&#xEB52;"/>
                 <Setter Property="Foreground" Value="Crimson"/>
@@ -319,7 +318,7 @@
 
     <StackPanel x:Name="ItemContainer" Orientation="Vertical"
                 HorizontalAlignment="Stretch"
-                Margin="0,2,0,2" DoubleTapped="ShowTimestamp">
+                Margin="0,2,0,2" DoubleTapped="Item_DoubleTapped">
 
         <TextBlock HorizontalAlignment="Center" 
                    Text="{x:Bind Item.Timestamp, Converter={StaticResource HumanizedDateTimeConverter}, Mode=OneWay}" 
@@ -336,7 +335,8 @@
                    Margin="0,0,0,2"/>
 
         <ContentControl x:Name="MainContentControl" Content="{x:Bind Item, Mode=OneWay}" 
-                        HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}">
+                        HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
+                        SizeChanged="ConfigTooltip_OnSizeChanged">
             <ContentControl.ContextFlyout>
                 <MenuFlyout x:Name="ItemContextMenu">
                     <MenuFlyoutItem Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
@@ -373,12 +373,5 @@
                        Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
                        Style="{ThemeResource FluentCaptionTextStyle}"/>
         </StackPanel>
-        <TextBlock x:Name="Timestamp"
-                   Style="{ThemeResource FluentCaptionTextStyle}"
-                   Text="{x:Bind Item.Timestamp, Mode=OneWay}" 
-                   Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                   Margin="2"
-                   HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
-                   Visibility="Collapsed" />
     </StackPanel>
 </UserControl>

@@ -1,20 +1,13 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Contacts;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Media.Core;
-using Windows.Media.Streaming.Adaptive;
-using Windows.UI.Core;
+using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Indirect.Wrapper;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
-using Microsoft.Toolkit.Uwp.UI;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -74,12 +67,6 @@ namespace Indirect
                 Item.Text = Item.Link.Text;
         }
 
-        private void ShowTimestamp(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            var panel = (Panel)sender;
-            var timestampTextBlock = panel.Children.Last();
-            timestampTextBlock.Visibility = timestampTextBlock.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
-        }
 
         private void ImageFrame_Tapped(object sender, TappedRoutedEventArgs e)
         {
@@ -121,8 +108,12 @@ namespace Indirect
             }
         }
 
+        private void Item_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e) => LikeUnlikeItem();
+
+        private void LikeUnlike_Click(object sender, RoutedEventArgs e) => LikeUnlikeItem();
+
         private bool _timeout;
-        private async void LikeUnlike_Click(object sender, RoutedEventArgs e)
+        private async void LikeUnlikeItem()
         {
             if (_timeout) return;
             if (Item.Reactions?.MeLiked ?? false)
@@ -136,7 +127,6 @@ namespace Indirect
             _timeout = true;
             await Task.Delay(TimeSpan.FromSeconds(2));
             _timeout = false;
-
         }
 
         private void MenuCopyOption_Click(object sender, RoutedEventArgs e)
@@ -148,6 +138,14 @@ namespace Indirect
             dataPackage.RequestedOperation = DataPackageOperation.Copy;
             dataPackage.SetText(textBlock.Text);
             Clipboard.SetContent(dataPackage);
+        }
+
+        private void ConfigTooltip_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var tooltip = new ToolTip();
+            tooltip.Content = $"{Item.Timestamp:f}";
+            tooltip.PlacementRect = new Rect(0,12, e.NewSize.Width, e.NewSize.Height);
+            ToolTipService.SetToolTip((DependencyObject) sender, tooltip);
         }
     }
 }
