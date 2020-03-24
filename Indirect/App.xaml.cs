@@ -134,7 +134,7 @@ namespace Indirect
             var deferral = e.SuspendingOperation.GetDeferral();
             try
             {
-                viewModel.SyncClient.Shutdown();    // No need to wait. Shutdown cleanly is not important here.
+                viewModel.SyncClient.Shutdown();    // Shutdown cleanly is not important here.
                 await viewModel.PushClient.TransferPushSocket();    // Has to wait for Dotnetty to shutdown
             }
             catch (Exception exception)
@@ -147,11 +147,11 @@ namespace Indirect
             }
         }
 
-        private void OnResuming(object sender, object e)
+        private async void OnResuming(object sender, object e)
         {
             var viewModel = ApiContainer.Instance;
             viewModel.PushClient.Start();
-            viewModel.SyncClient.Start(viewModel.Inbox.SeqId, viewModel.Inbox.SnapshotAt);
+            await viewModel.SyncClient.Start(viewModel.Inbox.SeqId, viewModel.Inbox.SnapshotAt);
             viewModel.UpdateInboxAndSelectedThread();
         }
 

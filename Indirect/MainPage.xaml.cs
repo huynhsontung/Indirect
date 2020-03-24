@@ -164,6 +164,7 @@ namespace Indirect
 
         private async void Profile_Click(object sender, RoutedEventArgs e)
         {
+            if (string.IsNullOrEmpty(_viewModel?.LoggedInUser?.Username)) return;
             var username = _viewModel.LoggedInUser.Username;
             var uri = new Uri("https://www.instagram.com/" + username);
             await Windows.System.Launcher.LaunchUriAsync(uri);

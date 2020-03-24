@@ -101,6 +101,12 @@ namespace Indirect.Wrapper
         public void AddItem(DirectItem item)
         {
             UpdateItemList(new List<DirectItem> {item});
+            var latestItem = ObservableItems.Last();
+            if (latestItem.Timestamp > LastPermanentItem.Timestamp)
+            {
+                LastPermanentItem = latestItem;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastPermanentItem)));
+            }
         }
 
         public void Update(DirectThread source, bool fromInbox = false)

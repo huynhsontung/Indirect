@@ -132,49 +132,55 @@ namespace Indirect
 
         private async void OnMessageSyncReceived(object sender, List<MessageSyncEventArgs> data)
         {
-            if (data.Count > 1 || !data[0].Realtime) return; // Old data. No need to process.
             try
             {
-                var itemData = data[0].Data[0];
-                var segments = itemData.Path.Trim('/').Split('/');
-                var threadId = segments[2];
-                if (string.IsNullOrEmpty(threadId)) return;
-                var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
-                if (thread == null) return;
-
-                if (itemData.Op == "add" && thread.ObservableItems.Count > 0)
+                foreach (var syncEvent in data)
                 {
-                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                        () => thread.AddItem(itemData.Item));
-                    _ = Inbox.UpdateInbox();
-                }
+                    var itemData = syncEvent.Data[0];
+                    var segments = itemData.Path.Trim('/').Split('/');
+                    var threadId = segments[2];
+                    if (string.IsNullOrEmpty(threadId)) continue;
+                    var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
+                    if (thread == null) continue;
 
-                if (itemData.Op == "replace")
-                {
-                    var item = thread.ObservableItems.SingleOrDefault(x => x.ItemId == itemData.Item.ItemId);
-                    if (item == null) return;
-                    if (itemData.Path.Contains("has_seen", StringComparison.Ordinal))
+                    switch (itemData.Op)
                     {
-                        // todo: handle seen event
-                        // var args = itemData.Path.Split('/');
-                        // if (long.TryParse(args[args.Length - 1], out var userId))
-                        // {
-                        // }
-                        return;
+                        case "add" when thread.ObservableItems.Count > 0:
+                        {
+                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                                () => thread.AddItem(itemData.Item));
+                            if (syncEvent.Realtime) await Inbox.UpdateInbox();
+                            break;
+                        }
+                        case "replace":
+                        {
+                            var item = thread.ObservableItems.SingleOrDefault(x => x.ItemId == itemData.Item.ItemId);
+                            if (item == null) continue;
+                            if (itemData.Path.Contains("has_seen", StringComparison.Ordinal))
+                            {
+                                // todo: handle seen event
+                                // var args = itemData.Path.Split('/');
+                                // if (long.TryParse(args[args.Length - 1], out var userId))
+                                // {
+                                // }
+                                continue;
+                            }
+
+                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                            {
+                                if (itemData.Item.Reactions == null)
+                                {
+                                    item.Reactions.Clear();
+                                }
+                                else
+                                {
+                                    item.Reactions?.Update(new InstaDirectReactionsWrapper(itemData.Item.Reactions, thread.ViewerId),
+                                        thread.Users);
+                                }
+                            });
+                            break;
+                        }
                     }
-
-                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        if (itemData.Item.Reactions == null)
-                        {
-                            item.Reactions.Clear();
-                        }
-                        else
-                        {
-                            item.Reactions?.Update(new InstaDirectReactionsWrapper(itemData.Item.Reactions, thread.ViewerId),
-                                thread.Users);
-                        }
-                    });
                 }
             }
             catch (Exception e)
@@ -263,8 +269,11 @@ namespace Indirect
                         null, content);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
                 await HandleException("Failed to send message");
                 return;
             }
@@ -279,51 +288,63 @@ namespace Indirect
 
         public async void SendFile(StorageFile file, Action<UploaderProgress> progress)
         {
-            if (file.ContentType.Contains("image", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                var properties = await file.Properties.GetImagePropertiesAsync();
-                int imageHeight = (int) properties.Height;
-                int imageWidth = (int) properties.Width;
-                IBuffer buffer;
-                if (properties.Width > 1080 || properties.Height > 1080)
+                if (file.ContentType.Contains("image", StringComparison.OrdinalIgnoreCase))
                 {
-                    buffer = await Helpers.CompressImage(file, 1080, 1080);
-                    double widthRatio = (double)1080 / imageWidth;
-                    double heightRatio = (double)1080 / imageHeight;
-                    double scaleRatio = Math.Min(widthRatio, heightRatio);
-                    imageHeight = (int) Math.Floor(imageHeight * scaleRatio);
-                    imageWidth = (int) Math.Floor(imageWidth * scaleRatio);
-                }
-                else
-                {
-                    buffer = await FileIO.ReadBufferAsync(file);
+                    var properties = await file.Properties.GetImagePropertiesAsync();
+                    int imageHeight = (int) properties.Height;
+                    int imageWidth = (int) properties.Width;
+                    IBuffer buffer;
+                    if (properties.Width > 1080 || properties.Height > 1080)
+                    {
+                        buffer = await Helpers.CompressImage(file, 1080, 1080);
+                        double widthRatio = (double)1080 / imageWidth;
+                        double heightRatio = (double)1080 / imageHeight;
+                        double scaleRatio = Math.Min(widthRatio, heightRatio);
+                        imageHeight = (int) Math.Floor(imageHeight * scaleRatio);
+                        imageWidth = (int) Math.Floor(imageWidth * scaleRatio);
+                    }
+                    else
+                    {
+                        buffer = await FileIO.ReadBufferAsync(file);
+                    }
+
+                    await SendBuffer(buffer, imageWidth, imageHeight, progress);
                 }
 
-                await SendBuffer(buffer, imageWidth, imageHeight, progress);
+
+                // Not yet tested
+                if (file.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))
+                {
+                    var properties = await file.Properties.GetVideoPropertiesAsync();
+                    if (properties.Duration > TimeSpan.FromMinutes(1)) return;
+                    var buffer = await FileIO.ReadBufferAsync(file);
+                    var instaVideo = new InstaVideo()
+                    {
+                        UploadBuffer = buffer,
+                        Width = (int) properties.Width,
+                        Height = (int) properties.Height,
+                    };
+                    var thumbnail = await file.GetThumbnailAsync(ThumbnailMode.VideosView);
+                    var thumbnailBuffer = new Buffer((uint) thumbnail.Size);
+                    await thumbnail.ReadAsync(thumbnailBuffer, (uint) thumbnail.Size, InputStreamOptions.None);
+                    var thumbnailImage = new InstaImage()
+                    {
+                        UploadBuffer = thumbnailBuffer,
+                        Width = (int) thumbnail.OriginalWidth,
+                        Height = (int) thumbnail.OriginalHeight
+                    };
+                    await _instaApi.SendDirectVideoAsync(progress,
+                        new InstaVideoUpload(instaVideo, thumbnailImage), SelectedThread.ThreadId);
+                }
             }
-
-            if (file.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))
+            catch (Exception e)
             {
-                var properties = await file.Properties.GetVideoPropertiesAsync();
-                if (properties.Duration > TimeSpan.FromMinutes(1)) return;
-                var buffer = await FileIO.ReadBufferAsync(file);
-                var instaVideo = new InstaVideo()
-                {
-                    UploadBuffer = buffer,
-                    Width = (int) properties.Width,
-                    Height = (int) properties.Height,
-                };
-                var thumbnail = await file.GetThumbnailAsync(ThumbnailMode.VideosView);
-                var thumbnailBuffer = new Buffer((uint) thumbnail.Size);
-                await thumbnail.ReadAsync(thumbnailBuffer, (uint) thumbnail.Size, InputStreamOptions.None);
-                var thumbnailImage = new InstaImage()
-                {
-                    UploadBuffer = thumbnailBuffer,
-                    Width = (int) thumbnail.OriginalWidth,
-                    Height = (int) thumbnail.OriginalHeight
-                };
-                await _instaApi.SendDirectVideoAsync(progress,
-                    new InstaVideoUpload(instaVideo, thumbnailImage), SelectedThread.ThreadId);
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
+                await HandleException("Failed to send message");
             }
         }
 
@@ -334,29 +355,39 @@ namespace Indirect
         /// <param name="stream"></param>
         public async void SendStream(IRandomAccessStream stream, Action<UploaderProgress> progress)
         {
-            stream.Seek(0);
-            var bitmap = new BitmapImage();
-            await bitmap.SetSourceAsync(stream);
-            int imageHeight = bitmap.PixelHeight;
-            int imageWidth = bitmap.PixelWidth;
-
-            IBuffer buffer;
-            if (imageWidth > 1080 || imageHeight > 1080)
+            try
             {
-                buffer = await Helpers.CompressImage(stream, 1080, 1080);
-                double widthRatio = (double)1080 / imageWidth;
-                double heightRatio = (double)1080 / imageHeight;
-                double scaleRatio = Math.Min(widthRatio, heightRatio);
-                imageHeight = (int)Math.Floor(imageHeight * scaleRatio);
-                imageWidth = (int)Math.Floor(imageWidth * scaleRatio);
-            }
-            else
-            {
-                buffer = new Buffer((uint) stream.Size);
-                await stream.WriteAsync(buffer);
-            }
+                stream.Seek(0);
+                var bitmap = new BitmapImage();
+                await bitmap.SetSourceAsync(stream);
+                int imageHeight = bitmap.PixelHeight;
+                int imageWidth = bitmap.PixelWidth;
 
-            await SendBuffer(buffer, imageWidth, imageHeight, progress);
+                IBuffer buffer;
+                if (imageWidth > 1080 || imageHeight > 1080)
+                {
+                    buffer = await Helpers.CompressImage(stream, 1080, 1080);
+                    double widthRatio = (double)1080 / imageWidth;
+                    double heightRatio = (double)1080 / imageHeight;
+                    double scaleRatio = Math.Min(widthRatio, heightRatio);
+                    imageHeight = (int)Math.Floor(imageHeight * scaleRatio);
+                    imageWidth = (int)Math.Floor(imageWidth * scaleRatio);
+                }
+                else
+                {
+                    buffer = new Buffer((uint) stream.Size);
+                    await stream.WriteAsync(buffer);
+                }
+
+                await SendBuffer(buffer, imageWidth, imageHeight, progress);
+            }
+            catch (Exception e)
+            {
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
+                await HandleException("Failed to send message");
+            }
         }
 
         private async Task SendBuffer(IBuffer buffer, int imageWidth, int imageHeight, Action<UploaderProgress> progress)
