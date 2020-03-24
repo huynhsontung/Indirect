@@ -318,7 +318,7 @@
 
     <StackPanel x:Name="ItemContainer" Orientation="Vertical"
                 HorizontalAlignment="Stretch"
-                Margin="0,2,0,2" DoubleTapped="Item_DoubleTapped">
+                Margin="0,2,0,2">
 
         <TextBlock HorizontalAlignment="Center" 
                    Text="{x:Bind Item.Timestamp, Converter={StaticResource HumanizedDateTimeConverter}, Mode=OneWay}" 
@@ -336,7 +336,7 @@
 
         <ContentControl x:Name="MainContentControl" Content="{x:Bind Item, Mode=OneWay}" 
                         HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
-                        SizeChanged="ConfigTooltip_OnSizeChanged">
+                        SizeChanged="ConfigTooltip_OnSizeChanged" DoubleTapped="Item_DoubleTapped">
             <ContentControl.ContextFlyout>
                 <MenuFlyout x:Name="ItemContextMenu">
                     <MenuFlyoutItem Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
