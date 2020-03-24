@@ -22,6 +22,7 @@ namespace InstagramAPI.Sync
     public class SyncClient
     {
         public event EventHandler<List<MessageSyncEventArgs>> MessageReceived;
+        public event EventHandler<Exception> FailedToStart;
 
         private int _packetId = 1;
         private CancellationTokenSource _pinging;
@@ -59,71 +60,71 @@ namespace InstagramAPI.Sync
 
         public async Task Start(long seqId, DateTimeOffset snapshotAt)
         {
-            Debug.WriteLine("Sync client starting");
-            if (seqId == 0)
-                throw new ArgumentException("Invalid seqId. Have you fetched inbox for the first time?",
-                    nameof(seqId));
-            _seqId = seqId;
-            _snapshotAt = snapshotAt;
-            _pinging?.Cancel();
-            _pinging = new CancellationTokenSource();
-            _packetId = 1;
-            var device = _instaApi.Device;
-            var baseHttpFilter = new HttpBaseProtocolFilter();
-            var cookies = baseHttpFilter.CookieManager.GetCookies(new Uri("https://i.instagram.com"));
-            foreach (var cookie in cookies)
-            {
-                var copyCookie = new HttpCookie(cookie.Name, "edge-chat.instagram.com", "/chat")
-                {
-                    Value = cookie.Value,
-                    Expires = cookie.Expires,
-                    HttpOnly = cookie.HttpOnly,
-                    Secure = cookie.Secure
-                };
-                baseHttpFilter.CookieManager.SetCookie(copyCookie);
-            }
-            var connectPacket = new ConnectPacket
-            {
-                CleanSession = true,
-                ClientId = "mqttwsclient",
-                HasUsername = true,
-                HasPassword = false,
-                KeepAliveInSeconds = 10,
-                ProtocolLevel = 3,
-                ProtocolName = "MQIsdp"
-            };
-            var aid = GenerateDigitsRandom(16);
-            var userAgent =
-                $"Mozilla/5.0 (Linux; Android 10; {device.DeviceName}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.93 Mobile Safari/537.36";
-            var json = new JObject(
-                new JProperty("u", _instaApi.Session.LoggedInUser.Pk),
-                new JProperty("s", GenerateDigitsRandom(16)),
-                new JProperty("cp", 1),
-                new JProperty("ecp", 0),
-                new JProperty("chat_on", true),
-                new JProperty("fg", true),
-                new JProperty("d", device.PhoneId.ToString()),
-                new JProperty("ct", "cookie_auth"),
-                new JProperty("mqtt_sid", ""),
-                new JProperty("aid", aid),
-                new JProperty("st", new JArray()),
-                new JProperty("pm", new JArray()),
-                new JProperty("dc", ""),
-                new JProperty("no_auto_fg", true),
-                new JProperty("a", userAgent)
-            );
-            var username = JsonConvert.SerializeObject(json, Formatting.None);
-            connectPacket.Username = username;
-            // var buffer = StandalonePacketEncoder.EncodePacket(connectPacket);
-            var messageWebsocket = new MessageWebSocket();
-            messageWebsocket.Control.MessageType = SocketMessageType.Binary;
-            messageWebsocket.SetRequestHeader("User-Agent", userAgent);
-            messageWebsocket.SetRequestHeader("Origin", "https://www.instagram.com");
-            messageWebsocket.MessageReceived += OnMessageReceived;
-            // messageWebsocket.Closed += OnClosed;
-            var buffer = StandalonePacketEncoder.EncodePacket(connectPacket);
             try
             {
+                Debug.WriteLine("Sync client starting");
+                if (seqId == 0)
+                    throw new ArgumentException("Invalid seqId. Have you fetched inbox for the first time?",
+                        nameof(seqId));
+                _seqId = seqId;
+                _snapshotAt = snapshotAt;
+                _pinging?.Cancel();
+                _pinging = new CancellationTokenSource();
+                _packetId = 1;
+                var device = _instaApi.Device;
+                var baseHttpFilter = new HttpBaseProtocolFilter();
+                var cookies = baseHttpFilter.CookieManager.GetCookies(new Uri("https://i.instagram.com"));
+                foreach (var cookie in cookies)
+                {
+                    var copyCookie = new HttpCookie(cookie.Name, "edge-chat.instagram.com", "/chat")
+                    {
+                        Value = cookie.Value,
+                        Expires = cookie.Expires,
+                        HttpOnly = cookie.HttpOnly,
+                        Secure = cookie.Secure
+                    };
+                    baseHttpFilter.CookieManager.SetCookie(copyCookie);
+                }
+                var connectPacket = new ConnectPacket
+                {
+                    CleanSession = true,
+                    ClientId = "mqttwsclient",
+                    HasUsername = true,
+                    HasPassword = false,
+                    KeepAliveInSeconds = 10,
+                    ProtocolLevel = 3,
+                    ProtocolName = "MQIsdp"
+                };
+                var aid = GenerateDigitsRandom(16);
+                var userAgent =
+                    $"Mozilla/5.0 (Linux; Android 10; {device.DeviceName}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.93 Mobile Safari/537.36";
+                var json = new JObject(
+                    new JProperty("u", _instaApi.Session.LoggedInUser.Pk),
+                    new JProperty("s", GenerateDigitsRandom(16)),
+                    new JProperty("cp", 1),
+                    new JProperty("ecp", 0),
+                    new JProperty("chat_on", true),
+                    new JProperty("fg", true),
+                    new JProperty("d", device.PhoneId.ToString()),
+                    new JProperty("ct", "cookie_auth"),
+                    new JProperty("mqtt_sid", ""),
+                    new JProperty("aid", aid),
+                    new JProperty("st", new JArray()),
+                    new JProperty("pm", new JArray()),
+                    new JProperty("dc", ""),
+                    new JProperty("no_auto_fg", true),
+                    new JProperty("a", userAgent)
+                );
+                var username = JsonConvert.SerializeObject(json, Formatting.None);
+                connectPacket.Username = username;
+                // var buffer = StandalonePacketEncoder.EncodePacket(connectPacket);
+                var messageWebsocket = new MessageWebSocket();
+                messageWebsocket.Control.MessageType = SocketMessageType.Binary;
+                messageWebsocket.SetRequestHeader("User-Agent", userAgent);
+                messageWebsocket.SetRequestHeader("Origin", "https://www.instagram.com");
+                messageWebsocket.MessageReceived += OnMessageReceived;
+                // messageWebsocket.Closed += OnClosed;
+                var buffer = StandalonePacketEncoder.EncodePacket(connectPacket);
                 await messageWebsocket.ConnectAsync(new Uri("wss://edge-chat.instagram.com/chat"));
                 await messageWebsocket.OutputStream.WriteAsync(buffer);
                 await messageWebsocket.OutputStream.FlushAsync();
@@ -133,6 +134,7 @@ namespace InstagramAPI.Sync
             {
                 Debug.WriteLine(e);
                 Debug.WriteLine($"{nameof(SyncClient)}: Failed to start.");
+                FailedToStart?.Invoke(this, e);
             }
         }
 
@@ -154,7 +156,7 @@ namespace InstagramAPI.Sync
                 // Ignore if fail
             }
             Debug.WriteLine($"{nameof(SyncClient)}: Internet connection available. Reconnecting.");
-            Start(_seqId, _snapshotAt);
+            await Start(_seqId, _snapshotAt);
         }
 
         private async void OnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)

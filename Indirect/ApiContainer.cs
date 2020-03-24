@@ -81,21 +81,15 @@ namespace Indirect
         {
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
             _instaApi.SyncClient.MessageReceived += OnMessageSyncReceived;
-            Inbox = new InstaDirectInboxWrapper(_instaApi);
-            Inbox.FirstUpdated += async (seqId, snapshotAt) =>
+            _instaApi.SyncClient.FailedToStart += async (sender, exception) =>
             {
-                try
-                {
-                    await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
-                }
-                catch (Exception e)
-                {
 #if !DEBUG
-                    Crashes.TrackError(e);
+                Crashes.TrackError(exception);
 #endif
-                    await HandleException();
-                }
+                await HandleException();
             };
+            Inbox = new InstaDirectInboxWrapper(_instaApi);
+            Inbox.FirstUpdated += async (seqId, snapshotAt) => await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
             await UpdateLoggedInUser();
             PushClient.Start();
             PushClient.MessageReceived += (sender, args) =>
