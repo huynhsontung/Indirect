@@ -45,7 +45,6 @@ namespace Indirect
             }
         }
 
-        private ApiContainer() { }
 
         private readonly Instagram _instaApi = Instagram.Instance;
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
@@ -57,10 +56,9 @@ namespace Indirect
         public PushClient PushClient => _instaApi.PushClient;
         public SyncClient SyncClient => _instaApi.SyncClient;
 
-        public InstaDirectInboxWrapper Inbox { get; private set; }
+        public InstaDirectInboxWrapper Inbox { get; }
 
-        public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads =>
-            Inbox.Threads;
+        public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads => Inbox.Threads;
 
         public CurrentUser LoggedInUser { get; private set; }
 
@@ -77,9 +75,8 @@ namespace Indirect
         public AndroidDevice Device => _instaApi?.Device;
         public bool IsUserAuthenticated => _instaApi.IsUserAuthenticated;
 
-        public async void OnLoggedIn()
+        private ApiContainer()
         {
-            if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
             _instaApi.SyncClient.MessageReceived += OnMessageSyncReceived;
             _instaApi.SyncClient.FailedToStart += async (sender, exception) =>
             {
@@ -90,13 +87,18 @@ namespace Indirect
             };
             Inbox = new InstaDirectInboxWrapper(_instaApi);
             Inbox.FirstUpdated += async (seqId, snapshotAt) => await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
-            await UpdateLoggedInUser();
-            PushClient.Start();
             PushClient.MessageReceived += (sender, args) =>
             {
                 Debug.Write("Background notification: ");
                 Debug.WriteLine(args.Json);
             };
+        }
+
+        public async void OnLoggedIn()
+        {
+            if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
+            await UpdateLoggedInUser();
+            PushClient.Start();
         }
 
         public void SetSelectedThreadNull()
@@ -128,37 +130,42 @@ namespace Indirect
         {
             try
             {
+                var updateInbox = false;
                 foreach (var syncEvent in data)
                 {
                     var itemData = syncEvent.Data[0];
+                    if (syncEvent.SeqId > Inbox.SeqId)
+                    {
+                        Inbox.SeqId = syncEvent.SeqId;
+                        Inbox.SnapshotAt = itemData.Item.Timestamp;
+                    }
                     var segments = itemData.Path.Trim('/').Split('/');
                     var threadId = segments[2];
                     if (string.IsNullOrEmpty(threadId)) continue;
                     var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
-                    if (thread == null) continue;
+                    if (thread == null)
+                    {
+                        if (!updateInbox) updateInbox = itemData.Op == "add";
+                        continue;
+                    }
 
                     switch (itemData.Op)
                     {
-                        case "add" when thread.ObservableItems.Count > 0:
+                        case "add":
                         {
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                                 () => thread.AddItem(itemData.Item));
-                            if (syncEvent.Realtime) await Inbox.UpdateInbox();
                             break;
                         }
                         case "replace":
                         {
-                            var item = thread.ObservableItems.SingleOrDefault(x => x.ItemId == itemData.Item.ItemId);
-                            if (item == null) continue;
-                            if (itemData.Path.Contains("has_seen", StringComparison.Ordinal))
+                            if (itemData.Path.Contains("has_seen", StringComparison.Ordinal) && long.TryParse(segments[4], out var userId))
                             {
-                                // todo: handle seen event
-                                // var args = itemData.Path.Split('/');
-                                // if (long.TryParse(args[args.Length - 1], out var userId))
-                                // {
-                                // }
+                                thread.UpdateLastSeenAt(userId, itemData.Item.Timestamp, itemData.Item.ItemId);
                                 continue;
                             }
+                            var item = thread.ObservableItems.SingleOrDefault(x => x.ItemId == itemData.Item.ItemId);
+                            if (item == null) continue;
 
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
                             {
@@ -176,6 +183,7 @@ namespace Indirect
                         }
                     }
                 }
+                if (updateInbox) await Inbox.UpdateInbox();
             }
             catch (Exception e)
             {

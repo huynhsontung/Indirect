@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace Indirect.Wrapper
         public event Action<int, DateTimeOffset> FirstUpdated;    // callback to start SyncClient
 
         public int PendingRequestsCount { get; set; }
-        public int SeqId { get; set; }
+        public long SeqId { get; set; }
         public DateTimeOffset SnapshotAt { get; set; }
 
         public new IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> Threads { get; }
@@ -62,10 +63,8 @@ namespace Indirect.Wrapper
                 foreach (var thread in container.Inbox.Threads)
                 {
                     var existed = false;
-                    for (var i = 0; i < Threads.Count; i++)
+                    foreach (var existingThread in Threads)
                     {
-                        // if (i > 60) break;
-                        var existingThread = Threads[i];
                         if (thread.ThreadId != existingThread.ThreadId) continue;
                         existingThread.Update(thread, true);
                         existed = true;
@@ -74,7 +73,9 @@ namespace Indirect.Wrapper
 
                     if (!existed)
                     {
-                        Threads.Insert(0, new InstaDirectInboxThreadWrapper(thread, _instaApi));
+                        var wrappedThread = new InstaDirectInboxThreadWrapper(thread, _instaApi);
+                        wrappedThread.PropertyChanged += OnThreadChanged;
+                        Threads.Insert(0, wrappedThread);
                     }
                 }
 
@@ -104,7 +105,16 @@ namespace Indirect.Wrapper
                 return new List<InstaDirectInboxThreadWrapper>(0);
             }
             UpdateExcludeThreads(container);
-            return container.Inbox.Threads.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi));
+
+            var wrappedThreadList = new List<InstaDirectInboxThreadWrapper>();
+            foreach (var directThread in container.Inbox.Threads)
+            {
+                var wrappedThread = new InstaDirectInboxThreadWrapper(directThread, _instaApi);
+                wrappedThread.PropertyChanged += OnThreadChanged;
+                wrappedThreadList.Add(wrappedThread);
+            }
+
+            return wrappedThreadList;
         }
 
         private void SortInboxThread()
@@ -131,6 +141,14 @@ namespace Indirect.Wrapper
                 Threads.Insert(j, tmp);
                 i--;
                 satisfied = true;
+            }
+        }
+
+        private void OnThreadChanged(object sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName == nameof(InstaDirectInboxThreadWrapper.LastActivity) || string.IsNullOrEmpty(args.PropertyName))
+            {
+                SortInboxThread();
             }
         }
 

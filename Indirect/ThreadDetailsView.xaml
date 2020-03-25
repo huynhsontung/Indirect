@@ -25,7 +25,6 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <FlyoutBase.AttachedFlyout>
@@ -65,6 +64,19 @@
                 <!-- Title bar height + command bar height = 32 + 48 = 80 -->
                 <Frame Height="80"/>
             </ListView.Header>
+            <ListView.Footer>
+                <StackPanel HorizontalAlignment="Stretch">
+                    <TextBlock x:Name="SeenIndicator" Margin="24,2,24,8" Text="Seen"
+                               Style="{ThemeResource FluentCaptionTextStyle}"
+                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                               HorizontalAlignment="Right" Visibility="Collapsed"/>
+                    <TextBlock Margin="0,0,0,16" Text="Send your first message to start chatting" 
+                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                               HorizontalAlignment="Center" 
+                               Visibility="{x:Bind Thread.ObservableItems.Count, Converter={StaticResource VisibleWhenZeroConverter}, Mode=OneWay}"/>
+                </StackPanel>
+            </ListView.Footer>
+
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <ItemsStackPanel VerticalAlignment="Bottom"
@@ -84,12 +96,9 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </utilities:ChatListView>
+        
 
-        <Frame Grid.Row="3" HorizontalAlignment="Center" Visibility="{x:Bind Thread.ObservableItems.Count, Converter={StaticResource VisibleWhenZeroConverter}, Mode=OneWay}">
-            <TextBlock Margin="0,0,0,16" Text="Send your first message to start chatting" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
-        </Frame>
-
-        <Grid x:Name="MessageInputGrid" Grid.Row="4" HorizontalAlignment="Stretch" Margin="0,2,0,2">
+        <Grid x:Name="MessageInputGrid" Grid.Row="3" HorizontalAlignment="Stretch" Margin="0,2,0,2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="44"/>
                 <ColumnDefinition Width="*"/>

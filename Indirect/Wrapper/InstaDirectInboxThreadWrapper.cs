@@ -97,18 +97,29 @@ namespace Indirect.Wrapper
             UpdateItemList(source.Items);
         }
 
-        // This does not update thread's metadata. Better run Inbox.Update() after this.
-        public void AddItem(DirectItem item)
+        public void AddItems(List<DirectItem> items)
         {
-            UpdateItemList(new List<DirectItem> {item});
-            var latestItem = ObservableItems.Last();
+            UpdateItemList(items);
+
+            var latestItem = ObservableItems.Last();    // Assuming order of item is maintained. Last item after update should be the latest.
             if (latestItem.Timestamp > LastPermanentItem.Timestamp)
             {
+                // This does not update thread data like users in the thread or is thread muted or not
                 LastPermanentItem = latestItem;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastPermanentItem)));
+                LastActivity = latestItem.Timestamp;
+                NewestCursor = latestItem.ItemId;
+                if (!latestItem.FromMe) LastNonSenderItemAt = latestItem.Timestamp;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
             }
         }
 
+        public void AddItem(DirectItem item) => AddItems(new List<DirectItem> {item});
+
+        /// <summary>
+        /// Update everything in a thread. Use it if you have all thread metadata.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="fromInbox"></param>
         public void Update(DirectThread source, bool fromInbox = false)
         {
             UpdateExcludeItemList(source);
@@ -157,7 +168,7 @@ namespace Indirect.Wrapper
                 string.Compare(NewestCursor, source.NewestCursor, StringComparison.Ordinal) < 0)
             {
                 NewestCursor = source.NewestCursor;
-                HasNewer = HasNewer;
+                // This implementation never has HasNewer = true
             }
 
             UpdateUserList(source.Users);
@@ -282,6 +293,25 @@ namespace Indirect.Wrapper
                 var duplicate = duplicateGroup.First();
                 ObservableItems.Remove(duplicate);
             }
+        }
+
+        public void UpdateLastSeenAt(long userId, DateTimeOffset timestamp, string itemId)
+        {
+            if (userId == default || timestamp == default || itemId == default) return;
+            if (LastSeenAt.TryGetValue(userId, out var lastSeen))
+            {
+                lastSeen.Timestamp = timestamp;
+                lastSeen.ItemId = itemId;
+            }
+            else
+            {
+                LastSeenAt[userId] = new LastSeen
+                {
+                    ItemId = itemId,
+                    Timestamp = timestamp
+                };
+            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastSeenAt)));
         }
     }
 }
