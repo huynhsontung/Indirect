@@ -84,7 +84,6 @@ namespace Indirect
             if (!string.IsNullOrEmpty(inboxThread.ThreadId)) 
                 ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
             _viewModel.MarkLatestItemSeen(inboxThread);
-            // await _viewModel.Inbox.UpdateInbox();    // todo: Uncomment when UpdateInbox() in MessageSync is removed, delete all together when message sync is fully implemented
         }
 
         private void NewMessageButton_OnClick(object sender, RoutedEventArgs e)

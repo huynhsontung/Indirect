@@ -183,7 +183,10 @@ namespace Indirect
                         }
                     }
                 }
-                if (updateInbox) await Inbox.UpdateInbox();
+                if (updateInbox)
+                {
+                    await Inbox.UpdateInbox();   
+                }
             }
             catch (Exception e)
             {
@@ -408,12 +411,10 @@ namespace Indirect
         public async void UpdateInboxAndSelectedThread()
         {
             _lastUpdated = DateTime.Now;
-            var selected = SelectedThread;
             await Inbox.UpdateInbox();
-            if (selected == null) return;
-            if (InboxThreads.Contains(selected) && SelectedThread != selected) SelectedThread = selected;
+            if (SelectedThread == null) return;
             await UpdateSelectedThread();
-            MarkLatestItemSeen(selected);
+            MarkLatestItemSeen(SelectedThread);
         }
 
         public async void Search(string query, Action<List<InstaDirectInboxThreadWrapper>> updateAction)

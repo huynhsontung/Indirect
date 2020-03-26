@@ -120,7 +120,6 @@ namespace Indirect.Wrapper
         private void SortInboxThread()
         {
             var sorted = Threads.OrderByDescending(x => x.LastActivity).ToList();
-
             bool satisfied = true;
             for (var i = 0; i < Threads.Count; i++)
             {
@@ -136,11 +135,23 @@ namespace Indirect.Wrapper
                 if (satisfied) continue;
                 // Threads.Move(i,j);
                 // ObservableCollection.Move call ObservableCollection implementation of RemoveItem which is cause to refresh all items
-                var tmp = Threads[i];
-                Threads.RemoveAt(i);
-                Threads.Insert(j, tmp);
-                i--;
-                satisfied = true;
+                if (ApiContainer.Instance.SelectedThread != Threads[i])
+                {
+                    var tmp = Threads[i];
+                    Threads.RemoveAt(i);
+                    Threads.Insert(j, tmp);
+                    i--;
+                    satisfied = true;
+                }
+                else
+                {
+                    // If Selected thread is Threads[i], RemoveAt(i) will deselect the thread
+                    var tmp = Threads[j];
+                    Threads.RemoveAt(j);
+                    Threads.Insert(i, tmp);
+                    i--;
+                    satisfied = true;
+                }
             }
         }
 

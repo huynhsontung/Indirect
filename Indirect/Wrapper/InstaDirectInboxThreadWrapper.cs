@@ -44,13 +44,9 @@ namespace Indirect.Wrapper
 
         public InstaDirectInboxThreadWrapper(RankedRecipientThread rankedThread, Instagram api) : this(api)
         {
-            Canonical = rankedThread.Canonical;
-            Named = rankedThread.Named;
-            Pending = rankedThread.Pending;
+            PropertyCopier<RankedRecipientThread, InstaDirectInboxThreadWrapper>.Copy(rankedThread, this);
             Title = rankedThread.ThreadTitle;
-            ThreadId = rankedThread.ThreadId;
             ThreadType = DirectThreadType.Private;
-            ViewerId = rankedThread.ViewerId;
             foreach (var user in rankedThread.Users)
             {
                 Users.Add(user);
@@ -60,34 +56,7 @@ namespace Indirect.Wrapper
 
         public InstaDirectInboxThreadWrapper(DirectThread source, Instagram api) : this(api)
         {
-            Canonical = source.Canonical;
-            HasNewer = source.HasNewer;
-            HasOlder = source.HasOlder;
-            IsSpam = source.IsSpam;
-            Muted = source.Muted;
-            Named = source.Named;
-            Pending = source.Pending;
-            ViewerId = source.ViewerId;
-            LastActivity = source.LastActivity;
-            ThreadId = source.ThreadId;
-            OldestCursor = source.OldestCursor;
-            IsGroup = source.IsGroup;
-            IsPin = source.IsPin;
-            ValuedRequest = source.ValuedRequest;
-            VCMuted = source.VCMuted;
-            ReshareReceiveCount = source.ReshareReceiveCount;
-            ReshareSendCount = source.ReshareSendCount;
-            ExpiringMediaReceiveCount = source.ExpiringMediaReceiveCount;
-            ExpiringMediaSendCount = source.ExpiringMediaSendCount;
-            NewestCursor = source.NewestCursor;
-            ThreadType = source.ThreadType;
-            Title = source.Title;
-            MentionsMuted = source.MentionsMuted;
-
-            Inviter = source.Inviter;
-            LastPermanentItem = source.LastPermanentItem;
-            LeftUsers = source.LeftUsers;
-            LastSeenAt = source.LastSeenAt;
+            PropertyCopier<DirectThread, InstaDirectInboxThreadWrapper>.Copy(source, this);
 
             foreach (var instaUserShortFriendship in source.Users)
             {
