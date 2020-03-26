@@ -102,31 +102,11 @@ namespace InstagramAPI.Classes.Direct
 
         #endregion
 
-        // [JsonProperty("story_share")] public InstaStoryShareResponse StoryShare { get; set; }
+        #region VideoCallEvent
 
-        // raven media properties
-        // [JsonProperty("view_mode")] public string RavenViewMode { get; set; }
+        [JsonProperty("video_call_event")] public VideoCallEvent VideoCallEvent { get; set; }
 
-        // [JsonProperty("seen_user_ids")] public List<long> RavenSeenUserIds { get; set; }
-
-        // [JsonProperty("reply_chain_count")] public int? RavenReplayChainCount { get; set; }
-
-        // [JsonProperty("seen_count")] public int RavenSeenCount { get; set; }
-
-
-        // end
-
-        // [JsonProperty("profile")] public InstaUserShortResponse ProfileMedia { get; set; }
-
-        // [JsonProperty("preview_medias")] public List<InstaMediaItemResponse> ProfileMediasPreview { get; set; }
-
-        // [JsonProperty("placeholder")] public InstaPlaceholderResponse Placeholder { get; set; }
-
-        // [JsonProperty("location")] public InstaLocationResponse LocationMedia { get; set; }
-
-        // [JsonProperty("felix_share")] public InstaFelixShareResponse FelixShareMedia { get; set; }
-
-        // [JsonProperty("live_viewer_invite")] public InstaDirectBroadcastResponse LiveViewerInvite { get; set; }
+        #endregion
 
         public bool Equals(DirectItem other)
         {

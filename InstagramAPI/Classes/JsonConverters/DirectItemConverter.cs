@@ -101,6 +101,17 @@ namespace InstagramAPI.Classes.JsonConverters
                         item.Description = item.FromMe ? "You sent a voice clip" : "Sent you a voice clip";
                         break;
 
+                    case DirectItemType.VideoCallEvent:
+                        if (item.VideoCallEvent?.Action == "video_call_started")
+                        {
+                            item.Description = item.FromMe ? "You started a video chat" : "Video chat started";
+                        }
+                        else
+                        {
+                            item.Description = "Video chat ended";
+                        }
+                        break;
+
                     default:
                         item = itemJson.ToObject<DirectItem>(serializer);
                         item.Description = item.ItemType.ToString();

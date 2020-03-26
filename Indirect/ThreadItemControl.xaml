@@ -312,6 +312,21 @@
                     </local:AutoVideoControl>
                 </Border>
             </DataTemplate>
+
+            <DataTemplate x:Key="VideoCallTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <Border x:Name="NotAvailableMessage" 
+                        Background="Transparent" 
+                        HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                        CornerRadius="2" BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1">
+                    <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
+                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                               Text="{x:Bind Description}"
+                               Margin="6" 
+                               MaxWidth="250"
+                               HorizontalAlignment="Center" 
+                               TextWrapping="WrapWholeWords" FontStyle="Italic"/>
+                </Border>
+            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -360,6 +375,7 @@
                                             AudioTemplate="{StaticResource AudioTemplate}"
                                             MediaShareTemplate="{StaticResource MediaShareTemplate}"
                                             ReelShareTemplate="{StaticResource ReelShareTemplate}"
+                                            VideoCallTemplate="{StaticResource VideoCallTemplate}"
                                             UnexpectedTemplate="{StaticResource UnexpectedTemplate}"/>
             </ContentControl.ContentTemplateSelector>
         </ContentControl>
