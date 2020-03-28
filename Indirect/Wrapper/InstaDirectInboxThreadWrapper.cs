@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
+using Windows.Foundation;
+using Windows.UI.Core;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes;
@@ -18,8 +22,31 @@ namespace Indirect.Wrapper
     class InstaDirectInboxThreadWrapper : DirectThread, INotifyPropertyChanged, IIncrementalSource<InstaDirectInboxItemWrapper>
     {
         private readonly Instagram _instaApi;
+        private CancellationTokenSource _typingCancellationTokenSource;
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private bool _isSomeoneTyping;
+        public bool IsSomeoneTyping
+        {
+            get => _isSomeoneTyping;
+            private set
+            {
+                _isSomeoneTyping = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSomeoneTyping)));
+            }
+        }
+
+        private bool _showSeenIndicator;
+        public bool ShowSeenIndicator
+        {
+            get => _showSeenIndicator;
+            private set
+            {
+                _showSeenIndicator = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowSeenIndicator)));
+            }
+        }
 
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
         public new ObservableCollection<InstaUser> Users { get; } = new ObservableCollection<InstaUser>();
@@ -28,6 +55,8 @@ namespace Indirect.Wrapper
         {
             ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
             _instaApi = api;
+            PropertyChanged += SeenCheck;
+            ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
         }
 
         /// <summary>
@@ -281,6 +310,78 @@ namespace Indirect.Wrapper
                 };
             }
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastSeenAt)));
+        }
+
+
+        /// <summary>
+        /// Set IsSomeoneTyping to true for a period of time
+        /// </summary>
+        /// <param name="ttl">Amount of time to keep IsSomeoneTyping true. If this is 0 immediately set to false</param>
+        public async void PingTypingIndicator(int ttl)
+        {
+            if (!IsSomeoneTyping && ttl == 0) return;
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+                CoreDispatcherPriority.High, async () =>
+                {
+                    _typingCancellationTokenSource?.Cancel();
+                    _typingCancellationTokenSource = new CancellationTokenSource();
+                    var cancellationToken = _typingCancellationTokenSource.Token;
+                    if (ttl > 0)
+                    {
+                        if (!IsSomeoneTyping) IsSomeoneTyping = true;
+                        try
+                        {
+                            await Task.Delay(ttl, cancellationToken);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            return;
+                        }
+
+                        IsSomeoneTyping = false;
+                    }
+                    else
+                    {
+                        _typingCancellationTokenSource?.Cancel();
+                        _typingCancellationTokenSource = null;
+                        IsSomeoneTyping = false;
+                    }
+                });
+        }
+
+        private void HideTypingIndicatorOnItemReceived(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems.Count == 1 && !((InstaDirectInboxItemWrapper)e.NewItems[0]).FromMe)
+            {
+                PingTypingIndicator(0);
+            }
+        }
+
+        private async void SeenCheck(object sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName != nameof(LastSeenAt) && !string.IsNullOrEmpty(args.PropertyName)) return;
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                if (ObservableItems.Count == 0)
+                {
+                    if (ShowSeenIndicator) ShowSeenIndicator = false;
+                    return;
+                }
+
+                var latestItem = ObservableItems.Last();
+                if (!latestItem.FromMe || LastSeenAt.Count == 0)
+                {
+                    if (ShowSeenIndicator) ShowSeenIndicator = false;
+                    return;
+                }
+
+                var value = LastSeenAt.Any(pair =>
+                {
+                    if (pair.Key == ViewerId) return false;
+                    return pair.Value.Timestamp >= latestItem.Timestamp;
+                });
+                if (value != ShowSeenIndicator) ShowSeenIndicator = value;
+            });
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Utils;
@@ -18,6 +19,16 @@ namespace InstagramAPI.Classes.JsonConverters
         public override DirectItem ReadJson(JsonReader reader, Type objectType, DirectItem existingValue, bool hasExistingValue,
             JsonSerializer serializer)
         {
+            for (var i = 0; i < serializer.Converters.Count; i++)
+            {
+                var converter = serializer.Converters[i];
+                if (converter is DirectItemConverter)
+                {
+                    serializer.Converters.Remove(converter);
+                    i--;
+                }
+            }
+
             serializer.NullValueHandling = NullValueHandling.Ignore;
             var itemJson = reader.TokenType == JsonToken.String
                 ? JObject.Parse((string) reader.Value)

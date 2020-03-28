@@ -22,6 +22,7 @@ namespace InstagramAPI.Sync
     public class SyncClient
     {
         public event EventHandler<List<MessageSyncEventArgs>> MessageReceived;
+        public event EventHandler<PubsubEventArgs> ActivityIndicatorChanged; 
         public event EventHandler<Exception> FailedToStart;
 
         private int _packetId = 1;
@@ -261,19 +262,31 @@ namespace InstagramAPI.Sync
                     case PacketType.PUBLISH:
                         var publishPacket = (PublishPacket)packet;
                         var payload = publishPacket.Payload.ReadString(publishPacket.Payload.ReadableBytes, Encoding.UTF8);
-                        if (publishPacket.TopicName == "/ig_message_sync")
-                        {
-                            var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(payload);
-                            var latest = messageSyncPayload.Last();
-                            if (latest.SeqId > _seqId ||
-                                latest.Data[0].Item.Timestamp > _snapshotAt)
-                            {
-                                _seqId = latest.SeqId;
-                                _snapshotAt = latest.Data[0].Item.Timestamp;
-                            }
-                            MessageReceived?.Invoke(this, messageSyncPayload);
-                        }
                         Debug.WriteLine($"{nameof(SyncClient)} pub to {publishPacket.TopicName} payload: {payload}");
+                        switch (publishPacket.TopicName)
+                        {
+                            case "/ig_message_sync":
+                                var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(payload);
+                                var latest = messageSyncPayload.Last();
+                                if (latest.SeqId > _seqId ||
+                                    latest.Data[0].Item.Timestamp > _snapshotAt)
+                                {
+                                    _seqId = latest.SeqId;
+                                    _snapshotAt = latest.Data[0].Item.Timestamp;
+                                }
+                                MessageReceived?.Invoke(this, messageSyncPayload);
+                                break;
+                            
+                            case "/pubsub":
+                                payload = payload.Substring(payload.IndexOf('{'));  // pubsub is weird. It has a few non string bytes before the actual data.
+                                var pubsub = JsonConvert.DeserializeObject<PubsubEventArgs>(payload);
+                                if (pubsub.Data[0].Path.Contains("activity_indicator_id"))
+                                {
+                                    ActivityIndicatorChanged?.Invoke(this, pubsub);
+                                }
+                                break;
+                        }
+
 
                         if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
                         {

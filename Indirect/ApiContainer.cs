@@ -96,6 +96,7 @@ namespace Indirect
 
         public async void OnLoggedIn()
         {
+            _instaApi.SyncClient.ActivityIndicatorChanged += OnActivityIndicatorChanged;
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
             await UpdateLoggedInUser();
             PushClient.Start();
@@ -124,6 +125,30 @@ namespace Indirect
             var loggedInUser = await _instaApi.GetCurrentUserAsync();
             LoggedInUser = loggedInUser.Value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
+        }
+
+        private void OnActivityIndicatorChanged(object sender, PubsubEventArgs data)
+        {
+            try
+            {
+                var indicatorData = data.Data[0];
+                var segments = indicatorData.Path.Trim('/').Split('/');
+                var threadId = segments[2];
+                if (string.IsNullOrEmpty(threadId)) return;
+                var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
+                if (thread == null) return;
+                if (indicatorData.Indicator.ActivityStatus == 1)
+                    thread.PingTypingIndicator(indicatorData.Indicator.TimeToLive);
+                else
+                    thread.PingTypingIndicator(0);
+            }
+            catch (Exception e)
+            {
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
+                Debug.WriteLine(e);
+            }
         }
 
         private async void OnMessageSyncReceived(object sender, List<MessageSyncEventArgs> data)

@@ -31,16 +31,20 @@ namespace InstagramAPI.Sync
             JsonConvert.DeserializeObject<MessageSyncEventArgs>(json);
     }
 
-    public class ItemSyncData
+    public class ItemSyncData : SyncBaseData
     {
-        [JsonProperty("op")]
-        public string Op { get; set; }
+        private static readonly DirectItemConverter Converter = new DirectItemConverter();
+        private DirectItem _item;
 
-        [JsonProperty("path")]
-        public string Path { get; set; }
-
-        [JsonProperty("value")]
-        [JsonConverter(typeof(DirectItemConverter))]
-        public DirectItem Item { get; set; }
+        [JsonIgnore]
+        public DirectItem Item
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Value)) return null;
+                if (_item == null) _item = JsonConvert.DeserializeObject<DirectItem>(Value, Converter);
+                return _item;
+            }
+        }
     }
 }

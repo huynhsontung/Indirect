@@ -16,6 +16,7 @@
         <ResourceDictionary>
             <converters:SendButtonGlyphConverter x:Key="SendButtonGlyphConverter"/>
             <converters:VisibleWhenZeroConverter x:Key="VisibleWhenZeroConverter"/>
+            <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -66,10 +67,14 @@
             </ListView.Header>
             <ListView.Footer>
                 <StackPanel HorizontalAlignment="Stretch">
-                    <TextBlock x:Name="SeenIndicator" Margin="24,2,24,8" Text="Seen"
+                    <TextBlock x:Name="SeenIndicator" Margin="18,2,18,8" Text="Seen"
                                Style="{ThemeResource FluentCaptionTextStyle}"
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                               HorizontalAlignment="Right" Visibility="Collapsed"/>
+                               HorizontalAlignment="Right" Visibility="{x:Bind Thread.ShowSeenIndicator, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}"/>
+                    <TextBlock x:Name="TypingIndicator" Margin="18,2,18,8" Text="Typing" FontStyle="Italic"
+                               Style="{ThemeResource FluentCaptionTextStyle}"
+                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                               HorizontalAlignment="Left" Visibility="{x:Bind Thread.IsSomeoneTyping, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}"/>
                     <TextBlock Margin="0,0,0,16" Text="Send your first message to start chatting" 
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                                HorizontalAlignment="Center" 

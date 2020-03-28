@@ -193,10 +193,12 @@
     <Compile Include="Push\PayloadProcessor.cs" />
     <Compile Include="Push\PushClient.cs" />
     <Compile Include="Push\PushReceivedEventArgs.cs" />
+    <Compile Include="Sync\PubsubEventArgs.cs" />
     <Compile Include="Sync\StandalonePacketDecoder.cs" />
     <Compile Include="Sync\StandalonePacketEncoder.cs" />
     <Compile Include="Push\StreamSocketChannel.cs" />
     <Compile Include="Sync\MessageSyncEventArgs.cs" />
+    <Compile Include="Sync\SyncBaseData.cs" />
     <Compile Include="Sync\SyncClient.cs" />
     <Compile Include="Utils\CryptoHelper.cs" />
     <Compile Include="Utils\DebugLogger.cs" />

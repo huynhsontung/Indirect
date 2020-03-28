@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -33,7 +34,7 @@ namespace Indirect
             nameof(Thread),
             typeof(InstaDirectInboxThreadWrapper),
             typeof(ThreadDetailsView),
-            new PropertyMetadata(null, OnThreadChanged));
+            new PropertyMetadata(null));
         // public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
         //     nameof(ViewModel),
         //     typeof(ApiContainer),
@@ -47,17 +48,6 @@ namespace Indirect
         }
 
         private static ApiContainer ViewModel => ApiContainer.Instance;
-
-        private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var view = (ThreadDetailsView) d;
-            var thread = e.NewValue as InstaDirectInboxThreadWrapper;
-            if (e.OldValue is InstaDirectInboxThreadWrapper oldThread) oldThread.PropertyChanged -= view.SeenCheck;
-            if (thread == null) return;
-            thread.PropertyChanged -= view.SeenCheck;   // Redundant. Just making sure it already unregistered.
-            thread.PropertyChanged += view.SeenCheck;
-            view.SeenCheck(null, null);
-        }
 
 
         public ThreadDetailsView()
@@ -203,27 +193,6 @@ namespace Indirect
                     SendButton_Click(sender, new RoutedEventArgs());
             }
 
-        }
-
-        private void SeenCheck(object sender, PropertyChangedEventArgs args)
-        {
-            if (Thread.ObservableItems.Count == 0)
-            {
-                SeenIndicator.Visibility = Visibility.Collapsed;
-                return;
-            }
-            var latestItem = Thread.ObservableItems.Last();
-            if (!latestItem.FromMe || Thread.LastSeenAt.Count == 0)
-            {
-                SeenIndicator.Visibility = Visibility.Collapsed;
-                return;
-            }
-
-            SeenIndicator.Visibility = Thread.LastSeenAt.Any(pair =>
-            {
-                if (pair.Key == Thread.ViewerId) return false;
-                return pair.Value.Timestamp >= latestItem.Timestamp;
-            }) ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }
