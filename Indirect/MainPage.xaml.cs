@@ -5,6 +5,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.Toolkit.Uwp.UI.Controls;
+using Microsoft.Toolkit.Uwp.UI.Extensions;
 using CoreWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
 using InstaDirectInboxThreadWrapper = Indirect.Wrapper.InstaDirectInboxThreadWrapper;
 
@@ -84,6 +85,9 @@ namespace Indirect
             if (!string.IsNullOrEmpty(inboxThread.ThreadId)) 
                 ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
             _viewModel.MarkLatestItemSeen(inboxThread);
+            
+            var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
+            details?.Focus(FocusState.Programmatic);    // Focus to chat box after selecting a thread
         }
 
         private void NewMessageButton_OnClick(object sender, RoutedEventArgs e)

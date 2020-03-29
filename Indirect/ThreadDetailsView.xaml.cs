@@ -1,26 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Security.Cryptography;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
 using Indirect.Wrapper;
 using InstagramAPI.Classes;
 
@@ -62,6 +50,10 @@ namespace Indirect
         public ThreadDetailsView()
         {
             this.InitializeComponent();
+            ItemsHolder.GotFocus += (sender, args) =>
+            {
+                MessageTextBox.Focus(FocusState.Programmatic);
+            };
         }
 
         private void RefreshThread_OnClick(object sender, RoutedEventArgs e)
