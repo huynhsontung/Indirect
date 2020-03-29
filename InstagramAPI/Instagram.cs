@@ -47,6 +47,10 @@ namespace InstagramAPI
         public SyncClient SyncClient { get; }
         public Dictionary<long, InstaUser> CentralUserRegistry { get; } = new Dictionary<long, InstaUser>();
 
+        // For push notification to look up thread title from thread id. Instagram doesn't pass thread title for push notifications.
+        public const string THREAD_TITLE_PERSISTENT_DICTIONARY_KEY = "ThreadTitlePersistentDictionary";
+        public PersistentDictionary<string> ThreadTitlePersistentDictionary { get; } = new PersistentDictionary<string>(THREAD_TITLE_PERSISTENT_DICTIONARY_KEY);
+
         private readonly HttpClient _httpClient = new HttpClient();
         private readonly ApiRequestMessage _apiRequestMessage;
         private readonly DebugLogger _logger;
@@ -68,6 +72,7 @@ namespace InstagramAPI
             SyncClient = new SyncClient(this);
 
             if (!IsUserAuthenticated) return;
+            ThreadTitlePersistentDictionary.LoadFromAppSettings();
             Session.LoadFromAppSettings();
             Device = AndroidDevice.CreateFromAppSettings() ?? Device;
             SetDefaultRequestHeaders();
@@ -355,10 +360,20 @@ namespace InstagramAPI
 
         public void SaveToAppSettings()
         {
-            Device.SaveToAppSettings();
-            Session.SaveToAppSettings();
-            PushClient.ConnectionData.SaveToAppSettings();
             IsUserAuthenticatedPersistent = IsUserAuthenticated;
+            Device.SaveToAppSettings();
+            if (IsUserAuthenticated)
+            {
+                Session.SaveToAppSettings();
+                PushClient.ConnectionData.SaveToAppSettings();
+                ThreadTitlePersistentDictionary.SaveToAppSettings();
+            }
+            else
+            {
+                Session.RemoveFromAppSettings();
+                PushClient.ConnectionData.RemoveFromAppSettings();
+                ThreadTitlePersistentDictionary.RemoveFromAppSettings();
+            }
         }
     }
 }

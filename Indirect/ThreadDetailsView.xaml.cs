@@ -214,7 +214,8 @@ namespace Indirect
             Debug.WriteLine($"LastVisibleIndex: {chatItemsStackPanel?.LastVisibleIndex}");
             Debug.WriteLine($"FirstVisibleIndex: {chatItemsStackPanel?.FirstVisibleIndex}");
             Debug.WriteLine($"Last index in ObservableItems: {Thread.ObservableItems.Count - 1}");
-            if (chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 1)
+            if (chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 1 ||
+                chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 2)
             {
                 ItemsHolder.ScrollIntoView(ItemsHolder.Footer);
             }

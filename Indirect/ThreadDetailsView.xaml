@@ -71,7 +71,7 @@
                                Style="{ThemeResource FluentCaptionTextStyle}"
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                                HorizontalAlignment="Right" Visibility="{x:Bind Thread.ShowSeenIndicator, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}"/>
-                    <TextBlock x:Name="TypingIndicator" Margin="18,2,18,8" Text="Typing" FontStyle="Italic"
+                    <TextBlock x:Name="TypingIndicator" Margin="18,8,18,8" Text="Typing" FontStyle="Italic"
                                Style="{ThemeResource FluentCaptionTextStyle}"
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                                HorizontalAlignment="Left" Visibility="{x:Bind Thread.IsSomeoneTyping, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}"/>

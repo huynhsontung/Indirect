@@ -75,5 +75,11 @@ namespace InstagramAPI.Classes
             session.LoadFromAppSettings();
             return session;
         }
+
+        public void RemoveFromAppSettings()
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values.Remove("_userSessionData");
+        }
     }
 }

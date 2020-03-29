@@ -61,6 +61,7 @@ namespace InstagramAPI
                     foreach (var directThread in nextInbox.Value.Inbox.Threads)
                     {
                         AddToUserRegistry(directThread.Users);
+                        ThreadTitlePersistentDictionary[directThread.ThreadId] = directThread.Title;
                     }
                     pagesLoaded++;
                 }

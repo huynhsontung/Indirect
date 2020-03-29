@@ -147,5 +147,11 @@ namespace InstagramAPI.Push
             _fbnsToken = default;
             FbnsTokenLastUpdated = DateTimeOffset.Now;
         }
+
+        public void RemoveFromAppSettings()
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values.Remove("_fbnsConnectionData");
+        }
     }
 }

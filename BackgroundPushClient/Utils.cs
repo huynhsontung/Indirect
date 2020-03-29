@@ -1,12 +1,6 @@
-﻿using System;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading.Tasks;
-using System.Web;
-using Windows.Security.Cryptography;
-using Windows.Storage;
-using Windows.Storage.Streams;
+﻿using System.Web;
 using Windows.UI.Notifications;
+using InstagramAPI;
 using InstagramAPI.Push;
 using Microsoft.Toolkit.Uwp.Notifications;
 
@@ -23,8 +17,12 @@ namespace BackgroundPushClient
             var queryParams = HttpUtility.ParseQueryString(igAction.Substring(querySeparatorIndex));
             var threadId = queryParams["id"];
             var itemId = queryParams["x"];
+            var threadTitle = GetThreadTitleFromAppSettings(threadId);
+            if (string.IsNullOrEmpty(threadTitle))
+                threadTitle = notificationContent.Message.Substring(notificationContent.Message.IndexOf(' '));
             var toastContent = new ToastContent()
             {
+                Header = new ToastHeader(threadId, threadTitle, string.Empty),
                 Visual = new ToastVisual()
                 {
                     BindingGeneric = new ToastBindingGeneric()
@@ -57,6 +55,13 @@ namespace BackgroundPushClient
             };
             // And send the notification
             ToastNotificationManager.CreateToastNotifier().Show(toast);
+        }
+
+        private static string GetThreadTitleFromAppSettings(string threadId)
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var composite = (Windows.Storage.ApplicationDataCompositeValue)localSettings.Values[Instagram.THREAD_TITLE_PERSISTENT_DICTIONARY_KEY];
+            return (string) composite?[threadId];
         }
     }
 }

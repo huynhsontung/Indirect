@@ -203,6 +203,7 @@
     <Compile Include="Utils\CryptoHelper.cs" />
     <Compile Include="Utils\DebugLogger.cs" />
     <Compile Include="UriCreator.cs" />
+    <Compile Include="Utils\PersistentDictionary.cs" />
     <EmbeddedResource Include="Properties\InstagramAPI.rd.xml" />
   </ItemGroup>
   <ItemGroup>
