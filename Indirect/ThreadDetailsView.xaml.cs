@@ -34,7 +34,7 @@ namespace Indirect
             nameof(Thread),
             typeof(InstaDirectInboxThreadWrapper),
             typeof(ThreadDetailsView),
-            new PropertyMetadata(null));
+            new PropertyMetadata(null, OnThreadChanged));
         // public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
         //     nameof(ViewModel),
         //     typeof(ApiContainer),
@@ -47,8 +47,17 @@ namespace Indirect
             set => SetValue(ThreadProperty, value);
         }
 
-        private static ApiContainer ViewModel => ApiContainer.Instance;
+        private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var view = (ThreadDetailsView)d;
+            var thread = e.NewValue as InstaDirectInboxThreadWrapper;
+            if (e.OldValue is InstaDirectInboxThreadWrapper oldThread) oldThread.PropertyChanged -= view.OnThreadPropertyChanged;
+            if (thread == null) return;
+            thread.PropertyChanged -= view.OnThreadPropertyChanged;   // Redundant. Just making sure it already unregistered.
+            thread.PropertyChanged += view.OnThreadPropertyChanged;
+        }
 
+        private static ApiContainer ViewModel => ApiContainer.Instance;
 
         public ThreadDetailsView()
         {
@@ -193,6 +202,22 @@ namespace Indirect
                     SendButton_Click(sender, new RoutedEventArgs());
             }
 
+        }
+
+        private void OnThreadPropertyChanged(object sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName != nameof(Thread.IsSomeoneTyping) &&
+                args.PropertyName != nameof(Thread.ShowSeenIndicator) &&
+                !string.IsNullOrEmpty(args.PropertyName)) return;
+            if (!Thread.IsSomeoneTyping && !Thread.ShowSeenIndicator) return;
+            var chatItemsStackPanel = (ItemsStackPanel) ItemsHolder.ItemsPanelRoot;
+            Debug.WriteLine($"LastVisibleIndex: {chatItemsStackPanel?.LastVisibleIndex}");
+            Debug.WriteLine($"FirstVisibleIndex: {chatItemsStackPanel?.FirstVisibleIndex}");
+            Debug.WriteLine($"Last index in ObservableItems: {Thread.ObservableItems.Count - 1}");
+            if (chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 1)
+            {
+                ItemsHolder.ScrollIntoView(ItemsHolder.Footer);
+            }
         }
     }
 }
