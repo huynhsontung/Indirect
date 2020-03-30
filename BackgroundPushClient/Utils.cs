@@ -19,7 +19,7 @@ namespace BackgroundPushClient
             var itemId = queryParams["x"];
             var threadTitle = GetThreadTitleFromAppSettings(threadId);
             if (string.IsNullOrEmpty(threadTitle))
-                threadTitle = notificationContent.Message.Substring(notificationContent.Message.IndexOf(' '));
+                threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(' '));
             var toastContent = new ToastContent()
             {
                 Header = new ToastHeader(threadId, threadTitle, string.Empty),

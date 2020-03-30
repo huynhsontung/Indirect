@@ -40,6 +40,7 @@ namespace InstagramAPI
                 foreach (var directThread in inboxResult.Value.Inbox.Threads)
                 {
                     AddToUserRegistry(directThread.Users);
+                    ThreadTitlePersistentDictionary[directThread.ThreadId] = directThread.Title;
                 }
                 paginationParameters.NextMaxId = inbox.Inbox.OldestCursor;
                 var pagesLoaded = 1;
