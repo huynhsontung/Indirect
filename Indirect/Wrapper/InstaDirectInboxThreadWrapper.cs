@@ -321,7 +321,7 @@ namespace Indirect.Wrapper
         {
             if (!IsSomeoneTyping && ttl == 0) return;
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                CoreDispatcherPriority.High, async () =>
+                CoreDispatcherPriority.Normal, async () =>
                 {
                     _typingCancellationTokenSource?.Cancel();
                     _typingCancellationTokenSource = new CancellationTokenSource();

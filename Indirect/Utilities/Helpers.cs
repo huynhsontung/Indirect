@@ -37,7 +37,7 @@ namespace Indirect.Utilities
             var resizedStream = new InMemoryRandomAccessStream();
 
             var propertySet = new BitmapPropertySet();
-            propertySet.Add("ImageQuality", new BitmapTypedValue(0.7, PropertyType.Single));
+            propertySet.Add("ImageQuality", new BitmapTypedValue(0.9, PropertyType.Single));
             BitmapEncoder encoder =
                 await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, resizedStream, propertySet);
             encoder.SetSoftwareBitmap(await decoder.GetSoftwareBitmapAsync());

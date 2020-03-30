@@ -1,10 +1,13 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -50,10 +53,6 @@ namespace Indirect
         public ThreadDetailsView()
         {
             this.InitializeComponent();
-            ItemsHolder.GotFocus += (sender, args) =>
-            {
-                MessageTextBox.Focus(FocusState.Programmatic);
-            };
         }
 
         private void RefreshThread_OnClick(object sender, RoutedEventArgs e)
@@ -84,6 +83,7 @@ namespace Indirect
             };
             picker.FileTypeFilter.Add(".jpg");
             picker.FileTypeFilter.Add(".jpeg");
+            picker.FileTypeFilter.Add(".png");
             // picker.FileTypeFilter.Add(".mp4");   // todo: to be tested
 
             var file = await picker.PickSingleFileAsync();
@@ -196,7 +196,7 @@ namespace Indirect
 
         }
 
-        private void OnThreadPropertyChanged(object sender, PropertyChangedEventArgs args)
+        private async void OnThreadPropertyChanged(object sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName != nameof(Thread.IsSomeoneTyping) &&
                 args.PropertyName != nameof(Thread.ShowSeenIndicator) &&
@@ -209,7 +209,12 @@ namespace Indirect
             if (chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 1 ||
                 chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 2)
             {
-                ItemsHolder.ScrollIntoView(ItemsHolder.Footer);
+                await Task.Delay(100);
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                    () =>
+                    {
+                        ItemsHolder.ScrollIntoView(ItemsHolder.Footer);
+                    });
             }
         }
     }

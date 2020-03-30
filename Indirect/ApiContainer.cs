@@ -337,7 +337,10 @@ namespace Indirect
                     }
                     else
                     {
-                        buffer = await FileIO.ReadBufferAsync(file);
+                        if (file.FileType.Contains("png", StringComparison.OrdinalIgnoreCase))
+                            buffer = await Helpers.CompressImage(file, imageWidth, imageHeight);
+                        else
+                            buffer = await FileIO.ReadBufferAsync(file);
                     }
 
                     await SendBuffer(buffer, imageWidth, imageHeight, progress);
@@ -405,8 +408,8 @@ namespace Indirect
                 }
                 else
                 {
-                    buffer = new Buffer((uint) stream.Size);
-                    await stream.WriteAsync(buffer);
+                    stream.Seek(0);
+                    buffer = await Helpers.CompressImage(stream, imageWidth, imageHeight);  // Force jpeg
                 }
 
                 await SendBuffer(buffer, imageWidth, imageHeight, progress);
