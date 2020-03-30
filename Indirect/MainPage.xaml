@@ -152,7 +152,8 @@
                             Background="Transparent"
                             Padding="6"
                             VerticalAlignment="Center"
-                            Click="NewMessageButton_OnClick">
+                            Click="NewMessageButton_OnClick"
+                            Visibility="Collapsed">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF716;" Width="32" Height="32"/>
                     </Button>
 
