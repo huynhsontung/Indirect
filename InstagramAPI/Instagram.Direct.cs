@@ -37,11 +37,6 @@ namespace InstagramAPI
                 if (!inboxResult.IsSucceeded)
                     return inboxResult;
                 var inbox = inboxResult.Value;
-                foreach (var directThread in inboxResult.Value.Inbox.Threads)
-                {
-                    AddToUserRegistry(directThread.Users);
-                    ThreadTitlePersistentDictionary[directThread.ThreadId] = directThread.Title;
-                }
                 paginationParameters.NextMaxId = inbox.Inbox.OldestCursor;
                 var pagesLoaded = 1;
                 while (inbox.Inbox.HasOlder
@@ -59,14 +54,14 @@ namespace InstagramAPI
                     inbox.Inbox.UnseenCount = nextInbox.Value.Inbox.UnseenCount;
                     inbox.Inbox.UnseenCountTs = nextInbox.Value.Inbox.UnseenCountTs;
                     inbox.Inbox.Threads.AddRange(nextInbox.Value.Inbox.Threads);
-                    foreach (var directThread in nextInbox.Value.Inbox.Threads)
-                    {
-                        AddToUserRegistry(directThread.Users);
-                        ThreadTitlePersistentDictionary[directThread.ThreadId] = directThread.Title;
-                    }
                     pagesLoaded++;
                 }
-
+                foreach (var directThread in inbox.Inbox.Threads)
+                {
+                    AddToUserRegistry(directThread.Users);
+                    ThreadTitlePersistentDictionary[directThread.ThreadId] = directThread.Title;
+                    directThread.Items.Reverse();
+                }
                 return Result<InboxContainer>.Success(inbox);
             }
             catch (Exception exception)
@@ -535,6 +530,27 @@ namespace InstagramAPI
             {
                 _logger?.LogException(exception);
                 return Result<ItemAckResponse>.Except(exception);
+            }
+        }
+
+        public async Task<Result<UserPresenceResponse>> GetPresence()
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var instaUri = UriCreator.GetDirectUserPresenceUri();
+                var response = await _httpClient.GetAsync(instaUri);
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<UserPresenceResponse>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<UserPresenceResponse>(json);
+                return obj.IsOk() ? Result<UserPresenceResponse>.Success(obj, json) : Result<UserPresenceResponse>.Fail(json);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<UserPresenceResponse>.Except(exception);
             }
         }
     }

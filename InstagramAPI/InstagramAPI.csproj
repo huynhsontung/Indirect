@@ -173,6 +173,7 @@
     <Compile Include="Classes\Result.cs" />
     <Compile Include="Classes\StoryUploadOptions.cs" />
     <Compile Include="Classes\TwoFactorLoginInfo.cs" />
+    <Compile Include="Classes\UserPresenceResponse.cs" />
     <Compile Include="Classes\UserSessionData.cs" />
     <Compile Include="Classes\User\CurrentUser.cs" />
     <Compile Include="Classes\User\InstaUser.cs" />

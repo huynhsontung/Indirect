@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -22,16 +23,35 @@ namespace Indirect
 {
     public sealed partial class ProfilePicture : UserControl
     {
-        public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
+        public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
             nameof(Source),
             typeof(ObservableCollection<InstaUser>),
             typeof(ProfilePicture),
             new PropertyMetadata(null, OnSourceChanged));
+        public static readonly DependencyProperty IsUserActiveProperty = DependencyProperty.Register(
+            nameof(IsUserActive),
+            typeof(bool),
+            typeof(ProfilePicture),
+            new PropertyMetadata(null, OnUserActiveChanged));
+
 
         public ObservableCollection<InstaUser> Source
         {
-            get => (ObservableCollection<InstaUser>)GetValue(ItemProperty);
-            set => SetValue(ItemProperty, value);
+            get => (ObservableCollection<InstaUser>)GetValue(SourceProperty);
+            set => SetValue(SourceProperty, value);
+        }
+
+        public bool IsUserActive
+        {
+            get => (bool) GetValue(IsUserActiveProperty);
+            set => SetValue(IsUserActiveProperty, value);
+        }
+
+        private static void OnUserActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var view = (ProfilePicture)d;
+            var isActive = (bool) e.NewValue;
+            view.ActiveIndicator.Visibility = isActive ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private static void OnSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -56,6 +76,20 @@ namespace Indirect
         public ProfilePicture()
         {
             this.InitializeComponent();
+            ApiContainer.Instance.PropertyChanged += ViewModelOnPropertyChanged;
+        }
+
+        private void ViewModelOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(e.PropertyName)) return;
+            if (Source == null) return;
+            if (Source.Any(user => ApiContainer.Instance.UserPresenceDictionary[user.Pk]))
+            {
+                IsUserActive = true;
+                return;
+            }
+
+            IsUserActive = false;
         }
 
         private void ProfilePicture_OnSizeChanged(object sender, SizeChangedEventArgs e)

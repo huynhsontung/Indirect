@@ -10,11 +10,12 @@
     d:DesignHeight="300"
     d:DesignWidth="400" SizeChanged="ProfilePicture_OnSizeChanged">
 
-    <StackPanel>
+    <Grid>
         <controls:ImageEx x:Name="Single" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" CornerRadius="99"/>
         <Grid x:Name="Group" Visibility="Collapsed">
             <controls:ImageEx x:Name="Person2" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" CornerRadius="99"/>
             <controls:ImageEx x:Name="Person1" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" CornerRadius="99"/>
         </Grid>
-    </StackPanel>
+        <Ellipse x:Name="ActiveIndicator" Fill="Chartreuse" Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Bottom" Visibility="Collapsed"/>
+    </Grid>
 </UserControl>

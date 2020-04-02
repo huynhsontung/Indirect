@@ -35,8 +35,8 @@ namespace InstagramAPI
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/inbox/", out var instaUri))
                 throw new Exception("Cant create URI for get inbox");
             return !string.IsNullOrEmpty(nextId)
-                ? new UriBuilder(instaUri) { Query = $"persistentBadging=true&use_unified_inbox=true&cursor={nextId}&direction=older" }.Uri
-                 : new UriBuilder(instaUri) { Query = "persistentBadging=true&use_unified_inbox=true" }.Uri;
+                ? new UriBuilder(instaUri) { Query = $"persistentBadging=true&use_unified_inbox=true&cursor={nextId}&direction=older&limit=20&thread_message_limit=10" }.Uri
+                 : new UriBuilder(instaUri) { Query = "persistentBadging=true&use_unified_inbox=true&limit=20&thread_message_limit=10" }.Uri;
         }
 
         public static Uri GetDirectInboxThreadUri(string threadId, string nextId)
@@ -155,6 +155,13 @@ namespace InstagramAPI
         {
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/{threadId}/items/{itemId}/seen/", out var instaUri))
                 throw new Exception("Cant create URI for seen thread");
+            return instaUri;
+        }
+
+        public static Uri GetDirectUserPresenceUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/get_presence/", out var instaUri))
+                throw new Exception("Cant create URI for user presence");
             return instaUri;
         }
     }

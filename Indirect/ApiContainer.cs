@@ -56,6 +56,8 @@ namespace Indirect
         public PushClient PushClient => _instaApi.PushClient;
         public SyncClient SyncClient => _instaApi.SyncClient;
 
+        public Dictionary<long, bool> UserPresenceDictionary { get; } = new Dictionary<long, bool>();
+
         public InstaDirectInboxWrapper Inbox { get; }
 
         public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads => Inbox.Threads;
@@ -78,6 +80,7 @@ namespace Indirect
         private ApiContainer()
         {
             _instaApi.SyncClient.MessageReceived += OnMessageSyncReceived;
+            _instaApi.SyncClient.ActivityIndicatorChanged += OnActivityIndicatorChanged;
             _instaApi.SyncClient.FailedToStart += async (sender, exception) =>
             {
 #if !DEBUG
@@ -96,9 +99,9 @@ namespace Indirect
 
         public async void OnLoggedIn()
         {
-            _instaApi.SyncClient.ActivityIndicatorChanged += OnActivityIndicatorChanged;
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
             await UpdateLoggedInUser();
+            GetUserPresence();
             PushClient.Start();
         }
 
@@ -521,6 +524,26 @@ namespace Indirect
                         thread.LastPermanentItem.FromMe) return;
                     await _instaApi.MarkItemSeenAsync(thread.ThreadId, thread.LastPermanentItem.ItemId).ConfigureAwait(false);
                 }
+            }
+            catch (Exception e)
+            {
+#if !DEBUG
+                Crashes.TrackError(e);
+#endif
+            }
+        }
+
+        private async void GetUserPresence()
+        {
+            try
+            {
+                var presenceResult = await _instaApi.GetPresence();
+                if (!presenceResult.IsSucceeded) return;
+                foreach (var userPresenceValue in presenceResult.Value.UserPresence)
+                {
+                    UserPresenceDictionary[userPresenceValue.Key] = userPresenceValue.Value.IsActive;
+                }
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserPresenceDictionary)));
             }
             catch (Exception e)
             {

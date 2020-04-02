@@ -193,11 +193,9 @@ namespace InstagramAPI.Sync
 
                         var unsubPacket = new UnsubscribePacket(_packetId++, "/ig_sub_iris_response");
                         await WriteAndFlushPacketAsync(unsubPacket, outStream);
-
                         subscribePacket = new SubscribePacket(_packetId++,
                             new SubscriptionRequest("/ig_sub_iris_response", QualityOfService.AtMostOnce));
                         await WriteAndFlushPacketAsync(subscribePacket, outStream);
-                        var random = new Random();
                         var json = new JObject(
                             new JProperty("seq_id", _seqId),
                             new JProperty("snapshot_at_ms", _snapshotAt.ToUnixTimeMilliseconds()),
@@ -211,6 +209,7 @@ namespace InstagramAPI.Sync
                             Payload = Unpooled.CopiedBuffer(jsonBytes)
                         };
                         await WriteAndFlushPacketAsync(irisPublishPacket, outStream);
+
                         json = new JObject(new JProperty("unsub", new JArray($"ig/u/v1/{loggedInUser.Pk}")));
                         jsonBytes = GetJsonBytes(json);
                         var pubsubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
@@ -225,7 +224,6 @@ namespace InstagramAPI.Sync
                         subscribePacket = new SubscribePacket(_packetId++,
                             new SubscriptionRequest("/pubsub", QualityOfService.AtMostOnce));
                         await WriteAndFlushPacketAsync(subscribePacket, outStream);
-
                         json = new JObject(new JProperty("sub", new JArray($"ig/u/v1/{loggedInUser.Pk}")));
                         jsonBytes = GetJsonBytes(json);
                         pubsubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
@@ -236,6 +234,32 @@ namespace InstagramAPI.Sync
                         };
                         await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
 
+                        var clientSubscriptionId = Guid.NewGuid().ToString();
+                        json = new JObject(new JProperty("unsub",
+                            new JArray($"1/graphqlsubscriptions/17846944882223835/{{\"input_data\":{{\"client_subscription_id\":\"{clientSubscriptionId}\"}}}}")));
+                        jsonBytes = GetJsonBytes(json);
+                        var realtimeSubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
+                        {
+                            PacketId = _packetId++,
+                            TopicName = "/ig_realtime_sub",
+                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                        };
+                        await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
+                        unsubPacket = new UnsubscribePacket(_packetId++, "/ig_realtime_sub");
+                        await WriteAndFlushPacketAsync(unsubPacket, outStream);
+                        subscribePacket = new SubscribePacket(_packetId++,
+                            new SubscriptionRequest("/ig_realtime_sub", QualityOfService.AtMostOnce));
+                        await WriteAndFlushPacketAsync(subscribePacket, outStream);
+                        json = new JObject(new JProperty("sub",
+                            new JArray($"1/graphqlsubscriptions/17846944882223835/{{\"input_data\":{{\"client_subscription_id\":\"{clientSubscriptionId}\"}}}}")));
+                        jsonBytes = GetJsonBytes(json);
+                        realtimeSubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
+                        {
+                            PacketId = _packetId++,
+                            TopicName = "/ig_realtime_sub",
+                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                        };
+                        await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
 
                         Debug.WriteLine($"{nameof(SyncClient)}: " + packet.PacketType);
                         _ = Task.Run(async () =>
