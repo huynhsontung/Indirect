@@ -22,7 +22,8 @@ namespace InstagramAPI.Sync
     public class SyncClient
     {
         public event EventHandler<List<MessageSyncEventArgs>> MessageReceived;
-        public event EventHandler<PubsubEventArgs> ActivityIndicatorChanged; 
+        public event EventHandler<PubsubEventArgs> ActivityIndicatorChanged;
+        public event EventHandler<UserPresenceEventArgs> UserPresenceChanged; 
         public event EventHandler<Exception> FailedToStart;
 
         private int _packetId = 1;
@@ -308,6 +309,13 @@ namespace InstagramAPI.Sync
                                 {
                                     ActivityIndicatorChanged?.Invoke(this, pubsub);
                                 }
+                                break;
+
+                            case "/ig_realtime_sub":
+                                payload = payload.Substring(payload.IndexOf('{'));
+                                var container = JsonConvert.DeserializeObject<JObject>(payload);
+                                var presenceEvent = container["presence_event"].ToObject<UserPresenceEventArgs>();
+                                UserPresenceChanged?.Invoke(this, presenceEvent);
                                 break;
                         }
 

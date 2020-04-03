@@ -15,7 +15,7 @@ namespace InstagramAPI.Classes
         public Dictionary<long, UserPresenceValue> UserPresence { get; set; }
     }
 
-    public class UserPresenceValue
+    public class UserPresenceValue : EventArgs
     {
         [JsonProperty("is_active")]
         public bool IsActive { get; set; }
@@ -23,11 +23,5 @@ namespace InstagramAPI.Classes
         [JsonProperty("last_activity_at_ms")]
         [JsonConverter(typeof(MilliTimestampConverter))]
         public DateTimeOffset? LastActivityAtMs { get; set; }
-    }
-
-    public class UserPresenceEvent : UserPresenceValue
-    {
-        [JsonProperty("user_id")]
-        public long UserId { get; set; }
     }
 }

@@ -202,6 +202,7 @@
     <Compile Include="Sync\MessageSyncEventArgs.cs" />
     <Compile Include="Sync\SyncBaseData.cs" />
     <Compile Include="Sync\SyncClient.cs" />
+    <Compile Include="Sync\UserPresenceEventArgs.cs" />
     <Compile Include="Utils\CryptoHelper.cs" />
     <Compile Include="Utils\DebugLogger.cs" />
     <Compile Include="UriCreator.cs" />

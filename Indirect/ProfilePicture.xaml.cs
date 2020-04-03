@@ -6,8 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -32,7 +34,7 @@ namespace Indirect
             nameof(IsUserActive),
             typeof(bool),
             typeof(ProfilePicture),
-            new PropertyMetadata(null, OnUserActiveChanged));
+            new PropertyMetadata(null));
 
 
         public ObservableCollection<InstaUser> Source
@@ -45,13 +47,6 @@ namespace Indirect
         {
             get => (bool) GetValue(IsUserActiveProperty);
             set => SetValue(IsUserActiveProperty, value);
-        }
-
-        private static void OnUserActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var view = (ProfilePicture)d;
-            var isActive = (bool) e.NewValue;
-            view.ActiveIndicator.Visibility = isActive ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private static void OnSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

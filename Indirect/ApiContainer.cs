@@ -81,6 +81,7 @@ namespace Indirect
         {
             _instaApi.SyncClient.MessageReceived += OnMessageSyncReceived;
             _instaApi.SyncClient.ActivityIndicatorChanged += OnActivityIndicatorChanged;
+            _instaApi.SyncClient.UserPresenceChanged += OnUserPresenceChanged;
             _instaApi.SyncClient.FailedToStart += async (sender, exception) =>
             {
 #if !DEBUG
@@ -543,7 +544,6 @@ namespace Indirect
                 {
                     UserPresenceDictionary[userPresenceValue.Key] = userPresenceValue.Value.IsActive;
                 }
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserPresenceDictionary)));
             }
             catch (Exception e)
             {
@@ -551,6 +551,15 @@ namespace Indirect
                 Crashes.TrackError(e);
 #endif
             }
+        }
+
+        private async void OnUserPresenceChanged(object sender, UserPresenceEventArgs e)
+        {
+            UserPresenceDictionary[e.UserId] = e.IsActive;
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserPresenceDictionary)));
+            });
         }
 
         public static IAsyncAction HandleException(string message = null, Exception e = null)
