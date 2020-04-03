@@ -27,6 +27,7 @@ namespace Indirect
         public DataTemplate VideoCallTemplate { get; set; }
         public DataTemplate NotSupportedTemplate { get; set; }
         public DataTemplate UnexpectedTemplate { get; set; }
+        public DataTemplate PlaceholderTemplate { get; set; }
 
         private static readonly DataTemplate EmptyTemplate = new DataTemplate();
 
@@ -82,6 +83,9 @@ namespace Indirect
 
                     case DirectItemType.VideoCallEvent:
                         return VideoCallTemplate;
+
+                    case DirectItemType.Placeholder:
+                        return PlaceholderTemplate;
 
                     default:
                         return NotSupportedTemplate;

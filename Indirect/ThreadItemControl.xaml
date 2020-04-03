@@ -327,6 +327,23 @@
                                TextWrapping="WrapWholeWords" FontStyle="Italic"/>
                 </Border>
             </DataTemplate>
+
+            <DataTemplate x:Key="PlaceholderTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <StackPanel Orientation="Vertical">
+                    <Border Background="Transparent" 
+                            MaxWidth="250"
+                            CornerRadius="2" Padding="8,6,8,6"
+                            BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="{x:Bind Placeholder.Title}" Style="{ThemeResource FluentBaseTextStyle}"/>
+                            <NavigationViewItemSeparator/>
+                            <TextBlock Text="{x:Bind Placeholder.Message}" 
+                                       Style="{ThemeResource FluentCaptionTextStyle}"
+                                       Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" TextWrapping="WrapWholeWords"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -376,7 +393,8 @@
                                             MediaShareTemplate="{StaticResource MediaShareTemplate}"
                                             ReelShareTemplate="{StaticResource ReelShareTemplate}"
                                             VideoCallTemplate="{StaticResource VideoCallTemplate}"
-                                            UnexpectedTemplate="{StaticResource UnexpectedTemplate}"/>
+                                            UnexpectedTemplate="{StaticResource UnexpectedTemplate}"
+                                            PlaceholderTemplate="{StaticResource PlaceholderTemplate}"/>
             </ContentControl.ContentTemplateSelector>
         </ContentControl>
 

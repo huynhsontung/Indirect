@@ -136,6 +136,7 @@
     <Compile Include="Classes\Direct\DirectThread.cs" />
     <Compile Include="Classes\Direct\ItemContent\Hashtag.cs" />
     <Compile Include="Classes\Direct\ItemContent\LocationContainer.cs" />
+    <Compile Include="Classes\Direct\ItemContent\Placeholder.cs" />
     <Compile Include="Classes\Direct\ItemContent\ReelShare.cs" />
     <Compile Include="Classes\Direct\ItemContent\VideoCallEvent.cs" />
     <Compile Include="Classes\Direct\ItemContent\VisualMedia.cs" />

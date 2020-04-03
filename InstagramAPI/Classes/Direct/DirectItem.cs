@@ -108,6 +108,12 @@ namespace InstagramAPI.Classes.Direct
 
         #endregion
 
+        #region Placeholder
+
+        [JsonProperty("placeholder")] public Placeholder Placeholder { get; set; }
+
+        #endregion
+
         public bool Equals(DirectItem other)
         {
             return !string.IsNullOrEmpty(ItemId) && !string.IsNullOrEmpty(other?.ItemId) && ItemId == other.ItemId;
