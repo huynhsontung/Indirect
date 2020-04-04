@@ -48,6 +48,17 @@ namespace Indirect.Wrapper
             }
         }
 
+        private string _draftMessage;
+        public string DraftMessage
+        {
+            get => _draftMessage;
+            set
+            {
+                _draftMessage = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DraftMessage)));
+            }
+        }
+
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
         public new ObservableCollection<InstaUser> Users { get; } = new ObservableCollection<InstaUser>();
 

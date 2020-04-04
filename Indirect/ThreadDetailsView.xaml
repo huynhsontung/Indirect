@@ -128,7 +128,7 @@
                 <SymbolIcon Symbol="Add"/>
             </Button>
 
-            <TextBox x:Name="MessageTextBox" 
+            <TextBox x:Name="MessageTextBox" Text="{x:Bind Thread.DraftMessage, Mode=TwoWay}" SelectionStart="{Binding RelativeSource={RelativeSource Self}, Path=Text.Length}"
                      Grid.Column="1" Grid.Row="1" Grid.RowSpan="2"
                      VerticalAlignment="Stretch"
                      TextWrapping="Wrap"
