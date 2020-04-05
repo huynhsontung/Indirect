@@ -43,7 +43,8 @@
 
         <Border Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1" Background="{ThemeResource SystemControlAcrylicElementBrush}"/>
 
-        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Right">
+        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Right" IsDynamicOverflowEnabled="False">
+            <AppBarButton x:Name="ViewProfileAppBarButton" Icon="Contact2" Label="View profile" Click="ViewProfileAppBarButton_OnClick"/>
             <AppBarButton Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" Background="Transparent">

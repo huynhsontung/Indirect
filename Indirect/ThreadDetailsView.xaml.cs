@@ -46,6 +46,8 @@ namespace Indirect
             if (thread == null) return;
             thread.PropertyChanged -= view.OnThreadPropertyChanged;   // Redundant. Just making sure it already unregistered.
             thread.PropertyChanged += view.OnThreadPropertyChanged;
+
+            view.ViewProfileAppBarButton.Visibility = thread.Users?.Count == 1 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private static ApiContainer ViewModel => ApiContainer.Instance;
@@ -216,6 +218,14 @@ namespace Indirect
                         ItemsHolder.ScrollIntoView(ItemsHolder.Footer);
                     });
             }
+        }
+
+        private async void ViewProfileAppBarButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (Thread?.Users == null || Thread.Users.Count == 0) return;
+            if (Thread.Users.Count > 1 || string.IsNullOrEmpty(Thread.Users[0].Username)) return;
+            var uri = new Uri("https://www.instagram.com/" + Thread.Users[0].Username);
+            await Windows.System.Launcher.LaunchUriAsync(uri);
         }
     }
 }
