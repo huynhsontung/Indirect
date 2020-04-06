@@ -132,6 +132,7 @@
     <Compile Include="AboutDialog.xaml.cs">
       <DependentUpon>AboutDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\EqualityConverter.cs" />
     <Compile Include="Converters\HumanizedDateTimeConverter.cs" />
     <Compile Include="Converters\ReelShareImageMarginConverter.cs" />
     <Compile Include="Converters\VisibleWhenZeroConverter.cs" />

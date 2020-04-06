@@ -32,7 +32,9 @@ namespace Indirect
         /// </summary>
         public App()
         {
+#if !DEBUG
             AppCenter.Start(APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
+#endif
             this.InitializeComponent();
             SetTheme();
             this.Suspending += OnSuspending;

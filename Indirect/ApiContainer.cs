@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -63,6 +64,8 @@ namespace Indirect
         public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads => Inbox.Threads;
 
         public CurrentUser LoggedInUser { get; private set; }
+
+        public ObservableCollection<InstaUser> NewMessageCandidates { get; } = new ObservableCollection<InstaUser>();
 
         public InstaDirectInboxThreadWrapper SelectedThread
         {
@@ -449,9 +452,8 @@ namespace Indirect
             MarkLatestItemSeen(SelectedThread);
         }
 
-        public async void Search(string query, Action<List<InstaDirectInboxThreadWrapper>> updateAction)
+        private async Task<bool> SearchReady()
         {
-            if (query.Length > 50) return;
             _searchCancellationToken?.Cancel();
             _searchCancellationToken = new CancellationTokenSource();
             var cancellationToken = _searchCancellationToken.Token;
@@ -459,11 +461,18 @@ namespace Indirect
             {
                 await Task.Delay(500, cancellationToken); // Delay so we don't search something mid typing
             }
-            catch (Exception)
+            catch (TaskCanceledException)
             {
-                return;
+                return false;
             }
-            if (cancellationToken.IsCancellationRequested) return;
+            if (cancellationToken.IsCancellationRequested) return false;
+            return true;
+        }
+
+        public async void Search(string query, Action<List<InstaDirectInboxThreadWrapper>> updateAction)
+        {
+            if (query.Length > 50) return;
+            if (!await SearchReady()) return;
 
             var result = await _instaApi.GetRankedRecipientsByUsernameAsync(query);
             if (!result.IsSucceeded) return;
@@ -480,6 +489,18 @@ namespace Indirect
                 return x;
             }).ToList();
             updateAction?.Invoke(decoratedList);
+        }
+
+        public async void SearchWithoutThreads(string query, Action<List<InstaUser>> updateAction)
+        {
+            if (query.Length > 50) return;
+            if (!await SearchReady()) return;
+
+            var result = await _instaApi.GetRankedRecipientsByUsernameAsync(query, false);
+            if (!result.IsSucceeded) return;
+            var recipients = result.Value.Users;
+            if (recipients?.Count > 0)
+                updateAction?.Invoke(recipients);
         }
 
         public async void MakeProperInboxThread(InstaDirectInboxThreadWrapper placeholderThread)

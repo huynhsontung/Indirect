@@ -65,11 +65,11 @@ namespace InstagramAPI
             return instaUri;
         }
 
-        public static Uri GetRankRecipientsByUserUri(string username)
+        public static Uri GetRankRecipientsByUserUri(string username, bool includeThreads = true)
         {
             if (!Uri.TryCreate(BaseInstagramUri,
                 API_SUFFIX +
-                $"/direct_v2/ranked_recipients/?mode=raven&show_threads=true&query={username}&use_unified_inbox=true", out var instaUri))
+                $"/direct_v2/ranked_recipients/?mode=reshare&show_threads={includeThreads.ToString().ToLower()}&query={username}&use_unified_inbox=true", out var instaUri))
                 throw new Exception("Cant create URI for get rank recipients by username");
             return instaUri;
         }
@@ -155,6 +155,13 @@ namespace InstagramAPI
         {
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/{threadId}/items/{itemId}/seen/", out var instaUri))
                 throw new Exception("Cant create URI for seen thread");
+            return instaUri;
+        }
+
+        public static Uri GetCreateGroupThread()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/create_group_thread/", out var instaUri))
+                throw new Exception("Cant create URI for creating group thread");
             return instaUri;
         }
 

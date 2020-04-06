@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using InstagramAPI.Classes.User;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
 using CoreWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
@@ -172,6 +174,49 @@ namespace Indirect
             var username = _viewModel.LoggedInUser.Username;
             var uri = new Uri("https://www.instagram.com/" + username);
             await Windows.System.Launcher.LaunchUriAsync(uri);
+        }
+
+        private void NewMessageSuggestBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
+            if (string.IsNullOrEmpty(sender.Text) || sender.Text.Length > 50)
+            {
+                return;
+            }
+
+            _viewModel.SearchWithoutThreads(sender.Text,
+                updatedList => NewMessageSuggestBox.ItemsSource = updatedList);
+        }
+
+        private void NewMessageSuggestBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        {
+            var selectedItem = (InstaUser) args.SelectedItem;
+            sender.Text = selectedItem.Username;
+        }
+
+        private void NewMessageSuggestBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            if (args.ChosenSuggestion != null)
+            {
+                var selectedRecipient = (InstaUser) args.ChosenSuggestion;
+                if (_viewModel.NewMessageCandidates.All(x => selectedRecipient.Username != x.Username))
+                    _viewModel.NewMessageCandidates.Add(selectedRecipient);
+            }
+            else if (!string.IsNullOrEmpty(sender.Text))
+            {
+                _viewModel.SearchWithoutThreads(sender.Text, updatedList =>
+                {
+                    if (updatedList.Count == 0) return;
+                    _viewModel.NewMessageCandidates.Add(updatedList[0]);
+                });
+            }
+            sender.Text = string.Empty;
+            sender.ItemsSource = null;
+        }
+
+        private void NewMessageClearAll_OnClick(object sender, RoutedEventArgs e)
+        {
+            _viewModel.NewMessageCandidates.Clear();
         }
     }
 }

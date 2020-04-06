@@ -9,6 +9,7 @@
     xmlns:local="using:Indirect" 
     xmlns:converters="using:Indirect.Converters"
     xmlns:wrapper="using:Indirect.Wrapper"
+    xmlns:users="using:InstagramAPI.Classes.User"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -34,6 +35,8 @@
                 <Setter Property="FontWeight" Value="Bold"/>
             </Style>
             
+            <converters:EqualityConverter x:Key="DisableWhenEqualZero" ReferenceValue="0" Invert="True"/>
+            <converters:EqualityConverter x:Key="DisableWhenEqual32" ReferenceValue="32" Invert="True"/>
         </ResourceDictionary>
     </Page.Resources>
 
@@ -152,8 +155,73 @@
                             Background="Transparent"
                             Padding="6"
                             VerticalAlignment="Center"
-                            Click="NewMessageButton_OnClick">
+                            Click="NewMessageButton_OnClick"
+                            ToolTipService.ToolTip="New message">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF716;" Width="32" Height="32"/>
+                        <Button.Flyout>
+                            <Flyout Placement="RightEdgeAlignedTop">
+                                <Grid Width="240">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Text="New message" Style="{ThemeResource FluentBaseTextStyle}" VerticalAlignment="Center"/>
+                                    <Button Grid.Row="0" HorizontalAlignment="Right" Content="Chat"
+                                            Style="{StaticResource AccentButtonStyle}"
+                                            IsEnabled="{x:Bind _viewModel.NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"/>
+                                    <AutoSuggestBox x:Name="NewMessageSuggestBox" Grid.Row="1" Margin="0,8,0,0"
+                                                    TextChanged="NewMessageSuggestBox_OnTextChanged"
+                                                    SuggestionChosen="NewMessageSuggestBox_OnSuggestionChosen"
+                                                    QuerySubmitted="NewMessageSuggestBox_OnQuerySubmitted"
+                                                    PlaceholderText="Search"
+                                                    UpdateTextOnSelect="False"
+                                                    QueryIcon="Find"
+                                                    IsEnabled="{x:Bind _viewModel.NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqual32}, Mode=OneWay}">
+                                        <AutoSuggestBox.ItemTemplate>
+                                            <DataTemplate x:DataType="users:InstaUser">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <controls:ImageEx Source="{x:Bind ProfilePictureUrl}" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" 
+                                                                      CornerRadius="99" Height="28" Width="28" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{x:Bind Username}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </AutoSuggestBox.ItemTemplate>
+                                    </AutoSuggestBox>
+                                    <ListView x:Name="NewMessageCandidateList" Grid.Row="2"
+                                              ItemsSource="{x:Bind _viewModel.NewMessageCandidates}" 
+                                              SelectionMode="None" MaxHeight="400" Margin="0,8,0,4">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="users:InstaUser">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <controls:ImageEx Grid.Column="0" Source="{x:Bind ProfilePictureUrl}" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" 
+                                                                      CornerRadius="99" Height="28" Width="28" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind Username}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                    <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                                        <TextBlock Text="{x:Bind _viewModel.NewMessageCandidates.Count, Mode=OneWay}" 
+                                                   Style="{ThemeResource FluentCaptionTextStyle}"
+                                                   Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                        <TextBlock Text="recipient(s)" Margin="4,0,0,0" 
+                                                   Style="{ThemeResource FluentCaptionTextStyle}"
+                                                   Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                    </StackPanel>
+                                    <Button Grid.Row="3" HorizontalAlignment="Right" 
+                                            Background="Transparent" Click="NewMessageClearAll_OnClick" ToolTipService.ToolTip="Clear selection">
+                                        <SymbolIcon Symbol="ClearSelection"/>
+                                    </Button>
+                                </Grid>
+                            </Flyout>
+                        </Button.Flyout>
                     </Button>
 
                     <AutoSuggestBox x:Name="SearchBox" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
@@ -168,17 +236,7 @@
                                 <StackPanel Orientation="Horizontal" Background="Transparent" Margin="0,4,0,4">
                                     <controls:ImageEx Source="{x:Bind Users[0].ProfilePictureUrl}" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" 
                                                       CornerRadius="99" Height="28" Width="28" VerticalAlignment="Center"/>
-                                    <StackPanel Orientation="Vertical" 
-                                                Margin="12,0,0,0"
-                                                VerticalAlignment="Center">
-                                        <TextBlock Text="{x:Bind Title}" 
-                                                   Style="{ThemeResource FluentBaseTextStyle}"
-                                                   MaxLines="1"/>
-                                        <TextBlock Text="{x:Bind LastPermanentItem.Description}"
-                                                   Style="{ThemeResource FluentCaptionTextStyle}"
-                                                   MaxLines="1"/>
-                                    </StackPanel>
-                                    
+                                    <TextBlock Text="{x:Bind Title}" MaxLines="1" Margin="12,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </DataTemplate>
                         </AutoSuggestBox.ItemTemplate>

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.User;
 using Newtonsoft.Json;
@@ -18,12 +19,12 @@ namespace InstagramAPI.Classes.Responses
         [JsonProperty("ranked_recipients")] public RankedRecipient[] RankedRecipients { get; set; }
 
         [JsonIgnore]
-        public RankedRecipientThread[] Threads => RankedRecipients.Select(response => response.Thread)
-            .Where(thread => thread != null).ToArray();
+        public List<RankedRecipientThread> Threads => RankedRecipients.Select(response => response.Thread)
+            .Where(thread => thread != null).ToList();
 
         [JsonIgnore]
-        public InstaUser[] Users => RankedRecipients.Select(response => response.User)
-            .Where(user => user != null).ToArray();
+        public List<InstaUser> Users => RankedRecipients.Select(response => response.User)
+            .Where(user => user != null).ToList();
     }
 
     public class RankedRecipient

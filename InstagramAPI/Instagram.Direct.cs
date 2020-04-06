@@ -224,10 +224,11 @@ namespace InstagramAPI
         ///     <para>Note: Some recipient has User, some recipient has Thread</para>
         /// </summary>
         /// <param name="username">Username to search</param>
+        /// <param name="includeThreads">Whether to include threads in the search result. Only works when username is specified.</param>
         /// <returns>
         ///     <see cref="RankedRecipientsResponse" />
         /// </returns>
-        public async Task<Result<RankedRecipientsResponse>> GetRankedRecipientsByUsernameAsync(string username)
+        public async Task<Result<RankedRecipientsResponse>> GetRankedRecipientsByUsernameAsync(string username, bool includeThreads = true)
         {
             ValidateLoggedIn();
             try
@@ -236,7 +237,7 @@ namespace InstagramAPI
                 if (string.IsNullOrEmpty(username))
                     instaUri = UriCreator.GetRankedRecipientsUri();
                 else
-                    instaUri = UriCreator.GetRankRecipientsByUserUri(username);
+                    instaUri = UriCreator.GetRankRecipientsByUserUri(username, includeThreads);
 
                 var response = await _httpClient.GetAsync(instaUri);
                 var json = await response.Content.ReadAsStringAsync();
