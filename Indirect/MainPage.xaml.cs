@@ -93,11 +93,6 @@ namespace Indirect
             details?.Focus(FocusState.Programmatic);    // Focus to chat box after selecting a thread
         }
 
-        private void NewMessageButton_OnClick(object sender, RoutedEventArgs e)
-        {
-            SearchBox.Focus(FocusState.Programmatic);
-        }
-
         private void SearchBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
             if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
@@ -255,5 +250,9 @@ namespace Indirect
 
         #endregion
 
+        private void TogglePendingInbox_OnClick(object sender, RoutedEventArgs e)
+        {
+            _viewModel.SwitchInbox();
+        }
     }
 }

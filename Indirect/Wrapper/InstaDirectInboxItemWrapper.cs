@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
@@ -276,27 +277,8 @@ namespace Indirect.Wrapper
             _instaApi = api;
             _sourceItem = source;
             Parent = parent;
-            RawJson = source.RawJson;
-            Description = source.Description;
-            UserId = source.UserId;
-            Timestamp = source.Timestamp;
-            ItemId = source.ItemId;
-            ItemType = source.ItemType;
+            PropertyCopier<DirectItem, InstaDirectInboxItemWrapper>.Copy(source, this);
             Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions, parent.ViewerId) : new InstaDirectReactionsWrapper();
-            Like = source.Like;
-            Link = source.Link;
-            Media = source.Media;
-            MediaShare = source.MediaShare;
-            RavenMedia = source.RavenMedia;
-            VisualMedia = source.VisualMedia;
-            ActionLog = source.ActionLog;
-            ReelShareMedia = source.ReelShareMedia;
-            VoiceMedia = source.VoiceMedia;
-            AnimatedMedia = source.AnimatedMedia;
-            HashtagMedia = source.HashtagMedia;
-            Text = source.Text;
-            ClientContext = source.ClientContext;
-            FromMe = source.FromMe;
 
             // Lookup InstaUser from user id
             var userExist = api.CentralUserRegistry.TryGetValue(UserId, out var sender);

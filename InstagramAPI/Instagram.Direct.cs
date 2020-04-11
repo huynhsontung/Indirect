@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -12,20 +8,15 @@ using Windows.Web.Http;
 using Windows.Web.Http.Headers;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
-using InstagramAPI.Classes.Direct.ItemContent;
-using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Responses;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using HttpMethod = System.Net.Http.HttpMethod;
-using HttpRequestMessage = Windows.Web.Http.HttpRequestMessage;
-using HttpResponseMessage = Windows.Web.Http.HttpResponseMessage;
 
 namespace InstagramAPI
 {
     public partial class Instagram
     {
-        public async Task<Result<InboxContainer>> GetInboxAsync(PaginationParameters paginationParameters)
+        public async Task<Result<InboxContainer>> GetInboxAsync(PaginationParameters paginationParameters, bool pending = false)
         {
             ValidateLoggedIn();
             try
@@ -33,7 +24,7 @@ namespace InstagramAPI
                 if (paginationParameters == null)
                     paginationParameters = PaginationParameters.MaxPagesToLoad(1);
 
-                var inboxResult = await GetDirectInbox(paginationParameters.NextMaxId).ConfigureAwait(false);
+                var inboxResult = await GetDirectInbox(paginationParameters.NextMaxId, pending).ConfigureAwait(false);
                 if (!inboxResult.IsSucceeded)
                     return inboxResult;
                 var inbox = inboxResult.Value;
@@ -71,11 +62,12 @@ namespace InstagramAPI
             }
         }
 
-        private async Task<Result<InboxContainer>> GetDirectInbox(string maxId = null)
+        private async Task<Result<InboxContainer>> GetDirectInbox(string maxId = null, bool pending = false)
         {
             try
             {
-                var directInboxUri = UriCreator.GetDirectInboxUri(maxId);
+                var directInboxUri =
+                    pending ? UriCreator.GetPendingInboxUri(maxId) : UriCreator.GetDirectInboxUri(maxId);
                 var response = await _httpClient.GetAsync(directInboxUri);
                 var json = await response.Content.ReadAsStringAsync();
                 _logger?.LogResponse(response);

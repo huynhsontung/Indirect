@@ -51,6 +51,7 @@ namespace Indirect
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
         private CancellationTokenSource _searchCancellationToken;
         private InstaDirectInboxThreadWrapper _selectedThread;
+        private InstaDirectInboxWrapper _secondaryInbox;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -59,7 +60,7 @@ namespace Indirect
 
         public Dictionary<long, bool> UserPresenceDictionary { get; } = new Dictionary<long, bool>();
 
-        public InstaDirectInboxWrapper Inbox { get; }
+        public InstaDirectInboxWrapper Inbox { get; private set; }
 
         public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads => Inbox.Threads;
 
@@ -94,6 +95,7 @@ namespace Indirect
             };
             Inbox = new InstaDirectInboxWrapper(_instaApi);
             Inbox.FirstUpdated += async (seqId, snapshotAt) => await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
+            _secondaryInbox = new InstaDirectInboxWrapper(_instaApi, true);
             PushClient.MessageReceived += (sender, args) =>
             {
                 Debug.Write("Background notification: ");
@@ -112,6 +114,15 @@ namespace Indirect
         public void SetSelectedThreadNull()
         {
             SelectedThread = null;
+        }
+
+        public void SwitchInbox()
+        {
+            SelectedThread = null;
+            var tmp = Inbox;
+            Inbox = _secondaryInbox;
+            _secondaryInbox = tmp;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InboxThreads)));
         }
 
         public Task<Result<LoginResult>> Login(string username, string password) => _instaApi.LoginAsync(username, password);
@@ -553,7 +564,7 @@ namespace Indirect
         {
             try
             {
-                if (thread == null || string.IsNullOrEmpty(thread.ThreadId)) return;
+                if (thread == null || string.IsNullOrEmpty(thread.ThreadId) || thread.LastSeenAt == null) return;
                 if (thread.LastSeenAt.TryGetValue(thread.ViewerId, out var lastSeen))
                 {
                     if (string.IsNullOrEmpty(thread.LastPermanentItem?.ItemId) || 

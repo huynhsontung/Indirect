@@ -136,6 +136,8 @@
                         <Button.Flyout>
                             <MenuFlyout Placement="Bottom">
                                 <MenuFlyoutItem Text="Profile" Click="Profile_Click"></MenuFlyoutItem>
+                                <ToggleMenuFlyoutItem Text="Pending inbox" IsChecked="False" Click="TogglePendingInbox_OnClick"
+                                                      IsEnabled="{x:Bind _viewModel.Inbox.PendingRequestsCount, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"/>
                                 <MenuFlyoutSeparator/>
                                 <MenuFlyoutSubItem Text="Theme">
                                     <MenuFlyoutItem Text="System" Click="ThemeItem_Click"/>
@@ -155,7 +157,6 @@
                             Background="Transparent"
                             Padding="6"
                             VerticalAlignment="Center"
-                            Click="NewMessageButton_OnClick"
                             ToolTipService.ToolTip="New message">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF716;" Width="32" Height="32"/>
                         <Button.Flyout>

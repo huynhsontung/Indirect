@@ -14,21 +14,34 @@ using Microsoft.Toolkit.Uwp;
 
 namespace Indirect.Wrapper
 {
-    class InstaDirectInboxWrapper: Inbox, IIncrementalSource<InstaDirectInboxThreadWrapper>
+    class InstaDirectInboxWrapper: Inbox, IIncrementalSource<InstaDirectInboxThreadWrapper>, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
         public event Action<int, DateTimeOffset> FirstUpdated;    // callback to start SyncClient
 
-        public int PendingRequestsCount { get; set; }
+        private int _pendingRequestCount;
+        public int PendingRequestsCount
+        {
+            get => _pendingRequestCount;
+            private set
+            {
+                _pendingRequestCount = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PendingRequestsCount)));
+            }
+        }
+
         public long SeqId { get; set; }
         public DateTimeOffset SnapshotAt { get; set; }
+        public bool PendingInbox { get; }
 
         public new IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> Threads { get; }
 
         private readonly Instagram _instaApi;
         private bool _firstTime = true;
-        public InstaDirectInboxWrapper(Instagram api)
+        public InstaDirectInboxWrapper(Instagram api, bool pending = false)
         {
             _instaApi = api ?? throw new NullReferenceException();
+            PendingInbox = pending;
             Threads =
                 new IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper>(this);
         }
@@ -85,11 +98,12 @@ namespace Indirect.Wrapper
 
         public async Task<IEnumerable<InstaDirectInboxThreadWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
         {
+            if (!_firstTime && !HasOlder) return Array.Empty<InstaDirectInboxThreadWrapper>();
             var pagesToLoad = pageSize / 20;
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(OldestCursor);
-            var result = await _instaApi.GetInboxAsync(pagination);
+            var result = await _instaApi.GetInboxAsync(pagination, PendingInbox);
             InboxContainer container;
             if (result.Status == ResultStatus.Succeeded)
             {
