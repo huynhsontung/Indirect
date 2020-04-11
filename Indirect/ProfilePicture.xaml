@@ -17,10 +17,10 @@
     </UserControl.Resources>
 
     <Grid>
-        <controls:ImageEx x:Name="Single" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" CornerRadius="99"/>
+        <controls:ImageEx x:Name="Single" Style="{ThemeResource ProfilePicturePlaceholderStyle}" CornerRadius="99"/>
         <Grid x:Name="Group" Visibility="Collapsed">
-            <controls:ImageEx x:Name="Person2" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" CornerRadius="99"/>
-            <controls:ImageEx x:Name="Person1" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" CornerRadius="99"/>
+            <controls:ImageEx x:Name="Person2" Style="{ThemeResource ProfilePicturePlaceholderStyle}" CornerRadius="99"/>
+            <controls:ImageEx x:Name="Person1" Style="{ThemeResource ProfilePicturePlaceholderStyle}" CornerRadius="99"/>
         </Grid>
         <Grid HorizontalAlignment="Right" VerticalAlignment="Bottom" Visibility="{x:Bind IsUserActive, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
             <Ellipse Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="{ThemeResource SystemControlAcrylicWindowBrush}"/>

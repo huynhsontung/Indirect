@@ -12,6 +12,19 @@
                 <core:FluiFrameworkThemeResources/>
             </ResourceDictionary.MergedDictionaries>
 
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <Style x:Key="ProfilePicturePlaceholderStyle" TargetType="controls:ImageEx">
+                        <Setter Property="PlaceholderSource" Value="Assets/ProfilePicturePlaceholder.jpg"/>
+                    </Style>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <Style x:Key="ProfilePicturePlaceholderStyle" TargetType="controls:ImageEx">
+                        <Setter Property="PlaceholderSource" Value="Assets/ProfilePicturePlaceholder-Dark.jpg"/>
+                    </Style>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
             <Style TargetType="controls:ImageEx">
                 <Setter Property="IsCacheEnabled" Value="True"/>
                 <Setter Property="CachingStrategy" Value="Custom"/>
