@@ -92,6 +92,33 @@ namespace InstagramAPI
             }
         }
 
+        public async Task<Result<DirectThread>> CreateGroupThreadAsync(IEnumerable<long> userIds)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var uri = UriCreator.GetCreateGroupThread();
+                var userIdStrings = userIds.Select(x => x.ToString());
+                var userJson = new JArray(userIdStrings);
+                var data = new Dictionary<string, string>
+                {
+                    {"recipient_users", userJson.ToString(Formatting.None)}
+                };
+                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<DirectThread>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<DirectThread>(json);
+                return obj.IsOk() ? Result<DirectThread>.Success(obj, json) : Result<DirectThread>.Fail(json);
+            }
+            catch (Exception e)
+            {
+                _logger?.LogException(e);
+                return Result<DirectThread>.Except(e);
+            }
+        }
+
         /// <summary>
         ///     Get direct inbox thread by its id asynchronously
         /// </summary>

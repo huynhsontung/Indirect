@@ -4,6 +4,7 @@ using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using InstagramAPI.Classes.User;
 using Microsoft.Toolkit.Uwp.UI.Controls;
@@ -176,6 +177,8 @@ namespace Indirect
             await Windows.System.Launcher.LaunchUriAsync(uri);
         }
 
+        #region NewMessage
+
         private void NewMessageSuggestBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
             if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
@@ -218,5 +221,39 @@ namespace Indirect
         {
             _viewModel.NewMessageCandidates.Clear();
         }
+
+        private async void ChatButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            NewThreadFlyout.Hide();
+            await _viewModel.CreateThread();
+            _viewModel.NewMessageCandidates.Clear();
+        }
+
+        private void ClearSingleCandidateButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var target = (InstaUser) (sender as FrameworkElement)?.DataContext;
+            if (target == null) return;
+            _viewModel.NewMessageCandidates.Remove(target);
+        }
+
+        private void Candidate_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            (sender as FrameworkElement).FindDescendantByName("ClearSingleCandidateButton").Visibility = Visibility.Visible;
+        }
+
+        private void Candidate_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            (sender as FrameworkElement).FindDescendantByName("ClearSingleCandidateButton").Visibility = Visibility.Collapsed;
+        }
+
+        private void ClearSingleCandidateSwipe_OnInvoked(SwipeItem sender, SwipeItemInvokedEventArgs args)
+        {
+            var target = (InstaUser) args.SwipeControl.DataContext;
+            if (target == null) return;
+            _viewModel.NewMessageCandidates.Remove(target);
+        }
+
+        #endregion
+
     }
 }

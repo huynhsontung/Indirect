@@ -186,7 +186,7 @@ namespace Indirect.Wrapper
 
         private void UpdateItemList(ICollection<DirectItem> source)
         {
-            if (source == null) return;
+            if (source == null || source.Count == 0) return;
             var convertedSource = source.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
             DecorateItems(convertedSource);
             if (ObservableItems.Count == 0)

@@ -503,6 +503,21 @@ namespace Indirect
                 updateAction?.Invoke(recipients);
         }
 
+        /// <summary>
+        /// User ids will be fetched from NewMessageCandidates
+        /// </summary>
+        /// <returns></returns>
+        public async Task CreateThread()
+        {
+            if (NewMessageCandidates.Count == 0 || NewMessageCandidates.Count > 32) return;
+            var userIds = NewMessageCandidates.Select(x => x.Pk);
+            var result = await _instaApi.CreateGroupThreadAsync(userIds);
+            if (!result.IsSucceeded) return;
+            var thread = result.Value;
+            var existingThread = InboxThreads.SingleOrDefault(x => x.ThreadId == thread.ThreadId);
+            SelectedThread = existingThread ?? new InstaDirectInboxThreadWrapper(thread, _instaApi);
+        }
+
         public async void MakeProperInboxThread(InstaDirectInboxThreadWrapper placeholderThread)
         {
             InstaDirectInboxThreadWrapper thread;

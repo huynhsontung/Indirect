@@ -159,7 +159,7 @@
                             ToolTipService.ToolTip="New message">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF716;" Width="32" Height="32"/>
                         <Button.Flyout>
-                            <Flyout Placement="RightEdgeAlignedTop">
+                            <Flyout x:Name="NewThreadFlyout" Placement="RightEdgeAlignedTop">
                                 <Grid Width="240">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -167,10 +167,11 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="New message" Style="{ThemeResource FluentBaseTextStyle}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="0" Text="To:" Style="{ThemeResource FluentBaseTextStyle}" VerticalAlignment="Center"/>
                                     <Button Grid.Row="0" HorizontalAlignment="Right" Content="Chat"
                                             Style="{StaticResource AccentButtonStyle}"
-                                            IsEnabled="{x:Bind _viewModel.NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"/>
+                                            IsEnabled="{x:Bind _viewModel.NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"
+                                            Click="ChatButton_OnClick"/>
                                     <AutoSuggestBox x:Name="NewMessageSuggestBox" Grid.Row="1" Margin="0,8,0,0"
                                                     TextChanged="NewMessageSuggestBox_OnTextChanged"
                                                     SuggestionChosen="NewMessageSuggestBox_OnSuggestionChosen"
@@ -194,18 +195,39 @@
                                               SelectionMode="None" MaxHeight="400" Margin="0,8,0,4">
                                         <ListView.ItemTemplate>
                                             <DataTemplate x:DataType="users:InstaUser">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <controls:ImageEx Grid.Column="0" Source="{x:Bind ProfilePictureUrl}" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" 
-                                                                      CornerRadius="99" Height="28" Width="28" VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Column="1" Text="{x:Bind Username}" Margin="12,0,0,0" VerticalAlignment="Center"/>
-                                                </Grid>
+                                                <SwipeControl>
+                                                    <SwipeControl.RightItems>
+                                                        <SwipeItems Mode="Execute">
+                                                            <SwipeItem Text="Clear" Background="Red" Invoked="ClearSingleCandidateSwipe_OnInvoked">
+                                                                <SwipeItem.IconSource>
+                                                                    <SymbolIconSource Symbol="Clear"/>
+                                                                </SwipeItem.IconSource>
+                                                            </SwipeItem>
+                                                        </SwipeItems>
+                                                    </SwipeControl.RightItems>
+                                                    <Grid HorizontalAlignment="Stretch" PointerEntered="Candidate_PointerEntered" PointerExited="Candidate_OnPointerExited" Background="Transparent">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <controls:ImageEx Grid.Column="0" Source="{x:Bind ProfilePictureUrl}" PlaceholderSource="Assets/ProfilePicturePlaceholder.jpg" 
+                                                                          CornerRadius="99" Height="28" Width="28" VerticalAlignment="Center"/>
+                                                        <TextBlock Grid.Column="1" Text="{x:Bind Username}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                                        <Button x:Name="ClearSingleCandidateButton" Grid.Column="2" Background="Transparent" Style="{x:Null}"
+                                                                HorizontalAlignment="Right" VerticalAlignment="Center" Padding="0" Visibility="Collapsed"
+                                                                Click="ClearSingleCandidateButton_OnClick">
+                                                            <FontIcon Glyph="&#xE106;" FontSize="14"/>
+                                                        </Button>
+                                                    </Grid>
+                                                </SwipeControl>
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="ListViewItem">
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
                                     </ListView>
                                     <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
                                         <TextBlock Text="{x:Bind _viewModel.NewMessageCandidates.Count, Mode=OneWay}" 
@@ -215,7 +237,7 @@
                                                    Style="{ThemeResource FluentCaptionTextStyle}"
                                                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
                                     </StackPanel>
-                                    <Button Grid.Row="3" HorizontalAlignment="Right" 
+                                    <Button Grid.Row="3" HorizontalAlignment="Right" Style="{x:Null}"
                                             Background="Transparent" Click="NewMessageClearAll_OnClick" ToolTipService.ToolTip="Clear selection">
                                         <SymbolIcon Symbol="ClearSelection"/>
                                     </Button>
