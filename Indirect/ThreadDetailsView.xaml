@@ -80,6 +80,40 @@
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                                HorizontalAlignment="Center" 
                                Visibility="{x:Bind Thread.ObservableItems.Count, Converter={StaticResource VisibleWhenZeroConverter}, Mode=OneWay}"/>
+
+                    <Grid x:Name="PendingControlGrid" HorizontalAlignment="Stretch" Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                          Visibility="{x:Bind Thread.Pending, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
+                        <Grid.Resources>
+                            <ResourceDictionary>
+                                <Style x:Key="PendingButtonStyle" TargetType="Button">
+                                    <Setter Property="Margin" Value="2"/>
+                                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                </Style>
+                            </ResourceDictionary>
+                        </Grid.Resources>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <RichTextBlock Grid.Row="0" Grid.ColumnSpan="3" TextAlignment="Center" HorizontalAlignment="Stretch" Margin="10" MaxWidth="350">
+                            <Paragraph>
+                                <Run Text="{x:Bind Thread.Inviter.Username, Mode=OneWay}" FontWeight="Bold"/> wants to send you a message.
+                            </Paragraph>
+                            <Paragraph/>
+                            <Paragraph FontSize="12" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}">
+                                Do you want to let <Run Text="{x:Bind Thread.Inviter.Username, Mode=OneWay}"/> send you messages from now on? They'll only know you've seen the request if you choose Accept.
+                            </Paragraph>
+                        </RichTextBlock>
+                        <Button Grid.Row="1" Grid.Column="0" Content="Block" IsEnabled="False" ToolTipService.ToolTip="Not yet implemented" Style="{StaticResource PendingButtonStyle}"/>
+                        <Button Grid.Row="1" Grid.Column="1" Content="Delete" IsEnabled="False" ToolTipService.ToolTip="Not yet implemented" Style="{StaticResource PendingButtonStyle}"/>
+                        <Button Grid.Row="1" Grid.Column="2" Content="Accept" Style="{StaticResource PendingButtonStyle}"/>
+                    </Grid>
                 </StackPanel>
             </ListView.Footer>
 
