@@ -10,15 +10,26 @@ namespace InstagramAPI
     {
         private void ValidateUser()
         {
-            if (string.IsNullOrEmpty(Session.Username) || string.IsNullOrEmpty(Session.Password))
-                throw new ArgumentException("user name and password must be specified");
+            if ((string.IsNullOrEmpty(Session.Username) || string.IsNullOrEmpty(Session.Password)) &&
+                string.IsNullOrEmpty(Session.FacebookAccessToken))
+                throw new ArgumentException("user name and password or access token must be specified");
         }
 
         private void ValidateLoggedIn()
         {
-            ValidateUser();
-            if (!IsUserAuthenticated)
-                throw new ArgumentException("user must be authenticated");
+            try
+            {
+                ValidateUser();
+                if (!IsUserAuthenticated)
+                    throw new ArgumentException("user must be authenticated");
+            }
+            catch (ArgumentException)
+            {
+                // Saved data may be corrupted. Force logout.
+                IsUserAuthenticated = false;
+                SaveToAppSettings();
+                throw;
+            }
         }
 
         private void ValidateRequestMessage()
