@@ -449,8 +449,19 @@ namespace Indirect
             _lastUpdated = DateTime.Now;
             await Inbox.UpdateInbox();
             if (SelectedThread == null) return;
-            await UpdateSelectedThread();
-            MarkLatestItemSeen(SelectedThread);
+            if (Inbox.Threads.Contains(SelectedThread))
+            {
+                await UpdateSelectedThread();
+                MarkLatestItemSeen(SelectedThread);
+            }
+            else
+            {
+                var preferSelectedThread = Inbox.Threads.SingleOrDefault(x => x.ThreadId == SelectedThread.ThreadId);
+                if (preferSelectedThread != null)
+                {
+                    SelectedThread = preferSelectedThread;
+                }
+            }
         }
 
         private async Task<bool> SearchReady()
