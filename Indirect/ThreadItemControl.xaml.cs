@@ -49,6 +49,7 @@ namespace Indirect
             var view = (ThreadItemControl) d;
             var item = (InstaDirectInboxItemWrapper) e.NewValue;
             view.ProcessItem();
+            view.LikeItemMenuOption.IsEnabled = !item.Parent.Pending;
             if (item.ItemType == DirectItemType.ActionLog)
                 view.ItemContainer.Visibility = Visibility.Collapsed;
             if (item.ItemType == DirectItemType.Text)
@@ -115,7 +116,7 @@ namespace Indirect
         private bool _timeout;
         private async void LikeUnlikeItem()
         {
-            if (_timeout) return;
+            if (_timeout || Item.Parent.Pending) return;
             if (Item.Reactions?.MeLiked ?? false)
             {
                 Item.UnlikeItem();

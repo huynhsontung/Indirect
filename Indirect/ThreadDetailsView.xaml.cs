@@ -48,6 +48,8 @@ namespace Indirect
             thread.PropertyChanged += view.OnThreadPropertyChanged;
 
             view.ViewProfileAppBarButton.Visibility = thread.Users?.Count == 1 ? Visibility.Visible : Visibility.Collapsed;
+            view.MessageInputGrid.Visibility = thread.Pending ? Visibility.Collapsed : Visibility.Visible;
+            view.RefreshButton.Visibility = thread.Pending ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private static ApiContainer ViewModel => ApiContainer.Instance;

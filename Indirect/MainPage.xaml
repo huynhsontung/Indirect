@@ -199,7 +199,7 @@
                                                 <SwipeControl>
                                                     <SwipeControl.RightItems>
                                                         <SwipeItems Mode="Execute">
-                                                            <SwipeItem Text="Clear" Background="Red" Invoked="ClearSingleCandidateSwipe_OnInvoked">
+                                                            <SwipeItem Text="Clear" Background="Firebrick" Invoked="ClearSingleCandidateSwipe_OnInvoked">
                                                                 <SwipeItem.IconSource>
                                                                     <SymbolIconSource Symbol="Clear"/>
                                                                 </SwipeItem.IconSource>
@@ -215,9 +215,9 @@
                                                         <controls:ImageEx Grid.Column="0" Source="{x:Bind ProfilePictureUrl}" Style="{ThemeResource ProfilePicturePlaceholderStyle}"
                                                                           CornerRadius="99" Height="28" Width="28" VerticalAlignment="Center"/>
                                                         <TextBlock Grid.Column="1" Text="{x:Bind Username}" Margin="12,0,0,0" VerticalAlignment="Center"/>
-                                                        <Button x:Name="ClearSingleCandidateButton" Grid.Column="2" Background="Transparent" Style="{x:Null}"
-                                                                HorizontalAlignment="Right" VerticalAlignment="Center" Padding="0" Visibility="Collapsed"
-                                                                Click="ClearSingleCandidateButton_OnClick">
+                                                        <Button x:Name="ClearSingleCandidateButton" Grid.Column="2" Background="Transparent" Style="{StaticResource TextBlockButtonStyle}"
+                                                                HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Collapsed" Foreground="{StaticResource ButtonForegroundThemeBrush}"
+                                                                Click="ClearSingleCandidateButton_OnClick" ToolTipService.ToolTip="Remove recipient">
                                                             <FontIcon Glyph="&#xE106;" FontSize="14"/>
                                                         </Button>
                                                     </Grid>
@@ -257,8 +257,7 @@
                         <AutoSuggestBox.ItemTemplate>
                             <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                                 <StackPanel Orientation="Horizontal" Background="Transparent" Margin="0,4,0,4">
-                                    <controls:ImageEx Source="{x:Bind Users[0].ProfilePictureUrl}" Style="{ThemeResource ProfilePicturePlaceholderStyle}"
-                                                      CornerRadius="99" Height="28" Width="28" VerticalAlignment="Center"/>
+                                    <local:ProfilePicture Source="{x:Bind Users}" Height="28" Width="28" VerticalAlignment="Center"/>
                                     <TextBlock Text="{x:Bind Title}" MaxLines="1" Margin="12,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </DataTemplate>
