@@ -48,6 +48,13 @@ namespace InstagramAPI
                 : new UriBuilder(instaUri).Uri;
         }
 
+        public static Uri GetPendingInboxApproveUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/approve_multiple/", out var instaUri))
+                throw new Exception("Cant create URI for get inbox");
+            return instaUri;
+        }
+
         public static Uri GetDirectInboxThreadUri(string threadId, string nextId)
         {
             if (

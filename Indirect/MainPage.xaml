@@ -81,7 +81,7 @@
                                     Grid.Row="0"
                                     Grid.RowSpan="2"
                                     BackButtonBehavior="Manual"
-                                    ItemsSource="{x:Bind _viewModel.InboxThreads, Mode=OneWay}"
+                                    ItemsSource="{x:Bind Inbox.Threads, Mode=OneWay}"
                                     SelectedItem="{x:Bind _viewModel.SelectedThread, Mode=TwoWay}"
                                     BorderBrush="Transparent"
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"

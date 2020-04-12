@@ -6,11 +6,11 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
+using Indirect.Wrapper;
 using InstagramAPI.Classes.User;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
 using CoreWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
-using InstaDirectInboxThreadWrapper = Indirect.Wrapper.InstaDirectInboxThreadWrapper;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -21,9 +21,22 @@ namespace Indirect
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        public static readonly DependencyProperty InboxProperty = DependencyProperty.Register(
+            nameof(Inbox),
+            typeof(InstaDirectInboxWrapper),
+            typeof(MainPage),
+            new PropertyMetadata(null));
+
+        internal InstaDirectInboxWrapper Inbox
+        {
+            get => (InstaDirectInboxWrapper) GetValue(InboxProperty);
+            set => SetValue(InboxProperty, value);
+        }
+
         private readonly ApiContainer _viewModel = ApiContainer.Instance;
         private readonly Windows.Storage.ApplicationDataContainer _localSettings =
             Windows.Storage.ApplicationData.Current.LocalSettings;
+
 
         public MainPage()
         {
@@ -31,6 +44,7 @@ namespace Indirect
             Window.Current.SetTitleBar(TitleBarElement);
             MainLayout.ViewStateChanged += OnViewStateChange;
             Window.Current.Activated += OnWindowFocusChange;
+            Inbox = _viewModel.Inbox;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -252,7 +266,7 @@ namespace Indirect
 
         private void TogglePendingInbox_OnClick(object sender, RoutedEventArgs e)
         {
-            _viewModel.SwitchInbox();
+            Inbox = Inbox == _viewModel.Inbox ? _viewModel.PendingInbox : _viewModel.Inbox;
         }
     }
 }

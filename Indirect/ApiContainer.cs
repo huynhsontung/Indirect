@@ -51,7 +51,6 @@ namespace Indirect
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
         private CancellationTokenSource _searchCancellationToken;
         private InstaDirectInboxThreadWrapper _selectedThread;
-        private InstaDirectInboxWrapper _secondaryInbox;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -60,9 +59,9 @@ namespace Indirect
 
         public Dictionary<long, bool> UserPresenceDictionary { get; } = new Dictionary<long, bool>();
 
-        public InstaDirectInboxWrapper Inbox { get; private set; }
+        public InstaDirectInboxWrapper PendingInbox { get; }
 
-        public IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> InboxThreads => Inbox.Threads;
+        public InstaDirectInboxWrapper Inbox { get; }
 
         public CurrentUser LoggedInUser { get; private set; }
 
@@ -95,7 +94,7 @@ namespace Indirect
             };
             Inbox = new InstaDirectInboxWrapper(_instaApi);
             Inbox.FirstUpdated += async (seqId, snapshotAt) => await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
-            _secondaryInbox = new InstaDirectInboxWrapper(_instaApi, true);
+            PendingInbox = new InstaDirectInboxWrapper(_instaApi, true);
             PushClient.MessageReceived += (sender, args) =>
             {
                 Debug.Write("Background notification: ");
@@ -114,15 +113,6 @@ namespace Indirect
         public void SetSelectedThreadNull()
         {
             SelectedThread = null;
-        }
-
-        public void SwitchInbox()
-        {
-            SelectedThread = null;
-            var tmp = Inbox;
-            Inbox = _secondaryInbox;
-            _secondaryInbox = tmp;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InboxThreads)));
         }
 
         public Task<Result<LoginResult>> Login(string username, string password) => _instaApi.LoginAsync(username, password);
@@ -153,7 +143,7 @@ namespace Indirect
                 var segments = indicatorData.Path.Trim('/').Split('/');
                 var threadId = segments[2];
                 if (string.IsNullOrEmpty(threadId)) return;
-                var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
+                var thread = Inbox.Threads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
                 if (thread == null) return;
                 if (indicatorData.Indicator.ActivityStatus == 1)
                     thread.PingTypingIndicator(indicatorData.Indicator.TimeToLive);
@@ -185,7 +175,7 @@ namespace Indirect
                     var segments = itemData.Path.Trim('/').Split('/');
                     var threadId = segments[2];
                     if (string.IsNullOrEmpty(threadId)) continue;
-                    var thread = InboxThreads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
+                    var thread = Inbox.Threads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
                     if (thread == null)
                     {
                         if (!updateInbox) updateInbox = itemData.Op == "add";
@@ -525,7 +515,7 @@ namespace Indirect
             var result = await _instaApi.CreateGroupThreadAsync(userIds);
             if (!result.IsSucceeded) return;
             var thread = result.Value;
-            var existingThread = InboxThreads.SingleOrDefault(x => x.ThreadId == thread.ThreadId);
+            var existingThread = Inbox.Threads.SingleOrDefault(x => x.ThreadId == thread.ThreadId);
             SelectedThread = existingThread ?? new InstaDirectInboxThreadWrapper(thread, _instaApi);
         }
 
@@ -545,7 +535,7 @@ namespace Indirect
                 thread = placeholderThread;
             }
 
-            foreach (var existingThread in InboxThreads)
+            foreach (var existingThread in Inbox.Threads)
             {
                 if (!thread.Equals(existingThread)) continue;
                 thread = existingThread;

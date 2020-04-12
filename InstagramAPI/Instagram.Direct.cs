@@ -84,6 +84,32 @@ namespace InstagramAPI
             }
         }
 
+        public async Task<Result<BaseStatusResponse>> ApprovePendingThreadAsync(IEnumerable<string> threadIds)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var uri = UriCreator.GetPendingInboxApproveUri();
+                var data = new Dictionary<string, string>
+                {
+                    {"thread_ids", JsonConvert.SerializeObject(threadIds, Formatting.None)},
+                    //{"folder", ""}
+                };
+                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<BaseStatusResponse>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<BaseStatusResponse>(json);
+                return obj.IsOk() ? Result<BaseStatusResponse>.Success(obj, json) : Result<BaseStatusResponse>.Fail(json);
+            }
+            catch (Exception e)
+            {
+                _logger?.LogException(e);
+                return Result<BaseStatusResponse>.Except(e);
+            }
+        }
+
         public async Task<Result<DirectThread>> CreateGroupThreadAsync(IEnumerable<long> userIds)
         {
             ValidateLoggedIn();
