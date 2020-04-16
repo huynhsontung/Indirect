@@ -19,16 +19,7 @@ namespace Indirect.Wrapper
         public event PropertyChangedEventHandler PropertyChanged;
         public event Action<int, DateTimeOffset> FirstUpdated;    // callback to start SyncClient
 
-        private int _pendingRequestCount;
-        public int PendingRequestsCount
-        {
-            get => _pendingRequestCount;
-            private set
-            {
-                _pendingRequestCount = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PendingRequestsCount)));
-            }
-        }
+        public int PendingRequestsCount { get; private set; }
 
         public long SeqId { get; set; }
         public DateTimeOffset SnapshotAt { get; set; }
@@ -61,6 +52,9 @@ namespace Indirect.Wrapper
                 OldestCursor = inbox.OldestCursor;
                 HasOlder = inbox.HasOlder;
             }
+
+            _ = CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PendingRequestsCount))); });
         }
 
         public async Task UpdateInbox()
