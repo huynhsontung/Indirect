@@ -74,16 +74,18 @@ namespace Indirect
             if (Item.ItemType == DirectItemType.AnimatedMedia) return;
             var uri = Item.FullImageUri;
             if (uri == null) return;
-            var immersive = new ImmersiveView(Item, InstaMediaType.Image);
-            var result = immersive.ShowAsync();
+            var frame = Window.Current.Content as Frame;
+            var page = frame?.Content as MainPage;
+            page?.OpenImmersiveView(Item);
         }
 
         private void VideoPopupButton_OnTapped(object sender, TappedRoutedEventArgs e)
         {
             var uri = Item.VideoUri;
             if (uri == null) return;
-            var immersive = new ImmersiveView(Item, InstaMediaType.Video);
-            var result = immersive.ShowAsync();
+            var frame = Window.Current.Content as Frame;
+            var page = frame?.Content as MainPage;
+            page?.OpenImmersiveView(Item);
         }
 
         private void OpenMediaButton_OnClick(object sender, RoutedEventArgs e)

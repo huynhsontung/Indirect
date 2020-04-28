@@ -51,7 +51,7 @@ namespace Indirect
             typeof(AutoVideoControl),
             new PropertyMetadata(true, AreTransportControlsEnabledChanged));
         public static readonly DependencyProperty PosterSourceProperty = DependencyProperty.Register(
-            nameof(Source),
+            nameof(PosterSource),
             typeof(object),
             typeof(AutoVideoControl),
             new PropertyMetadata(null, OnPosterSourceChanged));

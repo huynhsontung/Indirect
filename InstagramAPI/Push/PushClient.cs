@@ -198,7 +198,6 @@ namespace InstagramAPI.Push
             {
                 Debug.WriteLine($"{nameof(PushClient)}: Starting fresh.");
                 if (_loopGroup != null) await Shutdown();
-                _loopGroup = new SingleThreadEventLoop();
 
                 var connectPacket = new FbnsConnectPacket
                 {
@@ -240,6 +239,7 @@ namespace InstagramAPI.Push
                 var streamSocketChannel = new StreamSocketChannel(Socket);
                 streamSocketChannel.Pipeline.AddLast(new FbnsPacketEncoder(), new FbnsPacketDecoder(), this);
 
+                _loopGroup = new SingleThreadEventLoop();
                 await _loopGroup.RegisterAsync(streamSocketChannel).ConfigureAwait(false);
                 await streamSocketChannel.WriteAndFlushAsync(connectPacket).ConfigureAwait(false);
             }

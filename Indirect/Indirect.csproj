@@ -136,6 +136,9 @@
     <Compile Include="Converters\HumanizedDateTimeConverter.cs" />
     <Compile Include="Converters\ReelShareImageMarginConverter.cs" />
     <Compile Include="Converters\VisibleWhenZeroConverter.cs" />
+    <Compile Include="ImmersiveControl.xaml.cs">
+      <DependentUpon>ImmersiveControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ProfilePicture.xaml.cs">
       <DependentUpon>ProfilePicture.xaml</DependentUpon>
     </Compile>
@@ -163,9 +166,6 @@
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
     <Compile Include="Converters\SendButtonGlyphConverter.cs" />
     <Compile Include="Utilities\Helpers.cs" />
-    <Compile Include="ImmersiveView.xaml.cs">
-      <DependentUpon>ImmersiveView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ItemTemplateSelector.cs" />
     <Compile Include="PhotoVideoControl.xaml.cs">
       <DependentUpon>PhotoVideoControl.xaml</DependentUpon>
@@ -273,7 +273,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ImmersiveView.xaml">
+    <Page Include="ImmersiveControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

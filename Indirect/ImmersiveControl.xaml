@@ -1,20 +1,17 @@
-﻿<ContentDialog
-    x:Class="Indirect.ImmersiveView"
+﻿<UserControl
+    x:Class="Indirect.ImmersiveControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Indirect"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:local="using:Indirect"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:wrapper="using:Indirect.Wrapper"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d"
-    Background="Transparent"
-    BorderBrush="Transparent"
-    DefaultButton="Close"
-    CloseButtonText="Close"
-    Closing="ImmersiveView_OnClosing">
+    d:DesignHeight="300"
+    d:DesignWidth="400">
 
-    <ContentDialog.Resources>
+    <UserControl.Resources>
         <ResourceDictionary>
             <DataTemplate x:Key="ImageView" x:DataType="wrapper:InstaDirectInboxItemWrapper">
                 <ScrollViewer x:Name="ScrollViewer"
@@ -37,7 +34,6 @@
                 <local:AutoVideoControl x:Name="MediaPlayer" Source="{x:Bind VideoUri}"/>
             </DataTemplate>
         </ResourceDictionary>
-    </ContentDialog.Resources>
-
-    <ContentControl x:Name="ContentControl" Content="{x:Bind _item}"/>
-</ContentDialog>
+    </UserControl.Resources>
+    <ContentControl x:Name="MainControl" Content="{x:Bind Item, Mode=OneWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SizeChanged="MainControl_OnSizeChanged"/>
+</UserControl>

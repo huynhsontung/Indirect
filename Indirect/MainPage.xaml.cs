@@ -44,7 +44,16 @@ namespace Indirect
             Window.Current.SetTitleBar(TitleBarElement);
             MainLayout.ViewStateChanged += OnViewStateChange;
             Window.Current.Activated += OnWindowFocusChange;
+            Window.Current.SizeChanged += OnWindowSizeChanged;
             Inbox = _viewModel.Inbox;
+            MediaPopup.Width = Window.Current.Bounds.Width;
+            MediaPopup.Height = Window.Current.Bounds.Height - 32;
+        }
+
+        private void OnWindowSizeChanged(object sender, WindowSizeChangedEventArgs e)
+        {
+            MediaPopup.Width = e.Size.Width;
+            MediaPopup.Height = e.Size.Height - 32;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -267,6 +276,18 @@ namespace Indirect
         private void TogglePendingInbox_OnClick(object sender, RoutedEventArgs e)
         {
             Inbox = Inbox == _viewModel.Inbox ? _viewModel.PendingInbox : _viewModel.Inbox;
+        }
+
+        private void CloseMediaPopup_OnClick(object sender, RoutedEventArgs e)
+        {
+            MediaPopup.IsOpen = false;
+            ImmersiveControl.OnClose();
+        }
+
+        internal void OpenImmersiveView(InstaDirectInboxItemWrapper item)
+        {
+            MediaPopup.IsOpen = true;
+            ImmersiveControl.Item = item;
         }
     }
 }
