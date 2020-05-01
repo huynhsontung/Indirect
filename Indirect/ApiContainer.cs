@@ -124,7 +124,6 @@ namespace Indirect
         {
             _instaApi.Logout();
             _ = ImageCache.Instance.ClearAsync();
-            _ = VideoCache.Instance.ClearAsync();
             // _settings.Values.Clear();
         }
 

@@ -41,7 +41,6 @@ namespace Indirect
             this.Resuming += OnResuming;
             this.EnteredBackground += OnEnteredBackground;
             ImageCache.Instance.CacheDuration = TimeSpan.FromDays(7);
-            VideoCache.Instance.CacheDuration = TimeSpan.FromDays(30);
         }
 
         private void SetTheme()

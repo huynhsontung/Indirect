@@ -84,14 +84,7 @@ namespace Indirect
 
                 if (uri.IsFile && uri.Segments.Last().Contains(".mp4", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (Helpers.IsHttpUri(uri))
-                    {
-                        _source = await VideoCache.Instance.GetFromCacheAsync(uri);
-                    }
-                    else
-                    {
-                        _source = MediaSource.CreateFromUri(uri);
-                    }
+                    _source = MediaSource.CreateFromUri(uri);
                 }
             }
             else

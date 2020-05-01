@@ -185,7 +185,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\PropertyCopier.cs" />
     <Compile Include="Utilities\ReversedIncrementalLoadingCollection.cs" />
-    <Compile Include="Utilities\VideoCache.cs" />
     <Compile Include="Wrapper\InstaDirectInboxItemWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxThreadWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxWrapper.cs" />
