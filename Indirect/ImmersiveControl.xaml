@@ -15,15 +15,15 @@
         <ResourceDictionary>
             <DataTemplate x:Key="ImageView" x:DataType="wrapper:InstaDirectInboxItemWrapper">
                 <ScrollViewer x:Name="ScrollViewer"
-                              VerticalContentAlignment="Center"
-                              HorizontalContentAlignment="Center"
                               HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto"
                               VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Auto"
                               ZoomMode="Enabled" MinZoomFactor="1"
-                              SizeChanged="ScrollViewer_OnSizeChanged">
+                              SizeChanged="ScrollViewer_OnSizeChanged"
+                              DoubleTapped="ScrollViewer_OnDoubleTapped"
+                              Loaded="ScrollViewer_OnLoaded">
                     <controls:ImageEx x:Name="ImageView"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Stretch"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
                                       Stretch="Uniform"
                                       IsCacheEnabled="True"
                                       Source="{x:Bind FullImageUri}"/>

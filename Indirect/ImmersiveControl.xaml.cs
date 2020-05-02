@@ -80,6 +80,7 @@ namespace Indirect
             if (scrollviewer == null) return;
             scrollviewer.Width = ActualWidth;
             scrollviewer.Height = ActualHeight;
+            ScrollViewer_OnSizeChanged(scrollviewer, null);
         }
 
         private void PrepareVideoView()
@@ -92,8 +93,14 @@ namespace Indirect
             var scrollviewer = (ScrollViewer)sender;
             var imageView = scrollviewer.Content as ImageEx;
             if (imageView == null) return;
-            imageView.Height = scrollviewer.ViewportHeight;
-            if (Item.FullImageWidth > scrollviewer.ViewportWidth) imageView.Width = scrollviewer.ViewportWidth;
+            if (Item.FullImageHeight > scrollviewer.ViewportHeight)
+            {
+                imageView.MaxHeight = scrollviewer.ViewportHeight;
+            }
+            if (Item.FullImageWidth > scrollviewer.ViewportWidth)
+            {
+                imageView.MaxWidth = scrollviewer.ViewportWidth;
+            }
         }
 
         public void OnClose()
@@ -108,6 +115,21 @@ namespace Indirect
             if (scrollviewer == null) return;
             scrollviewer.Width = e.NewSize.Width;
             scrollviewer.Height = e.NewSize.Height;
+        }
+
+        private void ScrollViewer_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            var scrollviewer = (ScrollViewer) sender;
+            if (scrollviewer.ZoomFactor > 1)
+            {
+                scrollviewer.ChangeView(null, null, 1);
+            }
+        }
+
+        private void ScrollViewer_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            var scrollviewer = (ScrollViewer) sender;
+            scrollviewer.ChangeView(null, null, 1, true);
         }
     }
 }
