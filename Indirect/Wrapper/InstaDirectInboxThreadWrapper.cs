@@ -328,6 +328,7 @@ namespace Indirect.Wrapper
                 };
             }
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastSeenAt)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreadMessage)));
         }
 
 
