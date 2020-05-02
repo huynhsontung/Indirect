@@ -135,31 +135,34 @@ namespace Indirect.Wrapper
                 var j = i;
                 for (; j < sorted.Count; j++)
                 {
-                    if (!thread.Equals(sorted[j]) || i == j) continue;
-                    satisfied = false;
-                    break;
+                    if (thread.Equals(sorted[j]) && i != j)
+                    {
+                        satisfied = false;
+                        break;
+                    }
                 }
 
                 if (satisfied) continue;
                 // Threads.Move(i,j);
                 // ObservableCollection.Move call ObservableCollection implementation of RemoveItem which is cause to refresh all items
-                if (ApiContainer.Instance.SelectedThread != Threads[i])
+                // Removing Selected thread from collection will deselect the thread
+                if (ApiContainer.Instance.SelectedThread != Threads[j])
                 {
-                    var tmp = Threads[i];
-                    Threads.RemoveAt(i);
-                    Threads.Insert(j, tmp);
-                    i--;
-                    satisfied = true;
-                }
-                else
-                {
-                    // If Selected thread is Threads[i], RemoveAt(i) will deselect the thread
                     var tmp = Threads[j];
                     Threads.RemoveAt(j);
                     Threads.Insert(i, tmp);
-                    i--;
-                    satisfied = true;
                 }
+                else
+                {
+                    // j is always greater than i
+                    for (var k = j - 1; i <= k; k--)
+                    {
+                        var tmp = Threads[k];
+                        Threads.RemoveAt(k);
+                        Threads.Insert(k+1, tmp);
+                    }
+                }
+                satisfied = true;
             }
         }
 
