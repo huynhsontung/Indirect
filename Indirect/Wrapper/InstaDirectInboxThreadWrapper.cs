@@ -123,7 +123,9 @@ namespace Indirect.Wrapper
                     LastNonSenderItemAt = latestItem.Timestamp;
                 }
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastPermanentItem)));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreadMessage)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastActivity)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewestCursor)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreadMessage))); // LastNonSenderItemAt
             }
         }
 
