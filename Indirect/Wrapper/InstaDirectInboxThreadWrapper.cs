@@ -66,7 +66,8 @@ namespace Indirect.Wrapper
         {
             ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
             _instaApi = api;
-            PropertyChanged += SeenCheck;
+            PropertyChanged += SeenCheckProperty;
+            ObservableItems.CollectionChanged += SeenCheckCollection;
             ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
         }
 
@@ -117,8 +118,12 @@ namespace Indirect.Wrapper
                 LastPermanentItem = latestItem;
                 LastActivity = latestItem.Timestamp;
                 NewestCursor = latestItem.ItemId;
-                if (!latestItem.FromMe) LastNonSenderItemAt = latestItem.Timestamp;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+                if (!latestItem.FromMe)
+                {
+                    LastNonSenderItemAt = latestItem.Timestamp;
+                }
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastPermanentItem)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreadMessage)));
             }
         }
 
@@ -368,9 +373,14 @@ namespace Indirect.Wrapper
             }
         }
 
-        private async void SeenCheck(object sender, PropertyChangedEventArgs args)
+        private void SeenCheckProperty(object sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName != nameof(LastSeenAt) && !string.IsNullOrEmpty(args.PropertyName)) return;
+            SeenCheckCollection(sender, null);
+        }
+
+        private async void SeenCheckCollection(object sender, NotifyCollectionChangedEventArgs e)
+        {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 if (ObservableItems.Count == 0)
