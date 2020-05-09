@@ -144,8 +144,14 @@
     <Compile Include="Classes\Direct\ItemContent\VisualMediaContainer.cs" />
     <Compile Include="Classes\Direct\ItemContent\VoiceShare.cs" />
     <Compile Include="Classes\Direct\RankedRecipientThread.cs" />
+    <Compile Include="Classes\Story\DisplayResource.cs" />
+    <Compile Include="Classes\Story\Reel.cs" />
+    <Compile Include="Classes\Story\StoryItem.cs" />
+    <Compile Include="Classes\Story\Owner.cs" />
     <Compile Include="Classes\Responses\FacebookResponse.cs" />
     <Compile Include="Classes\Responses\RuploadResponse.cs" />
+    <Compile Include="Classes\Story\TappableObject.cs" />
+    <Compile Include="Classes\Story\VideoResource.cs" />
     <Compile Include="Classes\UploaderProgress.cs" />
     <Compile Include="Classes\JsonConverters\DirectItemConverter.cs" />
     <Compile Include="Classes\JsonConverters\JsonPathConverter.cs" />
@@ -184,6 +190,7 @@
     <Compile Include="Instagram.Direct.cs" />
     <Compile Include="Instagram.Http.cs" />
     <Compile Include="Instagram.MediaUpload.cs" />
+    <Compile Include="Instagram.Story.cs" />
     <Compile Include="Instagram.Utils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Push\FbnsConnectionData.cs" />

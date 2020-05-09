@@ -9,6 +9,13 @@ namespace InstagramAPI
         private const string API_SUFFIX = "/api/v1";
         private const string API_SUFFIX_V2 = "/api/v2";
 
+        public static Uri GetGraphQlUri(string queryHash, string variables)
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, "/graphql/query/", out var instaUri))
+                throw new Exception("Cant create URI for GraphQL");
+            return new UriBuilder(instaUri) {Query = $"query_hash={queryHash}&variables={variables}"}.Uri;
+        }
+
         public static Uri GetLoginUri()
         {
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/accounts/login/", out var instaUri))

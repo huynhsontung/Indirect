@@ -271,6 +271,11 @@ namespace Indirect
             _viewModel.NewMessageCandidates.Remove(target);
         }
 
+        private void CloseNewThreadFlyout_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            NewThreadFlyout.Hide();
+        }
+
         #endregion
 
         private void TogglePendingInbox_OnClick(object sender, RoutedEventArgs e)

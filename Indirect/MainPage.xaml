@@ -176,6 +176,9 @@
                         <Button.Flyout>
                             <Flyout x:Name="NewThreadFlyout" Placement="RightEdgeAlignedTop">
                                 <Grid Width="240">
+                                    <Grid.KeyboardAccelerators>
+                                        <KeyboardAccelerator Key="Escape" Invoked="CloseNewThreadFlyout_OnInvoked"/>
+                                    </Grid.KeyboardAccelerators>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
@@ -195,6 +198,9 @@
                                                     UpdateTextOnSelect="False"
                                                     QueryIcon="Find"
                                                     IsEnabled="{x:Bind _viewModel.NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqual32}, Mode=OneWay}">
+                                        <AutoSuggestBox.KeyboardAccelerators>
+                                            <KeyboardAccelerator Key="Escape" Invoked="CloseNewThreadFlyout_OnInvoked"/>
+                                        </AutoSuggestBox.KeyboardAccelerators>
                                         <AutoSuggestBox.ItemTemplate>
                                             <DataTemplate x:DataType="users:InstaUser">
                                                 <StackPanel Orientation="Horizontal">
