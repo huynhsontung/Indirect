@@ -1,5 +1,5 @@
 ﻿<UserControl
-    x:Class="Indirect.ThreadItemControl"
+    x:Class="Indirect.Controls.ThreadItemControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Indirect"
@@ -8,7 +8,9 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:core="using:FluiFramework.UWP.Core" 
     xmlns:converters="using:Indirect.Converters"
-    xmlns:wrappers="using:Indirect.Wrapper"
+    xmlns:wrappers="using:Indirect.Wrapper" 
+    xmlns:controls1="using:Indirect.Controls" 
+    xmlns:utilities="using:Indirect.Utilities"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400"
@@ -227,15 +229,15 @@
                             CornerRadius="2"
                             BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
                             BorderThickness="1">
-                        <local:AutoVideoControl x:Name="MediaFrame"
+                        <controls1:AutoVideoControl x:Name="MediaFrame"
                                                 MaxWidth="250" MaxHeight="350" 
                                                 VideoHeight="{x:Bind VideoHeight}" VideoWidth="{x:Bind VideoWidth}"
                                                 Source="{x:Bind VideoUri}" PosterSource="{x:Bind PreviewImageUri}">
-                            <local:AutoVideoControl.TransportControls>
+                            <controls1:AutoVideoControl.TransportControls>
                                 <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False"
                                                         IsZoomButtonVisible="False" ShowAndHideAutomatically="False"/>
-                            </local:AutoVideoControl.TransportControls>
-                        </local:AutoVideoControl>
+                            </controls1:AutoVideoControl.TransportControls>
+                        </controls1:AutoVideoControl>
                     </Border>
                 </Grid>
             </DataTemplate>
@@ -303,13 +305,13 @@
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                         BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
                         BorderThickness="1">
-                    <local:AutoVideoControl Width="250" Source="{x:Bind VideoUri}">
-                        <local:AutoVideoControl.TransportControls>
+                    <controls1:AutoVideoControl Width="250" Source="{x:Bind VideoUri}">
+                        <controls1:AutoVideoControl.TransportControls>
                             <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False"
                                                     IsZoomButtonVisible="False" ShowAndHideAutomatically="False"
                                                     IsCompact="True"/>
-                        </local:AutoVideoControl.TransportControls>
-                    </local:AutoVideoControl>
+                        </controls1:AutoVideoControl.TransportControls>
+                    </controls1:AutoVideoControl>
                 </Border>
             </DataTemplate>
 
@@ -378,7 +380,7 @@
                 </MenuFlyout>
             </ContentControl.ContextFlyout>
             <ContentControl.ContentTemplateSelector>
-                <local:ItemTemplateSelector TextTemplate="{StaticResource TextTemplate}"
+                <utilities:ItemTemplateSelector TextTemplate="{StaticResource TextTemplate}"
                                             LikeTemplate="{StaticResource LikeTemplate}"
                                             HyperlinkTemplate="{StaticResource HyperlinkTemplate}"
                                             HyperlinkWithPreviewTemplate="{StaticResource HyperlinkWithPreviewTemplate}"

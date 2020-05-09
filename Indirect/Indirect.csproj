@@ -129,17 +129,17 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AboutDialog.xaml.cs">
+    <Compile Include="Controls\AboutDialog.xaml.cs">
       <DependentUpon>AboutDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converters\EqualityConverter.cs" />
     <Compile Include="Converters\HumanizedDateTimeConverter.cs" />
     <Compile Include="Converters\ReelShareImageMarginConverter.cs" />
     <Compile Include="Converters\VisibleWhenZeroConverter.cs" />
-    <Compile Include="ImmersiveControl.xaml.cs">
+    <Compile Include="Controls\ImmersiveControl.xaml.cs">
       <DependentUpon>ImmersiveControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ProfilePicture.xaml.cs">
+    <Compile Include="Controls\ProfilePicture.xaml.cs">
       <DependentUpon>ProfilePicture.xaml</DependentUpon>
     </Compile>
     <Compile Include="SECRETS.cs" />
@@ -147,7 +147,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="ApiContainer.cs" />
-    <Compile Include="AutoVideoControl.xaml.cs">
+    <Compile Include="Controls\AutoVideoControl.xaml.cs">
       <DependentUpon>AutoVideoControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converters\LikeUnlikeStyleConverter.cs" />
@@ -166,14 +166,14 @@
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
     <Compile Include="Converters\SendButtonGlyphConverter.cs" />
     <Compile Include="Utilities\Helpers.cs" />
-    <Compile Include="ItemTemplateSelector.cs" />
-    <Compile Include="PhotoVideoControl.xaml.cs">
+    <Compile Include="Utilities\ItemTemplateSelector.cs" />
+    <Compile Include="Controls\PhotoVideoControl.xaml.cs">
       <DependentUpon>PhotoVideoControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ThreadDetailsView.xaml.cs">
+    <Compile Include="Controls\ThreadDetailsView.xaml.cs">
       <DependentUpon>ThreadDetailsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ThreadItemControl.xaml.cs">
+    <Compile Include="Controls\ThreadItemControl.xaml.cs">
       <DependentUpon>ThreadItemControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Login.xaml.cs">
@@ -264,31 +264,31 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="AboutDialog.xaml">
+    <Page Include="Controls\AboutDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="AutoVideoControl.xaml">
+    <Page Include="Controls\AutoVideoControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ImmersiveControl.xaml">
+    <Page Include="Controls\ImmersiveControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PhotoVideoControl.xaml">
+    <Page Include="Controls\PhotoVideoControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ProfilePicture.xaml">
+    <Page Include="Controls\ProfilePicture.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ThreadDetailsView.xaml">
+    <Page Include="Controls\ThreadDetailsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ThreadItemControl.xaml">
+    <Page Include="Controls\ThreadItemControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

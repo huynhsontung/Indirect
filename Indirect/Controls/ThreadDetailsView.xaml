@@ -1,5 +1,5 @@
 ﻿<UserControl
-    x:Class="Indirect.ThreadDetailsView"
+    x:Class="Indirect.Controls.ThreadDetailsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Indirect"
@@ -8,7 +8,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:wrapper="using:Indirect.Wrapper"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
-    xmlns:utilities="using:Indirect.Utilities"
+    xmlns:utilities="using:Indirect.Utilities" 
+    xmlns:controls1="using:Indirect.Controls"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
@@ -32,7 +33,7 @@
             <Flyout x:Name="FilePickerFlyout" Closing="FilePickerFlyout_OnClosing">
                 <StackPanel Orientation="Vertical">
                     <StackPanel x:Name="SendConfirmation" MaxWidth="300">
-                        <local:PhotoVideoControl x:Name="FilePickerPreview" Height="160" HorizontalAlignment="Center"
+                        <controls1:PhotoVideoControl x:Name="FilePickerPreview" Height="160" HorizontalAlignment="Center"
                                                  CornerRadius="2" Margin="0,0,0,12"/>
                         <TextBlock Style="{ThemeResource FluentBaseTextStyle}" Text="Do you want to send this photo?" Margin="0,0,0,12" HorizontalAlignment="Center"/>
                         <Button Content="Send"  HorizontalAlignment="Center" Click="SendFileButton_OnClick"/>
@@ -48,7 +49,7 @@
             <AppBarButton x:Name="RefreshButton" Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" Background="Transparent">
-                    <local:ProfilePicture Source="{x:Bind Thread.Users, Mode=OneWay}" Height="32" Width="32" Margin="12,0,16,0" VerticalAlignment="Center"/>
+                    <controls1:ProfilePicture Source="{x:Bind Thread.Users, Mode=OneWay}" Height="32" Width="32" Margin="12,0,16,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{x:Bind Thread.Title, Mode=OneWay}" 
                                Style="{ThemeResource FluentTitleTextStyle}"
                                MaxLines="1" 
@@ -132,7 +133,7 @@
 
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxItemWrapper">
-                    <local:ThreadItemControl Item="{x:Bind}"/>
+                    <controls1:ThreadItemControl Item="{x:Bind}"/>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </utilities:ChatListView>

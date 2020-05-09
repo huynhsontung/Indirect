@@ -17,7 +17,7 @@ using InstagramAPI.Classes;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
-namespace Indirect
+namespace Indirect.Controls
 {
     sealed partial class ThreadDetailsView : UserControl
     {

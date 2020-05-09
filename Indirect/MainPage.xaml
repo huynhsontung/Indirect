@@ -9,7 +9,8 @@
     xmlns:local="using:Indirect" 
     xmlns:converters="using:Indirect.Converters"
     xmlns:wrapper="using:Indirect.Wrapper"
-    xmlns:users="using:InstagramAPI.Classes.User"
+    xmlns:users="using:InstagramAPI.Classes.User" 
+    xmlns:controls1="using:Indirect.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -50,7 +51,7 @@
             <Grid Background="{ThemeResource SystemControlAcrylicElementBrush}" 
                   Width="{x:Bind MediaPopup.Width, Mode=OneWay}" 
                   Height="{x:Bind MediaPopup.Height, Mode=OneWay}">
-                <local:ImmersiveControl x:Name="ImmersiveControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                <controls1:ImmersiveControl x:Name="ImmersiveControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                 <Button Style="{x:Null}" Click="CloseMediaPopup_OnClick" VerticalAlignment="Top" HorizontalAlignment="Left">
                     <Button.KeyboardAccelerators>
                         <KeyboardAccelerator Key="Escape"/>
@@ -111,7 +112,7 @@
             <controls:MasterDetailsView.ItemTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <StackPanel Orientation="Horizontal">
-                        <local:ProfilePicture Source="{x:Bind Users}" Height="48" Width="48" Margin="4,8,16,8"/>
+                        <controls1:ProfilePicture Source="{x:Bind Users}" Height="48" Width="48" Margin="4,8,16,8"/>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Style="{ThemeResource FluentTitleTextStyle}" Text="{x:Bind Title}" MaxLines="1" HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
                             <TextBlock Style="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}" 
@@ -125,7 +126,7 @@
 
             <controls:MasterDetailsView.DetailsTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
-                    <local:ThreadDetailsView Thread="{x:Bind}"/>
+                    <controls1:ThreadDetailsView Thread="{x:Bind}"/>
                 </DataTemplate>
             </controls:MasterDetailsView.DetailsTemplate>
 
@@ -277,7 +278,7 @@
                         <AutoSuggestBox.ItemTemplate>
                             <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                                 <StackPanel Orientation="Horizontal" Background="Transparent" Margin="0,4,0,4">
-                                    <local:ProfilePicture Source="{x:Bind Users}" Height="28" Width="28" VerticalAlignment="Center"/>
+                                    <controls1:ProfilePicture Source="{x:Bind Users}" Height="28" Width="28" VerticalAlignment="Center"/>
                                     <TextBlock Text="{x:Bind Title}" MaxLines="1" Margin="12,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </DataTemplate>

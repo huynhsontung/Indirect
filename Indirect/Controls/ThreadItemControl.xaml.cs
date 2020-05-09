@@ -7,11 +7,10 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Indirect.Wrapper;
 using InstagramAPI.Classes.Direct;
-using InstagramAPI.Classes.Media;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
-namespace Indirect
+namespace Indirect.Controls
 {
     internal sealed partial class ThreadItemControl : UserControl
     {
