@@ -102,12 +102,14 @@ namespace Indirect
             };
         }
 
-        public async void OnLoggedIn()
+        public async Task OnLoggedIn()
         {
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
             await UpdateLoggedInUser();
             GetUserPresence();
             PushClient.Start();
+            await UpdateReelsFeed();
+            StartReelsFeedUpdateLoop();
         }
 
         public void SetSelectedThreadNull()

@@ -57,10 +57,10 @@ namespace Indirect
             MediaPopup.Height = e.Size.Height - 32;
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            _viewModel.OnLoggedIn();
+            await _viewModel.OnLoggedIn();
         }
 
         private async void LogoutButton_Click(object sender, RoutedEventArgs e)

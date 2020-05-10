@@ -135,6 +135,7 @@ namespace Indirect
             var deferral = e.SuspendingOperation.GetDeferral();
             try
             {
+                viewModel.StopReelsFeedUpdateLoop();
                 viewModel.SyncClient.Shutdown();    // Shutdown cleanly is not important here.
                 await viewModel.PushClient.TransferPushSocket();    // Has to wait for Dotnetty to shutdown
             }
@@ -154,6 +155,7 @@ namespace Indirect
             viewModel.PushClient.Start();
             await viewModel.SyncClient.Start(viewModel.Inbox.SeqId, viewModel.Inbox.SnapshotAt);
             viewModel.UpdateInboxAndSelectedThread();
+            viewModel.StartReelsFeedUpdateLoop();
         }
 
         private void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)
