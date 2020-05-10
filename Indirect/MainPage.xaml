@@ -119,7 +119,8 @@
                               ScrollViewer.HorizontalScrollMode="Enabled" 
                               ScrollViewer.HorizontalScrollBarVisibility="Auto"
                               ScrollViewer.VerticalScrollMode="Disabled"
-                              ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                              ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                              SelectionChanged="ReelsFeed_OnSelectionChanged">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
                                 <Setter Property="MinHeight" Value="0"/>

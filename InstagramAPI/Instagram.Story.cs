@@ -40,12 +40,14 @@ namespace InstagramAPI
             }
         }
 
-        public async Task<Result<Reel[]>> GetReels(string[] userIds)
+        public async Task<Result<Reel[]>> GetReels(ICollection<string> userIds)
         {
             ValidateLoggedIn();
             try
             {
-                const string queryHash = "04334405dbdef91f2c4e207b84c204d7";
+                if (userIds == null || userIds.Count == 0) 
+                    return Result<Reel[]>.Fail(Array.Empty<Reel>(), "user ids is empty");
+                const string queryHash = "f5dc1457da7a4d3f88762dae127e0238";
                 var reelIds = new JArray(userIds);
                 var variables =
                     $"{{\"reel_ids\": {reelIds.ToString(Formatting.None)}," +

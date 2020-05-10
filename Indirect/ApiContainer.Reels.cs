@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
+using Indirect.Wrapper;
 using InstagramAPI.Classes.Story;
 
 namespace Indirect
@@ -28,6 +29,13 @@ namespace Indirect
                     ReelsFeed.Add(reel);
                 }
             });
+        }
+
+        public async Task<ReelsWrapper> PrepareReelsWrapper(int selectedIndex)
+        {
+            var reelsWrapper = new ReelsWrapper(ReelsFeed, selectedIndex);
+            await reelsWrapper.UpdateUserIndex(selectedIndex);
+            return reelsWrapper;
         }
 
         public async void StartReelsFeedUpdateLoop()

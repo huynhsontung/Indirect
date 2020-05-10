@@ -5,7 +5,7 @@ using Newtonsoft.Json.Converters;
 
 namespace InstagramAPI.Classes.Story
 {
-    public class StoryItem
+    public class StoryItem : IEquatable<StoryItem>
     {
         [JsonProperty("__typename")]
         [JsonConverter(typeof(StringEnumConverter))]
@@ -82,6 +82,11 @@ namespace InstagramAPI.Classes.Story
 
         [JsonProperty("video_resources", NullValueHandling = NullValueHandling.Ignore)]
         public VideoResource[] VideoResources { get; set; }
+
+        public bool Equals(StoryItem other)
+        {
+            return Id == other?.Id && !string.IsNullOrEmpty(Id);
+        }
     }
 
     public enum StoryItemType

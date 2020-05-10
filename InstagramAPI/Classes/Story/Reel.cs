@@ -1,14 +1,15 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Story
 {
-    public class Reel  // GraphReel type
+    public class Reel : IEquatable<Reel>    // GraphReel type
     {
-        [JsonProperty("has_besties_media")]
-        public bool HasBestiesMedia { get; set; }
+        [JsonProperty("has_besties_media", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? HasBestiesMedia { get; set; }
 
-        [JsonProperty("has_pride_media")]
-        public bool HasPrideMedia { get; set; }
+        [JsonProperty("has_pride_media", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? HasPrideMedia { get; set; }
 
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -51,5 +52,10 @@ namespace InstagramAPI.Classes.Story
 
         [JsonProperty("owner")]
         public Owner Owner { get; set; }
+
+        public bool Equals(Reel other)
+        {
+            return Id == other?.Id && !string.IsNullOrEmpty(Id);
+        }
     }
 }

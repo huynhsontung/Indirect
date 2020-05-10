@@ -290,10 +290,19 @@ namespace Indirect
             ImmersiveControl.OnClose();
         }
 
-        internal void OpenImmersiveView(InstaDirectInboxItemWrapper item)
+        internal void OpenImmersiveView(object item)
         {
             MediaPopup.IsOpen = true;
             ImmersiveControl.Item = item;
+        }
+
+        private async void ReelsFeed_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var reelsFeed = (ListView) sender;
+            if (reelsFeed.SelectedIndex == -1) return;
+            var reelsWrapper = await _viewModel.PrepareReelsWrapper(reelsFeed.SelectedIndex);
+            OpenImmersiveView(reelsWrapper);
+            reelsFeed.SelectedIndex = -1;
         }
     }
 }
