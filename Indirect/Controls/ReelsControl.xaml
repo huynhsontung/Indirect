@@ -1,0 +1,64 @@
+﻿<UserControl
+    x:Class="Indirect.Controls.ReelsControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:helpers="using:Indirect.Utilities"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wrapper="using:Indirect.Wrapper"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:converters="using:Indirect.Converters"
+    xmlns:controls1="using:Indirect.Controls"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
+
+            <DataTemplate x:Key="VideoTemplate" x:DataType="wrapper:StoryItemWrapper">
+                <controls1:AutoVideoControl Source="{x:Bind VideoResources[1].Src}" VideoWidth="640" VideoHeight="1137"
+                                            PosterSource="{x:Bind DisplayUrl}" AutoPlay="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ImageTemplate" x:DataType="wrapper:StoryItemWrapper">
+                <controls:ImageEx Source="{x:Bind DisplayUrl}"/>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Canvas.ZIndex="1" Background="Transparent" Margin="44,0,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <controls:ImageEx Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                              Source="{x:Bind StoryView.SelectedItem.(wrapper:StoryItemWrapper.Owner).ProfilePicUrl, Mode=OneWay}" 
+                              Height="32" Width="32" Margin="12,0,16,0" CornerRadius="99" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="0" Grid.Column="1" 
+                       Text="{x:Bind StoryView.SelectedItem.(wrapper:StoryItemWrapper.Owner).Username, Mode=OneWay}" 
+                       Style="{ThemeResource FluentTitleTextStyle}" MaxLines="1" 
+                       VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="1" Grid.Column="1"
+                       Text="{x:Bind StoryView.SelectedItem.(wrapper:StoryItemWrapper.TakenAtTimestamp), Converter={StaticResource RelativeTimeConverter}, Mode=OneWay}"/>
+        </Grid>
+        <FlipView x:Name="StoryView" Grid.Row="0" Grid.RowSpan="3" ItemsSource="{x:Bind Source.Items, Mode=OneWay}" 
+                  Loaded="StoryView_OnLoaded">
+            <FlipView.ItemTemplateSelector>
+                <helpers:StoryTemplateSelector ImageTemplate="{StaticResource ImageTemplate}"
+                                               VideoTemplate="{StaticResource VideoTemplate}"/>
+            </FlipView.ItemTemplateSelector>
+        </FlipView>
+    </Grid>
+</UserControl>

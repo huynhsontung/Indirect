@@ -11,13 +11,14 @@ using InstagramAPI.Classes.Story;
 
 namespace Indirect.Wrapper
 {
-    internal class ReelsWrapper
+    public class ReelsWrapper
     {
-        public readonly ObservableCollection<StoryItem> Items = new ObservableCollection<StoryItem>();
+        public readonly ObservableCollection<StoryItemWrapper> Items = new ObservableCollection<StoryItemWrapper>();
 
         private readonly Dictionary<string, Reel> _userReelsDictionary = new Dictionary<string, Reel>();
         private readonly List<string> _userOrder = new List<string>();
         private int _userIndex;
+        private Selector _selector;
 
         public ReelsWrapper(ICollection<Reel> initialReels, int selected)
         {
@@ -39,6 +40,7 @@ namespace Indirect.Wrapper
 
         public void AttachSelector(Selector view)
         {
+            _selector = view;
             view.SelectionChanged -= SelectorOnSelectionChanged;
             view.SelectionChanged += SelectorOnSelectionChanged;
             var storyIndex = 0;
@@ -51,7 +53,13 @@ namespace Indirect.Wrapper
                 }
             }
 
-            view.SelectedIndex = storyIndex;
+            if (view.SelectedIndex != storyIndex)
+                view.SelectedIndex = storyIndex;
+        }
+
+        public void DetachSelector()
+        {
+            _selector.SelectionChanged -= SelectorOnSelectionChanged;
         }
 
         private async void SelectorOnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -149,39 +157,15 @@ namespace Indirect.Wrapper
                 {
                     if (i + indexAdder >= Items.Count)
                     {
-                        Items.Add(reel.Items[i]);
+                        Items.Add(new StoryItemWrapper(reel.Items[i]));
                     }
                     else if (reel.Items[i].Id != Items[i+indexAdder].Id)
                     {
-                        Items.Insert(i+indexAdder, reel.Items[i]);
+                        Items.Insert(i+indexAdder, new StoryItemWrapper(reel.Items[i]));
                     }
                 }
 
                 indexAdder += reel.Items.Length;
-            }
-        }
-
-        private void AddStoriesForward(Reel[] reels)
-        {
-            foreach (var reel in reels)
-            {
-                foreach (var storyItem in reel.Items)
-                {
-                    Items.Add(storyItem);
-                }
-            }
-        }
-
-        private void AddStoriesBackward(Reel[] reels)
-        {
-            for (var i = reels.Length-1; i >= 0; i--)
-            {
-                var reel = reels[i];
-                for (var j = reel.Items.Length-1; j >= 0; j--)
-                {
-                    var storyItem = reel.Items[j];
-                    Items.Insert(0, storyItem);
-                }
             }
         }
     }

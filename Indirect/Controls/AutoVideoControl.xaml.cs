@@ -46,6 +46,11 @@ namespace Indirect.Controls
             typeof(object),
             typeof(AutoVideoControl),
             new PropertyMetadata(null, OnPosterSourceChanged));
+        public static readonly DependencyProperty AutoPlayDependencyProperty = DependencyProperty.Register(
+            nameof(AutoPlay),
+            typeof(bool),
+            typeof(AutoVideoControl),
+            new PropertyMetadata(true));
 
         private static async void OnPosterSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -89,42 +94,51 @@ namespace Indirect.Controls
         {
             var view = (AutoVideoControl) d;
             var element = view.VideoPlayer;
-            element.MaxHeight = view.MaxHeight;
-            element.MaxWidth = view.MaxWidth;
+            var maxHeight = view.MaxHeight;
+            var maxWidth = view.MaxWidth;
+            if (double.IsInfinity(maxWidth) && double.IsInfinity(maxHeight) && 
+                view.ActualWidth > 0 && view.ActualHeight > 0)
+            {
+                maxHeight = view.ActualHeight;
+                maxWidth = view.ActualWidth;
+            }
+
+            element.MaxHeight = maxHeight;
+            element.MaxWidth = maxWidth;
             var height = view.VideoHeight;
             var width = view.VideoWidth;
             if (height < 1 || width < 1) return;
-            if (view.MaxWidth < 1 && view.MaxHeight < 1)
+            if (maxWidth < 1 && maxHeight < 1)
             {
                 element.Width = width;
                 element.Height = height;
                 return;
             }
 
-            if (view.MaxWidth < 1)
+            if (maxWidth < 1)
             {
-                element.Width = view.MaxHeight * width / height;
+                element.Width = maxHeight * width / height;
                 return;
             }
 
-            if (view.MaxHeight < 1)
+            if (maxHeight < 1)
             {
-                element.Height = view.MaxWidth * height / width;
+                element.Height = maxWidth * height / width;
                 return;
             }
 
-            var elementMaxRatio = view.MaxHeight / view.MaxWidth;
+            var elementMaxRatio = maxHeight / maxWidth;
             var ratio = height / width;
             if (ratio <= elementMaxRatio)
             {
                 element.Width = width;
-                var actualWidth = width <= view.MaxWidth ? width : view.MaxWidth;
+                var actualWidth = width <= maxWidth ? width : maxWidth;
                 element.Height = actualWidth / width * height;
             }
             else
             {
                 element.Height = height;
-                var actualHeight = height <= view.MaxHeight ? height : view.MaxHeight;
+                var actualHeight = height <= maxHeight ? height : maxHeight;
                 element.Width = actualHeight / height * width;
             }
         }
@@ -194,13 +208,18 @@ namespace Indirect.Controls
             get => (bool) GetValue(AreTransportControlsEnabledProperty);
             set => SetValue(AreTransportControlsEnabledProperty, value);
         }
+        public bool AutoPlay
+        {
+            get => (bool)GetValue(AutoPlayDependencyProperty);
+            set => SetValue(AutoPlayDependencyProperty, value);
+        }
 
         public MediaPlayer MediaPlayer => VideoPlayer.MediaPlayer;
 
         public AutoVideoControl()
         {
             this.InitializeComponent();
-            VideoPlayer.TransportControls.Show();
+            //VideoPlayer.TransportControls.Show();
         }
 
         private void AutoVideoControl_OnEffectiveViewportChanged(FrameworkElement sender, EffectiveViewportChangedEventArgs args)
@@ -211,15 +230,28 @@ namespace Indirect.Controls
             var width = ActualWidth;
             var height = ActualHeight;
 
-            if (bringIntoViewDistanceX > width || bringIntoViewDistanceY > height)
+            if (bringIntoViewDistanceX >= width * 0.9 || bringIntoViewDistanceY >= height * 0.9)
             {
                 VideoPlayer.MediaPlayer?.Pause();
             }
+            else if (AutoPlay)
+            {
+                VideoPlayer.MediaPlayer?.Play();
+            }
         }
+
+        public void Pause() => VideoPlayer.MediaPlayer?.Pause();
+
+        public void Play() => VideoPlayer.MediaPlayer?.Play();
 
         private void VideoPlayer_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
             ((MediaPlayerElement) sender).TransportControls?.Hide();
+        }
+
+        private void AutoVideoControl_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            OnVideoSizeChanged(this, null);
         }
     }
 }

@@ -8,7 +8,6 @@
     xmlns:wrapper="using:Indirect.Wrapper"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:Indirect.Controls"
-    xmlns:story="using:InstagramAPI.Classes.Story"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
@@ -37,13 +36,7 @@
             </DataTemplate>
 
             <DataTemplate x:Key="ReelView" x:DataType="wrapper:ReelsWrapper">
-                <FlipView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ItemsSource="{x:Bind Items}" Loaded="FlipView_OnLoaded">
-                    <FlipView.ItemTemplate>
-                        <DataTemplate x:DataType="story:StoryItem">
-                            <controls:ImageEx Source="{x:Bind DisplayUrl}"/>
-                        </DataTemplate>
-                    </FlipView.ItemTemplate>
-                </FlipView>
+                <controls1:ReelsControl Source="{x:Bind Mode=OneWay}"/>
             </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>

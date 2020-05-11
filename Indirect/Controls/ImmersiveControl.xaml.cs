@@ -111,6 +111,9 @@ namespace Indirect.Controls
         {
             var videoView = MainControl.ContentTemplateRoot as AutoVideoControl;
             videoView?.MediaPlayer.Pause();
+
+            var reelView = MainControl.ContentTemplateRoot as ReelsControl;
+            reelView?.OnClose();
         }
 
         private void MainControl_OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -134,13 +137,6 @@ namespace Indirect.Controls
         {
             var scrollviewer = (ScrollViewer) sender;
             scrollviewer.ChangeView(null, null, 1, true);
-        }
-
-        private void FlipView_OnLoaded(object sender, RoutedEventArgs e)
-        {
-            var reelWrapper = (ReelsWrapper)Item;
-            if (Item == null) return;
-            reelWrapper.AttachSelector((FlipView) sender);
         }
     }
 }
