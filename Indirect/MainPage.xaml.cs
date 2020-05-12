@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
@@ -272,9 +273,14 @@ namespace Indirect
             _viewModel.NewMessageCandidates.Remove(target);
         }
 
-        private void CloseNewThreadFlyout_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        private void NewMessageSuggestBox_OnProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)
         {
-            NewThreadFlyout.Hide();
+            if (args.Key == VirtualKey.Escape && args.Modifiers == VirtualKeyModifiers.None)
+            {
+                args.Handled = true;
+                NewThreadFlyout.Hide();
+            }
+                
         }
 
         #endregion
