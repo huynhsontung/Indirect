@@ -13,6 +13,8 @@ namespace Indirect.Wrapper
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public Reel Parent { get; }
+
         private string _draftMessage;
         public string DraftMessage
         {
@@ -24,9 +26,16 @@ namespace Indirect.Wrapper
             }
         }
 
-        public StoryItemWrapper(StoryItem source)
+        public StoryItemWrapper(StoryItem source, Reel parent)
         {
             PropertyCopier<StoryItem, StoryItemWrapper>.Copy(source, this);
+            Parent = parent;
+        }
+
+        public Uri GetBestVideoResourceUri(VideoResource[] resources)
+        {
+            var main = resources.FirstOrDefault(x => x.Profile == VideoProfile.Main);
+            return main != null ? main.Src : resources.FirstOrDefault(x => x.Profile == VideoProfile.Baseline)?.Src;
         }
     }
 }

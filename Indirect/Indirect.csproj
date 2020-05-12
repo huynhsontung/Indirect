@@ -134,6 +134,7 @@
     <Compile Include="Controls\AboutDialog.xaml.cs">
       <DependentUpon>AboutDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ExtendedMasterDetailsView.cs" />
     <Compile Include="Controls\ReelsControl.xaml.cs">
       <DependentUpon>ReelsControl.xaml</DependentUpon>
     </Compile>
@@ -278,6 +279,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\AutoVideoControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ExtendedMasterDetailsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

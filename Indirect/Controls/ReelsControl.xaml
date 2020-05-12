@@ -15,14 +15,47 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <converters:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
+            <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
+
+            <DataTemplate x:Key="ReplyControlTemplate" x:DataType="wrapper:StoryItemWrapper">
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
+                            Visibility="{x:Bind Parent.CanReply, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
+                    <TextBox Text="{x:Bind DraftMessage, Mode=TwoWay}" Width="300"
+                             TextWrapping="Wrap" Background="Transparent"
+                             PlaceholderText="Type a message"
+                             Margin="4,0,4,0" MaxLength="2200" 
+                             AcceptsReturn="True"
+                             ProcessKeyboardAccelerators="MessageTextBox_OnProcessKeyboardAccelerators"/>
+                    <Button ToolTipService.ToolTip="Send" Margin="0,0,4,0" Click="SendButton_Click" VerticalAlignment="Bottom" Width="60">
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE724;"/>
+                    </Button>
+                </StackPanel>
+            </DataTemplate>
 
             <DataTemplate x:Key="VideoTemplate" x:DataType="wrapper:StoryItemWrapper">
-                <controls1:AutoVideoControl Source="{x:Bind VideoResources[1].Src}" VideoWidth="640" VideoHeight="1137"
-                                            PosterSource="{x:Bind DisplayUrl}" AutoPlay="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <controls1:AutoVideoControl Grid.Row="0"
+                                                Source="{x:Bind GetBestVideoResourceUri(VideoResources)}" VideoWidth="640" VideoHeight="1137"
+                                                PosterSource="{x:Bind DisplayUrl}" AutoPlay="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    <ContentPresenter Grid.Row="1" ContentTemplate="{StaticResource ReplyControlTemplate}" Content="{x:Bind}" HorizontalAlignment="Center"/>
+                </Grid>
             </DataTemplate>
 
             <DataTemplate x:Key="ImageTemplate" x:DataType="wrapper:StoryItemWrapper">
-                <controls:ImageEx Source="{x:Bind DisplayUrl}"/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <controls:ImageEx Grid.Row="0" Source="{x:Bind DisplayUrl}"/>
+                    <ContentPresenter Grid.Row="1" ContentTemplate="{StaticResource ReplyControlTemplate}" Content="{x:Bind}" HorizontalAlignment="Center"/>
+                </Grid>
             </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -31,7 +64,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Canvas.ZIndex="1" Background="Transparent" Margin="44,0,0,0">
             <Grid.RowDefinitions>
@@ -53,7 +85,7 @@
             <TextBlock Grid.Row="1" Grid.Column="1"
                        Text="{x:Bind StoryView.SelectedItem.(wrapper:StoryItemWrapper.TakenAtTimestamp), Converter={StaticResource RelativeTimeConverter}, Mode=OneWay}"/>
         </Grid>
-        <FlipView x:Name="StoryView" Grid.Row="0" Grid.RowSpan="3" ItemsSource="{x:Bind Source.Items, Mode=OneWay}" 
+        <FlipView x:Name="StoryView" Grid.Row="0" Grid.RowSpan="2" ItemsSource="{x:Bind Source.Items, Mode=OneWay}" 
                   Loaded="StoryView_OnLoaded">
             <FlipView.ItemTemplateSelector>
                 <helpers:StoryTemplateSelector ImageTemplate="{StaticResource ImageTemplate}"

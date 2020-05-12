@@ -11,6 +11,6 @@
     EffectiveViewportChanged="AutoVideoControl_OnEffectiveViewportChanged"
     SizeChanged="AutoVideoControl_OnSizeChanged">
 
-    <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True"
+    <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" AutoPlay="False"
                         MaxWidth="{x:Bind MaxWidth}" MaxHeight="{x:Bind MaxHeight}"/>
 </UserControl>

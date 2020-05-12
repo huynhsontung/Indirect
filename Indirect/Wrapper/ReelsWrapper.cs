@@ -157,11 +157,11 @@ namespace Indirect.Wrapper
                 {
                     if (i + indexAdder >= Items.Count)
                     {
-                        Items.Add(new StoryItemWrapper(reel.Items[i]));
+                        Items.Add(new StoryItemWrapper(reel.Items[i], reel));
                     }
                     else if (reel.Items[i].Id != Items[i+indexAdder].Id)
                     {
-                        Items.Insert(i+indexAdder, new StoryItemWrapper(reel.Items[i]));
+                        Items.Insert(i+indexAdder, new StoryItemWrapper(reel.Items[i], reel));
                     }
                 }
 

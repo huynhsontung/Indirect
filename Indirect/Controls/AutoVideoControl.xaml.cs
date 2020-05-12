@@ -46,13 +46,13 @@ namespace Indirect.Controls
             typeof(object),
             typeof(AutoVideoControl),
             new PropertyMetadata(null, OnPosterSourceChanged));
-        public static readonly DependencyProperty AutoPlayDependencyProperty = DependencyProperty.Register(
+        public static readonly DependencyProperty AutoPlayProperty = DependencyProperty.Register(
             nameof(AutoPlay),
             typeof(bool),
             typeof(AutoVideoControl),
-            new PropertyMetadata(true));
+            new PropertyMetadata(false));
 
-        private static async void OnPosterSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnPosterSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (AutoVideoControl) d;
             var source = e.NewValue;
@@ -70,17 +70,8 @@ namespace Indirect.Controls
                 var url = source as string ?? source.ToString();
                 if (!Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) return;
             }
-
-            if (Helpers.IsHttpUri(uri))
-            {
-                imageSource = await ImageCache.Instance.GetFromCacheAsync(uri);
-            }
-            else
-            {
-                imageSource = new BitmapImage(uri);
-            }
-
-            view.VideoPlayer.PosterSource = imageSource;
+            
+            view.VideoPlayer.PosterSource = new BitmapImage(uri);
         }
 
         private static void AreTransportControlsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -210,8 +201,8 @@ namespace Indirect.Controls
         }
         public bool AutoPlay
         {
-            get => (bool)GetValue(AutoPlayDependencyProperty);
-            set => SetValue(AutoPlayDependencyProperty, value);
+            get => (bool)GetValue(AutoPlayProperty);
+            set => SetValue(AutoPlayProperty, value);
         }
 
         public MediaPlayer MediaPlayer => VideoPlayer.MediaPlayer;

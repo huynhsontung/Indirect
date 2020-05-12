@@ -304,5 +304,10 @@ namespace Indirect
             OpenImmersiveView(reelsWrapper);
             reelsFeed.SelectedIndex = -1;
         }
+
+        public Visibility VisibleWhenNotZero(int number)
+        {
+            return number != 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 }
