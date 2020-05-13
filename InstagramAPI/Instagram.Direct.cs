@@ -458,6 +458,41 @@ namespace InstagramAPI
             }
         }
 
+        public async Task<Result<ItemAckPayloadResponse>> SendReelShareAsync(string reelId, string mediaId, string threadId,
+            string text)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var uri = UriCreator.GetDirectReelShareUri();
+                var clientContext = Guid.NewGuid().ToString();
+                var data = new Dictionary<string, string>
+                {
+                    {"action", "send_item"},
+                    {"client_context", clientContext},
+                    {"reel_id", reelId},
+                    {"media_id", mediaId},
+                    {"thread_id", threadId},
+                    {"text", text},
+                };
+                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                _logger?.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<ItemAckPayloadResponse>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
+                return obj.IsOk()
+                    ? Result<ItemAckPayloadResponse>.Success(obj.Payload, json, obj.Message)
+                    : Result<ItemAckPayloadResponse>.Fail(json, obj.Message);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result<ItemAckPayloadResponse>.Except(exception);
+            }
+        }
+
         /// <summary>
         ///     Mark direct message as seen
         /// </summary>

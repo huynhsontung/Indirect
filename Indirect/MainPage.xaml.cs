@@ -306,7 +306,7 @@ namespace Indirect
         {
             var reelsFeed = (ListView) sender;
             if (reelsFeed.SelectedIndex == -1) return;
-            var reelsWrapper = await _viewModel.PrepareReelsWrapper(reelsFeed.SelectedIndex);
+            var reelsWrapper = await _viewModel.ReelsFeed.PrepareReelsWrapper(reelsFeed.SelectedIndex);
             OpenImmersiveView(reelsWrapper);
             reelsFeed.SelectedIndex = -1;
         }
@@ -314,6 +314,11 @@ namespace Indirect
         public Visibility VisibleWhenNotZero(int number)
         {
             return number != 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private async void StoriesSectionTitle_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            await _viewModel.ReelsFeed.UpdateReelsFeed();
         }
     }
 }

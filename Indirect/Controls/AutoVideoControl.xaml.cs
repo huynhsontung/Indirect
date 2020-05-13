@@ -51,6 +51,11 @@ namespace Indirect.Controls
             typeof(bool),
             typeof(AutoVideoControl),
             new PropertyMetadata(false));
+        public static readonly DependencyProperty AutoStopProperty = DependencyProperty.Register(
+            nameof(AutoStop),
+            typeof(bool),
+            typeof(AutoVideoControl),
+            new PropertyMetadata(true));
 
         private static void OnPosterSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -204,6 +209,11 @@ namespace Indirect.Controls
             get => (bool)GetValue(AutoPlayProperty);
             set => SetValue(AutoPlayProperty, value);
         }
+        public bool AutoStop
+        {
+            get => (bool) GetValue(AutoStopProperty);
+            set => SetValue(AutoStopProperty, value);
+        }
 
         public MediaPlayer MediaPlayer => VideoPlayer.MediaPlayer;
 
@@ -223,7 +233,7 @@ namespace Indirect.Controls
 
             if (bringIntoViewDistanceX >= width * 0.9 || bringIntoViewDistanceY >= height * 0.9)
             {
-                VideoPlayer.MediaPlayer?.Pause();
+                if (AutoStop) VideoPlayer.MediaPlayer?.Pause();
             }
             else if (AutoPlay)
             {

@@ -58,15 +58,10 @@ namespace Indirect
         public SyncClient SyncClient => _instaApi.SyncClient;
 
         public Dictionary<long, bool> UserPresenceDictionary { get; } = new Dictionary<long, bool>();
-
-        public InstaDirectInboxWrapper PendingInbox { get; }
-
-        public InstaDirectInboxWrapper Inbox { get; }
-
+        public InstaDirectInboxWrapper PendingInbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance, true);
+        public InstaDirectInboxWrapper Inbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance);
         public CurrentUser LoggedInUser { get; private set; }
-
         public ObservableCollection<InstaUser> NewMessageCandidates { get; } = new ObservableCollection<InstaUser>();
-
         public InstaDirectInboxThreadWrapper SelectedThread
         {
             get => _selectedThread;
@@ -79,6 +74,7 @@ namespace Indirect
 
         public AndroidDevice Device => _instaApi?.Device;
         public bool IsUserAuthenticated => _instaApi.IsUserAuthenticated;
+        public ReelsFeed ReelsFeed { get; } = new ReelsFeed();
 
         private ApiContainer()
         {
@@ -92,9 +88,7 @@ namespace Indirect
 #endif
                 await HandleException();
             };
-            Inbox = new InstaDirectInboxWrapper(_instaApi);
             Inbox.FirstUpdated += async (seqId, snapshotAt) => await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
-            PendingInbox = new InstaDirectInboxWrapper(_instaApi, true);
             PushClient.MessageReceived += (sender, args) =>
             {
                 Debug.Write("Background notification: ");
@@ -108,8 +102,8 @@ namespace Indirect
             await UpdateLoggedInUser();
             GetUserPresence();
             PushClient.Start();
-            await UpdateReelsFeed();
-            StartReelsFeedUpdateLoop();
+            await ReelsFeed.UpdateReelsFeed();
+            ReelsFeed.StartReelsFeedUpdateLoop();
         }
 
         public void SetSelectedThreadNull()

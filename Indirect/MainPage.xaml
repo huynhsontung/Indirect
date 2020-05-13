@@ -110,16 +110,16 @@
                                     CompactModeThresholdWidth="700">
 
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
-                <Grid Visibility="{x:Bind VisibleWhenNotZero(_viewModel.ReelsFeed.Count), Mode=OneWay}">
+                <Grid Visibility="{x:Bind VisibleWhenNotZero(_viewModel.ReelsFeed.Reels.Count), Mode=OneWay}" Margin="0,0,0,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="Stories" Style="{ThemeResource FluentTitleTextStyle}" FontSize="14" Margin="16,4,0,4"/>
+                    <TextBlock Grid.Row="0" Text="Stories" Style="{ThemeResource FluentTitleTextStyle}" FontSize="14" Margin="16,4,0,4" Tapped="StoriesSectionTitle_OnTapped"/>
 
-                    <ListView Grid.Row="1" ItemsSource="{x:Bind _viewModel.ReelsFeed}" Canvas.ZIndex="1" VerticalAlignment="Stretch"
+                    <ListView Grid.Row="1" ItemsSource="{x:Bind _viewModel.ReelsFeed.Reels}" Canvas.ZIndex="1" VerticalAlignment="Stretch"
                               ScrollViewer.HorizontalScrollMode="Enabled" 
-                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                              ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                               ScrollViewer.VerticalScrollMode="Disabled"
                               ScrollViewer.VerticalScrollBarVisibility="Hidden"
                               SelectionChanged="ReelsFeed_OnSelectionChanged">
@@ -132,16 +132,16 @@
                         </ListView.ItemContainerStyle>
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <ItemsStackPanel Orientation="Horizontal" Margin="0"></ItemsStackPanel>
+                                <ItemsStackPanel Orientation="Horizontal" Margin="0" GroupPadding="0"></ItemsStackPanel>
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="story:Reel">
-                                <StackPanel Orientation="Vertical" Width="52" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,8">
+                                <StackPanel Orientation="Vertical" Width="50" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,8">
                                     <controls:ImageEx Source="{x:Bind Owner.ProfilePicUrl}" 
                                                           Width="46" Height="46" CornerRadius="99"
                                                           HorizontalAlignment="Center"/>
-                                    <TextBlock Text="{x:Bind Owner.Username}" HorizontalAlignment="Center" MaxWidth="50"/>
+                                    <TextBlock Text="{x:Bind Owner.Username}" Style="{ThemeResource FluentCaptionTextStyle}" MaxWidth="50"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>

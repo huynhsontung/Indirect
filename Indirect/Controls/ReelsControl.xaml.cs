@@ -1,21 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+﻿using System.Linq;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 using Indirect.Wrapper;
-using InstagramAPI.Classes.Story;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
@@ -56,9 +44,13 @@ namespace Indirect.Controls
             autoVideo?.Pause();
         }
 
-        private void SendButton_Click(object sender, RoutedEventArgs e)
+        private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            var story = (StoryItemWrapper) StoryView.SelectedItem;
+            var message = story?.DraftMessage;
+            if (string.IsNullOrEmpty(message)) return;
+            story.DraftMessage = string.Empty;
+            await ApiContainer.Instance.ReelsFeed.ReplyToStory(story, message);
         }
 
         private void MessageTextBox_OnProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)
@@ -70,6 +62,22 @@ namespace Indirect.Controls
                 if (!string.IsNullOrEmpty(messageTextBox.Text))
                     SendButton_Click(sender, null);
             }
+        }
+
+        private void StoryView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var storyView = (FlipView)sender;
+            var previous = e.RemovedItems.FirstOrDefault();
+            var selected = e.AddedItems.FirstOrDefault();
+            var flipViewItem = storyView.ContainerFromItem(previous) as FlipViewItem;
+            var element = flipViewItem?.ContentTemplateRoot as FrameworkElement;
+            var autoVideo = element?.FindDescendant<AutoVideoControl>();
+            autoVideo?.Pause();
+
+            //flipViewItem = storyView.ContainerFromItem(selected) as FlipViewItem;
+            //element = flipViewItem?.ContentTemplateRoot as FrameworkElement;
+            //autoVideo = element?.FindDescendant<AutoVideoControl>();
+            //autoVideo?.Play();
         }
     }
 }

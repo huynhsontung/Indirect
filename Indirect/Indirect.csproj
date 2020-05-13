@@ -129,7 +129,6 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ApiContainer.Reels.cs" />
     <Compile Include="ApiContainer.Send.cs" />
     <Compile Include="Controls\AboutDialog.xaml.cs">
       <DependentUpon>AboutDialog.xaml</DependentUpon>
@@ -197,6 +196,7 @@
     <Compile Include="Wrapper\InstaDirectInboxThreadWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectInboxWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectReactionsWrapper.cs" />
+    <Compile Include="Wrapper\ReelsFeed.cs" />
     <Compile Include="Wrapper\ReelsWrapper.cs" />
     <Compile Include="Wrapper\StoryItemWrapper.cs" />
   </ItemGroup>
