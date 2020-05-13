@@ -120,7 +120,7 @@ namespace InstagramAPI
 
         public static Uri GetDirectReelShareUri()
         {
-            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/web/threads/broadcast/reel_share/", out var instaUri))
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/threads/broadcast/reel_share/", out var instaUri))
                 throw new Exception("Can't create URI for sending reel share");
             return instaUri; 
         }
