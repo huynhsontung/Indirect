@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
@@ -57,10 +58,10 @@ namespace Indirect
             MediaPopup.Height = e.Size.Height - 32;
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            _viewModel.OnLoggedIn();
+            await _viewModel.OnLoggedIn();
         }
 
         private async void LogoutButton_Click(object sender, RoutedEventArgs e)
@@ -272,9 +273,14 @@ namespace Indirect
             _viewModel.NewMessageCandidates.Remove(target);
         }
 
-        private void CloseNewThreadFlyout_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        private void NewMessageSuggestBox_OnProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)
         {
-            NewThreadFlyout.Hide();
+            if (args.Key == VirtualKey.Escape && args.Modifiers == VirtualKeyModifiers.None)
+            {
+                args.Handled = true;
+                NewThreadFlyout.Hide();
+            }
+                
         }
 
         #endregion
@@ -290,10 +296,29 @@ namespace Indirect
             ImmersiveControl.OnClose();
         }
 
-        internal void OpenImmersiveView(InstaDirectInboxItemWrapper item)
+        internal void OpenImmersiveView(object item)
         {
             MediaPopup.IsOpen = true;
             ImmersiveControl.Item = item;
+        }
+
+        private async void ReelsFeed_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var reelsFeed = (ListView) sender;
+            if (reelsFeed.SelectedIndex == -1) return;
+            var reelsWrapper = await _viewModel.ReelsFeed.PrepareReelsWrapper(reelsFeed.SelectedIndex);
+            OpenImmersiveView(reelsWrapper);
+            reelsFeed.SelectedIndex = -1;
+        }
+
+        public Visibility VisibleWhenNotZero(int number)
+        {
+            return number != 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private async void StoriesSectionTitle_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            await _viewModel.ReelsFeed.UpdateReelsFeed();
         }
     }
 }

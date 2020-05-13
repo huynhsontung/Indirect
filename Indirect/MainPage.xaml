@@ -10,12 +10,17 @@
     xmlns:converters="using:Indirect.Converters"
     xmlns:wrapper="using:Indirect.Wrapper"
     xmlns:users="using:InstagramAPI.Classes.User" 
-    xmlns:controls1="using:Indirect.Controls"
+    xmlns:controls1="using:Indirect.Controls" 
+    xmlns:story="using:InstagramAPI.Classes.Story"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Controls/MasterDetailsViewStyle.xaml"/>
+                <ResourceDictionary Source="Controls/ExtendedMasterDetailsView.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="MainBackground" Color="#1a1a1a"></SolidColorBrush>
@@ -51,13 +56,13 @@
             <Grid Background="{ThemeResource SystemControlAcrylicElementBrush}" 
                   Width="{x:Bind MediaPopup.Width, Mode=OneWay}" 
                   Height="{x:Bind MediaPopup.Height, Mode=OneWay}">
-                <controls1:ImmersiveControl x:Name="ImmersiveControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                <Button Style="{x:Null}" Click="CloseMediaPopup_OnClick" VerticalAlignment="Top" HorizontalAlignment="Left">
+                <Button Style="{x:Null}" Click="CloseMediaPopup_OnClick" VerticalAlignment="Top" HorizontalAlignment="Left" Canvas.ZIndex="1">
                     <Button.KeyboardAccelerators>
                         <KeyboardAccelerator Key="Escape"/>
                     </Button.KeyboardAccelerators>
                     <SymbolIcon Symbol="Cancel"/>
                 </Button>
+                <controls1:ImmersiveControl x:Name="ImmersiveControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
             </Grid>
         </Popup>
 
@@ -91,7 +96,7 @@
                 Click="DetailsBackButton_OnClick" Visibility="Collapsed">
         </Button>
 
-        <controls:MasterDetailsView x:Name="MainLayout"
+        <controls1:ExtendedMasterDetailsView x:Name="MainLayout"
                                     Background="{ThemeResource MainBackground}"
                                     Grid.Row="0"
                                     Grid.RowSpan="2"
@@ -99,17 +104,59 @@
                                     ItemsSource="{x:Bind Inbox.Threads, Mode=OneWay}"
                                     SelectedItem="{x:Bind _viewModel.SelectedThread, Mode=TwoWay}"
                                     BorderBrush="Transparent"
+                                    BorderThickness="0"
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
                                     SelectionChanged="MainLayout_OnSelectionChanged"
                                     CompactModeThresholdWidth="700">
-            <controls:MasterDetailsView.NoSelectionContent>
-                <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+            <controls1:ExtendedMasterDetailsView.MasterListHeader>
+                <Grid Visibility="{x:Bind VisibleWhenNotZero(_viewModel.ReelsFeed.Reels.Count), Mode=OneWay}" Margin="0,0,0,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Stories" Style="{ThemeResource FluentTitleTextStyle}" FontSize="14" Margin="16,4,0,4" Tapped="StoriesSectionTitle_OnTapped"/>
+
+                    <ListView Grid.Row="1" ItemsSource="{x:Bind _viewModel.ReelsFeed.Reels}" Canvas.ZIndex="1" VerticalAlignment="Stretch"
+                              ScrollViewer.HorizontalScrollMode="Enabled" 
+                              ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                              ScrollViewer.VerticalScrollMode="Disabled"
+                              ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                              SelectionChanged="ReelsFeed_OnSelectionChanged">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="MinHeight" Value="0"/>
+                                <Setter Property="MinWidth" Value="0"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsStackPanel Orientation="Horizontal" Margin="0" GroupPadding="0"></ItemsStackPanel>
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="story:Reel">
+                                <StackPanel Orientation="Vertical" Width="50" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,8">
+                                    <controls:ImageEx Source="{x:Bind Owner.ProfilePicUrl}" 
+                                                          Width="46" Height="46" CornerRadius="99"
+                                                          HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{x:Bind Owner.Username}" Style="{ThemeResource FluentCaptionTextStyle}" MaxWidth="50"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </controls1:ExtendedMasterDetailsView.MasterListHeader>
+
+            <controls1:ExtendedMasterDetailsView.NoSelectionContent>
+                <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Image Source="Assets/NoSelectionGraphic.png" Width="160" Height="160" Opacity="0.8"/>
                     <TextBlock Text="Select a thread to start chatting" Margin="0,24,0,0"/>
                 </StackPanel>
-            </controls:MasterDetailsView.NoSelectionContent>
+            </controls1:ExtendedMasterDetailsView.NoSelectionContent>
 
-            <controls:MasterDetailsView.ItemTemplate>
+            <controls1:ExtendedMasterDetailsView.ItemTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <StackPanel Orientation="Horizontal">
                         <controls1:ProfilePicture Source="{x:Bind Users}" Height="48" Width="48" Margin="4,8,16,8"/>
@@ -122,15 +169,15 @@
                     </StackPanel>
                     
                 </DataTemplate>
-            </controls:MasterDetailsView.ItemTemplate>
+            </controls1:ExtendedMasterDetailsView.ItemTemplate>
 
-            <controls:MasterDetailsView.DetailsTemplate>
+            <controls1:ExtendedMasterDetailsView.DetailsTemplate>
                 <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
                     <controls1:ThreadDetailsView Thread="{x:Bind}"/>
                 </DataTemplate>
-            </controls:MasterDetailsView.DetailsTemplate>
+            </controls1:ExtendedMasterDetailsView.DetailsTemplate>
 
-            <controls:MasterDetailsView.MasterHeader>
+            <controls1:ExtendedMasterDetailsView.MasterHeader>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="32"/>
@@ -177,9 +224,6 @@
                         <Button.Flyout>
                             <Flyout x:Name="NewThreadFlyout" Placement="RightEdgeAlignedTop">
                                 <Grid Width="240">
-                                    <Grid.KeyboardAccelerators>
-                                        <KeyboardAccelerator Key="Escape" Invoked="CloseNewThreadFlyout_OnInvoked"/>
-                                    </Grid.KeyboardAccelerators>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
@@ -198,10 +242,8 @@
                                                     PlaceholderText="Search"
                                                     UpdateTextOnSelect="False"
                                                     QueryIcon="Find"
+                                                    ProcessKeyboardAccelerators="NewMessageSuggestBox_OnProcessKeyboardAccelerators"
                                                     IsEnabled="{x:Bind _viewModel.NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqual32}, Mode=OneWay}">
-                                        <AutoSuggestBox.KeyboardAccelerators>
-                                            <KeyboardAccelerator Key="Escape" Invoked="CloseNewThreadFlyout_OnInvoked"/>
-                                        </AutoSuggestBox.KeyboardAccelerators>
                                         <AutoSuggestBox.ItemTemplate>
                                             <DataTemplate x:DataType="users:InstaUser">
                                                 <StackPanel Orientation="Horizontal">
@@ -287,7 +329,7 @@
 
                     
                 </Grid>
-            </controls:MasterDetailsView.MasterHeader>
-        </controls:MasterDetailsView>
+            </controls1:ExtendedMasterDetailsView.MasterHeader>
+        </controls1:ExtendedMasterDetailsView>
     </Grid>
 </Page>

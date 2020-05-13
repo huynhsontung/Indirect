@@ -12,7 +12,7 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace Indirect.Utilities
 {
-    internal class Helpers
+    public static class Helpers
     {
         public static Uri GetUri(string url) => new Uri(url);
 

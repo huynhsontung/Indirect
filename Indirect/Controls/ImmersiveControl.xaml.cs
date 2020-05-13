@@ -1,5 +1,6 @@
 ﻿using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Indirect.Wrapper;
 using InstagramAPI.Classes.Direct;
@@ -15,20 +16,26 @@ namespace Indirect.Controls
     {
         public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
             nameof(Item),
-            typeof(InstaDirectInboxItemWrapper),
+            typeof(object),
             typeof(ImmersiveControl),
             new PropertyMetadata(null, OnItemChanged));
 
-        public InstaDirectInboxItemWrapper Item
+        public object Item
         {
-            get => (InstaDirectInboxItemWrapper)GetValue(ItemProperty);
+            get => GetValue(ItemProperty);
             set => SetValue(ItemProperty, value);
         }
 
         private static void OnItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ImmersiveControl)d;
-            var item = (InstaDirectInboxItemWrapper)e.NewValue;
+
+            if (e.NewValue is ReelsWrapper reel && e.NewValue != null)
+            {
+                view.PrepareReelView();
+            }
+
+            var item = e.NewValue as InstaDirectInboxItemWrapper;
             if (item == null) return;
             switch (item.ItemType)
             {
@@ -77,18 +84,26 @@ namespace Indirect.Controls
             MainControl.ContentTemplate = (DataTemplate)Resources["VideoView"];
         }
 
+        private void PrepareReelView()
+        {
+            MainControl.ContentTemplate = (DataTemplate)Resources["ReelView"];
+        }
+
         private void ScrollViewer_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             var scrollviewer = (ScrollViewer)sender;
             var imageView = scrollviewer.Content as ImageEx;
             if (imageView == null) return;
-            if (Item.FullImageHeight > scrollviewer.ViewportHeight)
+            if (Item is InstaDirectInboxItemWrapper item && Item != null)
             {
-                imageView.MaxHeight = scrollviewer.ViewportHeight;
-            }
-            if (Item.FullImageWidth > scrollviewer.ViewportWidth)
-            {
-                imageView.MaxWidth = scrollviewer.ViewportWidth;
+                if (item.FullImageHeight > scrollviewer.ViewportHeight)
+                {
+                    imageView.MaxHeight = scrollviewer.ViewportHeight;
+                }
+                if (item.FullImageWidth > scrollviewer.ViewportWidth)
+                {
+                    imageView.MaxWidth = scrollviewer.ViewportWidth;
+                }
             }
         }
 
@@ -96,6 +111,9 @@ namespace Indirect.Controls
         {
             var videoView = MainControl.ContentTemplateRoot as AutoVideoControl;
             videoView?.MediaPlayer.Pause();
+
+            var reelView = MainControl.ContentTemplateRoot as ReelsControl;
+            reelView?.OnClose();
         }
 
         private void MainControl_OnSizeChanged(object sender, SizeChangedEventArgs e)

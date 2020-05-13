@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace InstagramAPI.Classes.Story
 {
-    public class StoryItem
+    public class StoryItem : IEquatable<StoryItem>
     {
         [JsonProperty("__typename")]
         [JsonConverter(typeof(StringEnumConverter))]
@@ -45,10 +46,12 @@ namespace InstagramAPI.Classes.Story
         public object FactCheckInformation { get; set; }
 
         [JsonProperty("taken_at_timestamp")]
-        public long TakenAtTimestamp { get; set; }
+        [JsonConverter(typeof(TimestampConverter))]
+        public DateTimeOffset TakenAtTimestamp { get; set; }
 
         [JsonProperty("expiring_at_timestamp")]
-        public long ExpiringAtTimestamp { get; set; }
+        [JsonConverter(typeof(TimestampConverter))]
+        public DateTimeOffset ExpiringAtTimestamp { get; set; }
 
         [JsonProperty("story_cta_url")]
         public Uri StoryCtaUrl { get; set; }
@@ -82,6 +85,11 @@ namespace InstagramAPI.Classes.Story
 
         [JsonProperty("video_resources", NullValueHandling = NullValueHandling.Ignore)]
         public VideoResource[] VideoResources { get; set; }
+
+        public bool Equals(StoryItem other)
+        {
+            return Id == other?.Id && !string.IsNullOrEmpty(Id);
+        }
     }
 
     public enum StoryItemType
