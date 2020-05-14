@@ -24,8 +24,11 @@
                              TextWrapping="Wrap" Background="Transparent"
                              PlaceholderText="Type a message"
                              Margin="4,0,4,0" MaxLength="2200" 
-                             AcceptsReturn="True"
-                             ProcessKeyboardAccelerators="MessageTextBox_OnProcessKeyboardAccelerators"/>
+                             AcceptsReturn="True">
+                        <TextBox.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="Enter" Invoked="MessageTextBox_OnKeyboardInvoked"/>
+                        </TextBox.KeyboardAccelerators>
+                    </TextBox>
                     <Button ToolTipService.ToolTip="Send" Margin="0,0,4,0" Click="SendButton_Click" VerticalAlignment="Bottom" Width="60">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE724;"/>
                     </Button>
@@ -82,7 +85,7 @@
                        Text="{x:Bind StoryView.SelectedItem.(wrapper:StoryItemWrapper.Owner).Username, Mode=OneWay}" 
                        Style="{ThemeResource FluentTitleTextStyle}" MaxLines="1" 
                        VerticalAlignment="Center"/>
-            <TextBlock Grid.Row="1" Grid.Column="1"
+            <TextBlock Grid.Row="1" Grid.Column="1" Style="{ThemeResource FluentCaptionTextStyle}"
                        Text="{x:Bind StoryView.SelectedItem.(wrapper:StoryItemWrapper.TakenAtTimestamp), Converter={StaticResource RelativeTimeConverter}, Mode=OneWay}"/>
         </Grid>
         <FlipView x:Name="StoryView" Grid.Row="0" Grid.RowSpan="2" ItemsSource="{x:Bind Source.Items, Mode=OneWay}" 

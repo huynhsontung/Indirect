@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -47,21 +48,12 @@ namespace Indirect.Controls
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
             var story = (StoryItemWrapper) StoryView.SelectedItem;
-            var message = story?.DraftMessage;
-            if (string.IsNullOrEmpty(message)) return;
-            story.DraftMessage = string.Empty;
+            var container = StoryView.ContainerFromItem(story) as FlipViewItem;
+            var textBox = container.FindDescendant<TextBox>();
+            if (string.IsNullOrEmpty(textBox?.Text)) return;
+            var message = textBox.Text;
+            textBox.Text = string.Empty;
             await ApiContainer.Instance.ReelsFeed.ReplyToStory(story, message);
-        }
-
-        private void MessageTextBox_OnProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)
-        {
-            var messageTextBox = (TextBox) sender;
-            if (args.Key == VirtualKey.Enter && args.Modifiers == VirtualKeyModifiers.None)
-            {
-                args.Handled = true;
-                if (!string.IsNullOrEmpty(messageTextBox.Text))
-                    SendButton_Click(sender, null);
-            }
         }
 
         private void StoryView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -78,6 +70,12 @@ namespace Indirect.Controls
             //element = flipViewItem?.ContentTemplateRoot as FrameworkElement;
             //autoVideo = element?.FindDescendant<AutoVideoControl>();
             //autoVideo?.Play();
+        }
+
+        private void MessageTextBox_OnKeyboardInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            args.Handled = true;
+            SendButton_Click(sender, null);
         }
     }
 }
