@@ -107,12 +107,7 @@
                                     BorderThickness="0"
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
                                     SelectionChanged="MainLayout_OnSelectionChanged"
-                                    CompactModeThresholdWidth="700"
-                                    Loaded="MainLayout_OnLoaded">
-            <controls1:ExtendedMasterDetailsView.Resources>
-                <ThemeShadow x:Name="MainShadow"/>
-            </controls1:ExtendedMasterDetailsView.Resources>
-
+                                    CompactModeThresholdWidth="700">
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
                 <Grid Visibility="{x:Bind VisibleWhenNotZero(_viewModel.ReelsFeed.Reels.Count), Mode=OneWay}" Margin="0,0,0,8">
                     <Grid.RowDefinitions>

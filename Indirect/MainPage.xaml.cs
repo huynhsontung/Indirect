@@ -321,15 +321,5 @@ namespace Indirect
         {
             await _viewModel.ReelsFeed.UpdateReelsFeed();
         }
-
-        private void MainLayout_OnLoaded(object sender, RoutedEventArgs e)
-        {
-            var element = (FrameworkElement) sender;
-            var master = (Grid) element.FindDescendantByName("MasterPanel");
-            var details = (Grid) element.FindDescendantByName("DetailsPanel");
-            details.Shadow = MainShadow;
-            MainShadow.Receivers.Add(master);
-            details.Translation += new Vector3(0,0,16);
-        }
     }
 }

@@ -15,6 +15,9 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}">
                         <Grid x:Name="RootPanel">
+                            <Grid.Resources>
+                                <ThemeShadow x:Name="MainShadow"/>
+                            </Grid.Resources>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition x:Name="MasterColumn"
                                                   Width="Auto" />
@@ -50,7 +53,7 @@
                                           HeaderTemplate="{TemplateBinding MasterListHeaderTemplate}"/>
                                 <Grid x:Name="MasterCommandBarPanel" Grid.Row="2"></Grid>
                             </Grid>
-                            <Grid x:Name="DetailsPanel"
+                            <Grid x:Name="DetailsPanel" Shadow="{StaticResource MainShadow}"
                                   Grid.Column="1">
                                 <ContentPresenter x:Name="NoSelectionPresenter"
                                                   Content="{TemplateBinding NoSelectionContent}"
