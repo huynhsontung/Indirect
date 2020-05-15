@@ -43,6 +43,7 @@
             
             <converters:EqualityConverter x:Key="DisableWhenEqualZero" ReferenceValue="0" Invert="True"/>
             <converters:EqualityConverter x:Key="DisableWhenEqual32" ReferenceValue="32" Invert="True"/>
+            <converters:VisibleWhenZeroConverter x:Key="VisibleWhenNotZeroConverter" Invert="True"/>
         </ResourceDictionary>
     </Page.Resources>
 
@@ -109,7 +110,7 @@
                                     SelectionChanged="MainLayout_OnSelectionChanged"
                                     CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}">
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
-                <Grid x:Name="ReelsFeed" Visibility="{x:Bind VisibleWhenNotZero(_viewModel.ReelsFeed.Reels.Count), Mode=OneWay}" Margin="0,0,0,8">
+                <Grid x:Name="ReelsFeed" Visibility="{x:Bind _viewModel.ReelsFeed.Reels.Count, Converter={StaticResource VisibleWhenNotZeroConverter}, Mode=OneWay}" Margin="0,0,0,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -346,7 +347,8 @@
                     </VisualState.StateTriggers>
 
                     <VisualState.Setters>
-                        <Setter Target="NewMessageButton.Content.Width" Value="56"/>
+                        <Setter Target="NewMessageButton.Width" Value="56"/>
+                        <Setter Target="NewMessageButton.Margin" Value="0,0,0,4"/>
                         <Setter Target="MainLayout.MasterPaneWidth" Value="80"/>
                         <Setter Target="MasterHeading.Visibility" Value="Collapsed"/>
                         <Setter Target="MasterMenuButton.Visibility" Value="Collapsed"/>

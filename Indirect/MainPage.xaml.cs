@@ -312,11 +312,6 @@ namespace Indirect
             reelsFeed.SelectedIndex = -1;
         }
 
-        public Visibility VisibleWhenNotZero(int number)
-        {
-            return number != 0 ? Visibility.Visible : Visibility.Collapsed;
-        }
-
         private async void StoriesSectionTitle_OnTapped(object sender, TappedRoutedEventArgs e)
         {
             await _viewModel.ReelsFeed.UpdateReelsFeed();
