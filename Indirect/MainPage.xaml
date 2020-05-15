@@ -107,9 +107,9 @@
                                     BorderThickness="0"
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
                                     SelectionChanged="MainLayout_OnSelectionChanged"
-                                    CompactModeThresholdWidth="700">
+                                    CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}">
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
-                <Grid Visibility="{x:Bind VisibleWhenNotZero(_viewModel.ReelsFeed.Reels.Count), Mode=OneWay}" Margin="0,0,0,8">
+                <Grid x:Name="ReelsFeed" Visibility="{x:Bind VisibleWhenNotZero(_viewModel.ReelsFeed.Reels.Count), Mode=OneWay}" Margin="0,0,0,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -189,7 +189,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Button Grid.Row="1" Grid.Column="0" Padding="6"
+                    <Button x:Name="MasterMenuButton" Grid.Row="1" Grid.Column="0" Padding="6"
                             Margin="0,0,6,0" VerticalAlignment="Center" Background="Transparent">
                         <controls:ImageEx Source="{x:Bind _viewModel.LoggedInUser.ProfilePictureUrl, Mode=OneWay}" 
                                           Style="{ThemeResource ProfilePicturePlaceholderStyle}"
@@ -211,10 +211,10 @@
                             </MenuFlyout>
                         </Button.Flyout>
                     </Button>
-                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,-3,0,0"
+                    <TextBlock x:Name="MasterHeading" Grid.Row="1" Grid.Column="1" Margin="0,-3,0,0"
                                Style="{ThemeResource FluentHeaderTextStyle}" Text="Direct" MaxLines="1" FontSize="30"
                                VerticalAlignment="Center"/>
-                    <Button Grid.Row="1" Grid.Column="2"
+                    <Button x:Name="NewMessageButton" Grid.Row="1" Grid.Column="2"
                             Background="Transparent"
                             Padding="6"
                             VerticalAlignment="Center"
@@ -329,6 +329,38 @@
                     
                 </Grid>
             </controls1:ExtendedMasterDetailsView.MasterHeader>
+
         </controls1:ExtendedMasterDetailsView>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="Compact">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource CompactWindowWidth}"/>
+                    </VisualState.StateTriggers>
+                </VisualState>
+
+                <VisualState x:Name="Intermediate">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource IntermediateWindowWidth}"/>
+                    </VisualState.StateTriggers>
+
+                    <VisualState.Setters>
+                        <Setter Target="NewMessageButton.Content.Width" Value="56"/>
+                        <Setter Target="MainLayout.MasterPaneWidth" Value="80"/>
+                        <Setter Target="MasterHeading.Visibility" Value="Collapsed"/>
+                        <Setter Target="MasterMenuButton.Visibility" Value="Collapsed"/>
+                        <Setter Target="SearchBox.Visibility" Value="Collapsed"/>
+                        <Setter Target="ReelsFeed.Visibility" Value="Collapsed"/>
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="Full">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource FullWindowWidth}"/>
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </Page>

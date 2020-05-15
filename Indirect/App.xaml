@@ -30,6 +30,10 @@
                 <Setter Property="CachingStrategy" Value="Custom"/>
             </Style>
             <Style TargetType="Button" BasedOn="{StaticResource ButtonRevealStyle}"/>
+
+            <x:Double x:Key="CompactWindowWidth">0</x:Double>
+            <x:Double x:Key="IntermediateWindowWidth">500</x:Double>
+            <x:Double x:Key="FullWindowWidth">700</x:Double>
         </ResourceDictionary>
         
     </Application.Resources>
