@@ -21,9 +21,12 @@ namespace InstagramAPI.Utils
         public void SaveToAppSettings()
         {
             var composite = new Windows.Storage.ApplicationDataCompositeValue();
-            foreach (var (key, value) in this)
+            lock (this)
             {
-                composite[key] = value;
+                foreach (var (key, value) in this)
+                {
+                    composite[key] = value;
+                }
             }
             _localSettings.Values[Identifier] = composite;
         }
@@ -32,9 +35,12 @@ namespace InstagramAPI.Utils
         {
             var composite = (Windows.Storage.ApplicationDataCompositeValue)_localSettings.Values[Identifier];
             if (composite == null) return;
-            foreach (var (key, value) in composite)
+            lock (this)
             {
-                this[key] = (TValue) value;
+                foreach (var (key, value) in composite)
+                {
+                    this[key] = (TValue) value;
+                }
             }
         }
 

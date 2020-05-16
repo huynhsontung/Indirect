@@ -189,7 +189,8 @@ namespace Indirect
                         {
                             if (itemData.Path.Contains("has_seen", StringComparison.Ordinal) && long.TryParse(segments[4], out var userId))
                             {
-                                thread.UpdateLastSeenAt(userId, itemData.Item.Timestamp, itemData.Item.ItemId);
+                                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                                    () => thread.UpdateLastSeenAt(userId, itemData.Item.Timestamp, itemData.Item.ItemId));
                                 continue;
                             }
                             var item = thread.ObservableItems.SingleOrDefault(x => x.ItemId == itemData.Item.ItemId);

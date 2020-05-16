@@ -235,15 +235,18 @@ namespace Indirect.Wrapper
         private void UpdateUserList(List<UserWithFriendship> users)
         {
             if (users == null || users.Count == 0) return;
-            var toBeAdded = users.Where(p2 => Users.All(p1 => !p1.Equals(p2)));
-            var toBeDeleted = Users.Where(p1 => users.All(p2 => !p1.Equals(p2)));
-            foreach (var user in toBeAdded)
+            lock (Users)
             {
-                Users.Add(user);
-            }
-            foreach (var user in toBeDeleted)
-            {
-                Users.Remove(user);
+                var toBeAdded = users.Where(p2 => Users.All(p1 => !p1.Equals(p2)));
+                var toBeDeleted = Users.Where(p1 => users.All(p2 => !p1.Equals(p2)));
+                foreach (var user in toBeAdded)
+                {
+                    Users.Add(user);
+                }
+                foreach (var user in toBeDeleted)
+                {
+                    Users.Remove(user);
+                }
             }
         }
 

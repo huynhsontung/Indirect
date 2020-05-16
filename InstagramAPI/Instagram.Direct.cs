@@ -50,7 +50,10 @@ namespace InstagramAPI
                 foreach (var directThread in inbox.Inbox.Threads)
                 {
                     AddToUserRegistry(directThread.Users);
-                    ThreadTitlePersistentDictionary[directThread.ThreadId] = directThread.Title;
+                    lock (ThreadTitlePersistentDictionary)
+                    {
+                        ThreadTitlePersistentDictionary[directThread.ThreadId] = directThread.Title;
+                    }
                     directThread.Items.Reverse();
                 }
                 return Result<InboxContainer>.Success(inbox);

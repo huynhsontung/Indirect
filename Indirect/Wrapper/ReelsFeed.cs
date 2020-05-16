@@ -13,7 +13,7 @@ using InstagramAPI.Classes.Story;
 
 namespace Indirect.Wrapper
 {
-    class ReelsFeed : IDisposable
+    class ReelsFeed
     {
         public readonly ObservableCollection<Reel> Reels = new ObservableCollection<Reel>();
 
@@ -89,7 +89,6 @@ namespace Indirect.Wrapper
         public async void StartReelsFeedUpdateLoop()
         {
             _reelsUpdateLoop?.Cancel();
-            _reelsUpdateLoop?.Dispose();
             _reelsUpdateLoop = new CancellationTokenSource();
             while (!_reelsUpdateLoop.IsCancellationRequested)
             {
@@ -108,7 +107,6 @@ namespace Indirect.Wrapper
         public void StopReelsFeedUpdateLoop()
         {
             _reelsUpdateLoop?.Cancel();
-            _reelsUpdateLoop?.Dispose();
         }
 
         public async Task ReplyToStory(StoryItemWrapper story, string message)
@@ -119,12 +117,6 @@ namespace Indirect.Wrapper
             var thread = resultThread.Value;
             var mediaId = story.Id + "_" + story.Owner.Id;
             await Instagram.Instance.SendReelShareAsync(story.Owner.Id, mediaId, thread.ThreadId, message);
-        }
-
-        public void Dispose()
-        {
-            _reelsUpdateLoop?.Cancel();
-            _reelsUpdateLoop?.Dispose();
         }
     }
 }
