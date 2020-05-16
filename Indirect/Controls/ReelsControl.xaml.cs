@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -24,6 +25,8 @@ namespace Indirect.Controls
             get => (ReelsWrapper) GetValue(SourceProperty);
             set => SetValue(SourceProperty, value);
         }
+
+        private Tuple<int, int> _reelLimit;
 
         public ReelsControl()
         {
@@ -59,17 +62,54 @@ namespace Indirect.Controls
         private void StoryView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var storyView = (FlipView)sender;
-            var previous = e.RemovedItems.FirstOrDefault();
-            var selected = e.AddedItems.FirstOrDefault();
+            var previous = (StoryItemWrapper) e.RemovedItems.FirstOrDefault();
+            var selected = (StoryItemWrapper) e.AddedItems.FirstOrDefault();
             var flipViewItem = storyView.ContainerFromItem(previous) as FlipViewItem;
             var element = flipViewItem?.ContentTemplateRoot as FrameworkElement;
             var autoVideo = element?.FindDescendant<AutoVideoControl>();
             autoVideo?.Pause();
 
-            //flipViewItem = storyView.ContainerFromItem(selected) as FlipViewItem;
-            //element = flipViewItem?.ContentTemplateRoot as FrameworkElement;
-            //autoVideo = element?.FindDescendant<AutoVideoControl>();
-            //autoVideo?.Play();
+            if (selected == null)
+            {
+                ReelsProgressBar.Value = 0;
+            }
+            else if (selected.Parent != previous?.Parent)
+            {
+                var start = 0;
+                var end = 0;
+                for (int i = 0; i < Source.Items.Count; i++)
+                {
+                    if (selected.Parent == Source.Items[i].Parent)
+                    {
+                        start = i;
+                        break;
+                    }
+                }
+
+                for (int i = Source.Items.Count - 1; i >= 0; i--)
+                {
+                    if (selected.Parent == Source.Items[i].Parent)
+                    {
+                        end = i;
+                        break;
+                    }
+                }
+
+                _reelLimit = new Tuple<int, int>(start, end);
+                ReelsProgressBar.Value = 1d / (end - start + 1) * 100;
+            }
+            else
+            {
+                var selectedIndex = StoryView.SelectedIndex;
+                if (_reelLimit.Item2 < selectedIndex) ReelsProgressBar.Value = 0;
+                else
+                {
+                    ReelsProgressBar.Value = (selectedIndex - _reelLimit.Item1 + 1d) /
+                        (_reelLimit.Item2 - _reelLimit.Item1 + 1d) * 100;
+                }
+            }
+
+            if (ReelsProgressBar.Value > 99) ReelsProgressBar.Value = 100;
         }
 
         private void MessageTextBox_OnKeyboardInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
