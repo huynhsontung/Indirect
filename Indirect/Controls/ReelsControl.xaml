@@ -36,7 +36,7 @@
             </DataTemplate>
 
             <DataTemplate x:Key="VideoTemplate" x:DataType="wrapper:StoryItemWrapper">
-                <Grid>
+                <Grid Margin="0,0,0,6">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
@@ -50,7 +50,7 @@
             </DataTemplate>
 
             <DataTemplate x:Key="ImageTemplate" x:DataType="wrapper:StoryItemWrapper">
-                <Grid>
+                <Grid Margin="0,0,0,6">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
@@ -69,8 +69,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <ProgressBar x:Name="ReelsProgressBar" Canvas.ZIndex="1" Grid.Row="0" Opacity="0.3" HorizontalAlignment="Stretch" Background="Transparent"/>
-        <Grid Grid.Row="1" Canvas.ZIndex="1" Background="Transparent" Margin="40,0,0,0">
+        <ProgressBar x:Name="ReelsProgressBar" Grid.Row="0" Canvas.ZIndex="1" Opacity="0.3" HorizontalAlignment="Stretch"/>
+        <Grid Grid.Row="1" Canvas.ZIndex="1" Background="Transparent" Margin="42,0,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -89,7 +89,7 @@
             <TextBlock Grid.Row="1" Grid.Column="1" Style="{ThemeResource FluentCaptionTextStyle}"
                        Text="{x:Bind StoryView.SelectedItem.(wrapper:StoryItemWrapper.TakenAtTimestamp), Converter={StaticResource RelativeTimeConverter}, Mode=OneWay}"/>
         </Grid>
-        <FlipView x:Name="StoryView" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{x:Bind Source.Items, Mode=OneWay}" 
+        <FlipView x:Name="StoryView" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{x:Bind Source.Items, Mode=OneWay}"
                   Loaded="StoryView_OnLoaded" SelectionChanged="StoryView_OnSelectionChanged">
             <FlipView.ItemTemplateSelector>
                 <helpers:StoryTemplateSelector ImageTemplate="{StaticResource ImageTemplate}"
