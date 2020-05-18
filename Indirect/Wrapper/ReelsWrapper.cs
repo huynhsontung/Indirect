@@ -66,7 +66,7 @@ namespace Indirect.Wrapper
         {
             if (e.AddedItems.Count == 0) return;
             var view = (Selector) sender;
-            if (view.SelectedIndex == -1) return;
+            if (view.SelectedIndex == -1 || view.SelectedIndex >= Items.Count) return;
             var userIndex = GetUserIndex(Items[view.SelectedIndex].Owner.Id);
             await UpdateUserIndex(userIndex);
         }
