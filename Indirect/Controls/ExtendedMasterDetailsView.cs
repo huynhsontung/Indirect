@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 using Microsoft.Toolkit.Uwp.UI.Controls;
@@ -42,23 +43,31 @@ namespace Indirect.Controls
         {
             base.OnApplyTemplate();
 
-            var shadow = GetTemplateChild(PartMainShadow) as ThemeShadow;
-            var mainPanel = GetTemplateChild(PartMasterPanel) as FrameworkElement;
-            var details = GetTemplateChild(PartDetailsPanel) as FrameworkElement;
-            if (shadow == null || mainPanel == null || details == null) return;
-            shadow.Receivers.Add(mainPanel);
-            details.Translation += new Vector3(0, 0, 16);
-            ViewStateChanged += (sender, state) =>
+            try
             {
-                if (state == MasterDetailsViewState.Master || state == MasterDetailsViewState.Details)
+                var shadow = GetTemplateChild(PartMainShadow) as ThemeShadow;
+                var mainPanel = GetTemplateChild(PartMasterPanel) as FrameworkElement;
+                var details = GetTemplateChild(PartDetailsPanel) as FrameworkElement;
+                if (shadow == null || mainPanel == null || details == null) return;
+                shadow.Receivers.Add(mainPanel);
+                details.Translation += new Vector3(0, 0, 16);
+                ViewStateChanged += (sender, state) =>
                 {
-                    shadow.Receivers.Clear();
-                }
-                else if (shadow.Receivers.Count == 0)
-                {
-                    shadow.Receivers.Add(mainPanel);
-                }
-            };
+                    if (state == MasterDetailsViewState.Master || state == MasterDetailsViewState.Details)
+                    {
+                        shadow.Receivers.Clear();
+                    }
+                    else if (shadow.Receivers.Count == 0)
+                    {
+                        shadow.Receivers.Add(mainPanel);
+                    }
+                };
+            }
+            catch (Exception)
+            {
+                
+                // Failed to set config Shadow. Maybe old system?
+            }
         }
     }
 }

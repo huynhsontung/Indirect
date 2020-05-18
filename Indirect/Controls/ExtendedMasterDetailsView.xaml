@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="using:Indirect.Controls">
+    xmlns:controls="using:Indirect.Controls" 
+    xmlns:Windows10version1903="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 8)">
 
     <Style TargetType="controls:ExtendedMasterDetailsView">
         <Setter Property="Background" Value="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
@@ -16,7 +17,7 @@
                             BorderThickness="{TemplateBinding BorderThickness}">
                         <Grid x:Name="RootPanel">
                             <Grid.Resources>
-                                <ThemeShadow x:Name="MainShadow"/>
+                                <Windows10version1903:ThemeShadow x:Name="MainShadow"/>
                             </Grid.Resources>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition x:Name="MasterColumn"
@@ -53,7 +54,7 @@
                                           HeaderTemplate="{TemplateBinding MasterListHeaderTemplate}"/>
                                 <Grid x:Name="MasterCommandBarPanel" Grid.Row="2"></Grid>
                             </Grid>
-                            <Grid x:Name="DetailsPanel" Shadow="{StaticResource MainShadow}"
+                            <Grid x:Name="DetailsPanel" Windows10version1903:Shadow="{StaticResource MainShadow}"
                                   Grid.Column="1">
                                 <ContentPresenter x:Name="NoSelectionPresenter"
                                                   Content="{TemplateBinding NoSelectionContent}"
