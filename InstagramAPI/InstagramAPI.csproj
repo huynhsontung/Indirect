@@ -144,7 +144,7 @@
     <Compile Include="Classes\Direct\ItemContent\VisualMediaContainer.cs" />
     <Compile Include="Classes\Direct\ItemContent\VoiceShare.cs" />
     <Compile Include="Classes\Direct\RankedRecipientThread.cs" />
-    <Compile Include="Classes\JsonConverters\TolerantJsonConverter.cs" />
+    <Compile Include="Classes\JsonConverters\TolerantEnumConverter.cs" />
     <Compile Include="Classes\Story\DisplayResource.cs" />
     <Compile Include="Classes\Story\Reel.cs" />
     <Compile Include="Classes\Story\StoryItem.cs" />
