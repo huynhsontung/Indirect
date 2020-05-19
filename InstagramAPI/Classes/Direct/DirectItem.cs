@@ -23,7 +23,9 @@ namespace InstagramAPI.Classes.Direct
 
         [JsonProperty("item_id")] public string ItemId { get; set; }
 
-        [JsonProperty("item_type")] public DirectItemType ItemType { get; set; }
+        [JsonProperty("item_type")]
+        [JsonConverter(typeof(TolerantEnumConverter))]
+        public DirectItemType ItemType { get; set; }
 
         [JsonProperty("reactions")] public ReactionsContainer Reactions { get; set; }
 

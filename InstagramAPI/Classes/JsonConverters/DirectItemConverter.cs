@@ -34,7 +34,6 @@ namespace InstagramAPI.Classes.JsonConverters
                 ? JObject.Parse((string) reader.Value)
                 : JObject.Load(reader);
             var rawJson = itemJson.ToString(Formatting.None);
-            var itemType = itemJson["item_type"]?.ToObject<DirectItemType>(serializer) ?? DirectItemType.Unknown;
             var itemSender = itemJson["user_id"]?.ToObject<long>(serializer) ?? 0;
             var viewerPk = Instagram.Instance.Session.LoggedInUser.Pk;
             var item = itemJson.ToObject<DirectItem>(serializer);
@@ -42,7 +41,7 @@ namespace InstagramAPI.Classes.JsonConverters
             item.FromMe = itemSender == viewerPk;
             try
             {
-                switch (itemType)
+                switch (item.ItemType)
                 {
                     case DirectItemType.ActionLog:
                         item.Description = item.ActionLog.Description;
