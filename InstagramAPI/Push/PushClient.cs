@@ -127,6 +127,7 @@ namespace InstagramAPI.Push
             // Hand over MQTT socket to socket broker
             Debug.WriteLine($"{nameof(PushClient)}: Transferring sockets.");
             await SendPing().ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromSeconds(2));  // grace period
             Shutdown();
             await Socket.CancelIOAsync();
             Socket.TransferOwnership(
@@ -255,19 +256,28 @@ namespace InstagramAPI.Push
         public void Shutdown()
         {
             _runningTokenSource?.Cancel();
-            _inboundReader?.DetachStream();
-            _inboundReader?.Dispose();
+            _inboundReader = null;
             _outboundWriter?.DetachStream();
             _outboundWriter?.Dispose();
+            _outboundWriter = null;
             Debug.WriteLine("Stopped pinging push server");
         }
 
         private async void StartPollingLoop()
         {
-            while (!(_runningTokenSource?.IsCancellationRequested ?? false))
+            while (!(_runningTokenSource?.IsCancellationRequested ?? false) && _inboundReader != null)
             {
-                await _inboundReader.LoadAsync(FbnsPacketDecoder.PACKET_HEADER_LENGTH);
-                var packet = await FbnsPacketDecoder.DecodePacket(_inboundReader);
+                var reader = _inboundReader;
+                try
+                {
+                    await reader.LoadAsync(FbnsPacketDecoder.PACKET_HEADER_LENGTH);
+                }
+                catch (Exception)
+                {
+                    // Connection closed (most likely)
+                    return;
+                }
+                var packet = await FbnsPacketDecoder.DecodePacket(reader);
                 await OnPacketReceived(packet);
             }
         }
