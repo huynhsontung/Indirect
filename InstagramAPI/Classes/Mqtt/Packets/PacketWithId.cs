@@ -5,6 +5,6 @@ namespace InstagramAPI.Classes.Mqtt.Packets
 {
     public abstract class PacketWithId : Packet
     {
-        public int PacketId { get; set; }
+        public ushort PacketId { get; set; }
     }
 }

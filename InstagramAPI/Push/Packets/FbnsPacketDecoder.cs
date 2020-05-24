@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using InstagramAPI.Classes.Mqtt;
 using InstagramAPI.Classes.Mqtt.Packets;
-using Buffer = Windows.Storage.Streams.Buffer;
 
 namespace InstagramAPI.Push.Packets
 {
@@ -13,7 +12,7 @@ namespace InstagramAPI.Push.Packets
     ///     Customized MqttDecoder for Fbns that only handles Publish, PubAck, and ConnAck
     /// </summary>
     /// Reference: https://github.com/Azure/DotNetty/blob/dev/src/DotNetty.Codecs.Mqtt/MqttDecoder.cs
-    public sealed class FbnsPacketDecoder
+    public static class FbnsPacketDecoder
     {
         public const uint PACKET_HEADER_LENGTH = 2;
 
@@ -39,23 +38,16 @@ namespace InstagramAPI.Push.Packets
             }
         }
 
-        private readonly DataReader _dataReader;
-
-        public FbnsPacketDecoder(DataReader reader)
+        public static async Task<Packet> DecodePacket(DataReader reader)
         {
-            _dataReader = reader;
-        }
+            int signature = reader.ReadByte();
 
-        public async Task<Packet> DecodePacket()
-        {
-            int signature = _dataReader.ReadByte();
-
-            var remainingLength = await DecodeRemainingLength();
+            var remainingLength = await DecodeRemainingLength(reader);
             
             // Load remaining length into buffer
-            await _dataReader.LoadAsync(remainingLength);
+            await reader.LoadAsync(remainingLength);
 
-            var packet = DecodePacketInternal(signature, ref remainingLength);
+            var packet = DecodePacketInternal(reader, signature, ref remainingLength);
 
             if (remainingLength > 0)
             {
@@ -65,7 +57,7 @@ namespace InstagramAPI.Push.Packets
             return packet;
         }
 
-        private Packet DecodePacketInternal(int packetSignature, ref uint remainingLength)
+        private static Packet DecodePacketInternal(DataReader reader, int packetSignature, ref uint remainingLength)
         {
             if (Signatures.IsPublish(packetSignature))
             {
@@ -81,7 +73,7 @@ namespace InstagramAPI.Push.Packets
                 bool duplicate = (packetSignature & 0x8) == 0x8; // test bit#3
                 bool retain = (packetSignature & 0x1) != 0; // test bit#0
                 var packet = new PublishPacket(qualityOfService, duplicate, retain);
-                DecodePublishPacket(_dataReader, packet, ref remainingLength);
+                DecodePublishPacket(reader, packet, ref remainingLength);
                 return packet;
             }
 
@@ -89,30 +81,30 @@ namespace InstagramAPI.Push.Packets
             {
                 case Signatures.Subscribe & 240:
                     var subscribePacket = new SubscribePacket();
-                    DecodePacketIdVariableHeader(_dataReader, subscribePacket, ref remainingLength);
-                    DecodeSubscribePayload(_dataReader, subscribePacket, ref remainingLength);
+                    DecodePacketIdVariableHeader(reader, subscribePacket, ref remainingLength);
+                    DecodeSubscribePayload(reader, subscribePacket, ref remainingLength);
                     return subscribePacket;
                 case Signatures.Connect:
                     var connectPacket = new FbnsConnectPacket();
-                    DecodeConnectPacket(_dataReader, connectPacket, ref remainingLength);
+                    DecodeConnectPacket(reader, connectPacket, ref remainingLength);
                     return connectPacket;
                 case Signatures.PubAck:
                     var pubAckPacket = new PubAckPacket();
-                    DecodePacketIdVariableHeader(_dataReader, pubAckPacket, ref remainingLength);
+                    DecodePacketIdVariableHeader(reader, pubAckPacket, ref remainingLength);
                     return pubAckPacket;
                 case Signatures.ConnAck:
                     var connAckPacket = new FbnsConnAckPacket();
-                    DecodeConnAckPacket(_dataReader, connAckPacket, ref remainingLength);
+                    DecodeConnAckPacket(reader, connAckPacket, ref remainingLength);
                     return connAckPacket;
                 case Signatures.SubAck:
                     var subAckPacket = new SubAckPacket();
-                    DecodePacketIdVariableHeader(_dataReader, subAckPacket, ref remainingLength);
-                    DecodeSubAckPayload(_dataReader, subAckPacket, ref remainingLength);
+                    DecodePacketIdVariableHeader(reader, subAckPacket, ref remainingLength);
+                    DecodeSubAckPayload(reader, subAckPacket, ref remainingLength);
                     return subAckPacket;
                 case Signatures.Unsubscribe & 240:
                     var unsubscribePacket = new UnsubscribePacket();
-                    DecodePacketIdVariableHeader(_dataReader, unsubscribePacket, ref remainingLength);
-                    DecodeUnsubscribePayload(_dataReader, unsubscribePacket, ref remainingLength);
+                    DecodePacketIdVariableHeader(reader, unsubscribePacket, ref remainingLength);
+                    DecodeUnsubscribePayload(reader, unsubscribePacket, ref remainingLength);
                     return unsubscribePacket;
                 case Signatures.PingResp:
                     return PingRespPacket.Instance;
@@ -297,12 +289,12 @@ namespace InstagramAPI.Push.Packets
             }
             else
             {
-                payload = new Buffer(0);
+                payload = null;
             }
             packet.Payload = payload;
         }
 
-        private async Task<uint> DecodeRemainingLength()
+        private static async Task<uint> DecodeRemainingLength(DataReader reader)
         {
             uint result = 0;
             uint multiplier = 1;
@@ -310,8 +302,8 @@ namespace InstagramAPI.Push.Packets
             uint read = 0;
             do
             {
-                await _dataReader.LoadAsync(1);
-                digit = _dataReader.ReadByte();
+                await reader.LoadAsync(1);
+                digit = reader.ReadByte();
                 result += (uint) (digit & 0x7f) * multiplier;
                 multiplier <<= 7;
                 read++;
@@ -405,22 +397,6 @@ namespace InstagramAPI.Push.Packets
                         break;
                 }
             }
-        }
-
-        private async Task<bool> TryLoadAsync(uint count)
-        {
-            try
-            {
-                await _dataReader.LoadAsync(count);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e);
-                Debug.WriteLine($"{nameof(FbnsPacketDecoder)}: Stream is detached (maybe)");
-            }
-
-            return false;
         }
     }
 }

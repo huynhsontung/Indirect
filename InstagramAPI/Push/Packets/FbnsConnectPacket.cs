@@ -10,13 +10,13 @@ namespace InstagramAPI.Push.Packets
         /// <summary>
         ///     Following flags are marked: User Name Flag, Password Flag, Clean Session
         /// </summary>
-        public int ConnectFlags { get; set; } = 194;
+        public byte ConnectFlags { get; set; } = 194;
 
         public string ProtocolName { get; set; } = "MQTToT";
 
-        public int ProtocolLevel { get; set; } = 3;
+        public byte ProtocolLevel { get; set; } = 3;
 
-        public int KeepAliveInSeconds { get; set; } = 900;
+        public ushort KeepAliveInSeconds { get; set; } = 900;
 
         public bool CleanSession { get; set; }
 

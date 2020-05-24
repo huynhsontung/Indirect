@@ -11,7 +11,7 @@ namespace InstagramAPI.Classes.Mqtt.Packets
 
         public string ProtocolName { get; set; }
 
-        public int ProtocolLevel { get; set; }
+        public byte ProtocolLevel { get; set; }
 
         public bool CleanSession { get; set; }
 
@@ -25,7 +25,7 @@ namespace InstagramAPI.Classes.Mqtt.Packets
 
         public bool HasUsername { get; set; }
 
-        public int KeepAliveInSeconds { get; set; }
+        public ushort KeepAliveInSeconds { get; set; }
 
         public string Username { get; set; }
 
