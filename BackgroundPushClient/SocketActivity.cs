@@ -46,7 +46,6 @@ namespace BackgroundPushClient
 
                 await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
                 instagram.PushClient.ConnectionData.SaveToAppSettings();
-                await instagram.PushClient.Shutdown();
                 await instagram.PushClient.TransferPushSocket();
             }
             catch (Exception e)
