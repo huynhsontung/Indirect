@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using Windows.Storage.Streams;
-using DotNetty.Buffers;
-using DotNetty.Common.Utilities;
 using InstagramAPI.Classes.Mqtt.Packets;
 using ByteOrder = Windows.Storage.Streams.ByteOrder;
 
@@ -69,7 +67,7 @@ namespace InstagramAPI.Sync
             payloadBufferSize += STRING_SIZE_LENGTH + clientIdBytes.Length;
 
             byte[] willTopicBytes;
-            IByteBuffer willMessage;
+            IBuffer willMessage;
             if (packet.HasWill)
             {
                 // Will topic and message
@@ -77,7 +75,7 @@ namespace InstagramAPI.Sync
                 willTopicBytes = EncodeStringInUtf8(willTopic);
                 willMessage = packet.WillMessage;
                 payloadBufferSize += STRING_SIZE_LENGTH + willTopicBytes.Length;
-                payloadBufferSize += 2 + willMessage.ReadableBytes;
+                payloadBufferSize += 2 + (int) willMessage.Length;
             }
             else
             {
@@ -113,50 +111,36 @@ namespace InstagramAPI.Sync
             byte[] protocolNameBytes = EncodeStringInUtf8(packet.ProtocolName);
             int variableHeaderBufferSize = STRING_SIZE_LENGTH + protocolNameBytes.Length + 4;
             int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
-            try
+            writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
+            WriteVariableLengthInt(writer, variablePartSize);
+
+            writer.WriteInt16((short) protocolNameBytes.Length);
+            writer.WriteBytes(protocolNameBytes);
+
+            writer.WriteByte((byte) packet.ProtocolLevel);
+            writer.WriteByte(CalculateConnectFlagsByte(packet));
+            writer.WriteInt16((short) packet.KeepAliveInSeconds);
+
+            // Payload
+            writer.WriteInt16((short) clientIdBytes.Length);
+            writer.WriteBytes(clientIdBytes);
+            if (packet.HasWill)
             {
-                writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
-                WriteVariableLengthInt(writer, variablePartSize);
-
-                writer.WriteInt16((short) protocolNameBytes.Length);
-                writer.WriteBytes(protocolNameBytes);
-
-                writer.WriteByte((byte) packet.ProtocolLevel);
-                writer.WriteByte(CalculateConnectFlagsByte(packet));
-                writer.WriteInt16((short) packet.KeepAliveInSeconds);
-
-                // Payload
-                writer.WriteInt16((short) clientIdBytes.Length);
-                writer.WriteBytes(clientIdBytes);
-                if (packet.HasWill)
-                {
-                    writer.WriteInt16((short) willTopicBytes.Length);
-                    writer.WriteBytes(willTopicBytes);
-                    writer.WriteInt16((short) willMessage.ReadableBytes);
-                    if (willMessage.IsReadable())
-                    {
-                        var willMessageBytes = new byte[willMessage.ReadableBytes];
-                        willMessage.ReadBytes(willMessageBytes);
-                        writer.WriteBytes(willMessageBytes);
-                    }
-                    willMessage.Release();
-                    willMessage = null;
-                }
-                if (packet.HasUsername)
-                {
-                    writer.WriteInt16((short) userNameBytes.Length);
-                    writer.WriteBytes(userNameBytes);
-
-                    if (packet.HasPassword)
-                    {
-                        writer.WriteInt16((short) passwordBytes.Length);
-                        writer.WriteBytes(passwordBytes);
-                    }
-                }
+                writer.WriteInt16((short) willTopicBytes.Length);
+                writer.WriteBytes(willTopicBytes);
+                writer.WriteInt16((short) willMessage.Length);
+                writer.WriteBuffer(willMessage);
             }
-            finally
+            if (packet.HasUsername)
             {
-                willMessage?.SafeRelease();
+                writer.WriteInt16((short) userNameBytes.Length);
+                writer.WriteBytes(userNameBytes);
+
+                if (packet.HasPassword)
+                {
+                    writer.WriteInt16((short) passwordBytes.Length);
+                    writer.WriteBytes(passwordBytes);
+                }
             }
         }
 
@@ -204,7 +188,7 @@ namespace InstagramAPI.Sync
 
         static void EncodePublishMessage(DataWriter writer, PublishPacket packet)
         {
-            IByteBuffer payload = packet.Payload ?? Unpooled.Empty;
+            IBuffer payload = packet.Payload;
 
             string topicName = packet.TopicName;
             // Util.ValidateTopicName(topicName);
@@ -212,7 +196,7 @@ namespace InstagramAPI.Sync
 
             int variableHeaderBufferSize = STRING_SIZE_LENGTH + topicNameBytes.Length +
                 (packet.QualityOfService > QualityOfService.AtMostOnce ? PACKET_ID_LENGTH : 0);
-            int payloadBufferSize = payload.ReadableBytes;
+            int payloadBufferSize = (int) payload.Length;
             int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
 
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
@@ -224,12 +208,7 @@ namespace InstagramAPI.Sync
                 writer.WriteInt16((short) packet.PacketId);
             }
 
-            if (payload.IsReadable())
-            {
-                var payloadBytes = new byte[payload.ReadableBytes];
-                payload.ReadBytes(payloadBytes);
-                writer.WriteBytes(payloadBytes);
-            }
+            writer.WriteBuffer(payload);
         }
 
         static void EncodePacketWithIdOnly(DataWriter writer, PacketWithId packet)

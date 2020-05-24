@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace InstagramAPI.Sync
         public event EventHandler<UserPresenceEventArgs> UserPresenceChanged; 
         public event EventHandler<Exception> FailedToStart;
 
-        private int _packetId = 1;
+        private ushort _packetId = 1;
         private CancellationTokenSource _pinging;
         private readonly Instagram _instaApi;
         private long _seqId;
@@ -207,7 +208,7 @@ namespace InstagramAPI.Sync
                         {
                             PacketId = _packetId++,
                             TopicName = "/ig_sub_iris",
-                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                            Payload = jsonBytes.AsBuffer()
                         };
                         await WriteAndFlushPacketAsync(irisPublishPacket, outStream);
 
@@ -217,7 +218,7 @@ namespace InstagramAPI.Sync
                         {
                             PacketId = _packetId++,
                             TopicName = "/pubsub",
-                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                            Payload = jsonBytes.AsBuffer()
                         };
                         await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
                         unsubPacket = new UnsubscribePacket(_packetId++, "/pubsub");
@@ -231,7 +232,7 @@ namespace InstagramAPI.Sync
                         {
                             PacketId = _packetId++,
                             TopicName = "/pubsub",
-                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                            Payload = jsonBytes.AsBuffer()
                         };
                         await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
 
@@ -243,7 +244,7 @@ namespace InstagramAPI.Sync
                         {
                             PacketId = _packetId++,
                             TopicName = "/ig_realtime_sub",
-                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                            Payload = jsonBytes.AsBuffer()
                         };
                         await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
                         unsubPacket = new UnsubscribePacket(_packetId++, "/ig_realtime_sub");
@@ -258,7 +259,7 @@ namespace InstagramAPI.Sync
                         {
                             PacketId = _packetId++,
                             TopicName = "/ig_realtime_sub",
-                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                            Payload = jsonBytes.AsBuffer()
                         };
                         await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
 
@@ -286,7 +287,9 @@ namespace InstagramAPI.Sync
 
                     case PacketType.PUBLISH:
                         var publishPacket = (PublishPacket)packet;
-                        var payload = publishPacket.Payload.ReadString(publishPacket.Payload.ReadableBytes, Encoding.UTF8);
+                        if (publishPacket.Payload == null) 
+                            throw new Exception($"{nameof(SyncClient)}: Publish packet received but payload is null");
+                        var payload = Encoding.UTF8.GetString(publishPacket.Payload.ToArray());
                         Debug.WriteLine($"{nameof(SyncClient)} pub to {publishPacket.TopicName} payload: {payload}");
                         switch (publishPacket.TopicName)
                         {
@@ -353,10 +356,8 @@ namespace InstagramAPI.Sync
 
             if (packet is PublishPacket publishPacket)
             {
-                publishPacket.Payload.SetReaderIndex(0);
-                var json = publishPacket.Payload.ReadString(publishPacket.Payload.ReadableBytes, Encoding.UTF8);
+                var json = Encoding.UTF8.GetString(publishPacket.Payload.ToArray());
                 Debug.WriteLine($"Payload: {json}");
-                publishPacket.Payload?.Release();
             }
         }
 

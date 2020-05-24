@@ -168,6 +168,8 @@ namespace InstagramAPI.Push
                 Socket = socket;
                 _inboundReader = new DataReader(socket.InputStream);
                 _outboundWriter = new DataWriter(socket.OutputStream);
+                _inboundReader.ByteOrder = ByteOrder.BigEndian;
+                _outboundWriter.ByteOrder = ByteOrder.BigEndian;
                 _runningTokenSource = new CancellationTokenSource();
                 
                 StartPollingLoop();
@@ -233,6 +235,8 @@ namespace InstagramAPI.Push
 
                 _inboundReader = new DataReader(Socket.InputStream);
                 _outboundWriter = new DataWriter(Socket.OutputStream);
+                _inboundReader.ByteOrder = ByteOrder.BigEndian;
+                _outboundWriter.ByteOrder = ByteOrder.BigEndian;
                 _runningTokenSource = new CancellationTokenSource();
 
                 await FbnsPacketEncoder.EncodePacket(connectPacket, _outboundWriter);
@@ -304,6 +308,8 @@ namespace InstagramAPI.Push
                     case PacketType.PUBLISH:
                         Debug.WriteLine($"{nameof(PushClient)}:\tPUBLISH received.");
                         var publishPacket = (PublishPacket) msg;
+                        if (publishPacket.Payload == null)
+                            throw new Exception($"{nameof(PushClient)}: Publish packet received but payload is null");
                         if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
                         {
                             await FbnsPacketEncoder.EncodePacket(PubAckPacket.InResponseTo(publishPacket), _outboundWriter);
@@ -490,11 +496,8 @@ namespace InstagramAPI.Push
                 zlibStream.CopyTo(decompressedStream);
             }
 
-            var data = new byte[decompressedStream.Length];
-            decompressedStream.Position = 0;
-            decompressedStream.Read(data, 0, data.Length);
-            decompressedStream.Dispose();
-            return data;
+            var data = decompressedStream.GetWindowsRuntimeBuffer(0, (int) decompressedStream.Length);
+            return data.ToArray();
         }
     }
 }
