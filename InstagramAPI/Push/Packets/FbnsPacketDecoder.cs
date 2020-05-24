@@ -45,7 +45,7 @@ namespace InstagramAPI.Push.Packets
             var remainingLength = await DecodeRemainingLength(reader);
             
             // Load remaining length into buffer
-            await reader.LoadAsync(remainingLength);
+            if (remainingLength > 0) await reader.LoadAsync(remainingLength);
 
             var packet = DecodePacketInternal(reader, signature, ref remainingLength);
 
