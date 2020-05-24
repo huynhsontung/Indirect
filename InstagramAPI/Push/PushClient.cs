@@ -11,10 +11,10 @@ using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Web.Http;
 using DotNetty.Buffers;
-using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Transport.Channels;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
+using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
 using Ionic.Zlib;
 using Microsoft.AppCenter.Crashes;
@@ -416,6 +416,7 @@ namespace InstagramAPI.Push
                 {"device_type", "android_mqtt"},
                 {"is_main_push_channel", "true"},
                 {"phone_id", _device.PhoneId.ToString()},
+                {"device_sub_type", "2" },
                 {"device_token", token},
                 {"_csrftoken", _user.CsrfToken },
                 {"guid", _device.Uuid.ToString() },

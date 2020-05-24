@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using Windows.Storage.Streams;
 using DotNetty.Buffers;
-using DotNetty.Codecs.Mqtt.Packets;
 using DotNetty.Common.Utilities;
+using InstagramAPI.Classes.Mqtt.Packets;
 using ByteOrder = Windows.Storage.Streams.ByteOrder;
 
 namespace InstagramAPI.Sync

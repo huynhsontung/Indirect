@@ -1,5 +1,5 @@
-﻿using DotNetty.Buffers;
-using DotNetty.Codecs.Mqtt.Packets;
+﻿using Windows.Storage.Streams;
+using InstagramAPI.Classes.Mqtt.Packets;
 
 namespace InstagramAPI.Push.Packets
 {
@@ -22,7 +22,7 @@ namespace InstagramAPI.Push.Packets
 
         public bool HasWill { get; set; }
 
-        public IByteBuffer WillMessage { get; set; }
+        public IBuffer WillMessage { get; set; }
 
         public QualityOfService WillQualityOfService { get; set; }
 
@@ -40,6 +40,6 @@ namespace InstagramAPI.Push.Packets
 
         public string WillTopicName { get; set; }
 
-        public IByteBuffer Payload { get; set; }
+        public IBuffer Payload { get; set; }
     }
 }

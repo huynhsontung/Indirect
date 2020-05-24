@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Windows.Storage.Streams;
 using DotNetty.Buffers;
-using DotNetty.Codecs.Mqtt.Packets;
+using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
 using ByteOrder = Windows.Storage.Streams.ByteOrder;
 
@@ -43,7 +43,7 @@ namespace InstagramAPI.Sync
             {
                 var qualityOfService =
                     (QualityOfService)((signature >> 1) &
-                                        0x3); // take bits #1 and #2 ONLY and convert them into QoS value
+                                       0x3); // take bits #1 and #2 ONLY and convert them into QoS value
                 if (qualityOfService == QualityOfService.Reserved)
                 {
                     throw new Exception(

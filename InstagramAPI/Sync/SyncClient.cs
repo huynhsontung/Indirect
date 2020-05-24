@@ -11,7 +11,7 @@ using Windows.Storage.Streams;
 using Windows.Web.Http;
 using Windows.Web.Http.Filters;
 using DotNetty.Buffers;
-using DotNetty.Codecs.Mqtt.Packets;
+using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push;
 using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
