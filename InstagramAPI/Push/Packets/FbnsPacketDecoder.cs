@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
-using DotNetty.Buffers;
-using DotNetty.Codecs;
-using DotNetty.Codecs.Mqtt.Packets;
-using DotNetty.Transport.Channels;
+using System.Threading.Tasks;
+using Windows.Storage.Streams;
+using InstagramAPI.Classes.Mqtt;
+using InstagramAPI.Classes.Mqtt.Packets;
+using Buffer = Windows.Storage.Streams.Buffer;
 
 namespace InstagramAPI.Push.Packets
 {
@@ -13,8 +13,10 @@ namespace InstagramAPI.Push.Packets
     ///     Customized MqttDecoder for Fbns that only handles Publish, PubAck, and ConnAck
     /// </summary>
     /// Reference: https://github.com/Azure/DotNetty/blob/dev/src/DotNetty.Codecs.Mqtt/MqttDecoder.cs
-    public sealed class FbnsPacketDecoder : ReplayingDecoder<FbnsPacketDecoder.ParseState>
+    public sealed class FbnsPacketDecoder
     {
+        public const uint PACKET_HEADER_LENGTH = 2;
+
         private static class Signatures
         {
             public const byte PubAck = 64;
@@ -37,82 +39,33 @@ namespace InstagramAPI.Push.Packets
             }
         }
 
-        public enum ParseState
+        private readonly DataReader _dataReader;
+
+        public FbnsPacketDecoder(DataReader reader)
         {
-            Ready,
-            Failed
+            _dataReader = reader;
         }
 
-        public FbnsPacketDecoder() : base(ParseState.Ready)
+        public async Task<Packet> DecodePacket()
         {
-        }
+            int signature = _dataReader.ReadByte();
 
-        protected override void Decode(IChannelHandlerContext context, IByteBuffer input, List<object> output)
-        {
-            try
-            {
-                switch (this.State)
-                {
-                    case ParseState.Ready:
-                        Packet packet;
+            var remainingLength = await DecodeRemainingLength();
+            
+            // Load remaining length into buffer
+            await _dataReader.LoadAsync(remainingLength);
 
-                        if (!this.TryDecodePacket(input, out packet))
-                        {
-                            this.RequestReplay();
-                            return;
-                        }
-
-                        output.Add(packet);
-                        this.Checkpoint();
-                        break;
-                    case ParseState.Failed:
-                        // read out data until connection is closed
-                        input.SkipBytes(input.ReadableBytes);
-                        return;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-            catch (DecoderException)
-            {
-                input.SkipBytes(input.ReadableBytes);
-                this.Checkpoint(ParseState.Failed);
-                throw;
-            }
-        }
-
-        private bool TryDecodePacket(IByteBuffer buffer, out Packet packet)
-        {
-            // Check fixed header
-            if (!buffer.IsReadable(2)) // packet consists of at least 2 bytes
-            {
-                packet = null;
-                return false;
-            }
-
-            int signature = buffer.ReadByte();
-
-            int remainingLength;
-
-            if (!this.TryDecodeRemainingLength(buffer, out remainingLength) || 
-                !buffer.IsReadable(remainingLength) ||
-                remainingLength < 2)
-            {
-                packet = null;
-                return false;
-            }
-
-            packet = this.DecodePacketInternal(buffer, signature, ref remainingLength);
+            var packet = DecodePacketInternal(signature, ref remainingLength);
 
             if (remainingLength > 0)
             {
                 throw new DecoderException($"Declared remaining length is bigger than packet data size by {remainingLength}.");
             }
 
-            return true;
+            return packet;
         }
 
-        private Packet DecodePacketInternal(IByteBuffer buffer, int packetSignature, ref int remainingLength)
+        private Packet DecodePacketInternal(int packetSignature, ref uint remainingLength)
         {
             if (Signatures.IsPublish(packetSignature))
             {
@@ -128,7 +81,7 @@ namespace InstagramAPI.Push.Packets
                 bool duplicate = (packetSignature & 0x8) == 0x8; // test bit#3
                 bool retain = (packetSignature & 0x1) != 0; // test bit#0
                 var packet = new PublishPacket(qualityOfService, duplicate, retain);
-                DecodePublishPacket(buffer, packet, ref remainingLength);
+                DecodePublishPacket(_dataReader, packet, ref remainingLength);
                 return packet;
             }
 
@@ -136,30 +89,30 @@ namespace InstagramAPI.Push.Packets
             {
                 case Signatures.Subscribe & 240:
                     var subscribePacket = new SubscribePacket();
-                    DecodePacketIdVariableHeader(buffer, subscribePacket, ref remainingLength);
-                    DecodeSubscribePayload(buffer, subscribePacket, ref remainingLength);
+                    DecodePacketIdVariableHeader(_dataReader, subscribePacket, ref remainingLength);
+                    DecodeSubscribePayload(_dataReader, subscribePacket, ref remainingLength);
                     return subscribePacket;
                 case Signatures.Connect:
                     var connectPacket = new FbnsConnectPacket();
-                    DecodeConnectPacket(buffer, connectPacket, ref remainingLength);
+                    DecodeConnectPacket(_dataReader, connectPacket, ref remainingLength);
                     return connectPacket;
                 case Signatures.PubAck:
                     var pubAckPacket = new PubAckPacket();
-                    DecodePacketIdVariableHeader(buffer, pubAckPacket, ref remainingLength);
+                    DecodePacketIdVariableHeader(_dataReader, pubAckPacket, ref remainingLength);
                     return pubAckPacket;
                 case Signatures.ConnAck:
                     var connAckPacket = new FbnsConnAckPacket();
-                    DecodeConnAckPacket(buffer, connAckPacket, ref remainingLength);
+                    DecodeConnAckPacket(_dataReader, connAckPacket, ref remainingLength);
                     return connAckPacket;
                 case Signatures.SubAck:
                     var subAckPacket = new SubAckPacket();
-                    DecodePacketIdVariableHeader(buffer, subAckPacket, ref remainingLength);
-                    DecodeSubAckPayload(buffer, subAckPacket, ref remainingLength);
+                    DecodePacketIdVariableHeader(_dataReader, subAckPacket, ref remainingLength);
+                    DecodeSubAckPayload(_dataReader, subAckPacket, ref remainingLength);
                     return subAckPacket;
                 case Signatures.Unsubscribe & 240:
                     var unsubscribePacket = new UnsubscribePacket();
-                    DecodePacketIdVariableHeader(buffer, unsubscribePacket, ref remainingLength);
-                    DecodeUnsubscribePayload(buffer, unsubscribePacket, ref remainingLength);
+                    DecodePacketIdVariableHeader(_dataReader, unsubscribePacket, ref remainingLength);
+                    DecodeUnsubscribePayload(_dataReader, unsubscribePacket, ref remainingLength);
                     return unsubscribePacket;
                 case Signatures.PingResp:
                     return PingRespPacket.Instance;
@@ -168,17 +121,17 @@ namespace InstagramAPI.Push.Packets
             }
         }
 
-        static void DecodeSubscribePayload(IByteBuffer buffer, SubscribePacket packet, ref int remainingLength)
+        static void DecodeSubscribePayload(DataReader reader, SubscribePacket packet, ref uint remainingLength)
         {
             var subscribeTopics = new List<SubscriptionRequest>();
             while (remainingLength > 0)
             {
-                string topicFilter = DecodeString(buffer, ref remainingLength);
+                string topicFilter = DecodeString(reader, ref remainingLength);
                 ValidateTopicFilter(topicFilter);
 
                 DecreaseRemainingLength(ref remainingLength, 1);
-                int qos = buffer.ReadByte();
-                if (qos >= (int)QualityOfService.Reserved)
+                var qos = reader.ReadByte();
+                if (qos >= (int) QualityOfService.Reserved)
                 {
                     throw new DecoderException($"[MQTT-3.8.3-4]. Invalid QoS value: {qos}.");
                 }
@@ -194,12 +147,12 @@ namespace InstagramAPI.Push.Packets
             packet.Requests = subscribeTopics;
         }
 
-        static void DecodeSubAckPayload(IByteBuffer buffer, SubAckPacket packet, ref int remainingLength)
+        static void DecodeSubAckPayload(DataReader reader, SubAckPacket packet, ref uint remainingLength)
         {
             var returnCodes = new QualityOfService[remainingLength];
             for (int i = 0; i < remainingLength; i++)
             {
-                var returnCode = (QualityOfService)buffer.ReadByte();
+                var returnCode = (QualityOfService)reader.ReadByte();
                 if (returnCode > QualityOfService.ExactlyOnce && returnCode != QualityOfService.Failure)
                 {
                     throw new DecoderException($"[MQTT-3.9.3-2]. Invalid return code: {returnCode}");
@@ -211,12 +164,12 @@ namespace InstagramAPI.Push.Packets
             remainingLength = 0;
         }
 
-        static void DecodeUnsubscribePayload(IByteBuffer buffer, UnsubscribePacket packet, ref int remainingLength)
+        static void DecodeUnsubscribePayload(DataReader reader, UnsubscribePacket packet, ref uint remainingLength)
         {
             var unsubscribeTopics = new List<string>();
             while (remainingLength > 0)
             {
-                string topicFilter = DecodeString(buffer, ref remainingLength);
+                string topicFilter = DecodeString(reader, ref remainingLength);
                 ValidateTopicFilter(topicFilter);
                 unsubscribeTopics.Add(topicFilter);
             }
@@ -231,9 +184,9 @@ namespace InstagramAPI.Push.Packets
             remainingLength = 0;
         }
 
-        static void DecodeConnectPacket(IByteBuffer buffer, FbnsConnectPacket packet, ref int remainingLength)
+        static void DecodeConnectPacket(DataReader reader, FbnsConnectPacket packet, ref uint remainingLength)
         {
-            string protocolName = DecodeString(buffer, ref remainingLength);
+            string protocolName = DecodeString(reader, ref remainingLength);
             // if (!PROTOCOL_NAME.Equals(protocolName, StringComparison.Ordinal))
             // {
             //     throw new DecoderException($"Unexpected protocol name. Expected: {PROTOCOL_NAME}. Actual: {protocolName}");
@@ -241,7 +194,7 @@ namespace InstagramAPI.Push.Packets
             packet.ProtocolName = protocolName;
 
             DecreaseRemainingLength(ref remainingLength, 1);
-            packet.ProtocolLevel = buffer.ReadByte();
+            packet.ProtocolLevel = reader.ReadByte();
 
             // if (packet.ProtocolLevel != Util.ProtocolLevel)
             // {
@@ -252,7 +205,7 @@ namespace InstagramAPI.Push.Packets
             // }
 
             DecreaseRemainingLength(ref remainingLength, 1);
-            int connectFlags = buffer.ReadByte();
+            int connectFlags = reader.ReadByte();
 
             packet.CleanSession = (connectFlags & 0x02) == 0x02;
 
@@ -284,41 +237,41 @@ namespace InstagramAPI.Push.Packets
                 throw new DecoderException("[MQTT-3.1.2-3]");
             }
 
-            packet.KeepAliveInSeconds = DecodeUnsignedShort(buffer, ref remainingLength);
+            packet.KeepAliveInSeconds = DecodeUnsignedShort(reader, ref remainingLength);
 
-            string clientId = DecodeString(buffer, ref remainingLength);
+            string clientId = DecodeString(reader, ref remainingLength);
             if (string.IsNullOrEmpty(clientId)) throw new DecoderException("Client identifier is required.");
             packet.ClientId = clientId;
 
             if (hasWill)
             {
-                packet.WillTopicName = DecodeString(buffer, ref remainingLength);
-                int willMessageLength = DecodeUnsignedShort(buffer, ref remainingLength);
+                packet.WillTopicName = DecodeString(reader, ref remainingLength);
+                var willMessageLength = DecodeUnsignedShort(reader, ref remainingLength);
                 DecreaseRemainingLength(ref remainingLength, willMessageLength);
-                packet.WillMessage = buffer.ReadBytes(willMessageLength);
+                packet.WillMessage = reader.ReadBuffer(willMessageLength);
             }
 
             if (packet.HasUsername)
             {
-                packet.Username = DecodeString(buffer, ref remainingLength);
+                packet.Username = DecodeString(reader, ref remainingLength);
             }
 
             if (packet.HasPassword)
             {
-                packet.Password = DecodeString(buffer, ref remainingLength);
+                packet.Password = DecodeString(reader, ref remainingLength);
             }
         }
 
-        static void DecodeConnAckPacket(IByteBuffer buffer, FbnsConnAckPacket packet, ref int remainingLength)
+        static void DecodeConnAckPacket(DataReader reader, FbnsConnAckPacket packet, ref uint remainingLength)
         {
-            packet.ConnAckFlags = buffer.ReadByte();
-            packet.ReturnCode = (ConnectReturnCode) buffer.ReadByte();
+            packet.ConnAckFlags = reader.ReadByte();
+            packet.ReturnCode = (ConnectReturnCode) reader.ReadByte();
             remainingLength -= 2;
             if (remainingLength > 0)
             {
-                var authSize = buffer.ReadUnsignedShort();
-                packet.Authentication = buffer.ReadString(authSize, Encoding.UTF8);
-                remainingLength -= authSize + 2;
+                var authSize = reader.ReadUInt16();
+                packet.Authentication = reader.ReadString(authSize);
+                remainingLength -= authSize + 2u;
                 if(remainingLength>0)
                     Debug.WriteLine(
                         $"FbnsPacketDecoder: Unhandled data in the buffer. Length of remaining data = {remainingLength}",
@@ -326,48 +279,40 @@ namespace InstagramAPI.Push.Packets
             }
         }
 
-        static void DecodePublishPacket(IByteBuffer buffer, PublishPacket packet, ref int remainingLength)
+        static void DecodePublishPacket(DataReader reader, PublishPacket packet, ref uint remainingLength)
         {
-            string topicName = DecodeString(buffer, ref remainingLength);
+            string topicName = DecodeString(reader, ref remainingLength);
 
             packet.TopicName = topicName;
             if (packet.QualityOfService > QualityOfService.AtMostOnce)
             {
-                DecodePacketIdVariableHeader(buffer, packet, ref remainingLength);
+                DecodePacketIdVariableHeader(reader, packet, ref remainingLength);
             }
 
-            IByteBuffer payload;
+            IBuffer payload;
             if (remainingLength > 0)
             {
-                payload = buffer.ReadSlice(remainingLength);
-                payload.Retain();
+                payload = reader.ReadBuffer(remainingLength);
                 remainingLength = 0;
             }
             else
             {
-                payload = Unpooled.Empty;
+                payload = new Buffer(0);
             }
             packet.Payload = payload;
         }
 
-
-        private bool TryDecodeRemainingLength(IByteBuffer buffer, out int value)
+        private async Task<uint> DecodeRemainingLength()
         {
-            int readable = buffer.ReadableBytes;
-
-            int result = 0;
-            int multiplier = 1;
+            uint result = 0;
+            uint multiplier = 1;
             byte digit;
-            int read = 0;
+            uint read = 0;
             do
             {
-                if (readable < read + 1)
-                {
-                    value = default(int);
-                    return false;
-                }
-                digit = buffer.ReadByte();
-                result += (digit & 0x7f) * multiplier;
+                await _dataReader.LoadAsync(1);
+                digit = _dataReader.ReadByte();
+                result += (uint) (digit & 0x7f) * multiplier;
                 multiplier <<= 7;
                 read++;
             }
@@ -378,32 +323,31 @@ namespace InstagramAPI.Push.Packets
                 throw new DecoderException("Remaining length exceeds 4 bytes in length");
             }
 
-            value = result;
-            return true;
+            return result;
         }
 
-        static void DecodePacketIdVariableHeader(IByteBuffer buffer, PacketWithId packet, ref int remainingLength)
+        static void DecodePacketIdVariableHeader(DataReader reader, PacketWithId packet, ref uint remainingLength)
         {
-            int packetId = packet.PacketId = DecodeUnsignedShort(buffer, ref remainingLength);
+            int packetId = packet.PacketId = DecodeUnsignedShort(reader, ref remainingLength);
             if (packetId == 0)
             {
                 throw new DecoderException("[MQTT-2.3.1-1]");
             }
         }
 
-        static int DecodeUnsignedShort(IByteBuffer buffer, ref int remainingLength)
+        static ushort DecodeUnsignedShort(DataReader reader, ref uint remainingLength)
         {
             DecreaseRemainingLength(ref remainingLength, 2);
-            return buffer.ReadUnsignedShort();
+            return reader.ReadUInt16();
         }
 
-        static string DecodeString(IByteBuffer buffer, ref int remainingLength) => DecodeString(buffer, ref remainingLength, 0, int.MaxValue);
+        static string DecodeString(DataReader reader, ref uint remainingLength) => DecodeString(reader, ref remainingLength, 0, uint.MaxValue);
 
-        static string DecodeString(IByteBuffer buffer, ref int remainingLength, int minBytes) => DecodeString(buffer, ref remainingLength, minBytes, int.MaxValue);
+        static string DecodeString(DataReader reader, ref uint remainingLength, uint minBytes) => DecodeString(reader, ref remainingLength, minBytes, uint.MaxValue);
 
-        static string DecodeString(IByteBuffer buffer, ref int remainingLength, int minBytes, int maxBytes)
+        static string DecodeString(DataReader reader, ref uint remainingLength, uint minBytes, uint maxBytes)
         {
-            int size = DecodeUnsignedShort(buffer, ref remainingLength);
+            ushort size = DecodeUnsignedShort(reader, ref remainingLength);
 
             if (size < minBytes)
             {
@@ -420,14 +364,12 @@ namespace InstagramAPI.Push.Packets
             }
 
             DecreaseRemainingLength(ref remainingLength, size);
-
-            string value = buffer.ToString(buffer.ReaderIndex, size, Encoding.UTF8);
+            string value = reader.ReadString(size);
             // todo: enforce string definition by MQTT spec
-            buffer.SetReaderIndex(buffer.ReaderIndex + size);
             return value;
         }
 
-        static void DecreaseRemainingLength(ref int remainingLength, int minExpectedLength)
+        static void DecreaseRemainingLength(ref uint remainingLength, uint minExpectedLength)
         {
             if (remainingLength < minExpectedLength)
             {
@@ -463,6 +405,22 @@ namespace InstagramAPI.Push.Packets
                         break;
                 }
             }
+        }
+
+        private async Task<bool> TryLoadAsync(uint count)
+        {
+            try
+            {
+                await _dataReader.LoadAsync(count);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                Debug.WriteLine($"{nameof(FbnsPacketDecoder)}: Stream is detached (maybe)");
+            }
+
+            return false;
         }
     }
 }
