@@ -296,11 +296,11 @@ namespace InstagramAPI.Push.Packets
 
         private static async Task<uint> DecodeRemainingLength(DataReader reader)
         {
-            uint result = 0;
-            uint multiplier = 1;
-            byte digit;
-            uint read = 0;
-            do
+            uint multiplier = 1 << 7;
+            byte digit = reader.ReadByte();
+            uint result = (uint)(digit & 0x7f);
+            uint read = 1;
+            while ((digit & 0x80) != 0 && read < 4)
             {
                 await reader.LoadAsync(1);
                 digit = reader.ReadByte();
@@ -308,7 +308,6 @@ namespace InstagramAPI.Push.Packets
                 multiplier <<= 7;
                 read++;
             }
-            while ((digit & 0x80) != 0 && read < 4);
 
             if (read == 4 && (digit & 0x80) != 0)
             {
