@@ -11,7 +11,7 @@ namespace InstagramAPI.Classes.Mqtt.Packets
         {
         }
 
-        public UnsubscribePacket(int packetId, params string[] topicFilters)
+        public UnsubscribePacket(ushort packetId, params string[] topicFilters)
         {
             this.PacketId = packetId;
             this.TopicFilters = topicFilters;

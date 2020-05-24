@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking;
 using Windows.Networking.Sockets;
-using DotNetty.Transport.Channels;
 using InstagramAPI;
 using InstagramAPI.Push;
 using InstagramAPI.Push.Packets;
@@ -24,7 +23,6 @@ namespace BackgroundPushClient
 
                 await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
                 instagram.PushClient.ConnectionData.SaveToAppSettings();
-                await instagram.PushClient.Shutdown();
                 await instagram.PushClient.TransferPushSocket();
             }
             catch (Exception e)

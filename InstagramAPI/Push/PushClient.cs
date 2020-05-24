@@ -240,6 +240,7 @@ namespace InstagramAPI.Push
                 _runningTokenSource = new CancellationTokenSource();
 
                 await FbnsPacketEncoder.EncodePacket(connectPacket, _outboundWriter);
+                StartPollingLoop();
             }
             catch (Exception e)
             {
@@ -263,7 +264,7 @@ namespace InstagramAPI.Push
 
         private async void StartPollingLoop()
         {
-            while (_runningTokenSource?.IsCancellationRequested ?? false)
+            while (!(_runningTokenSource?.IsCancellationRequested ?? false))
             {
                 await _inboundReader.LoadAsync(FbnsPacketDecoder.PACKET_HEADER_LENGTH);
                 var packet = await FbnsPacketDecoder.DecodePacket(_inboundReader);

@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
-using DotNetty.Codecs;
+using InstagramAPI.Classes.Mqtt;
 using InstagramAPI.Classes.Mqtt.Packets;
 
 namespace InstagramAPI.Push.Packets
@@ -15,39 +16,42 @@ namespace InstagramAPI.Push.Packets
 
         public static async Task EncodePacket(Packet packet, DataWriter writer)
         {
+            Debug.WriteLine($"{nameof(FbnsPacketEncoder)}: Encoding {packet.PacketType}");
             switch (packet.PacketType)
             {
                 case PacketType.CONNECT:
                     if (packet is FbnsConnectPacket fbnsConnectPacket)
                     {
-                        await EncodeFbnsConnectPacket(fbnsConnectPacket, writer);
+                        EncodeFbnsConnectPacket(fbnsConnectPacket, writer);
                     }
                     else
                     {
-                        await EncodeConnectMessage((ConnectPacket) packet, writer);
+                        EncodeConnectMessage((ConnectPacket) packet, writer);
                     }
                     break;
                 case PacketType.PUBLISH:
-                    await EncodePublishPacket((PublishPacket) packet, writer);
+                    EncodePublishPacket((PublishPacket) packet, writer);
                     break;
                 case PacketType.PUBACK:
                 case PacketType.PUBREC:
                 case PacketType.PUBREL:
                 case PacketType.PUBCOMP:
                 case PacketType.UNSUBACK:
-                    await EncodePacketWithIdOnly((PacketWithId)packet, writer);
+                    EncodePacketWithIdOnly((PacketWithId)packet, writer);
                     break;
                 case PacketType.PINGREQ:
                 case PacketType.PINGRESP:
                 case PacketType.DISCONNECT:
-                    await EncodePacketWithFixedHeaderOnly(packet, writer);
+                    EncodePacketWithFixedHeaderOnly(packet, writer);
                     break;
                 default:
                     throw new ArgumentException("Unsupported packet type: " + packet.PacketType, nameof(packet));
             }
+            await writer.StoreAsync();
+            await writer.FlushAsync();
         }
 
-        static async Task EncodeConnectMessage(ConnectPacket packet, DataWriter writer)
+        static void EncodeConnectMessage(ConnectPacket packet, DataWriter writer)
         {
             uint payloadwriterferSize = 0;
 
@@ -136,12 +140,9 @@ namespace InstagramAPI.Push.Packets
                     writer.WriteBytes(passwordBytes);
                 }
             }
-
-            await writer.StoreAsync();
-            await writer.FlushAsync();
         }
 
-        private static async Task EncodeFbnsConnectPacket(FbnsConnectPacket packet, DataWriter writer)
+        private static void EncodeFbnsConnectPacket(FbnsConnectPacket packet, DataWriter writer)
         {
             var payload = packet.Payload;
             uint payloadSize = payload?.Length ?? 0;
@@ -166,12 +167,9 @@ namespace InstagramAPI.Push.Packets
             {
                 writer.WriteBuffer(payload);
             }
-
-            await writer.StoreAsync();
-            await writer.FlushAsync();
         }
 
-        private static async Task EncodePublishPacket(PublishPacket packet, DataWriter writer)
+        private static void EncodePublishPacket(PublishPacket packet, DataWriter writer)
         {
             var payload = packet.Payload;
 
@@ -196,12 +194,9 @@ namespace InstagramAPI.Push.Packets
             {
                 writer.WriteBuffer(payload);
             }
-
-            await writer.StoreAsync();
-            await writer.FlushAsync();
         }
 
-        static async Task EncodePacketWithIdOnly(PacketWithId packet, DataWriter writer)
+        static void EncodePacketWithIdOnly(PacketWithId packet, DataWriter writer)
         {
             var msgId = packet.PacketId;
 
@@ -210,17 +205,12 @@ namespace InstagramAPI.Push.Packets
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             WriteVariableLengthInt(writer, VariableHeaderBufferSize);
             writer.WriteUInt16(msgId);
-            await writer.StoreAsync();
-            await writer.FlushAsync();
         }
 
-        static async Task EncodePacketWithFixedHeaderOnly(Packet packet, DataWriter writer)
+        static void EncodePacketWithFixedHeaderOnly(Packet packet, DataWriter writer)
         {
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             writer.WriteByte(0);
-
-            await writer.StoreAsync();
-            await writer.FlushAsync();
         }
 
         static byte CalculateFirstByteOfFixedHeader(Packet packet)

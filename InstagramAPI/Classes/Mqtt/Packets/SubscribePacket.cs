@@ -11,7 +11,7 @@ namespace InstagramAPI.Classes.Mqtt.Packets
         {
         }
 
-        public SubscribePacket(int packetId, params SubscriptionRequest[] requests)
+        public SubscribePacket(ushort packetId, params SubscriptionRequest[] requests)
         {
             this.PacketId = packetId;
             this.Requests = requests;
