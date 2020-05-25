@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Windows.Storage.Streams;
 using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
+using InstagramAPI.Utils;
 using ByteOrder = Windows.Storage.Streams.ByteOrder;
 
 namespace InstagramAPI.Sync
@@ -223,9 +223,8 @@ namespace InstagramAPI.Sync
                 packet.Authentication = buffer.ReadString(authSize);
                 remainingLength -= authSize + 2;
                 if (remainingLength > 0)
-                    Debug.WriteLine(
-                        $"FbnsPacketDecoder: Unhandled data in the buffer. Length of remaining data = {remainingLength}",
-                        "Warning");
+                    DebugLogger.Log(nameof(StandalonePacketDecoder),
+                        $"Unhandled data in the buffer. Length of remaining data = {remainingLength}");
             }
         }
 

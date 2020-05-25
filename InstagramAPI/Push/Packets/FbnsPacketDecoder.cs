@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using InstagramAPI.Classes.Mqtt;
 using InstagramAPI.Classes.Mqtt.Packets;
+using InstagramAPI.Utils;
 
 namespace InstagramAPI.Push.Packets
 {
@@ -264,10 +264,9 @@ namespace InstagramAPI.Push.Packets
                 var authSize = reader.ReadUInt16();
                 packet.Authentication = reader.ReadString(authSize);
                 remainingLength -= authSize + 2u;
-                if(remainingLength>0)
-                    Debug.WriteLine(
-                        $"FbnsPacketDecoder: Unhandled data in the buffer. Length of remaining data = {remainingLength}",
-                        "Warning");
+                if (remainingLength > 0)
+                    DebugLogger.Log(nameof(FbnsPacketDecoder),
+                        $"Unhandled data in the buffer. Length of remaining data = {remainingLength}");
             }
         }
 

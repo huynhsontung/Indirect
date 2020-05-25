@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
-using Windows.Storage.Streams;
 using Windows.Web.Http;
 using Windows.Web.Http.Filters;
-using Windows.Web.Http.Headers;
 using InstagramAPI.Classes;
-using InstagramAPI.Classes.Android;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -47,17 +41,17 @@ namespace InstagramAPI
 
         public async Task<HttpResponseMessage> GetAsync(Uri requestUri)
         {
-            _logger?.LogRequest(requestUri);
+            DebugLogger.LogRequest(requestUri);
             var response = await _httpClient.GetAsync(requestUri);
-            _logger?.LogResponse(response);
+            DebugLogger.LogResponse(response);
             return response;
         }
 
         public async Task<HttpResponseMessage> PostAsync(Uri requestUri, IHttpContent content)
         {
-            _logger?.LogRequest(requestUri);
+            DebugLogger.LogRequest(requestUri);
             var response = await _httpClient.PostAsync(requestUri, content);
-            _logger?.LogResponse(response);
+            DebugLogger.LogResponse(response);
             return response;
         }
 

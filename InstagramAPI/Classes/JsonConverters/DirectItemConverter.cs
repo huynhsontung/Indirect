@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Linq;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Utils;
@@ -130,7 +128,7 @@ namespace InstagramAPI.Classes.JsonConverters
             }
             catch
             {
-                Debug.WriteLine($"Failed to write item description. Json: {rawJson}");
+                this.Log($"Failed to write item description. Json: {rawJson}");
                 // Not important enough to throw. Pass
             }
 

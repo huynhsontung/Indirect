@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using InstagramAPI.Classes.Mqtt;
 using InstagramAPI.Classes.Mqtt.Packets;
+using InstagramAPI.Utils;
 
 namespace InstagramAPI.Push.Packets
 {
@@ -16,7 +16,7 @@ namespace InstagramAPI.Push.Packets
 
         public static async Task EncodePacket(Packet packet, DataWriter writer)
         {
-            Debug.WriteLine($"{nameof(FbnsPacketEncoder)}: Encoding {packet.PacketType}");
+            DebugLogger.Log(nameof(FbnsPacketEncoder), $"Encoding {packet.PacketType}");
             switch (packet.PacketType)
             {
                 case PacketType.CONNECT:

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Story;
+using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -24,7 +24,7 @@ namespace InstagramAPI
                 var uri = UriCreator.GetGraphQlUri(queryHash, variables);
                 var response = await _httpClient.GetAsync(uri);
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<Reel[]>.Fail(json, response.ReasonPhrase);
                 var payload = JsonConvert.DeserializeObject<JObject>(json);
@@ -35,7 +35,7 @@ namespace InstagramAPI
             }
             catch (Exception e)
             {
-                _logger?.LogException(e);
+                DebugLogger.LogException(e);
                 return Result<Reel[]>.Except(e);
             }
         }
@@ -62,7 +62,7 @@ namespace InstagramAPI
                 var uri = UriCreator.GetGraphQlUri(queryHash, variables);
                 var response = await _httpClient.GetAsync(uri);
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<Reel[]>.Fail(json, response.ReasonPhrase);
                 var payload = JsonConvert.DeserializeObject<JObject>(json);
@@ -73,7 +73,7 @@ namespace InstagramAPI
             }
             catch (Exception e)
             {
-                _logger?.LogException(e);
+                DebugLogger.LogException(e);
                 return Result<Reel[]>.Except(e);
             }
         }

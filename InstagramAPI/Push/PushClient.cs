@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
@@ -17,6 +16,7 @@ using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
+using InstagramAPI.Utils;
 using Ionic.Zlib;
 using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
@@ -125,7 +125,7 @@ namespace InstagramAPI.Push
             if (!_instaApi.IsUserAuthenticated || _runningTokenSource.IsCancellationRequested) return;
 
             // Hand over MQTT socket to socket broker
-            Debug.WriteLine($"{nameof(PushClient)}: Transferring sockets.");
+            this.Log("Transferring sockets");
             await SendPing().ConfigureAwait(false);
             await Task.Delay(TimeSpan.FromSeconds(2));  // grace period
             Shutdown();
@@ -164,7 +164,7 @@ namespace InstagramAPI.Push
         {
             try
             {
-                Debug.WriteLine($"{nameof(PushClient)}: Starting with existing socket.");
+                this.Log("Starting with existing socket");
                 Shutdown();
                 Socket = socket;
                 _inboundReader = new DataReader(socket.InputStream);
@@ -194,7 +194,7 @@ namespace InstagramAPI.Push
         {
             try
             {
-                Debug.WriteLine($"{nameof(PushClient)}: Starting fresh.");
+                this.Log("Starting fresh");
                 Shutdown();
 
                 var connectPacket = new FbnsConnectPacket
@@ -213,8 +213,8 @@ namespace InstagramAPI.Push
                     }
                     catch (Exception connectedStandby)
                     {
-                        Debug.WriteLine(connectedStandby);
-                        Debug.WriteLine($"{nameof(PushClient)}: Connected standby not available.");
+                        this.Log(connectedStandby);
+                        this.Log("Connected standby not available");
                         try
                         {
                             Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
@@ -224,8 +224,8 @@ namespace InstagramAPI.Push
 #if !DEBUG
                             Crashes.TrackError(e);
 #endif
-                            Debug.WriteLine(e);
-                            Debug.WriteLine($"{nameof(PushClient)}: Failed to transfer socket completely!");
+                            this.Log(e);
+                            this.Log("Failed to transfer socket completely!");
                             Shutdown();
                             return;
                         }
@@ -260,7 +260,7 @@ namespace InstagramAPI.Push
             _outboundWriter?.DetachStream();
             _outboundWriter?.Dispose();
             _outboundWriter = null;
-            Debug.WriteLine("Stopped pinging push server");
+            this.Log("Stopped pinging push server");
         }
 
         private async void StartPollingLoop()
@@ -288,11 +288,11 @@ namespace InstagramAPI.Push
             {
                 var packet = PingReqPacket.Instance;
                 await FbnsPacketEncoder.EncodePacket(packet, _outboundWriter);
-                Debug.WriteLine("Pinging Push server");
+                this.Log("Pinging Push server");
             }
             catch (Exception)
             {
-                Debug.WriteLine("Failed to ping Push server. Shutting down.");
+                this.Log("Failed to ping Push server. Shutting down.");
                 Shutdown();
             }
         }
@@ -311,13 +311,13 @@ namespace InstagramAPI.Push
                 switch (msg.PacketType)
                 {
                     case PacketType.CONNACK:
-                        Debug.WriteLine($"{nameof(PushClient)}:\tCONNACK received.");
+                        this.Log("Received CONNACK");
                         ConnectionData.UpdateAuth(((FbnsConnAckPacket) msg).Authentication);
                         await RegisterMqttClient();
                         break;
 
                     case PacketType.PUBLISH:
-                        Debug.WriteLine($"{nameof(PushClient)}:\tPUBLISH received.");
+                        this.Log("Received PUBLISH");
                         var publishPacket = (PublishPacket) msg;
                         if (publishPacket.Payload == null)
                             throw new Exception($"{nameof(PushClient)}: Publish packet received but payload is null");
@@ -328,7 +328,7 @@ namespace InstagramAPI.Push
 
                         var payload = DecompressPayload(publishPacket.Payload);
                         var json = Encoding.UTF8.GetString(payload);
-                        Debug.WriteLine($"{nameof(PushClient)}:\tMQTT json: {json}");
+                        this.Log($"MQTT json: {json}");
                         switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                         {
                             case TopicIds.Message:
@@ -341,20 +341,20 @@ namespace InstagramAPI.Push
                                 StartKeepAliveLoop();
                                 break;
                             default:
-                                Debug.WriteLine($"Unknown topic received: {publishPacket.TopicName}", "Warning");
+                                this.Log($"Unknown topic received: {publishPacket.TopicName}");
                                 break;
                         }
 
                         break;
 
                     case PacketType.PUBACK:
-                        Debug.WriteLine($"{nameof(PushClient)}:\tPUBACK received.");
+                        this.Log("Received PUBACK");
                         _waitingForPubAck = false;
                         break;
 
                     // todo: PingResp never arrives even though data was received. Decoder problem?
                     case PacketType.PINGRESP:
-                        Debug.WriteLine($"{nameof(PushClient)}:\tPINGRESP received.");
+                        this.Log("Received PINGRESP");
                         break;
 
                     default:
@@ -383,7 +383,7 @@ namespace InstagramAPI.Push
 
                 if (!string.IsNullOrEmpty(response["error"]))
                 {
-                    Debug.WriteLine($"{nameof(PushClient)}: {response["error"]}");
+                    this.Log($"{response["error"]}");
                     Shutdown();
                 }
 
@@ -393,7 +393,7 @@ namespace InstagramAPI.Push
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
+                this.Log(e);
 #if !DEBUG
                 Crashes.TrackError(e);
 #endif
