@@ -25,13 +25,6 @@ namespace BackgroundPushClient
                 var socket = details.SocketInformation.StreamSocket;
                 instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
                 await instagram.PushClient.StartWithExistingSocket(socket);
-
-                // We don't need to handle SocketActivity event. Push client will take care of that.
-                if (details.Reason == SocketActivityTriggerReason.KeepAliveTimerExpired)
-                {
-                    await instagram.PushClient.SendPing();
-                }
-
                 await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
                 instagram.PushClient.ConnectionData.SaveToAppSettings();
                 await instagram.PushClient.TransferPushSocket();
