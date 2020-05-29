@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using InstagramAPI.Classes.Direct.ItemContent;
 using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.Responses;

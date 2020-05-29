@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Windows.Storage.Streams;
-using DotNetty.Buffers;
-using DotNetty.Codecs.Mqtt.Packets;
+using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
+using InstagramAPI.Utils;
 using ByteOrder = Windows.Storage.Streams.ByteOrder;
 
 namespace InstagramAPI.Sync
@@ -43,7 +42,7 @@ namespace InstagramAPI.Sync
             {
                 var qualityOfService =
                     (QualityOfService)((signature >> 1) &
-                                        0x3); // take bits #1 and #2 ONLY and convert them into QoS value
+                                       0x3); // take bits #1 and #2 ONLY and convert them into QoS value
                 if (qualityOfService == QualityOfService.Reserved)
                 {
                     throw new Exception(
@@ -197,11 +196,9 @@ namespace InstagramAPI.Sync
             if (hasWill)
             {
                 packet.WillTopicName = DecodeString(buffer, ref remainingLength);
-                int willMessageLength = DecodeUnsignedShort(buffer, ref remainingLength);
+                var willMessageLength = DecodeUnsignedShort(buffer, ref remainingLength);
                 DecreaseRemainingLength(ref remainingLength, willMessageLength);
-                var payload = new byte[willMessageLength];
-                buffer.ReadBytes(payload);
-                packet.WillMessage = Unpooled.CopiedBuffer(payload);
+                packet.WillMessage = buffer.ReadBuffer(willMessageLength);
             }
 
             if (packet.HasUsername)
@@ -226,9 +223,8 @@ namespace InstagramAPI.Sync
                 packet.Authentication = buffer.ReadString(authSize);
                 remainingLength -= authSize + 2;
                 if (remainingLength > 0)
-                    Debug.WriteLine(
-                        $"FbnsPacketDecoder: Unhandled data in the buffer. Length of remaining data = {remainingLength}",
-                        "Warning");
+                    DebugLogger.Log(nameof(StandalonePacketDecoder),
+                        $"Unhandled data in the buffer. Length of remaining data = {remainingLength}");
             }
         }
 
@@ -244,14 +240,12 @@ namespace InstagramAPI.Sync
 
             if (remainingLength > 0)
             {
-                var payload = new byte[remainingLength];
-                buffer.ReadBytes(payload);
+                packet.Payload = buffer.ReadBuffer((uint) remainingLength);
                 remainingLength = 0;
-                packet.Payload = Unpooled.CopiedBuffer(payload);
             }
             else
             {
-                packet.Payload = Unpooled.Empty;
+                packet.Payload = null;
             }
         }
 
@@ -287,7 +281,7 @@ namespace InstagramAPI.Sync
             }
         }
 
-        static int DecodeUnsignedShort(DataReader buffer, ref int remainingLength)
+        static ushort DecodeUnsignedShort(DataReader buffer, ref int remainingLength)
         {
             DecreaseRemainingLength(ref remainingLength, 2);
             return buffer.ReadUInt16();

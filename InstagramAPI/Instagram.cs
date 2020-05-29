@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Storage;
@@ -53,7 +51,6 @@ namespace InstagramAPI
 
         private readonly HttpClient _httpClient = new HttpClient();
         private readonly ApiRequestMessage _apiRequestMessage;
-        private readonly DebugLogger _logger;
         private string _fbAccessToken;
         public TwoFactorLoginInfo TwoFactorInfo { get; private set; }  // Only used when login returns two factor
         public ChallengeLoginInfo ChallengeInfo { get; private set; }  // Only used when login returns challenge
@@ -62,7 +59,7 @@ namespace InstagramAPI
         private Instagram()
         {
 #if DEBUG
-            _logger = new DebugLogger(LogLevel.All);
+            DebugLogger.LogLevel = LogLevel.All;
 #endif
             SetDefaultRequestHeaders();
             _apiRequestMessage = new ApiRequestMessage(this);
@@ -100,7 +97,7 @@ namespace InstagramAPI
                 if (isNewLogin)
                 {
                     var firstResponse = await _httpClient.GetAsync(UriCreator.BaseInstagramUri);
-                    _logger?.LogResponse(firstResponse);
+                    DebugLogger.LogResponse(firstResponse);
                 }
 
                 var csrftoken = GetCsrfToken();
@@ -178,7 +175,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<LoginResult>.Except(exception, LoginResult.Exception);
             }
         }
@@ -204,7 +201,7 @@ namespace InstagramAPI
                 if (GetCsrfToken() == string.Empty)
                 {
                     var firstResponse = await _httpClient.GetAsync(UriCreator.BaseInstagramUri);
-                    _logger?.LogResponse(firstResponse);
+                    DebugLogger.LogResponse(firstResponse);
                 }
 
                 var instaUri = UriCreator.GetFacebookSignUpUri();
@@ -226,7 +223,7 @@ namespace InstagramAPI
                 var request = GetSignedRequest(instaUri, data);
                 var response = await _httpClient.SendRequestAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                 {
@@ -304,7 +301,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<LoginResult>.Except(exception, LoginResult.Exception);
             }
         }
@@ -313,13 +310,13 @@ namespace InstagramAPI
         /// No need to clear data. If IsUserAuthenticated is false, next time when constructor is called,
         /// data will not be loaded.
         /// </summary>
-        public async void Logout()
+        public void Logout()
         {
             IsUserAuthenticated = false;
             SyncClient.Shutdown();
             PushClient.UnregisterTasks();
             SaveToAppSettings();
-            await PushClient.Shutdown().ConfigureAwait(false);    // long task
+            PushClient.Shutdown();
             PushClient.ConnectionData.Clear();
         }
 
@@ -337,7 +334,7 @@ namespace InstagramAPI
                 };
                 var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(fields));
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<CurrentUser>.Fail(json, response.ReasonPhrase);
@@ -353,7 +350,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<CurrentUser>.Except(exception);
             }
         }

@@ -1,33 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking;
 using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
+using Windows.Storage.Streams;
 using Windows.Web.Http;
-using DotNetty.Buffers;
-using DotNetty.Codecs.Mqtt.Packets;
-using DotNetty.Transport.Channels;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
+using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
+using InstagramAPI.Utils;
 using Ionic.Zlib;
 using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Push
 {
-    public class PushClient : SimpleChannelInboundHandler<Packet>
+    public class PushClient
     {
         public event EventHandler<PushReceivedEventArgs> MessageReceived;
         public FbnsConnectionData ConnectionData { get; } = new FbnsConnectionData();
         public StreamSocket Socket { get; private set; }
-        public override bool IsSharable { get; } = true;
 
         private const string HOST_NAME = "mqtt-mini.facebook.com";
         private const string BACKGROUND_SOCKET_ACTIVITY_NAME = "BackgroundPushClient.SocketActivity";
@@ -36,7 +36,6 @@ namespace InstagramAPI.Push
         private const string INTERNET_AVAILABLE_ENTRY_POINT = "BackgroundPushClient.InternetAvailable";
         private const string SOCKET_ID = "mqtt_fbns";
 
-        private SingleThreadEventLoop _loopGroup;
         private readonly UserSessionData _user;
         private readonly AndroidDevice _device;
         private IBackgroundTaskRegistration _socketActivityTask;
@@ -45,7 +44,9 @@ namespace InstagramAPI.Push
         public const int KEEP_ALIVE = 900;    // seconds
         private const int TIMEOUT = 5;
         private bool _waitingForPubAck;
-        private IChannelHandlerContext _context;
+        private CancellationTokenSource _runningTokenSource;
+        private DataReader _inboundReader;
+        private DataWriter _outboundWriter;
         private readonly Instagram _instaApi;
 
         public PushClient(Instagram api, bool tryLoadData = true)
@@ -66,15 +67,10 @@ namespace InstagramAPI.Push
             NetworkInformation.NetworkStatusChanged += async sender =>
             {
                 var internetProfile = NetworkInformation.GetInternetConnectionProfile();
-                if (internetProfile == null || _loopGroup == null) return;
-                await Shutdown();
+                if (internetProfile == null || _runningTokenSource.IsCancellationRequested) return;
+                Shutdown();
                 await StartFresh();
             };
-        }
-
-        public override void ChannelRegistered(IChannelHandlerContext context)
-        {
-            _context = context;
         }
 
         public void UnregisterTasks()
@@ -126,12 +122,13 @@ namespace InstagramAPI.Push
         /// </summary>
         public async Task TransferPushSocket()
         {
-            if (!_instaApi.IsUserAuthenticated || _loopGroup == null) return;
+            if (!_instaApi.IsUserAuthenticated || _runningTokenSource.IsCancellationRequested) return;
 
             // Hand over MQTT socket to socket broker
-            Debug.WriteLine($"{nameof(PushClient)}: Transferring sockets.");
+            this.Log("Transferring sockets");
             await SendPing().ConfigureAwait(false);
-            await Shutdown().ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromSeconds(2));  // grace period
+            Shutdown();
             await Socket.CancelIOAsync();
             Socket.TransferOwnership(
                 SOCKET_ID,
@@ -167,17 +164,18 @@ namespace InstagramAPI.Push
         {
             try
             {
-                Debug.WriteLine($"{nameof(PushClient)}: Starting with existing socket.");
+                this.Log("Starting with existing socket");
+                Shutdown();
                 Socket = socket;
-                if (_loopGroup != null) await Shutdown().ConfigureAwait(false);
-                _loopGroup = new SingleThreadEventLoop();
-
-                var streamSocketChannel = new StreamSocketChannel(Socket);
-                streamSocketChannel.Pipeline.AddLast(new FbnsPacketEncoder(), new FbnsPacketDecoder(), this);
-
-                await _loopGroup.RegisterAsync(streamSocketChannel).ConfigureAwait(false);
+                _inboundReader = new DataReader(socket.InputStream);
+                _outboundWriter = new DataWriter(socket.OutputStream);
+                _inboundReader.ByteOrder = ByteOrder.BigEndian;
+                _outboundWriter.ByteOrder = ByteOrder.BigEndian;
+                _runningTokenSource = new CancellationTokenSource();
+                
+                StartPollingLoop();
                 await SendPing().ConfigureAwait(false);
-                await _context.Executor.Schedule(KeepAliveLoop, TimeSpan.FromSeconds(KEEP_ALIVE - 60));
+                StartKeepAliveLoop();
             }
             catch (TaskCanceledException)
             {
@@ -188,7 +186,7 @@ namespace InstagramAPI.Push
 #if !DEBUG
                 Crashes.TrackError(e);
 #endif
-                await Shutdown().ConfigureAwait(false);
+                Shutdown();
             }
         }
 
@@ -196,8 +194,8 @@ namespace InstagramAPI.Push
         {
             try
             {
-                Debug.WriteLine($"{nameof(PushClient)}: Starting fresh.");
-                if (_loopGroup != null) await Shutdown();
+                this.Log("Starting fresh");
+                Shutdown();
 
                 var connectPacket = new FbnsConnectPacket
                 {
@@ -215,8 +213,8 @@ namespace InstagramAPI.Push
                     }
                     catch (Exception connectedStandby)
                     {
-                        Debug.WriteLine(connectedStandby);
-                        Debug.WriteLine($"{nameof(PushClient)}: Connected standby not available.");
+                        this.Log(connectedStandby);
+                        this.Log("Connected standby not available");
                         try
                         {
                             Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
@@ -226,9 +224,9 @@ namespace InstagramAPI.Push
 #if !DEBUG
                             Crashes.TrackError(e);
 #endif
-                            Debug.WriteLine(e);
-                            Debug.WriteLine($"{nameof(PushClient)}: Failed to transfer socket completely!");
-                            await Shutdown().ConfigureAwait(false);
+                            this.Log(e);
+                            this.Log("Failed to transfer socket completely!");
+                            Shutdown();
                             return;
                         }
                     }
@@ -236,41 +234,51 @@ namespace InstagramAPI.Push
 
                 await Socket.ConnectAsync(new HostName(HOST_NAME), "443", SocketProtectionLevel.Tls12);
 
-                var streamSocketChannel = new StreamSocketChannel(Socket);
-                streamSocketChannel.Pipeline.AddLast(new FbnsPacketEncoder(), new FbnsPacketDecoder(), this);
+                _inboundReader = new DataReader(Socket.InputStream);
+                _outboundWriter = new DataWriter(Socket.OutputStream);
+                _inboundReader.ByteOrder = ByteOrder.BigEndian;
+                _outboundWriter.ByteOrder = ByteOrder.BigEndian;
+                _runningTokenSource = new CancellationTokenSource();
 
-                _loopGroup = new SingleThreadEventLoop();
-                await _loopGroup.RegisterAsync(streamSocketChannel).ConfigureAwait(false);
-                await streamSocketChannel.WriteAndFlushAsync(connectPacket).ConfigureAwait(false);
+                await FbnsPacketEncoder.EncodePacket(connectPacket, _outboundWriter);
+                StartPollingLoop();
             }
             catch (Exception e)
             {
 #if !DEBUG
                 Crashes.TrackError(e);
 #endif
-                await Shutdown().ConfigureAwait(false);
+                Shutdown();
             }
             
         }
 
-        public async Task Shutdown()
+        public void Shutdown()
         {
-            if (_loopGroup != null)
+            _runningTokenSource?.Cancel();
+            _inboundReader = null;
+            _outboundWriter?.DetachStream();
+            _outboundWriter?.Dispose();
+            _outboundWriter = null;
+            this.Log("Stopped pinging push server");
+        }
+
+        private async void StartPollingLoop()
+        {
+            while (!(_runningTokenSource?.IsCancellationRequested ?? false) && _inboundReader != null)
             {
-                Debug.WriteLine("Stopped pinging push server");
-                var loopGroup = _loopGroup;
-                _loopGroup = null;
+                var reader = _inboundReader;
                 try
                 {
-                    await loopGroup.ShutdownGracefullyAsync(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(1))
-                        .ConfigureAwait(false);
+                    await reader.LoadAsync(FbnsPacketDecoder.PACKET_HEADER_LENGTH);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-#if !DEBUG
-                    Crashes.TrackError(e);
-#endif
+                    // Connection closed (most likely)
+                    return;
                 }
+                var packet = await FbnsPacketDecoder.DecodePacket(reader);
+                await OnPacketReceived(packet);
             }
         }
 
@@ -279,13 +287,13 @@ namespace InstagramAPI.Push
             try
             {
                 var packet = PingReqPacket.Instance;
-                await _context.WriteAndFlushAsync(packet);
-                Debug.WriteLine("Pinging Push server");
+                await FbnsPacketEncoder.EncodePacket(packet, _outboundWriter);
+                this.Log("Pinging Push server");
             }
             catch (Exception)
             {
-                Debug.WriteLine("Failed to ping Push server. Shutting down.");
-                _ = Shutdown();
+                this.Log("Failed to ping Push server. Shutting down.");
+                Shutdown();
             }
         }
 
@@ -296,65 +304,57 @@ namespace InstagramAPI.Push
             RegResp = 80    // "/fbns_reg_resp"
         }
 
-        protected override async void ChannelRead0(IChannelHandlerContext ctx, Packet msg)
+        private async Task OnPacketReceived(Packet msg)
         {
             try
             {
-                _context = ctx; // Save context for manual Ping later
                 switch (msg.PacketType)
                 {
                     case PacketType.CONNACK:
-                        Debug.WriteLine($"{nameof(PushClient)}:\tCONNACK received.");
+                        this.Log("Received CONNACK");
                         ConnectionData.UpdateAuth(((FbnsConnAckPacket) msg).Authentication);
-                        RegisterMqttClient(ctx);
+                        await RegisterMqttClient();
                         break;
 
                     case PacketType.PUBLISH:
-                        Debug.WriteLine($"{nameof(PushClient)}:\tPUBLISH received.");
+                        this.Log("Received PUBLISH");
                         var publishPacket = (PublishPacket) msg;
+                        if (publishPacket.Payload == null)
+                            throw new Exception($"{nameof(PushClient)}: Publish packet received but payload is null");
                         if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
                         {
-                            await ctx.WriteAndFlushAsync(PubAckPacket.InResponseTo(publishPacket));
+                            await FbnsPacketEncoder.EncodePacket(PubAckPacket.InResponseTo(publishPacket), _outboundWriter);
                         }
 
                         var payload = DecompressPayload(publishPacket.Payload);
                         var json = Encoding.UTF8.GetString(payload);
-                        Debug.WriteLine($"{nameof(PushClient)}:\tMQTT json: {json}");
+                        this.Log($"MQTT json: {json}");
                         switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                         {
                             case TopicIds.Message:
                                 var message = JsonConvert.DeserializeObject<PushReceivedEventArgs>(json);
                                 message.Json = json;
-                                OnMessageReceived(message);
+                                MessageReceived?.Invoke(this, message);
                                 break;
                             case TopicIds.RegResp:
-                                OnRegisterResponse(json);
-                                try
-                                {
-                                    await _context.Executor.Schedule(KeepAliveLoop,
-                                        TimeSpan.FromSeconds(KEEP_ALIVE - 60));
-                                }
-                                catch (TaskCanceledException)
-                                {
-                                    // pass
-                                }
-
+                                await OnRegisterResponse(json);
+                                StartKeepAliveLoop();
                                 break;
                             default:
-                                Debug.WriteLine($"Unknown topic received: {publishPacket.TopicName}", "Warning");
+                                this.Log($"Unknown topic received: {publishPacket.TopicName}");
                                 break;
                         }
 
                         break;
 
                     case PacketType.PUBACK:
-                        Debug.WriteLine($"{nameof(PushClient)}:\tPUBACK received.");
+                        this.Log("Received PUBACK");
                         _waitingForPubAck = false;
                         break;
 
                     // todo: PingResp never arrives even though data was received. Decoder problem?
                     case PacketType.PINGRESP:
-                        Debug.WriteLine($"{nameof(PushClient)}:\tPINGRESP received.");
+                        this.Log("Received PINGRESP");
                         break;
 
                     default:
@@ -367,7 +367,7 @@ namespace InstagramAPI.Push
 #if !DEBUG
                 Crashes.TrackError(e);
 #endif
-                await Shutdown().ConfigureAwait(false);
+                Shutdown();
             }
         }
 
@@ -375,7 +375,7 @@ namespace InstagramAPI.Push
         /// <summary>
         ///     After receiving the token, proceed to register over Instagram API
         /// </summary>
-        private async void OnRegisterResponse(string json)
+        private async Task OnRegisterResponse(string json)
         {
             try
             {
@@ -383,8 +383,8 @@ namespace InstagramAPI.Push
 
                 if (!string.IsNullOrEmpty(response["error"]))
                 {
-                    Debug.WriteLine($"{nameof(PushClient)}: {response["error"]}");
-                    await Shutdown();
+                    this.Log($"{response["error"]}");
+                    Shutdown();
                 }
 
                 var token = response["token"];
@@ -393,11 +393,11 @@ namespace InstagramAPI.Push
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
+                this.Log(e);
 #if !DEBUG
                 Crashes.TrackError(e);
 #endif
-                await Shutdown();
+                Shutdown();
             }
         }
 
@@ -416,6 +416,7 @@ namespace InstagramAPI.Push
                 {"device_type", "android_mqtt"},
                 {"is_main_push_channel", "true"},
                 {"phone_id", _device.PhoneId.ToString()},
+                {"device_sub_type", "2" },
                 {"device_token", token},
                 {"_csrftoken", _user.CsrfToken },
                 {"guid", _device.Uuid.ToString() },
@@ -433,7 +434,7 @@ namespace InstagramAPI.Push
         ///     The server will then return a token for registering over Instagram API side.
         /// </summary>
         /// <param name="ctx"></param>
-        private void RegisterMqttClient(IChannelHandlerContext ctx)
+        private async Task RegisterMqttClient()
         {
             var message = new Dictionary<string, string>
             {
@@ -458,30 +459,37 @@ namespace InstagramAPI.Push
 
             var publishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
             {
-                Payload = Unpooled.CopiedBuffer(compressed),
-                PacketId = (int) CryptographicBuffer.GenerateRandomNumber(),
+                Payload = compressed.AsBuffer(),
+                PacketId = (ushort) CryptographicBuffer.GenerateRandomNumber(),
                 TopicName = ((byte)TopicIds.RegReq).ToString()
             };
 
             // Send PUBLISH packet then wait for PUBACK
             // Retry after TIMEOUT seconds
-            ctx.WriteAndFlushAsync(publishPacket);
-            _waitingForPubAck = true;
-            Task.Delay(TimeSpan.FromSeconds(TIMEOUT)).ContinueWith(retry =>
-            {
-                if (_waitingForPubAck)
-                {
-                    RegisterMqttClient(ctx);
-                }
-            });
+            await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
+            WaitForPubAck();
         }
 
-        private async void KeepAliveLoop()
+        private async void WaitForPubAck()
         {
-            await SendPing();
+            _waitingForPubAck = true;
+            await Task.Delay(TimeSpan.FromSeconds(TIMEOUT));
+            if (_waitingForPubAck)
+            {
+                await RegisterMqttClient();
+            }
+        }
+
+        private async void StartKeepAliveLoop()
+        {
+            if (_runningTokenSource == null) return;
             try
             {
-                await _context.Executor.Schedule(KeepAliveLoop, TimeSpan.FromSeconds(KEEP_ALIVE - 60));
+                while (!_runningTokenSource.IsCancellationRequested)
+                {
+                    await SendPing();
+                    await Task.Delay(TimeSpan.FromSeconds(KEEP_ALIVE - 60), _runningTokenSource.Token);
+                }
             }
             catch (TaskCanceledException)
             {
@@ -489,31 +497,18 @@ namespace InstagramAPI.Push
             }
         }
 
-        private byte[] DecompressPayload(IByteBuffer payload)
+        private byte[] DecompressPayload(IBuffer payload)
         {
-            var totalLength = payload.ReadableBytes;
+            var compressedStream = payload.AsStream();
 
             var decompressedStream = new MemoryStream(256);
-            using (var compressedStream = new MemoryStream(totalLength))
+            using (var zlibStream = new ZlibStream(compressedStream, CompressionMode.Decompress, true))
             {
-                payload.GetBytes(0, compressedStream, totalLength);
-                compressedStream.Position = 0;
-                using (var zlibStream = new ZlibStream(compressedStream, CompressionMode.Decompress, true))
-                {
-                    zlibStream.CopyTo(decompressedStream);
-                }
+                zlibStream.CopyTo(decompressedStream);
             }
 
-            var data = new byte[decompressedStream.Length];
-            decompressedStream.Position = 0;
-            decompressedStream.Read(data, 0, data.Length);
-            decompressedStream.Dispose();
-            return data;
-        }
-
-        private void OnMessageReceived(PushReceivedEventArgs args)
-        {
-            MessageReceived?.Invoke(this, args);
+            var data = decompressedStream.GetWindowsRuntimeBuffer(0, (int) decompressedStream.Length);
+            return data.ToArray();
         }
     }
 }

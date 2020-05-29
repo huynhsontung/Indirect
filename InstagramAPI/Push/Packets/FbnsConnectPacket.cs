@@ -1,5 +1,5 @@
-﻿using DotNetty.Buffers;
-using DotNetty.Codecs.Mqtt.Packets;
+﻿using Windows.Storage.Streams;
+using InstagramAPI.Classes.Mqtt.Packets;
 
 namespace InstagramAPI.Push.Packets
 {
@@ -10,19 +10,19 @@ namespace InstagramAPI.Push.Packets
         /// <summary>
         ///     Following flags are marked: User Name Flag, Password Flag, Clean Session
         /// </summary>
-        public int ConnectFlags { get; set; } = 194;
+        public byte ConnectFlags { get; set; } = 194;
 
         public string ProtocolName { get; set; } = "MQTToT";
 
-        public int ProtocolLevel { get; set; } = 3;
+        public byte ProtocolLevel { get; set; } = 3;
 
-        public int KeepAliveInSeconds { get; set; } = 900;
+        public ushort KeepAliveInSeconds { get; set; } = 900;
 
         public bool CleanSession { get; set; }
 
         public bool HasWill { get; set; }
 
-        public IByteBuffer WillMessage { get; set; }
+        public IBuffer WillMessage { get; set; }
 
         public QualityOfService WillQualityOfService { get; set; }
 
@@ -40,6 +40,6 @@ namespace InstagramAPI.Push.Packets
 
         public string WillTopicName { get; set; }
 
-        public IByteBuffer Payload { get; set; }
+        public IBuffer Payload { get; set; }
     }
 }

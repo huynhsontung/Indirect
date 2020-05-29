@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking;
 using Windows.Networking.Sockets;
-using DotNetty.Transport.Channels;
 using InstagramAPI;
 using InstagramAPI.Push;
 using InstagramAPI.Push.Packets;

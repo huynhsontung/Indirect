@@ -1,4 +1,4 @@
-﻿using DotNetty.Codecs.Mqtt.Packets;
+﻿using InstagramAPI.Classes.Mqtt.Packets;
 
 namespace InstagramAPI.Push.Packets
 {

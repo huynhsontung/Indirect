@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using DotNetty.Buffers;
+using Windows.Storage.Streams;
 using Ionic.Zlib;
 using Thrift.Protocol;
 using Thrift.Protocol.Entities;
@@ -47,7 +48,7 @@ namespace InstagramAPI.Push
         /// Make a complete payload from <see cref="FbnsConnectionData"/> using Thrift.
         /// </summary>
         /// <returns>Payload</returns>
-        public static async Task<IByteBuffer> BuildPayload(FbnsConnectionData data)
+        public static async Task<IBuffer> BuildPayload(FbnsConnectionData data)
         {
             _memoryBufferTransport = new TMemoryBufferTransport();
             _thrift = new TCompactProtocol(_memoryBufferTransport);
@@ -62,12 +63,7 @@ namespace InstagramAPI.Push
                 await zlibStream.WriteAsync(rawPayload, 0, rawPayload.Length);
             }
 
-            var readData = new byte[dataStream.Length];
-            dataStream.Position = 0;
-            await dataStream.ReadAsync(readData, 0, readData.Length);
-            dataStream.Dispose();
-
-            var compressed = Unpooled.CopiedBuffer(readData);
+            var compressed = dataStream.GetWindowsRuntimeBuffer(0, (int)dataStream.Length);
             return compressed;
         }
 

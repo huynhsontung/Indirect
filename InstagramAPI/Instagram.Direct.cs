@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.Web.Http;
-using Windows.Web.Http.Headers;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Responses;
+using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -60,7 +58,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<InboxContainer>.Except(exception);
             }
         }
@@ -73,7 +71,7 @@ namespace InstagramAPI
                     pending ? UriCreator.GetPendingInboxUri(maxId) : UriCreator.GetDirectInboxUri(maxId);
                 var response = await _httpClient.GetAsync(directInboxUri);
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<InboxContainer>.Fail(json, response.ReasonPhrase);
@@ -82,7 +80,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<InboxContainer>.Except(exception);
             }
         }
@@ -100,7 +98,7 @@ namespace InstagramAPI
                 };
                 var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<BaseStatusResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<BaseStatusResponse>(json);
@@ -108,7 +106,7 @@ namespace InstagramAPI
             }
             catch (Exception e)
             {
-                _logger?.LogException(e);
+                DebugLogger.LogException(e);
                 return Result<BaseStatusResponse>.Except(e);
             }
         }
@@ -127,7 +125,7 @@ namespace InstagramAPI
                 };
                 var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<DirectThread>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<DirectThread>(json);
@@ -135,7 +133,7 @@ namespace InstagramAPI
             }
             catch (Exception e)
             {
-                _logger?.LogException(e);
+                DebugLogger.LogException(e);
                 return Result<DirectThread>.Except(e);
             }
         }
@@ -208,7 +206,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<DirectThread>.Except(exception);
             }
         }
@@ -220,7 +218,7 @@ namespace InstagramAPI
                 var directInboxUri = UriCreator.GetDirectInboxThreadUri(threadId, maxId);
                 var response = await _httpClient.GetAsync(directInboxUri);
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<DirectThread>.Fail(json, response.ReasonPhrase);
@@ -234,7 +232,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<DirectThread>.Except(exception);
             }
         }
@@ -247,7 +245,7 @@ namespace InstagramAPI
                 var threadUri = UriCreator.GetThreadByRecipientsUri(userIds);
                 var response = await _httpClient.GetAsync(threadUri);
                 var json = await response.Content.ReadAsStringAsync();
-                _logger.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<DirectThread>.Fail(json, response.ReasonPhrase);
@@ -262,7 +260,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<DirectThread>.Except(exception);
             }
         }
@@ -289,7 +287,7 @@ namespace InstagramAPI
 
                 var response = await _httpClient.GetAsync(instaUri);
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<RankedRecipientsResponse>.Fail(json, response.ReasonPhrase);
@@ -298,7 +296,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<RankedRecipientsResponse>.Except(exception);
             }
         }
@@ -324,7 +322,7 @@ namespace InstagramAPI
                 };
                 var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<ItemAckPayloadResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
@@ -334,7 +332,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<ItemAckPayloadResponse>.Except(exception);
             }
         }
@@ -367,7 +365,7 @@ namespace InstagramAPI
 
                 var response = await _httpClient.PostAsync(directSendMessageUri, new HttpFormUrlEncodedContent(fields));
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<List<DirectThread>>.Fail(json);
@@ -378,7 +376,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<List<DirectThread>>.Except(exception);
             }
         }
@@ -445,7 +443,7 @@ namespace InstagramAPI
 
                 var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<ItemAckPayloadResponse>.Fail(json, response.ReasonPhrase);
@@ -456,7 +454,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<ItemAckPayloadResponse>.Except(exception);
             }
         }
@@ -480,7 +478,7 @@ namespace InstagramAPI
                 };
                 var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<ItemAckPayloadResponse>.Fail(json, response.ReasonPhrase);
@@ -491,7 +489,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<ItemAckPayloadResponse>.Except(exception);
             }
         }
@@ -519,7 +517,7 @@ namespace InstagramAPI
                 };
                 var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<bool>.Fail(json, response.ReasonPhrase);
@@ -530,7 +528,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<bool>.Except(exception);
             }
         }
@@ -562,7 +560,7 @@ namespace InstagramAPI
                 };
                 var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<ItemAckResponse>.Fail(json, response.ReasonPhrase);
@@ -571,7 +569,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<ItemAckResponse>.Except(exception);
             }
         }
@@ -603,7 +601,7 @@ namespace InstagramAPI
                 };
                 var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<ItemAckResponse>.Fail(json, response.ReasonPhrase);
@@ -612,7 +610,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<ItemAckResponse>.Except(exception);
             }
         }
@@ -625,7 +623,7 @@ namespace InstagramAPI
                 var instaUri = UriCreator.GetDirectUserPresenceUri();
                 var response = await _httpClient.GetAsync(instaUri);
                 var json = await response.Content.ReadAsStringAsync();
-                _logger?.LogResponse(response);
+                DebugLogger.LogResponse(response);
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<UserPresenceResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<UserPresenceResponse>(json);
@@ -633,7 +631,7 @@ namespace InstagramAPI
             }
             catch (Exception exception)
             {
-                _logger?.LogException(exception);
+                DebugLogger.LogException(exception);
                 return Result<UserPresenceResponse>.Except(exception);
             }
         }

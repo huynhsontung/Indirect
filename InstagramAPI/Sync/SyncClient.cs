@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,9 +10,8 @@ using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
 using Windows.Web.Http.Filters;
-using DotNetty.Buffers;
-using DotNetty.Codecs.Mqtt.Packets;
-using InstagramAPI.Push;
+using InstagramAPI.Classes.Mqtt.Packets;
+using InstagramAPI.Utils;
 using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -26,7 +25,7 @@ namespace InstagramAPI.Sync
         public event EventHandler<UserPresenceEventArgs> UserPresenceChanged; 
         public event EventHandler<Exception> FailedToStart;
 
-        private int _packetId = 1;
+        private ushort _packetId = 1;
         private CancellationTokenSource _pinging;
         private readonly Instagram _instaApi;
         private long _seqId;
@@ -53,7 +52,7 @@ namespace InstagramAPI.Sync
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
+                this.Log(e);
 #if !DEBUG
                 Crashes.TrackError(e);
 #endif
@@ -64,7 +63,7 @@ namespace InstagramAPI.Sync
         {
             try
             {
-                Debug.WriteLine("Sync client starting");
+                this.Log("Sync client starting");
                 if (seqId == 0)
                     throw new ArgumentException("Invalid seqId. Have you fetched inbox for the first time?",
                         nameof(seqId));
@@ -134,8 +133,8 @@ namespace InstagramAPI.Sync
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
-                Debug.WriteLine($"{nameof(SyncClient)}: Failed to start.");
+                this.Log(e);
+                this.Log("Failed to start");
                 FailedToStart?.Invoke(this, e);
             }
         }
@@ -157,7 +156,7 @@ namespace InstagramAPI.Sync
             {
                 // Ignore if fail
             }
-            Debug.WriteLine($"{nameof(SyncClient)}: Internet connection available. Reconnecting.");
+            this.Log("Internet connection available. Reconnecting.");
             await Start(_seqId, _snapshotAt);
         }
 
@@ -176,15 +175,15 @@ namespace InstagramAPI.Sync
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e);
-                    Debug.WriteLine($"{nameof(SyncClient)}: Failed to decode packet.");
+                    this.Log(e);
+                    this.Log("Failed to decode packet.");
                     return;
                 }
 
+                this.Log("Received " + packet.PacketType);
                 switch (packet.PacketType)
                 {
                     case PacketType.CONNACK:
-                        Debug.WriteLine($"{nameof(SyncClient)}: " + packet.PacketType);
                         var subscribePacket = new SubscribePacket(
                             _packetId++,
                             new SubscriptionRequest("/ig_message_sync", QualityOfService.AtMostOnce),
@@ -207,7 +206,7 @@ namespace InstagramAPI.Sync
                         {
                             PacketId = _packetId++,
                             TopicName = "/ig_sub_iris",
-                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                            Payload = jsonBytes.AsBuffer()
                         };
                         await WriteAndFlushPacketAsync(irisPublishPacket, outStream);
 
@@ -217,7 +216,7 @@ namespace InstagramAPI.Sync
                         {
                             PacketId = _packetId++,
                             TopicName = "/pubsub",
-                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                            Payload = jsonBytes.AsBuffer()
                         };
                         await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
                         unsubPacket = new UnsubscribePacket(_packetId++, "/pubsub");
@@ -231,7 +230,7 @@ namespace InstagramAPI.Sync
                         {
                             PacketId = _packetId++,
                             TopicName = "/pubsub",
-                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                            Payload = jsonBytes.AsBuffer()
                         };
                         await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
 
@@ -243,7 +242,7 @@ namespace InstagramAPI.Sync
                         {
                             PacketId = _packetId++,
                             TopicName = "/ig_realtime_sub",
-                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                            Payload = jsonBytes.AsBuffer()
                         };
                         await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
                         unsubPacket = new UnsubscribePacket(_packetId++, "/ig_realtime_sub");
@@ -258,11 +257,10 @@ namespace InstagramAPI.Sync
                         {
                             PacketId = _packetId++,
                             TopicName = "/ig_realtime_sub",
-                            Payload = Unpooled.CopiedBuffer(jsonBytes)
+                            Payload = jsonBytes.AsBuffer()
                         };
                         await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
 
-                        Debug.WriteLine($"{nameof(SyncClient)}: " + packet.PacketType);
                         _ = Task.Run(async () =>
                         {
                             while (!_pinging.IsCancellationRequested)
@@ -277,7 +275,7 @@ namespace InstagramAPI.Sync
                                 }
                                 catch (TaskCanceledException)
                                 {
-                                    Debug.WriteLine("Stopped pinging sync server");
+                                    this.Log("Stopped pinging sync server");
                                     return;
                                 }
                             }
@@ -286,8 +284,10 @@ namespace InstagramAPI.Sync
 
                     case PacketType.PUBLISH:
                         var publishPacket = (PublishPacket)packet;
-                        var payload = publishPacket.Payload.ReadString(publishPacket.Payload.ReadableBytes, Encoding.UTF8);
-                        Debug.WriteLine($"{nameof(SyncClient)} pub to {publishPacket.TopicName} payload: {payload}");
+                        if (publishPacket.Payload == null) 
+                            throw new Exception($"{nameof(SyncClient)}: Publish packet received but payload is null");
+                        var payload = Encoding.UTF8.GetString(publishPacket.Payload.ToArray());
+                        this.Log($"Publish to {publishPacket.TopicName} with payload: {payload}");
                         switch (publishPacket.TopicName)
                         {
                             case "/ig_message_sync":
@@ -327,11 +327,6 @@ namespace InstagramAPI.Sync
                         return;
 
                     case PacketType.PINGRESP:
-                        Debug.WriteLine("Got pong from Sync Client");
-                        break;
-
-                    default:
-                        Debug.WriteLine($"{nameof(SyncClient)}: " + packet.PacketType);
                         break;
                 }
             }
@@ -340,23 +335,21 @@ namespace InstagramAPI.Sync
 #if !DEBUG
                 Crashes.TrackError(e);
 #endif
-                Debug.WriteLine("Exception occured when processing incoming sync message.");
-                Debug.WriteLine(e);
+                this.Log("Exception occured when processing incoming sync message.");
+                this.Log(e);
             }
         }
 
         private static async Task WriteAndFlushPacketAsync(Packet packet, IOutputStream outStream)
         {
-            Debug.WriteLine($"Sending {packet.PacketType}");
+            DebugLogger.Log(nameof(SyncClient), $"Sending {packet.PacketType}");
             await outStream.WriteAsync(StandalonePacketEncoder.EncodePacket(packet));
             await outStream.FlushAsync();
 
             if (packet is PublishPacket publishPacket)
             {
-                publishPacket.Payload.SetReaderIndex(0);
-                var json = publishPacket.Payload.ReadString(publishPacket.Payload.ReadableBytes, Encoding.UTF8);
-                Debug.WriteLine($"Payload: {json}");
-                publishPacket.Payload?.Release();
+                var json = Encoding.UTF8.GetString(publishPacket.Payload.ToArray());
+                DebugLogger.Log(nameof(SyncClient), $"Payload: {json}");
             }
         }
 
