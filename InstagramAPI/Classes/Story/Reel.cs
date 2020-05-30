@@ -1,4 +1,5 @@
 ﻿using System;
+using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Story
@@ -41,8 +42,9 @@ namespace InstagramAPI.Classes.Story
         [JsonProperty("ranked_position")]
         public long RankedPosition { get; set; }
 
-        [JsonProperty("seen")]
-        public object Seen { get; set; }
+        [JsonProperty("seen", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(TimestampConverter))]
+        public DateTimeOffset? Seen { get; set; }
 
         [JsonProperty("seen_ranked_position")]
         public long SeenRankedPosition { get; set; }

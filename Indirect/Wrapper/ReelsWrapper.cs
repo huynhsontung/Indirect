@@ -69,6 +69,7 @@ namespace Indirect.Wrapper
             if (view.SelectedIndex == -1 || view.SelectedIndex >= Items.Count) return;
             var userIndex = GetUserIndex(Items[view.SelectedIndex].Owner.Id);
             await UpdateUserIndex(userIndex);
+            await TryMarkStorySeen(view.SelectedIndex);
         }
 
         public async Task UpdateUserIndex(int userIndex)
@@ -130,6 +131,14 @@ namespace Indirect.Wrapper
             }
 
             _userIndex = userIndex;
+        }
+
+        private async Task TryMarkStorySeen(int storyIndex)
+        {
+            var story = Items[storyIndex];
+            if (story.Parent.Seen != null && story.Parent.Seen >= story.TakenAtTimestamp) return;
+            await Instagram.Instance.MarkStorySeenAsync(story.Id, story.Owner.Id, story.TakenAtTimestamp);
+            story.Parent.Seen = story.TakenAtTimestamp;
         }
 
         private async Task FetchStories(params string[] users)

@@ -167,6 +167,13 @@ namespace InstagramAPI
             return instaUri;
         }
 
+        public static Uri GetMarkStorySeenUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX_V2 + "/media/seen/?reel=1&live_vod=0", out var instaUri))
+                throw new Exception("Cant create URI for marking story seen");
+            return instaUri;
+        }
+
         public static Uri GetVideoStoryConfigureUri(bool isVideo = false)
         {
             if (!Uri.TryCreate(BaseInstagramUri, isVideo ? API_SUFFIX + "/media/configure_to_story/?video=1" : API_SUFFIX + "/media/configure_to_story/", out var instaUri))

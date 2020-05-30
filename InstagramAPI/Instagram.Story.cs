@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.Web.Http;
 using InstagramAPI.Classes;
+using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.Story;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
@@ -77,5 +78,60 @@ namespace InstagramAPI
                 return Result<Reel[]>.Except(e);
             }
         }
+
+        public async Task<Result<BaseStatusResponse>> MarkStorySeenAsync(string mediaId, string ownerId,
+            DateTimeOffset storyTakenAt)
+        {
+            ValidateLoggedIn();
+            try
+            {
+
+                var uri = UriCreator.GetMarkStorySeenUri();
+                var payload = new JObject
+                {
+                    {"_csrftoken", Session.CsrfToken},
+                    {"_uid", Session.LoggedInUser.Pk.ToString()},
+                    {"_uuid", Device.Uuid},
+                    {"container_module", "feed_timeline"},
+                    {"live_vods_skipped", new JObject()},
+                    {"nuxes_skipped", new JObject()},
+                    {"nuxes", new JObject()},
+                    {
+                        "reels", new JObject
+                        {
+                            {
+                                $"{mediaId}_{ownerId}_{ownerId}",
+                                new JArray
+                                {
+                                    $"{storyTakenAt.ToUnixTimeSeconds()}_{DateTimeOffset.Now.ToUnixTimeSeconds()}"
+                                }
+                            }
+                        }
+                    },
+                    {"live_vods", new JObject()},
+                    {"reel_media_skipped", new JObject()}
+                };
+                var body = $"SIGNATURE.{payload.ToString(Formatting.None)}";
+                var data = new Dictionary<string, string>
+                {
+                    {"signed_body", body}
+                };
+                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                DebugLogger.LogResponse(response);
+                if (!response.IsSuccessStatusCode)
+                    return Result<BaseStatusResponse>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<BaseStatusResponse>(json);
+                return obj.IsOk()
+                    ? Result<BaseStatusResponse>.Success(obj, json)
+                    : Result<BaseStatusResponse>.Fail(json);
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+                return Result<BaseStatusResponse>.Except(e);
+            }
+        }
+        
     }
 }
