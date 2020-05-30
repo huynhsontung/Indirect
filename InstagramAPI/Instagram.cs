@@ -103,14 +103,11 @@ namespace InstagramAPI
                 var csrftoken = GetCsrfToken();
                 Session.CsrfToken = csrftoken;
                 var loginUri = UriCreator.GetLoginUri();
-                var apiVersion = ApiVersion.CurrentApiVersion;
                 var signature =
-                    $"{_apiRequestMessage.GenerateChallengeSignature(apiVersion, apiVersion.SignatureKey, csrftoken, out var devid)}.{_apiRequestMessage.GetChallengeMessageString(csrftoken)}";
-                Device.DeviceId = devid;
+                    $"SIGNATURE.{_apiRequestMessage.GetChallengeMessageString(csrftoken)}";
                 var fields = new Dictionary<string, string>
                 {
-                    {"signed_body", signature},
-                    {"ig_sig_key_version", "4"}
+                    {"signed_body", signature}
                 };
                 var request = new HttpRequestMessage(HttpMethod.Post, loginUri);
                 request.Headers.Host = new HostName("i.instagram.com");

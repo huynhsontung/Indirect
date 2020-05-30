@@ -61,16 +61,15 @@ namespace InstagramAPI
             var hash = CryptoHelper.CalculateHash(ApiVersion.CurrentApiVersion.SignatureKey,
                 data.ToString(Formatting.None));
             var payload = data.ToString(Formatting.None);
-            return GetSignedRequest(uri, hash, payload);
+            return GetSignedRequest(uri, payload);
         }
 
-        public static HttpRequestMessage GetSignedRequest(Uri uri, string hash, string payload)
+        public static HttpRequestMessage GetSignedRequest(Uri uri, string payload)
         {
-            var signature = $"{hash}.{payload}";
+            var signature = $"SIGNATURE.{payload}";
             var fields = new Dictionary<string, string>
             {
-                {"signed_body", signature},
-                {"ig_sig_key_version", "4"}
+                {"signed_body", signature}
             };
             var request = new HttpRequestMessage(HttpMethod.Post, uri);
             request.Content = new HttpFormUrlEncodedContent(fields);
