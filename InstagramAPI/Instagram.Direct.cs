@@ -6,6 +6,7 @@ using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Responses;
+using InstagramAPI.Classes.Story;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -225,7 +226,7 @@ namespace InstagramAPI
 
                 var statusResponse = JObject.Parse(json);
                 if (statusResponse["status"].ToObject<string>() != "ok")
-                    Result<DirectThread>.Fail(json);
+                    return Result<DirectThread>.Fail(json);
                 var thread = statusResponse["thread"].ToObject<DirectThread>();
 
                 return Result<DirectThread>.Success(thread);
@@ -234,6 +235,29 @@ namespace InstagramAPI
             {
                 DebugLogger.LogException(exception);
                 return Result<DirectThread>.Except(exception);
+            }
+        }
+
+        public async Task<Result<DirectThreadItemsOnly>> GetItemsInDirectThreadAsync(string threadId,
+            params string[] itemIds)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var uri = UriCreator.GetDirectThreadItemsUri(threadId, itemIds);
+                var response = await _httpClient.GetAsync(uri);
+                var json = await response.Content.ReadAsStringAsync();
+                DebugLogger.LogResponse(response);
+
+                if (!response.IsSuccessStatusCode)
+                    return Result<DirectThreadItemsOnly>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<DirectThreadItemsOnly>(json);
+                return !obj.IsOk() ? Result<DirectThreadItemsOnly>.Fail(json) : Result<DirectThreadItemsOnly>.Success(obj);
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+                return Result<DirectThreadItemsOnly>.Except(e);
             }
         }
 
@@ -459,22 +483,28 @@ namespace InstagramAPI
             }
         }
 
-        public async Task<Result<ItemAckPayloadResponse>> SendReelShareAsync(string reelId, string mediaId, string threadId,
+        public async Task<Result<ItemAckPayloadResponse>> SendReelShareAsync(string reelId, string mediaId,
+            StoryItemType mediaType, string threadId,
             string text)
         {
             ValidateLoggedIn();
             try
             {
-                var uri = UriCreator.GetDirectReelShareUri();
+                var uri = UriCreator.GetDirectReelShareUri(mediaType);
                 var clientContext = Guid.NewGuid().ToString();
                 var data = new Dictionary<string, string>
                 {
                     {"action", "send_item"},
                     {"client_context", clientContext},
+                    {"mutation_token", clientContext},
                     {"reel_id", reelId},
                     {"media_id", mediaId},
-                    {"thread_id", threadId},
+                    {"thread_ids", $"[{threadId}]"},
                     {"text", text},
+                    {"entry", "reel"},
+                    {"device_id", Device.DeviceId},
+                    {"_csrftoken", Session.CsrfToken},
+                    {"_uuid", Device.Uuid.ToString()},
                 };
                 var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();

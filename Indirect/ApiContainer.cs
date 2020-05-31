@@ -181,8 +181,15 @@ namespace Indirect
                     {
                         case "add":
                         {
+                            var item = itemData.Item;
+                            if (item.ItemType == DirectItemType.Placeholder)
+                            {
+                                var result = await _instaApi.GetItemsInDirectThreadAsync(threadId, itemData.Item.ItemId);
+                                if (result.IsSucceeded && result.Value.Items.Count > 0) 
+                                    item = result.Value.Items[0];
+                            }
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                                () => thread.AddItem(itemData.Item));
+                                () => thread.AddItem(item));
                             break;
                         }
                         case "replace":

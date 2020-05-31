@@ -127,6 +127,7 @@
     <Compile Include="Classes\ChallengeLoginInfo.cs" />
     <Compile Include="Classes\Direct\DirectItem.cs" />
     <Compile Include="Classes\Direct\DirectItemType.cs" />
+    <Compile Include="Classes\Direct\DirectThreadItemsOnly.cs" />
     <Compile Include="Classes\Direct\ItemContent\AnimatedMedia.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectActionLog.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectMedia.cs" />

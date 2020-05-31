@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using InstagramAPI.Classes.Story;
 
 namespace InstagramAPI
 {
@@ -118,9 +119,10 @@ namespace InstagramAPI
             return instaUri;
         }
 
-        public static Uri GetDirectReelShareUri()
+        public static Uri GetDirectReelShareUri(StoryItemType mediaType)
         {
-            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/threads/broadcast/reel_share/", out var instaUri))
+            var mediaTypeStr = mediaType == StoryItemType.GraphStoryVideo ? "video" : "image";
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/broadcast/reel_share/?media_type={mediaTypeStr}", out var instaUri))
                 throw new Exception("Can't create URI for sending reel share");
             return instaUri; 
         }
@@ -192,6 +194,16 @@ namespace InstagramAPI
         {
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/{threadId}/items/{itemId}/seen/", out var instaUri))
                 throw new Exception("Cant create URI for seen thread");
+            return instaUri;
+        }
+
+        public static Uri GetDirectThreadItemsUri(string threadId, params string[] itemIds)
+        {
+            if (itemIds.Length == 0) throw new Exception("At least 1 item id is required");
+            if (!Uri.TryCreate(BaseInstagramUri,
+                API_SUFFIX + $"/direct_v2/threads/{threadId}/get_items/?item_ids=[{string.Join(",", itemIds)}]",
+                out var instaUri))
+                throw new Exception("Cant create URI for getting thread items");
             return instaUri;
         }
 

@@ -38,7 +38,7 @@ namespace Indirect.Wrapper
         public bool StoriesFetched(string userId) =>
             _userReelsDictionary[userId].Items != null && _userReelsDictionary[userId].Items.Length > 0;
 
-        public void AttachSelector(Selector view)
+        public async Task AttachSelector(Selector view)
         {
             _selector = view;
             view.SelectionChanged -= SelectorOnSelectionChanged;
@@ -54,7 +54,13 @@ namespace Indirect.Wrapper
             }
 
             if (view.SelectedIndex != storyIndex)
+            {
                 view.SelectedIndex = storyIndex;
+            }
+            else
+            {
+                await TryMarkStorySeen(storyIndex);
+            }
         }
 
         public void DetachSelector()
