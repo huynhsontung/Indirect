@@ -65,6 +65,7 @@ namespace Indirect.Wrapper
 
         public void DetachSelector()
         {
+            if (_selector == null) return;
             _selector.SelectionChanged -= SelectorOnSelectionChanged;
         }
 
