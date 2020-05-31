@@ -108,15 +108,5 @@ namespace Indirect.Wrapper
         {
             _reelsUpdateLoop?.Cancel();
         }
-
-        public static async Task ReplyToStory(StoryItemWrapper story, string message)
-        {
-            var userId = long.Parse(story.Owner.Id);
-            var resultThread = await Instagram.Instance.CreateGroupThreadAsync(new []{userId});
-            if (!resultThread.IsSucceeded) return;
-            var thread = resultThread.Value;
-            var mediaId = story.Id + "_" + story.Owner.Id;
-            await Instagram.Instance.SendReelShareAsync(story.Owner.Id, mediaId, story.Typename, thread.ThreadId, message);
-        }
     }
 }

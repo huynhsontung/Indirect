@@ -53,10 +53,10 @@ namespace Indirect.Controls
             var story = (StoryItemWrapper) StoryView.SelectedItem;
             var container = StoryView.ContainerFromItem(story) as FlipViewItem;
             var textBox = container.FindDescendant<TextBox>();
-            if (string.IsNullOrEmpty(textBox?.Text)) return;
+            if (string.IsNullOrEmpty(textBox?.Text) || story == null) return;
             var message = textBox.Text;
             textBox.Text = string.Empty;
-            await ApiContainer.Instance.ReelsFeed.ReplyToStory(story, message);
+            await story.Reply(message);
         }
 
         private void StoryView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

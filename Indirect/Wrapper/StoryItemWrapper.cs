@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Indirect.Utilities;
+using InstagramAPI;
 using InstagramAPI.Classes.Story;
 
 namespace Indirect.Wrapper
@@ -36,6 +37,16 @@ namespace Indirect.Wrapper
         {
             var main = resources.FirstOrDefault(x => x.Profile == VideoProfile.Main);
             return main != null ? main.Src : resources.FirstOrDefault(x => x.Profile == VideoProfile.Baseline)?.Src;
+        }
+
+        public async Task Reply(string message)
+        {
+            var userId = long.Parse(Owner.Id);
+            var resultThread = await Instagram.Instance.CreateGroupThreadAsync(new[] { userId });
+            if (!resultThread.IsSucceeded) return;
+            var thread = resultThread.Value;
+            var mediaId = Id + "_" + Owner.Id;
+            await Instagram.Instance.SendReelShareAsync(Owner.Id, mediaId, Typename, thread.ThreadId, message);
         }
     }
 }
