@@ -1,4 +1,5 @@
 ﻿using System.Web;
+using Windows.Foundation.Metadata;
 using Windows.UI.Notifications;
 using InstagramAPI;
 using InstagramAPI.Push;
@@ -43,7 +44,8 @@ namespace BackgroundPushClient
                                 AlternateText = "Profile picture"
                             }
                     }
-                }
+                },
+                Launch = $"action=openThread&threadId={threadId}"
             };
 
             // Create the toast notification
@@ -53,6 +55,11 @@ namespace BackgroundPushClient
                 Tag = itemId,
                 ExpiresOnReboot = false
             };
+            if (ApiInformation.IsPropertyPresent(typeof(ToastNotification).FullName,
+                nameof(ToastNotification.RemoteId)))
+            {
+                toast.RemoteId = notificationContent.PushId;
+            }
             // And send the notification
             ToastNotificationManager.CreateToastNotifier().Show(toast);
         }
