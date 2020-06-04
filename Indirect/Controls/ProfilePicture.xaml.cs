@@ -52,7 +52,7 @@ namespace Indirect.Controls
                 view.Group.Visibility = Visibility.Collapsed;
                 view.Single.Source = item[0]?.ProfilePictureUrl;
             }
-            if (e.OldValue == null) view.ViewModelOnPropertyChanged(view, new PropertyChangedEventArgs(string.Empty));
+            view.ViewModelOnPropertyChanged(view, new PropertyChangedEventArgs(string.Empty));
         }
 
         public ProfilePicture()
@@ -65,7 +65,7 @@ namespace Indirect.Controls
         {
             if (e.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(e.PropertyName)) return;
             if (Source == null) return;
-            if (Source.Any(user => ApiContainer.Instance.UserPresenceDictionary.TryGetValue(user.Pk, out var value) && value))
+            if (Source.Any(user => ApiContainer.Instance.UserPresenceDictionary.TryGetValue(user.Pk, out var value) && value.IsActive))
             {
                 IsUserActive = true;
                 return;

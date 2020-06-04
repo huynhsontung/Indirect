@@ -12,6 +12,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Indirect.Converters;
 using Indirect.Wrapper;
 using InstagramAPI.Classes;
 
@@ -50,6 +51,7 @@ namespace Indirect.Controls
             view.ViewProfileAppBarButton.Visibility = thread.Users?.Count == 1 ? Visibility.Visible : Visibility.Collapsed;
             view.MessageInputGrid.Visibility = thread.Pending ? Visibility.Collapsed : Visibility.Visible;
             view.RefreshButton.Visibility = thread.Pending ? Visibility.Collapsed : Visibility.Visible;
+            view.OnUserPresenceChanged();
         }
 
         private static ApiContainer ViewModel => ApiContainer.Instance;
@@ -57,6 +59,43 @@ namespace Indirect.Controls
         public ThreadDetailsView()
         {
             this.InitializeComponent();
+            ApiContainer.Instance.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
+                OnUserPresenceChanged();
+            };
+        }
+
+        private void OnUserPresenceChanged()
+        {
+            if (Thread == null) return;
+            if (Thread.Users.Count > 1)
+            {
+                LastActiveText.Visibility = Visibility.Collapsed;
+                return;
+            }
+            if (ApiContainer.Instance.UserPresenceDictionary.TryGetValue(Thread.Users[0].Pk, out var value))
+            {
+                LastActiveText.Visibility = Visibility.Visible;
+                if (value.IsActive)
+                {
+                    LastActiveText.Text = "Active now";
+                }
+                else if (value.LastActivityAtMs != null)
+                {
+                    var converter = new RelativeTimeConverter();
+                    LastActiveText.Text =
+                        $"Active {converter.Convert(value.LastActivityAtMs, typeof(DateTimeOffset), null, "en-us")}";
+                }
+                else
+                {
+                    LastActiveText.Visibility = Visibility.Collapsed;
+                }
+            }
+            else
+            {
+                LastActiveText.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void RefreshThread_OnClick(object sender, RoutedEventArgs e)

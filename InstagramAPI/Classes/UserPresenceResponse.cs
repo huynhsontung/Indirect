@@ -20,7 +20,7 @@ namespace InstagramAPI.Classes
         [JsonProperty("is_active")]
         public bool IsActive { get; set; }
 
-        [JsonProperty("last_activity_at_ms")]
+        [JsonProperty("last_activity_at_ms", NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(MilliTimestampConverter))]
         public DateTimeOffset? LastActivityAtMs { get; set; }
     }

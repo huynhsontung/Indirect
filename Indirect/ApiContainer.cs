@@ -57,7 +57,7 @@ namespace Indirect
         public PushClient PushClient => _instaApi.PushClient;
         public SyncClient SyncClient => _instaApi.SyncClient;
 
-        public Dictionary<long, bool> UserPresenceDictionary { get; } = new Dictionary<long, bool>();
+        public Dictionary<long, UserPresenceValue> UserPresenceDictionary { get; } = new Dictionary<long, UserPresenceValue>();
         public InstaDirectInboxWrapper PendingInbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance, true);
         public InstaDirectInboxWrapper Inbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance);
         public CurrentUser LoggedInUser { get; private set; }
@@ -403,7 +403,7 @@ namespace Indirect
                 if (!presenceResult.IsSucceeded) return;
                 foreach (var userPresenceValue in presenceResult.Value.UserPresence)
                 {
-                    UserPresenceDictionary[userPresenceValue.Key] = userPresenceValue.Value.IsActive;
+                    UserPresenceDictionary[userPresenceValue.Key] = userPresenceValue.Value;
                 }
             }
             catch (Exception e)
@@ -416,7 +416,7 @@ namespace Indirect
 
         private async void OnUserPresenceChanged(object sender, UserPresenceEventArgs e)
         {
-            UserPresenceDictionary[e.UserId] = e.IsActive;
+            UserPresenceDictionary[e.UserId] = e;
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserPresenceDictionary)));

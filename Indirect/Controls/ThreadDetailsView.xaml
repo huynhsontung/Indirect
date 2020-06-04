@@ -49,12 +49,14 @@
             <AppBarButton x:Name="RefreshButton" Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" Background="Transparent">
-                    <controls1:ProfilePicture Source="{x:Bind Thread.Users, Mode=OneWay}" Height="32" Width="32" Margin="12,0,16,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="{x:Bind Thread.Title, Mode=OneWay}" 
-                               Style="{ThemeResource FluentTitleTextStyle}"
-                               MaxLines="1" 
-                               VerticalAlignment="Center"
-                               ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                    <controls1:ProfilePicture Source="{x:Bind Thread.Users, Mode=OneWay}" Height="32" Width="32" Margin="12,0,12,0" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                        <TextBlock Text="{x:Bind Thread.Title, Mode=OneWay}" 
+                                   Style="{ThemeResource FluentBaseTextStyle}"/>
+                        <TextBlock x:Name="LastActiveText" Text="Active now" Margin="0,-1,0,0"
+                                   Opacity="0.6"
+                                   Style="{ThemeResource FluentCaptionTextStyle}"/>
+                    </StackPanel>
                 </StackPanel>
             </CommandBar.Content>
         </CommandBar>
