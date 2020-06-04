@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using Windows.Web.Http;
 using Windows.Web.Http.Headers;
+using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Utils
@@ -61,12 +62,15 @@ namespace InstagramAPI.Utils
 
         public static void LogException(Exception ex)
         {
+#if !DEBUG
+            Crashes.TrackError(ex);
+#endif
             if (LogLevel < LogLevel.Exceptions) return;
 #if NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NETSTANDARD1_0 || NETSTANDARD1_1 || NETSTANDARD1_2 || NETSTANDARD1_3 || NETSTANDARD1_4 || NETSTANDARD1_5 || NETSTANDARD1_6 || NETSTANDARD2_0 || NETSTANDARD2_1 || NETSTANDARD2_2 || NETSTANDARD2_3
             Console.WriteLine($"Exception: {ex}");
             Console.WriteLine($"Stacktrace: {ex.StackTrace}");
 #else
-            Debug.WriteLine($"Exception: {ex}");
+            Log("Exception", ex);
             Debug.WriteLine($"Stacktrace: {ex.StackTrace}");
 #endif
         }

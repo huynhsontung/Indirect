@@ -18,7 +18,6 @@ using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
 using InstagramAPI.Utils;
 using Ionic.Zlib;
-using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Push
@@ -48,6 +47,7 @@ namespace InstagramAPI.Push
         private DataReader _inboundReader;
         private DataWriter _outboundWriter;
         private readonly Instagram _instaApi;
+        private bool RunningAndReadable => !(_runningTokenSource?.IsCancellationRequested ?? false) && _inboundReader != null;
 
         public PushClient(Instagram api, bool tryLoadData = true)
         {
@@ -183,9 +183,7 @@ namespace InstagramAPI.Push
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
                 Shutdown();
             }
         }
@@ -221,10 +219,7 @@ namespace InstagramAPI.Push
                         }
                         catch (Exception e)
                         {
-#if !DEBUG
-                            Crashes.TrackError(e);
-#endif
-                            this.Log(e);
+                            DebugLogger.LogException(e);
                             this.Log("Failed to transfer socket completely!");
                             Shutdown();
                             return;
@@ -245,9 +240,7 @@ namespace InstagramAPI.Push
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
                 Shutdown();
             }
             
@@ -265,19 +258,26 @@ namespace InstagramAPI.Push
 
         private async void StartPollingLoop()
         {
-            while (!(_runningTokenSource?.IsCancellationRequested ?? false) && _inboundReader != null)
+            while (RunningAndReadable)
             {
                 var reader = _inboundReader;
+                Packet packet;
                 try
                 {
                     await reader.LoadAsync(FbnsPacketDecoder.PACKET_HEADER_LENGTH);
+                    packet = await FbnsPacketDecoder.DecodePacket(reader);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    // Connection closed (most likely)
+                    // If client is still active then retry
+                    if (RunningAndReadable)
+                    {
+                        DebugLogger.LogException(e);
+                        Shutdown();
+                        Start();
+                    }
                     return;
                 }
-                var packet = await FbnsPacketDecoder.DecodePacket(reader);
                 await OnPacketReceived(packet);
             }
         }
@@ -364,9 +364,7 @@ namespace InstagramAPI.Push
             catch (Exception e)
             {
                 // Something went wrong with Push client. Shutting down.
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
                 Shutdown();
             }
         }
@@ -393,10 +391,7 @@ namespace InstagramAPI.Push
             }
             catch (Exception e)
             {
-                this.Log(e);
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
                 Shutdown();
             }
         }
