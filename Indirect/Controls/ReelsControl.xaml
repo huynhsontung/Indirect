@@ -81,7 +81,7 @@
             </Grid.ColumnDefinitions>
             <controls:ImageEx Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
                               Source="{x:Bind StoryView.SelectedItem.(wrapper:StoryItemWrapper.Owner).ProfilePicUrl, Mode=OneWay}" 
-                              Height="32" Width="32" Margin="12,0,12,0" CornerRadius="99" VerticalAlignment="Center"/>
+                              Height="32" Width="32" Margin="12,0,12,0" CornerRadius="99" VerticalAlignment="Center" Tapped="RedirectToThread"/>
             <TextBlock Grid.Row="0" Grid.Column="1" 
                        Text="{x:Bind StoryView.SelectedItem.(wrapper:StoryItemWrapper.Owner).Username, Mode=OneWay}" 
                        Style="{ThemeResource FluentTitleTextStyle}" MaxLines="1" 

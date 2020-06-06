@@ -293,14 +293,19 @@ namespace Indirect
 
         private void CloseMediaPopup_OnClick(object sender, RoutedEventArgs e)
         {
-            MediaPopup.IsOpen = false;
-            ImmersiveControl.OnClose();
+            CloseImmersiveView();
         }
 
         internal void OpenImmersiveView(object item)
         {
             MediaPopup.IsOpen = true;
             ImmersiveControl.Item = item;
+        }
+
+        internal void CloseImmersiveView()
+        {
+            MediaPopup.IsOpen = false;
+            ImmersiveControl.OnClose();
         }
 
         private async void ReelsFeed_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

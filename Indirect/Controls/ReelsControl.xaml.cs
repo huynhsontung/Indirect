@@ -4,6 +4,7 @@ using System.Linq;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Indirect.Wrapper;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
@@ -116,6 +117,22 @@ namespace Indirect.Controls
         {
             args.Handled = true;
             SendButton_Click(sender, null);
+        }
+
+        private void RedirectToThread(object sender, TappedRoutedEventArgs e)
+        {
+            if (!(Window.Current.Content is Frame frame)) return;
+            if (!(frame.Content is MainPage mainPage)) return;
+            var owner = (StoryView.SelectedItem as StoryItemWrapper)?.Owner;
+            if (owner != null && !string.IsNullOrEmpty(owner.Username))
+                ApiContainer.Instance.SearchWithoutThreads(owner.Username, async userList =>
+                {
+                    ApiContainer.Instance.NewMessageCandidates.Clear();
+                    ApiContainer.Instance.NewMessageCandidates.Add(userList[0]);
+                    mainPage.CloseImmersiveView();
+                    await ApiContainer.Instance.CreateThread();
+                });
+
         }
     }
 }

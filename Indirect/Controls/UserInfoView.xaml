@@ -58,7 +58,7 @@
             <HyperlinkButton x:Name="ExternalUrl" Visibility="{x:Bind VisibleWhenNotNullOrEmpty(User.ExternalUrl), Mode=OneWay}"/>
             <TextBlock Text="{x:Bind User.ProfileContext, Mode=OneWay}" Style="{ThemeResource FluentCaptionTextStyle}" 
                        Opacity="0.6" TextWrapping="Wrap" MaxLines="2" MaxWidth="330" Margin="0,4,0,0"/>
-            <HyperlinkButton x:Name="GoToProfileHyperlinkButton" FontWeight="Bold" Margin="0,16,0,0">See full profile on instagram.com →</HyperlinkButton>
+            <HyperlinkButton x:Name="GoToProfileHyperlinkButton" FontWeight="SemiBold" Margin="0,16,0,0">See full profile on instagram.com →</HyperlinkButton>
         </StackPanel>
     </Grid>
 </UserControl>
