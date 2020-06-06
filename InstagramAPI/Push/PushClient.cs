@@ -410,7 +410,6 @@ namespace InstagramAPI.Push
             {
                 {"device_type", "android_mqtt"},
                 {"is_main_push_channel", "true"},
-                {"phone_id", _device.PhoneId.ToString()},
                 {"device_sub_type", "2" },
                 {"device_token", token},
                 {"_csrftoken", _user.CsrfToken },
