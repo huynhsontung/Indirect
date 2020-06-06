@@ -8,6 +8,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using InstagramAPI;
 using InstagramAPI.Classes;
+using InstagramAPI.Utils;
 using Microsoft.AppCenter.Crashes;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
@@ -68,9 +69,7 @@ namespace Indirect
                     {
                         await ShowLoginErrorDialog(
                             "Unexpected error occured while logging in with Facebook. Please try again later or log in with Instagram account instead.");
-#if !DEBUG
-                        Crashes.TrackError(e);
-#endif
+                        DebugLogger.LogException(e);
                     }
                 }
             };

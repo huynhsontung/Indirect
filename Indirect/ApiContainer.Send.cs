@@ -13,6 +13,7 @@ using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Responses;
+using InstagramAPI.Utils;
 using Microsoft.AppCenter.Crashes;
 using Buffer = System.Buffer;
 
@@ -76,9 +77,7 @@ namespace Indirect
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
                 await HandleException("Failed to send message");
                 return;
             }
@@ -159,9 +158,7 @@ namespace Indirect
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
                 await HandleException("Failed to send message");
             }
         }
@@ -201,9 +198,7 @@ namespace Indirect
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
                 await HandleException("Failed to send message");
             }
         }

@@ -84,9 +84,7 @@ namespace Indirect
             _instaApi.SyncClient.UserPresenceChanged += OnUserPresenceChanged;
             _instaApi.SyncClient.FailedToStart += async (sender, exception) =>
             {
-#if !DEBUG
-                Crashes.TrackError(exception);
-#endif
+                DebugLogger.LogException(exception);
                 await HandleException();
             };
             Inbox.FirstUpdated += async (seqId, snapshotAt) => await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
@@ -148,9 +146,7 @@ namespace Indirect
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
                 Debug.WriteLine(e);
             }
         }
@@ -237,9 +233,7 @@ namespace Indirect
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
                 Debug.WriteLine(e);
                 if (DateTimeOffset.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
                     UpdateInboxAndSelectedThread();
@@ -261,9 +255,7 @@ namespace Indirect
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
             }
         }
 
@@ -400,9 +392,7 @@ namespace Indirect
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
             }
         }
 
@@ -419,9 +409,7 @@ namespace Indirect
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
             }
         }
 
