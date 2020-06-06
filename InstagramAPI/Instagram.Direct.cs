@@ -604,6 +604,35 @@ namespace InstagramAPI
             }
         }
 
+        public async Task<Result<BaseStatusResponse>> UnsendMessageAsync(string threadId, string itemId)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var instaUri = UriCreator.GetUnsendMessageUri(threadId, itemId);
+                var data = new Dictionary<string, string>
+                {
+                    {"_csrftoken", Session.CsrfToken},
+                    {"_uuid", Device.Uuid.ToString()},
+                };
+                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                DebugLogger.LogResponse(response);
+
+                if (!response.IsSuccessStatusCode)
+                    return Result<BaseStatusResponse>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<BaseStatusResponse>(json);
+                return obj.IsOk()
+                    ? Result<BaseStatusResponse>.Success(obj, json)
+                    : Result<BaseStatusResponse>.Fail(json);
+            }
+            catch (Exception exception)
+            {
+                DebugLogger.LogException(exception);
+                return Result<BaseStatusResponse>.Except(exception);
+            }
+        }
+
         /// <summary>
         ///     UnLike direct message in a thread
         /// </summary>

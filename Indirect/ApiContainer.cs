@@ -26,6 +26,7 @@ using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
 using InstagramAPI.Sync;
+using InstagramAPI.Utils;
 using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.UI;
@@ -165,7 +166,10 @@ namespace Indirect
                     if (syncEvent.SeqId > Inbox.SeqId)
                     {
                         Inbox.SeqId = syncEvent.SeqId;
-                        Inbox.SnapshotAt = itemData.Item.Timestamp;
+                        if (itemData.Item != null)
+                        {
+                            Inbox.SnapshotAt = itemData.Item.Timestamp;
+                        }
                     }
                     var segments = itemData.Path.Trim('/').Split('/');
                     var threadId = segments[2];
@@ -217,6 +221,13 @@ namespace Indirect
                             });
                             break;
                         }
+                        case "remove":
+                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                                () => thread.RemoveItem(itemData.Value));
+                            break;
+                        default:
+                            DebugLogger.LogException(new Exception($"Sync operation '{itemData.Op}' not expected"));
+                            break;
                     }
                 }
                 if (updateInbox)

@@ -8,6 +8,7 @@ using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
 using Indirect.Utilities;
+using Indirect.Wrapper;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
@@ -19,7 +20,7 @@ namespace Indirect
 {
     internal partial class ApiContainer
     {
-        public async void SendLike()
+        public async Task SendLike()
         {
             try
             {
@@ -35,7 +36,7 @@ namespace Indirect
         }
 
         // Send message to the current selected recipient
-        public async void SendMessage(string content)
+        public async Task SendMessage(string content)
         {
             var selectedThread = SelectedThread;
             content = content.Trim(' ', '\n', '\r');
@@ -90,7 +91,17 @@ namespace Indirect
             }
         }
 
-        public async void SendFile(StorageFile file, Action<UploaderProgress> progress)
+        public async Task UnsendMessage(InstaDirectInboxItemWrapper item)
+        {
+            var result = await _instaApi.UnsendMessageAsync(item.Parent.ThreadId, item.ItemId);
+            if (result.IsSucceeded)
+            {
+                // For redundancy. This should only run on UI thread.
+                item.Parent.RemoveItem(item.ItemId);
+            }
+        }
+
+        public async Task SendFile(StorageFile file, Action<UploaderProgress> progress)
         {
             try
             {
@@ -160,7 +171,7 @@ namespace Indirect
         /// For screenshot in clipboard
         /// </summary>
         /// <param name="stream"></param>
-        public async void SendStream(IRandomAccessStream stream, Action<UploaderProgress> progress)
+        public async Task SendStream(IRandomAccessStream stream, Action<UploaderProgress> progress)
         {
             try
             {

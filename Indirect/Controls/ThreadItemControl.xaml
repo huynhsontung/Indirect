@@ -369,7 +369,7 @@
                         HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
                         SizeChanged="ConfigTooltip_OnSizeChanged" DoubleTapped="Item_DoubleTapped">
             <ContentControl.ContextFlyout>
-                <MenuFlyout x:Name="ItemContextMenu">
+                <MenuFlyout>
                     <MenuFlyoutItem x:Name="LikeItemMenuOption" Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
                                     Click="LikeUnlike_Click"/>
                     <MenuFlyoutItem x:Name="MenuCopyOption" Visibility="Collapsed" Text="Copy" Click="MenuCopyOption_Click">
@@ -377,6 +377,9 @@
                             <SymbolIcon Symbol="Copy"/>
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
+                    <MenuFlyoutSeparator Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}"/>
+                    <MenuFlyoutItem Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" 
+                                    Icon="Delete" Text="Unsend" Click="UnsendMessage"/>
                 </MenuFlyout>
             </ContentControl.ContextFlyout>
             <ContentControl.ContentTemplateSelector>

@@ -294,10 +294,11 @@ namespace InstagramAPI.Sync
                                 var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(payload);
                                 var latest = messageSyncPayload.Last();
                                 if (latest.SeqId > _seqId ||
-                                    latest.Data[0].Item.Timestamp > _snapshotAt)
+                                    latest.Data[0].Item?.Timestamp > _snapshotAt)
                                 {
                                     _seqId = latest.SeqId;
-                                    _snapshotAt = latest.Data[0].Item.Timestamp;
+                                    if (latest.Data[0].Op != "remove")
+                                        _snapshotAt = latest.Data[0].Item.Timestamp;
                                 }
                                 MessageReceived?.Invoke(this, messageSyncPayload);
                                 break;

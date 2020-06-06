@@ -204,6 +204,13 @@ namespace InstagramAPI
             return instaUri;
         }
 
+        public static Uri GetUnsendMessageUri(string threadId, string itemId)
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/{threadId}/items/{itemId}/delete/", out var instaUri))
+                throw new Exception("Cant create URI for unsending message");
+            return instaUri;
+        }
+
         public static Uri GetDirectThreadItemsUri(string threadId, params string[] itemIds)
         {
             if (itemIds.Length == 0) throw new Exception("At least 1 item id is required");

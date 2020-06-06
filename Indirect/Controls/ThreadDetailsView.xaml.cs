@@ -109,11 +109,11 @@ namespace Indirect.Controls
             MessageTextBox.Text = "";
             if(string.IsNullOrEmpty(message))
             {
-                ViewModel.SendLike();
+                _ = ViewModel.SendLike();
             }
             else
             {
-                ViewModel.SendMessage(message);
+                _ = ViewModel.SendMessage(message);
             }
         }
 
@@ -204,12 +204,12 @@ namespace Indirect.Controls
 
             if (FilePickerPreview.Source is StorageFile file)
             {
-                ViewModel.SendFile(file, UploadAction);
+                _ = ViewModel.SendFile(file, UploadAction);
             }
 
             if (FilePickerPreview.Source is IRandomAccessStreamWithContentType stream)
             {
-                ViewModel.SendStream(stream, UploadAction);
+                _ = ViewModel.SendStream(stream, UploadAction);
             }
             FilePickerFlyout.Hide();
         }

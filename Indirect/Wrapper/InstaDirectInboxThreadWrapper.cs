@@ -133,6 +133,22 @@ namespace Indirect.Wrapper
 
         public void AddItem(DirectItem item) => AddItems(new List<DirectItem> {item});
 
+        public void RemoveItem(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId)) return;
+            lock (ObservableItems)
+            {
+                for (int i = ObservableItems.Count - 1; i >= 0; i--)
+                {
+                    if (ObservableItems[i].ItemId == itemId)
+                    {
+                        ObservableItems.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Update everything in a thread. Use it if you have all thread metadata.
         /// </summary>
@@ -198,37 +214,40 @@ namespace Indirect.Wrapper
             if (source == null || source.Count == 0) return;
             var convertedSource = source.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
             DecorateItems(convertedSource);
-            if (ObservableItems.Count == 0)
+            lock (ObservableItems)
             {
-                foreach (var item in convertedSource)
-                    ObservableItems.Add(item);
-                return;
-            }
-
-            foreach (var item in convertedSource)
-            {
-                var existingItem = ObservableItems.SingleOrDefault(x => x.Equals(item));
-                var existed = existingItem != null;
-
-                if (existed)
+                if (ObservableItems.Count == 0)
                 {
-                    if (item.Reactions != null)
-                    {
-                        existingItem.Reactions.Update(item.Reactions, Users);
-                    }
-                    continue;
+                    foreach (var item in convertedSource)
+                        ObservableItems.Add(item);
+                    return;
                 }
-                for (var i = ObservableItems.Count-1; i >= 0; i--)
-                {
-                    if (item.Timestamp > ObservableItems[i].Timestamp)
-                    {
-                        ObservableItems.Insert(i+1, item);
-                        break;
-                    }
 
-                    if (i == 0)
+                foreach (var item in convertedSource)
+                {
+                    var existingItem = ObservableItems.SingleOrDefault(x => x.Equals(item));
+                    var existed = existingItem != null;
+
+                    if (existed)
                     {
-                        ObservableItems.Insert(0, item);
+                        if (item.Reactions != null)
+                        {
+                            existingItem.Reactions.Update(item.Reactions, Users);
+                        }
+                        continue;
+                    }
+                    for (var i = ObservableItems.Count-1; i >= 0; i--)
+                    {
+                        if (item.Timestamp > ObservableItems[i].Timestamp)
+                        {
+                            ObservableItems.Insert(i+1, item);
+                            break;
+                        }
+
+                        if (i == 0)
+                        {
+                            ObservableItems.Insert(0, item);
+                        }
                     }
                 }
             }
@@ -375,6 +394,7 @@ namespace Indirect.Wrapper
 
         private void HideTypingIndicatorOnItemReceived(object sender, NotifyCollectionChangedEventArgs e)
         {
+            if (e.NewItems == null || e.NewItems.Count == 0) return;    // Item removed, not received
             if (e.NewItems.Count == 1 && !((InstaDirectInboxItemWrapper)e.NewItems[0]).FromMe)
             {
                 PingTypingIndicator(0);

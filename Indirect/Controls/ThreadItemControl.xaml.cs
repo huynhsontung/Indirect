@@ -149,5 +149,22 @@ namespace Indirect.Controls
             tooltip.PlacementRect = new Rect(0,12, e.NewSize.Width, e.NewSize.Height);
             ToolTipService.SetToolTip((DependencyObject) sender, tooltip);
         }
+
+        private async void UnsendMessage(object sender, RoutedEventArgs e)
+        {
+            var confirmDialog = new ContentDialog
+            {
+                Title = "Unsend message?",
+                Content = "Unsending will remove the message for everyone. People may have seen it already.",
+                CloseButtonText = "Cancel",
+                PrimaryButtonText = "Unsend",
+                DefaultButton = ContentDialogButton.Primary,
+            };
+            var confirmation = await confirmDialog.ShowAsync();
+            if (confirmation == ContentDialogResult.Primary)
+            {
+                await ApiContainer.Instance.UnsendMessage(Item);
+            }
+        }
     }
 }
