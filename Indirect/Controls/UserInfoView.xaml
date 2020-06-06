@@ -13,6 +13,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <converters:HumanizedLargeNumberConverter x:Key="HumanizedLargeNumberConverter"/>
+            <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -25,23 +26,29 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="50"/>
-            <ColumnDefinition Width="70"/>
-            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
         <controls:ImageEx Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Width="76" Height="76" Margin="8,0,16,0" VerticalAlignment="Center"
                           Source="{x:Bind User.ProfilePictureUrl, Mode=OneWay}" Style="{ThemeResource ProfilePicturePlaceholderStyle}" CornerRadius="99"/>
-        <TextBlock Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="0" Text="{x:Bind User.Username, Mode=OneWay}" Style="{ThemeResource FluentLightTitleTextStyle}" FontSize="22"/>
+        <StackPanel Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="0" Orientation="Horizontal">
+            <TextBlock Text="{x:Bind User.Username, Mode=OneWay}" Style="{ThemeResource FluentLightTitleTextStyle}" FontSize="22"/>
+            <Border CornerRadius="4" Background="{StaticResource SystemControlBackgroundBaseLowBrush}" Margin="4,0,0,4" Height="14" VerticalAlignment="Bottom"
+                    Visibility="{x:Bind User.IsVerified, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
+                <TextBlock Text="Verified" Margin="4,0,4,0" FontWeight="SemiBold" FontSize="9" Opacity="0.6" Height="12"/>
+            </Border>
+        </StackPanel>
         <TextBlock Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="1" Text="{x:Bind User.FullName, Mode=OneWay}" Style="{ThemeResource FluentBaseTextStyle}" Margin="0,0,0,4"
                    Visibility="{x:Bind VisibleWhenNotNullOrEmpty(User.FullName), Mode=OneWay}"/>
-        <TextBlock Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Center">
+        <TextBlock Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Center" Margin="0,0,16,0">
             <Run FontWeight="Bold" Text="{x:Bind User.MediaCount, Converter={StaticResource HumanizedLargeNumberConverter}, Mode=OneWay}"/>
             <LineBreak/>
             Posts
         </TextBlock>
 
-        <TextBlock Grid.Column="2" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Center">
+        <TextBlock Grid.Column="2" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Center" Margin="0,0,16,0">
             <Run FontWeight="Bold" Text="{x:Bind User.FollowerCount, Converter={StaticResource HumanizedLargeNumberConverter}, Mode=OneWay}"/>
             <LineBreak/>
             Followers

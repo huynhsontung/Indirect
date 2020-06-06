@@ -198,8 +198,8 @@
                         <Button.Flyout>
                             <MenuFlyout Placement="Bottom">
                                 <MenuFlyoutItem Text="Profile" Click="Profile_Click"></MenuFlyoutItem>
-                                <ToggleMenuFlyoutItem Text="Pending inbox" IsChecked="False" Click="TogglePendingInbox_OnClick"
-                                                      IsEnabled="{x:Bind _viewModel.Inbox.PendingRequestsCount, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"/>
+                                <!--<ToggleMenuFlyoutItem Text="Pending inbox" IsChecked="False" Click="TogglePendingInbox_OnClick"
+                                                      IsEnabled="{x:Bind _viewModel.Inbox.PendingRequestsCount, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"/>-->
                                 <MenuFlyoutSeparator/>
                                 <MenuFlyoutSubItem Text="Theme">
                                     <MenuFlyoutItem Text="System" Click="ThemeItem_Click"/>

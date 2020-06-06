@@ -48,8 +48,8 @@
             <AppBarButton x:Name="ViewProfileAppBarButton" Icon="Contact2" Label="View profile" Click="ShowUserInfoFlyout"/>
             <AppBarButton x:Name="RefreshButton" Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
             <CommandBar.Content>
-                <StackPanel x:Name="ThreadInfoHeader" Orientation="Horizontal" Background="Transparent" Tapped="ShowUserInfoFlyout">
-                    <controls1:ProfilePicture Source="{x:Bind Thread.Users, Mode=OneWay}" Height="32" Width="32" Margin="12,0,12,0" VerticalAlignment="Center"/>
+                <StackPanel x:Name="ThreadInfoHeader" Orientation="Horizontal" Background="Transparent" Tapped="ShowUserInfoFlyout" Margin="8,0,0,0">
+                    <controls1:ProfilePicture Source="{x:Bind Thread.Users, Mode=OneWay}" Height="32" Width="32" Margin="4,0,12,0" VerticalAlignment="Center"/>
                     <StackPanel Orientation="Vertical" VerticalAlignment="Center">
                         <TextBlock Text="{x:Bind Thread.Title, Mode=OneWay}" 
                                    Style="{ThemeResource FluentBaseTextStyle}"/>
