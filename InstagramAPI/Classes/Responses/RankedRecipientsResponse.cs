@@ -23,7 +23,7 @@ namespace InstagramAPI.Classes.Responses
             .Where(thread => thread != null).ToList();
 
         [JsonIgnore]
-        public List<InstaUser> Users => RankedRecipients.Select(response => response.User)
+        public List<BaseUser> Users => RankedRecipients.Select(response => response.User)
             .Where(user => user != null).ToList();
     }
 
@@ -31,6 +31,6 @@ namespace InstagramAPI.Classes.Responses
     {
         [JsonProperty("thread")] public RankedRecipientThread Thread { get; set; }
 
-        [JsonProperty("user")] public InstaUser User { get; set; }
+        [JsonProperty("user")] public BaseUser User { get; set; }
     }
 }

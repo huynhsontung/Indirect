@@ -61,7 +61,7 @@ namespace InstagramAPI
             }.ToString(Formatting.None);
         }
 
-        private void AddToUserRegistry(IEnumerable<InstaUser> users)
+        private void AddToUserRegistry(IEnumerable<BaseUser> users)
         {
             foreach (var user in users)
             {

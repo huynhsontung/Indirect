@@ -52,7 +52,7 @@ namespace InstagramAPI.Classes.Direct.ItemContent
         public int OriginalHeight { get; set; }
 
         [JsonProperty("user")]
-        public InstaUser User { get; set; }
+        public BaseUser User { get; set; }
 
         [JsonProperty("can_viewer_reshare")]
         public bool CanViewerReshare { get; set; }
@@ -94,7 +94,7 @@ namespace InstagramAPI.Classes.Direct.ItemContent
         public string[] TopLikers { get; set; }
 
         [JsonProperty("facepile_top_likers")]
-        public List<InstaUser> FacepileTopLikers { get; set; }
+        public List<BaseUser> FacepileTopLikers { get; set; }
 
         [JsonProperty("photo_of_you")]
         public bool PhotoOfYou { get; set; }

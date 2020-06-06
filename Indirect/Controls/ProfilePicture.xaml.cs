@@ -13,7 +13,7 @@ namespace Indirect.Controls
     {
         public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
             nameof(Source),
-            typeof(ObservableCollection<InstaUser>),
+            typeof(ObservableCollection<BaseUser>),
             typeof(ProfilePicture),
             new PropertyMetadata(null, OnSourceChanged));
         public static readonly DependencyProperty IsUserActiveProperty = DependencyProperty.Register(
@@ -23,9 +23,9 @@ namespace Indirect.Controls
             new PropertyMetadata(null));
 
 
-        public ObservableCollection<InstaUser> Source
+        public ObservableCollection<BaseUser> Source
         {
-            get => (ObservableCollection<InstaUser>)GetValue(SourceProperty);
+            get => (ObservableCollection<BaseUser>)GetValue(SourceProperty);
             set => SetValue(SourceProperty, value);
         }
 
@@ -38,7 +38,7 @@ namespace Indirect.Controls
         private static void OnSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ProfilePicture)d;
-            var item = (ObservableCollection<InstaUser>) e.NewValue;
+            var item = (ObservableCollection<BaseUser>) e.NewValue;
             if (item.Count > 1)
             {
                 view.Single.Visibility = Visibility.Collapsed;

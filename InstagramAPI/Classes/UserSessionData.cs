@@ -8,7 +8,7 @@ namespace InstagramAPI.Classes
         public string Username { get; internal set; }
         public string Password { get; internal set; }
 
-        public InstaUser LoggedInUser { get; internal set; }
+        public BaseUser LoggedInUser { get; internal set; }
         public string RankToken { get; internal set; }
 
         public string CsrfToken { get; internal set; }
@@ -54,7 +54,7 @@ namespace InstagramAPI.Classes
             CsrfToken = (string) composite["CsrfToken"];
             FacebookUserId = (string) composite["FacebookUserId"];
             FacebookAccessToken = (string) composite["FacebookAccessToken"];
-            LoggedInUser = new InstaUser
+            LoggedInUser = new BaseUser
             {
                 IsVerified = (bool) composite["LoggedInUser.IsVerified"],
                 IsPrivate = (bool) composite["LoggedInUser.IsPrivate"],

@@ -10,7 +10,7 @@ namespace InstagramAPI.Classes.Media
     public partial class ReelMedia
     {
         [JsonProperty("user")]
-        public InstaUser User { get; set; }
+        public BaseUser User { get; set; }
 
         [JsonProperty("expiring_at")]
         [JsonConverter(typeof(TimestampConverter))]

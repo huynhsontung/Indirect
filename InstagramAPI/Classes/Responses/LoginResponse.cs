@@ -7,6 +7,6 @@ namespace InstagramAPI.Classes.Responses
     {
         [JsonProperty("status")] public string Status { get; set; }
 
-        [JsonProperty("logged_in_user")] public InstaUser User { get; set; }
+        [JsonProperty("logged_in_user")] public BaseUser User { get; set; }
     }
 }

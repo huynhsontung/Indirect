@@ -60,7 +60,7 @@ namespace Indirect.Wrapper
         }
 
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
-        public new ObservableCollection<InstaUser> Users { get; } = new ObservableCollection<InstaUser>();
+        public new ObservableCollection<BaseUser> Users { get; } = new ObservableCollection<BaseUser>();
 
         private InstaDirectInboxThreadWrapper(Instagram api)
         {
@@ -76,11 +76,11 @@ namespace Indirect.Wrapper
         /// </summary>
         /// <param name="user"></param>
         /// <param name="api"></param>
-        public InstaDirectInboxThreadWrapper(InstaUser user, Instagram api) : this(api)
+        public InstaDirectInboxThreadWrapper(BaseUser user, Instagram api) : this(api)
         {
             Users.Add(user);
             Title = user.Username;
-            if (Users.Count == 0) Users.Add(new InstaUser());
+            if (Users.Count == 0) Users.Add(new BaseUser());
         }
 
         public InstaDirectInboxThreadWrapper(RankedRecipientThread rankedThread, Instagram api) : this(api)
@@ -92,7 +92,7 @@ namespace Indirect.Wrapper
             {
                 Users.Add(user);
             }
-            if (Users.Count == 0) Users.Add(new InstaUser());
+            if (Users.Count == 0) Users.Add(new BaseUser());
         }
 
         public InstaDirectInboxThreadWrapper(DirectThread source, Instagram api) : this(api)
@@ -103,7 +103,7 @@ namespace Indirect.Wrapper
             {
                 Users.Add(instaUserShortFriendship);
             }
-            if (Users.Count == 0) Users.Add(new InstaUser());
+            if (Users.Count == 0) Users.Add(new BaseUser());
             UpdateItemList(source.Items);
         }
 

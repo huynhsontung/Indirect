@@ -21,7 +21,7 @@ namespace Indirect.Wrapper
 
         public InstaDirectInboxThreadWrapper Parent { get; }
         public new InstaDirectReactionsWrapper Reactions { get; }
-        public InstaUser Sender { get; }
+        public BaseUser Sender { get; }
 
         private bool _showTimestampHeader;
         public bool ShowTimestampHeader
@@ -280,11 +280,11 @@ namespace Indirect.Wrapper
             PropertyCopier<DirectItem, InstaDirectInboxItemWrapper>.Copy(source, this);
             Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions, parent.ViewerId) : new InstaDirectReactionsWrapper();
 
-            // Lookup InstaUser from user id
+            // Lookup BaseUser from user id
             var userExist = api.CentralUserRegistry.TryGetValue(UserId, out var sender);
             Sender = userExist
                 ? sender
-                : new InstaUser
+                : new BaseUser
                 {
                     Username = "UNKNOWN_USER",
                     FullName = "UNKNOWN_USER"

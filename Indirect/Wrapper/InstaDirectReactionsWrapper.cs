@@ -14,7 +14,7 @@ namespace Indirect.Wrapper
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ObservableCollection<InstaUser> Senders = new ObservableCollection<InstaUser>();
+        public ObservableCollection<BaseUser> Senders = new ObservableCollection<BaseUser>();
 
         public new bool MeLiked
         {
@@ -56,7 +56,7 @@ namespace Indirect.Wrapper
             Senders.Clear();
         }
 
-        public void Update(InstaDirectReactionsWrapper source, ICollection<InstaUser> usersList)
+        public void Update(InstaDirectReactionsWrapper source, ICollection<BaseUser> usersList)
         {
             LikesCount = source.LikesCount;
             MeLiked = source.MeLiked;

@@ -61,7 +61,7 @@ namespace Indirect
         public InstaDirectInboxWrapper PendingInbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance, true);
         public InstaDirectInboxWrapper Inbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance);
         public CurrentUser LoggedInUser { get; private set; }
-        public ObservableCollection<InstaUser> NewMessageCandidates { get; } = new ObservableCollection<InstaUser>();
+        public ObservableCollection<BaseUser> NewMessageCandidates { get; } = new ObservableCollection<BaseUser>();
         public InstaDirectInboxThreadWrapper SelectedThread
         {
             get => _selectedThread;
@@ -316,7 +316,7 @@ namespace Indirect
             updateAction?.Invoke(decoratedList);
         }
 
-        public async void SearchWithoutThreads(string query, Action<List<InstaUser>> updateAction)
+        public async void SearchWithoutThreads(string query, Action<List<BaseUser>> updateAction)
         {
             if (query.Length > 50) return;
             if (!await SearchReady()) return;

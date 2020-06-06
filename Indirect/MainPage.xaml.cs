@@ -214,7 +214,7 @@ namespace Indirect
 
         private void NewMessageSuggestBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
         {
-            var selectedItem = (InstaUser) args.SelectedItem;
+            var selectedItem = (BaseUser) args.SelectedItem;
             sender.Text = selectedItem.Username;
         }
 
@@ -222,7 +222,7 @@ namespace Indirect
         {
             if (args.ChosenSuggestion != null)
             {
-                var selectedRecipient = (InstaUser) args.ChosenSuggestion;
+                var selectedRecipient = (BaseUser) args.ChosenSuggestion;
                 if (_viewModel.NewMessageCandidates.All(x => selectedRecipient.Username != x.Username))
                     _viewModel.NewMessageCandidates.Add(selectedRecipient);
             }
@@ -252,7 +252,7 @@ namespace Indirect
 
         private void ClearSingleCandidateButton_OnClick(object sender, RoutedEventArgs e)
         {
-            var target = (InstaUser) (sender as FrameworkElement)?.DataContext;
+            var target = (BaseUser) (sender as FrameworkElement)?.DataContext;
             if (target == null) return;
             _viewModel.NewMessageCandidates.Remove(target);
         }
@@ -269,7 +269,7 @@ namespace Indirect
 
         private void ClearSingleCandidateSwipe_OnInvoked(SwipeItem sender, SwipeItemInvokedEventArgs args)
         {
-            var target = (InstaUser) args.SwipeControl.DataContext;
+            var target = (BaseUser) args.SwipeControl.DataContext;
             if (target == null) return;
             _viewModel.NewMessageCandidates.Remove(target);
         }

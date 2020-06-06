@@ -6,7 +6,7 @@ namespace InstagramAPI.Classes.Responses
 {
     internal class FacebookLoginResponse
     {
-        [JsonProperty("logged_in_user")] public InstaUser LoggedInUser { get; set; }
+        [JsonProperty("logged_in_user")] public BaseUser LoggedInUser { get; set; }
 
         [JsonProperty("code")] public int? Code { get; set; }
 
@@ -14,7 +14,7 @@ namespace InstagramAPI.Classes.Responses
 
         [JsonProperty("status")] public string Status { get; set; }
 
-        [JsonProperty("created_user")] public InstaUser CreatedUser { get; set; }
+        [JsonProperty("created_user")] public BaseUser CreatedUser { get; set; }
 
         [JsonProperty("multiple_users_on_device")] public bool? MultipleUsersOnDevice { get; set; }
     }

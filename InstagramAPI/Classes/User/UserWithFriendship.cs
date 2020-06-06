@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.User
 {
-    public class UserWithFriendship : InstaUser
+    public class UserWithFriendship : BaseUser
     {
         [JsonProperty("friendship_status")] public FriendshipStatus FriendshipStatus { get; set; }
     }

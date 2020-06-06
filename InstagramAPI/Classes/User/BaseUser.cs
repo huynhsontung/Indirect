@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.User
 {
-    public class InstaUser : IEquatable<InstaUser>
+    public class BaseUser : IEquatable<BaseUser>
     {
         [JsonProperty("is_verified")] public bool? IsVerified { get; set; }
 
@@ -23,16 +23,16 @@ namespace InstagramAPI.Classes.User
 
         [JsonProperty("latest_reel_media")] public long? LatestReelMedia { get; set; }
 
-        public static InstaUser Empty => new InstaUser {FullName = string.Empty, Username = string.Empty};
+        public static BaseUser Empty => new BaseUser {FullName = string.Empty, Username = string.Empty};
 
-        public bool Equals(InstaUser user)
+        public bool Equals(BaseUser user)
         {
             return Pk == user?.Pk;
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as InstaUser);
+            return Equals(obj as BaseUser);
         }
 
         public override int GetHashCode()

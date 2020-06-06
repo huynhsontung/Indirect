@@ -167,6 +167,7 @@
     <Compile Include="Classes\Mqtt\Packets\SubscriptionRequest.cs" />
     <Compile Include="Classes\Mqtt\Packets\UnsubAckPacket.cs" />
     <Compile Include="Classes\Mqtt\Packets\UnsubscribePacket.cs" />
+    <Compile Include="Classes\Responses\UserInfoResponse.cs" />
     <Compile Include="Classes\Story\DisplayResource.cs" />
     <Compile Include="Classes\Story\Reel.cs" />
     <Compile Include="Classes\Story\StoryItem.cs" />
@@ -206,7 +207,8 @@
     <Compile Include="Classes\UserPresenceResponse.cs" />
     <Compile Include="Classes\UserSessionData.cs" />
     <Compile Include="Classes\User\CurrentUser.cs" />
-    <Compile Include="Classes\User\InstaUser.cs" />
+    <Compile Include="Classes\User\BaseUser.cs" />
+    <Compile Include="Classes\User\UserInfo.cs" />
     <Compile Include="Classes\User\UserWithFriendship.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="Instagram.cs" />

@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.User
 {
-    public class CurrentUser : InstaUser
+    public class CurrentUser : BaseUser
     {
         [JsonProperty("show_conversion_edit_entry")]
         public bool ShowConversationEditEntry { get; set; }

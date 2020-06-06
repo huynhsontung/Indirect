@@ -39,7 +39,7 @@ namespace InstagramAPI.Classes.Direct
         public bool? HasOlder { get; set; }
 
         [JsonProperty("inviter")]
-        public InstaUser Inviter { get; set; }
+        public BaseUser Inviter { get; set; }
 
         [JsonProperty("named")]
         public bool Named { get; set; }

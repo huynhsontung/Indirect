@@ -43,6 +43,6 @@ namespace InstagramAPI.Classes.Direct.ItemContent
         public string OrganicTrackingToken { get; set; }
 
         [JsonProperty("user")]
-        public InstaUser User { get; set; }
+        public BaseUser User { get; set; }
     }
 }

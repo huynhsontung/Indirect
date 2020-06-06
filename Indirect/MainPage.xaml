@@ -245,7 +245,7 @@
                                                     ProcessKeyboardAccelerators="NewMessageSuggestBox_OnProcessKeyboardAccelerators"
                                                     IsEnabled="{x:Bind _viewModel.NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqual32}, Mode=OneWay}">
                                         <AutoSuggestBox.ItemTemplate>
-                                            <DataTemplate x:DataType="users:InstaUser">
+                                            <DataTemplate x:DataType="users:BaseUser">
                                                 <StackPanel Orientation="Horizontal">
                                                     <controls:ImageEx Source="{x:Bind ProfilePictureUrl}" Style="{ThemeResource ProfilePicturePlaceholderStyle}"
                                                                       CornerRadius="99" Height="28" Width="28" VerticalAlignment="Center"/>
@@ -258,7 +258,7 @@
                                               ItemsSource="{x:Bind _viewModel.NewMessageCandidates}" 
                                               SelectionMode="None" MaxHeight="400" Margin="0,8,0,4">
                                         <ListView.ItemTemplate>
-                                            <DataTemplate x:DataType="users:InstaUser">
+                                            <DataTemplate x:DataType="users:BaseUser">
                                                 <SwipeControl>
                                                     <SwipeControl.RightItems>
                                                         <SwipeItems Mode="Execute">

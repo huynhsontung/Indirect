@@ -43,7 +43,7 @@ namespace InstagramAPI
         public AndroidDevice Device { get; } = AndroidDevice.GetRandomAndroidDevice();
         public PushClient PushClient { get; }
         public SyncClient SyncClient { get; }
-        public Dictionary<long, InstaUser> CentralUserRegistry { get; } = new Dictionary<long, InstaUser>();
+        public Dictionary<long, BaseUser> CentralUserRegistry { get; } = new Dictionary<long, BaseUser>();
 
         // For push notification to look up thread title from thread id. Instagram doesn't pass thread title for push notifications.
         public const string THREAD_TITLE_PERSISTENT_DICTIONARY_KEY = "ThreadTitlePersistentDictionary";
@@ -259,7 +259,7 @@ namespace InstagramAPI
                 }
 
                 var fbUserId = string.Empty;
-                InstaUser loginInfoUser = null;
+                BaseUser loginInfoUser = null;
                 if (json.Contains("\"account_created\""))
                 {
                     var rmt = JsonConvert.DeserializeObject<FacebookRegistrationResponse>(json);

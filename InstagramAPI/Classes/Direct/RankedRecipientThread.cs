@@ -18,7 +18,7 @@ namespace InstagramAPI.Classes.Direct
 
         [JsonProperty("thread_type")] public string ThreadType { get; set; }
 
-        [JsonProperty("users")] public List<InstaUser> Users { get; set; }
+        [JsonProperty("users")] public List<BaseUser> Users { get; set; }
 
         [JsonProperty("viewer_id")] public long ViewerId { get; set; }
     }
