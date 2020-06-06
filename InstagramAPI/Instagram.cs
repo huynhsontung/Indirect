@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Storage;
+using Windows.System;
 using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
@@ -349,6 +350,30 @@ namespace InstagramAPI
             {
                 DebugLogger.LogException(exception);
                 return Result<CurrentUser>.Except(exception);
+            }
+        }
+
+        public async Task<Result<UserInfo>> GetUserInfoAsync(long userId)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var uri = UriCreator.GetUserInfoUri(userId);
+                var response = await _httpClient.GetAsync(uri);
+                var json = await response.Content.ReadAsStringAsync();
+                DebugLogger.LogResponse(response);
+
+                if (!response.IsSuccessStatusCode)
+                    return Result<UserInfo>.Fail(json, response.ReasonPhrase);
+                var userInfoResponse = JsonConvert.DeserializeObject<UserInfoResponse>(json);
+                return userInfoResponse.IsOk()
+                    ? Result<UserInfo>.Success(userInfoResponse.User)
+                    : Result<UserInfo>.Fail(json);
+            }
+            catch (Exception exception)
+            {
+                DebugLogger.LogException(exception);
+                return Result<UserInfo>.Except(exception);
             }
         }
 

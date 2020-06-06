@@ -38,6 +38,13 @@ namespace InstagramAPI
             return instaUri;
         }
 
+        public static Uri GetUserInfoUri(long userId)
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/users/{userId}/info/?from_module=feed_timeline", out var instaUri))
+                throw new Exception("Cant create URI for user info");
+            return instaUri;
+        }
+
         public static Uri GetDirectInboxUri(string nextId = "")
         {
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/inbox/", out var instaUri))

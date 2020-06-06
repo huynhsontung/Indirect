@@ -11,7 +11,7 @@ namespace InstagramAPI.Classes.User
 
         [JsonProperty("pk")] public long Pk { get; set; }
 
-        [JsonProperty("profile_pic_url")] public string ProfilePictureUrl { get; set; }
+        [JsonProperty("profile_pic_url")] public Uri ProfilePictureUrl { get; set; }
 
         [JsonProperty("profile_pic_id")] public string ProfilePictureId { get; set; }
 

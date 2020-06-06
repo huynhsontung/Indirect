@@ -137,8 +137,12 @@
     <Compile Include="Controls\ReelsControl.xaml.cs">
       <DependentUpon>ReelsControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\UserInfoView.xaml.cs">
+      <DependentUpon>UserInfoView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Converters\EqualityConverter.cs" />
     <Compile Include="Converters\HumanizedDateTimeConverter.cs" />
+    <Compile Include="Converters\HumanizedLargeNumberConverter.cs" />
     <Compile Include="Converters\ReelShareImageMarginConverter.cs" />
     <Compile Include="Converters\RelativeTimeConverter.cs" />
     <Compile Include="Converters\VisibleWhenZeroConverter.cs" />
@@ -311,6 +315,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ThreadItemControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\UserInfoView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

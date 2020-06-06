@@ -261,12 +261,19 @@ namespace Indirect.Controls
             }
         }
 
-        private async void ViewProfileAppBarButton_OnClick(object sender, RoutedEventArgs e)
+        private async void ShowUserInfoFlyout(object sender, RoutedEventArgs e)
         {
             if (Thread?.Users == null || Thread.Users.Count == 0) return;
             if (Thread.Users.Count > 1 || string.IsNullOrEmpty(Thread.Users[0].Username)) return;
-            var uri = new Uri("https://www.instagram.com/" + Thread.Users[0].Username);
-            await Windows.System.Launcher.LaunchUriAsync(uri);
+            if (Thread.DetailedUserInfo == null)
+            {
+                var userInfoResult = await InstagramAPI.Instagram.Instance.GetUserInfoAsync(Thread.Users[0].Pk);
+                if (!userInfoResult.IsSucceeded) return;
+                Thread.DetailedUserInfo = userInfoResult.Value;
+            }
+
+            UserInfoView.User = Thread.DetailedUserInfo;
+            FlyoutBase.ShowAttachedFlyout(ThreadInfoHeader);
         }
     }
 }

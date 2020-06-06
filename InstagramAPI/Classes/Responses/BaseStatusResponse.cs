@@ -15,10 +15,5 @@ namespace InstagramAPI.Classes.Responses
         {
             return !string.IsNullOrEmpty(Status) && Status.ToLower() == "ok";
         }
-
-        public bool IsFail()
-        {
-            return !string.IsNullOrEmpty(Status) && Status.ToLower() == "fail";
-        }
     }
 }

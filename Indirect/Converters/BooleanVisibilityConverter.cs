@@ -10,9 +10,13 @@ namespace Indirect.Converters
 {
     class BooleanVisibilityConverter : IValueConverter
     {
+        public bool Invert { get; set; } = false;
+
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             var b = (bool) value;
+            if (Invert)
+                return b ? Visibility.Collapsed : Visibility.Visible;
             return b ? Visibility.Visible : Visibility.Collapsed;
         }
 

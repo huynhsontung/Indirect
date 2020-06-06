@@ -9,12 +9,6 @@ namespace InstagramAPI.Classes.User
 {
     public class UserInfo : BaseUser
     {
-        [JsonProperty("profile_pic_url")]
-        public Uri ProfilePicUrl { get; set; }
-
-        [JsonProperty("profile_pic_id")]
-        public string ProfilePicId { get; set; }
-
         [JsonProperty("media_count")]
         public long MediaCount { get; set; }
 

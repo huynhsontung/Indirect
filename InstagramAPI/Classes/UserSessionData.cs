@@ -35,7 +35,7 @@ namespace InstagramAPI.Classes
                 ["LoggedInUser.IsVerified"] = LoggedInUser.IsVerified,
                 ["LoggedInUser.IsPrivate"] = LoggedInUser.IsPrivate,
                 ["LoggedInUser.Pk"] = LoggedInUser.Pk,
-                ["LoggedInUser.ProfilePictureUrl"] = LoggedInUser.ProfilePictureUrl,
+                ["LoggedInUser.ProfilePictureUrl"] = LoggedInUser.ProfilePictureUrl.ToString(),
                 ["LoggedInUser.ProfilePictureId"] = LoggedInUser.ProfilePictureId,
                 ["LoggedInUser.Username"] = LoggedInUser.Username,
                 ["LoggedInUser.FullName"] = LoggedInUser.FullName
@@ -59,7 +59,7 @@ namespace InstagramAPI.Classes
                 IsVerified = (bool) composite["LoggedInUser.IsVerified"],
                 IsPrivate = (bool) composite["LoggedInUser.IsPrivate"],
                 Pk = (long) composite["LoggedInUser.Pk"],
-                ProfilePictureUrl = (string) composite["LoggedInUser.ProfilePictureUrl"],
+                ProfilePictureUrl = new Uri((string) composite["LoggedInUser.ProfilePictureUrl"]),
                 ProfilePictureId = (string) composite["LoggedInUser.ProfilePictureId"],
                 Username = (string) composite["LoggedInUser.Username"],
                 FullName = (string) composite["LoggedInUser.FullName"]

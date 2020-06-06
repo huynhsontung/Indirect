@@ -1,0 +1,64 @@
+﻿<UserControl
+    x:Class="Indirect.Controls.UserInfoView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Indirect.Controls"
+    xmlns:converters="using:Indirect.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:HumanizedLargeNumberConverter x:Key="HumanizedLargeNumberConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="50"/>
+            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="70"/>
+        </Grid.ColumnDefinitions>
+
+        <controls:ImageEx Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Width="76" Height="76" Margin="8,0,16,0" VerticalAlignment="Center"
+                          Source="{x:Bind User.ProfilePictureUrl, Mode=OneWay}" Style="{ThemeResource ProfilePicturePlaceholderStyle}" CornerRadius="99"/>
+        <TextBlock Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="0" Text="{x:Bind User.Username, Mode=OneWay}" Style="{ThemeResource FluentLightTitleTextStyle}" FontSize="22"/>
+        <TextBlock Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="1" Text="{x:Bind User.FullName, Mode=OneWay}" Style="{ThemeResource FluentBaseTextStyle}" Margin="0,0,0,4"
+                   Visibility="{x:Bind VisibleWhenNotNullOrEmpty(User.FullName), Mode=OneWay}"/>
+        <TextBlock Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Center">
+            <Run FontWeight="Bold" Text="{x:Bind User.MediaCount, Converter={StaticResource HumanizedLargeNumberConverter}, Mode=OneWay}"/>
+            <LineBreak/>
+            Posts
+        </TextBlock>
+
+        <TextBlock Grid.Column="2" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Center">
+            <Run FontWeight="Bold" Text="{x:Bind User.FollowerCount, Converter={StaticResource HumanizedLargeNumberConverter}, Mode=OneWay}"/>
+            <LineBreak/>
+            Followers
+        </TextBlock>
+
+        <TextBlock Grid.Column="3" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" TextAlignment="Center">
+            <Run FontWeight="Bold" Text="{x:Bind User.FollowingCount, Converter={StaticResource HumanizedLargeNumberConverter}, Mode=OneWay}"/>
+            <LineBreak/>
+            Following
+        </TextBlock>
+
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="3" Margin="8" Orientation="Vertical">
+            <TextBlock Text="{x:Bind User.Biography, Mode=OneWay}" Visibility="{x:Bind VisibleWhenNotNullOrEmpty(User.Biography), Mode=OneWay}" TextWrapping="Wrap" MaxWidth="330" IsTextSelectionEnabled="True"/>
+            <HyperlinkButton x:Name="ExternalUrl" Visibility="{x:Bind VisibleWhenNotNullOrEmpty(User.ExternalUrl), Mode=OneWay}"/>
+            <TextBlock Text="{x:Bind User.ProfileContext, Mode=OneWay}" Style="{ThemeResource FluentCaptionTextStyle}" 
+                       Opacity="0.6" TextWrapping="Wrap" MaxLines="2" MaxWidth="330" Margin="0,4,0,0"/>
+            <HyperlinkButton x:Name="GoToProfileHyperlinkButton" FontWeight="Bold" Margin="0,16,0,0">See full profile on instagram.com →</HyperlinkButton>
+        </StackPanel>
+    </Grid>
+</UserControl>

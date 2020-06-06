@@ -254,7 +254,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,6,8,6">
-                        <PersonPicture ProfilePicture="{x:Bind MediaShare.User.ProfilePictureUrl}" Height="24" Width="24" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <controls:ImageEx Source="{x:Bind MediaShare.User.ProfilePictureUrl}" Height="24" Width="24" CornerRadius="99" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Text="{x:Bind MediaShare.User.Username}" 
                                    Style="{ThemeResource FluentBaseTextStyle}"
                                    MaxLines="1" 
