@@ -37,7 +37,7 @@
             <TextBlock Text="{x:Bind User.Username, Mode=OneWay}" Style="{ThemeResource FluentLightTitleTextStyle}" FontSize="22"/>
             <Border CornerRadius="4" Background="{StaticResource SystemControlBackgroundBaseLowBrush}" Margin="4,0,0,4" Height="14" VerticalAlignment="Bottom"
                     Visibility="{x:Bind User.IsVerified, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
-                <TextBlock Text="Verified" Margin="4,0,4,0" FontWeight="SemiBold" FontSize="9" Opacity="0.6" Height="12"/>
+                <TextBlock Text="Verified" Margin="4,0,4,0" FontWeight="SemiBold" FontSize="9" Opacity="0.6"/>
             </Border>
         </StackPanel>
         <TextBlock Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="1" Text="{x:Bind User.FullName, Mode=OneWay}" Style="{ThemeResource FluentBaseTextStyle}" Margin="0,0,0,4"

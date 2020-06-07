@@ -258,8 +258,9 @@ namespace Indirect.Wrapper
             if (users == null || users.Count == 0) return;
             lock (Users)
             {
-                var toBeAdded = users.Where(p2 => Users.All(p1 => !p1.Equals(p2)));
-                var toBeDeleted = Users.Where(p1 => users.All(p2 => !p1.Equals(p2)));
+                var copyUsers = Users.ToList(); // attempt to troubleshoot InvalidOperationException: Collection was modified
+                var toBeAdded = users.Where(p2 => copyUsers.All(p1 => !p1.Equals(p2)));
+                var toBeDeleted = copyUsers.Where(p1 => users.All(p2 => !p1.Equals(p2)));
                 foreach (var user in toBeAdded)
                 {
                     Users.Add(user);

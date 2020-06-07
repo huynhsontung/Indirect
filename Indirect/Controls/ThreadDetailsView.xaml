@@ -36,7 +36,11 @@
                         <controls1:PhotoVideoControl x:Name="FilePickerPreview" Height="160" HorizontalAlignment="Center"
                                                  CornerRadius="2" Margin="0,0,0,12"/>
                         <TextBlock Style="{ThemeResource FluentBaseTextStyle}" Text="Do you want to send this photo?" Margin="0,0,0,12" HorizontalAlignment="Center"/>
-                        <Button Content="Send"  HorizontalAlignment="Center" Click="SendFileButton_OnClick"/>
+                        <Button Content="Send" HorizontalAlignment="Center" Click="SendFileButton_OnClick">
+                            <Button.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="Enter"/>
+                            </Button.KeyboardAccelerators>
+                        </Button>
                     </StackPanel>
                 </StackPanel>
             </Flyout>
