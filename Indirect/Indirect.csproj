@@ -130,6 +130,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ApiContainer.Send.cs" />
+    <Compile Include="Controls\TwoFactorAuthDialog.xaml.cs">
+      <DependentUpon>TwoFactorAuthDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\AboutDialog.xaml.cs">
       <DependentUpon>AboutDialog.xaml</DependentUpon>
     </Compile>
@@ -278,6 +281,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Controls\TwoFactorAuthDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\AboutDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

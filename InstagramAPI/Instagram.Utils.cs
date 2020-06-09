@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Windows.Web.Http.Filters;
 using InstagramAPI.Classes.User;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -66,6 +67,29 @@ namespace InstagramAPI
             foreach (var user in users)
             {
                 CentralUserRegistry[user.Pk] = user;
+            }
+        }
+
+        private void ClearCookies()
+        {
+            var myFilter = new HttpBaseProtocolFilter();
+            var cookieManager = myFilter.CookieManager;
+            var instagramApiCookies = cookieManager.GetCookies(UriCreator.BaseInstagramUri);
+            foreach (var cookie in instagramApiCookies)
+            {
+                cookieManager.DeleteCookie(cookie);
+            }
+
+            var instagramCookies = cookieManager.GetCookies(new Uri("https://www.instagram.com/"));
+            foreach (var cookie in instagramCookies)
+            {
+                cookieManager.DeleteCookie(cookie);
+            }
+
+            var fbCookies = cookieManager.GetCookies(new Uri("https://www.facebook.com/"));
+            foreach (var cookie in fbCookies)
+            {
+                cookieManager.DeleteCookie(cookie);
             }
         }
     }

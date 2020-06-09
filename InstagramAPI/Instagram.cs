@@ -52,7 +52,6 @@ namespace InstagramAPI
 
         private readonly HttpClient _httpClient = new HttpClient();
         private readonly ApiRequestMessage _apiRequestMessage;
-        private string _fbAccessToken;
         public TwoFactorLoginInfo TwoFactorInfo { get; private set; }  // Only used when login returns two factor
         public ChallengeLoginInfo ChallengeInfo { get; private set; }  // Only used when login returns challenge
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
@@ -115,10 +114,11 @@ namespace InstagramAPI
                 request.Content = new HttpFormUrlEncodedContent(fields);
                 var response = await _httpClient.SendRequestAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
+                DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                 {
-                    var loginFailReason = JsonConvert.DeserializeObject<LoginBaseResponse>(json);
+                    var loginFailReason = JsonConvert.DeserializeObject<LoginFailedResponse>(json);
 
                     if (loginFailReason.InvalidCredentials)
                         return Result<LoginResult>.Fail(loginFailReason.ErrorType == "bad_password"
@@ -182,7 +182,6 @@ namespace InstagramAPI
         ///     Login with Facebook access token
         /// </summary>
         /// <param name="fbAccessToken">Facebook access token</param>
-        /// <param name="cookiesContainer">Cookies</param>
         /// <returns>
         ///     Success --> is succeed
         ///     TwoFactorRequired --> requires 2FA login.
@@ -217,7 +216,7 @@ namespace InstagramAPI
                     {"fb_access_token", fbAccessToken},
                 };
 
-                _fbAccessToken = fbAccessToken;
+                Session.FacebookAccessToken = fbAccessToken;
                 var request = GetSignedRequest(instaUri, data);
                 var response = await _httpClient.SendRequestAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
@@ -225,7 +224,7 @@ namespace InstagramAPI
 
                 if (response.StatusCode != HttpStatusCode.Ok)
                 {
-                    var loginFailReason = JsonConvert.DeserializeObject<LoginBaseResponse>(json);
+                    var loginFailReason = JsonConvert.DeserializeObject<LoginFailedResponse>(json);
 
                     if (loginFailReason.InvalidCredentials)
                         return Result<LoginResult>.Fail(loginFailReason.ErrorType == "bad_password"
@@ -293,9 +292,69 @@ namespace InstagramAPI
                 Session.CsrfToken = GetCsrfToken();
                 Session.FacebookUserId = fbUserId;
                 Session.Username = loginInfoUser.Username;
-                Session.FacebookAccessToken = fbAccessToken;
                 Session.Password = "LOGGED_IN_THROUGH_FB";
                 return Result<LoginResult>.Success(LoginResult.Success, json);
+            }
+            catch (Exception exception)
+            {
+                DebugLogger.LogException(exception);
+                return Result<LoginResult>.Except(exception, LoginResult.Exception);
+            }
+        }
+
+        public async Task<Result<LoginResult>> LoginWithTwoFactorAsync(string verificationCode)
+        {
+            if (TwoFactorInfo == null) 
+                return Result<LoginResult>.Except(new ArgumentNullException(nameof(TwoFactorInfo), "Cannot login with two factor before logging in normally"));
+            try
+            {
+                var twoFactorData = new JObject
+                {
+                    {"verification_code", verificationCode},
+                    {"username", Session.Username},
+                    {"device_id", Device.DeviceId},
+                    {"two_factor_identifier", TwoFactorInfo.TwoFactorIdentifier}
+                };
+                var loginUri = UriCreator.GetTwoFactorLoginUri();
+                var signature =
+                    $"SIGNATURE.{twoFactorData.ToString(Formatting.None)}";
+                var fields = new Dictionary<string, string>
+                {
+                    {"signed_body", signature}
+                };
+                var request = new HttpRequestMessage(HttpMethod.Post, loginUri);
+                request.Headers.Host = new HostName("i.instagram.com");
+                request.Content = new HttpFormUrlEncodedContent(fields);
+                var response = await _httpClient.SendRequestAsync(request);
+                var json = await response.Content.ReadAsStringAsync();
+                DebugLogger.LogResponse(response);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var loginFailReason = JsonConvert.DeserializeObject<LoginFailedResponse>(json);
+
+                    if (loginFailReason.ErrorType == "sms_code_validation_code_invalid")
+                        return Result<LoginResult>.Fail(LoginResult.InvalidCode, "Please check the security code.", json);
+                    if (loginFailReason.Challenge != null)
+                    {
+                        ChallengeInfo = loginFailReason.Challenge;
+                        return Result<LoginResult>.Fail(LoginResult.ChallengeRequired, "Challenge is required", json);
+                    }
+                    return Result<LoginResult>.Fail(LoginResult.CodeExpired, "This code is no longer valid, please, call LoginAsync again to request a new one", json);
+                }
+
+                var loginInfo =
+                    JsonConvert.DeserializeObject<LoginResponse>(json);
+                if (loginInfo.User == null)
+                {
+                    return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
+                }
+                IsUserAuthenticated = loginInfo.User != null;
+                Session.Username = loginInfo.User.Username;
+                Session.LoggedInUser = loginInfo.User;
+                Session.RankToken = $"{loginInfo.User.Pk}_{_apiRequestMessage.PhoneId}";
+
+                return Result<LoginResult>.Success(LoginResult.Success);
             }
             catch (Exception exception)
             {
@@ -343,7 +402,7 @@ namespace InstagramAPI
                 var user = statusResponse["user"].ToObject<CurrentUser>();
                 if (user.Pk < 1)
                     Result<CurrentUser>.Fail(json, "Pk is incorrect");
-                CentralUserRegistry.Add(user.Pk, user);
+                CentralUserRegistry[user.Pk] = user;
                 return Result<CurrentUser>.Success(user, json);
             }
             catch (Exception exception)
@@ -380,6 +439,7 @@ namespace InstagramAPI
         public void SaveToAppSettings()
         {
             IsUserAuthenticatedPersistent = IsUserAuthenticated;
+            if (!IsUserAuthenticated) ClearCookies();
             Device.SaveToAppSettings();
             if (IsUserAuthenticated)
             {

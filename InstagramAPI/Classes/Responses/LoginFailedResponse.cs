@@ -2,7 +2,7 @@
 
 namespace InstagramAPI.Classes.Responses
 {
-    internal class LoginBaseResponse
+    internal class LoginFailedResponse : BaseStatusResponse
     {
         #region InvalidCredentials
 

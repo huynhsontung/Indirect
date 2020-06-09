@@ -31,6 +31,13 @@ namespace InstagramAPI
             return instaUri;
         }
 
+        public static Uri GetTwoFactorLoginUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/accounts/two_factor_login/", out var instaUri))
+                throw new Exception("Cant create URI for user 2FA login");
+            return instaUri;
+        }
+
         public static Uri GetCurrentUserUri()
         {
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/accounts/current_user?edit=true", out var instaUri))

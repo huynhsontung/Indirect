@@ -197,7 +197,7 @@
     <Compile Include="Classes\Responses\BaseStatusResponse.cs" />
     <Compile Include="Classes\Responses\DefaultResponse.cs" />
     <Compile Include="Classes\Responses\ItemAckResponse.cs" />
-    <Compile Include="Classes\Responses\LoginBaseResponse.cs" />
+    <Compile Include="Classes\Responses\LoginFailedResponse.cs" />
     <Compile Include="Classes\Responses\LoginResponse.cs" />
     <Compile Include="Classes\Responses\RankedRecipientsResponse.cs" />
     <Compile Include="Classes\Responses\TextSentResponse.cs" />

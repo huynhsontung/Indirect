@@ -6,6 +6,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
+using Indirect.Controls;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Utils;
@@ -29,50 +30,59 @@ namespace Indirect
             Window.Current.SizeChanged += OnWindowSizeChanged;
             LoginWebview.Height = Window.Current.Bounds.Height * 0.8;
             WebviewPopup.VerticalOffset = -(LoginWebview.Height / 2);
-            LoginWebview.NavigationStarting += async (view, args) =>
+            LoginWebview.NavigationStarting += LoginWebviewOnNavigationStarting;
+        }
+
+        private async void LoginWebviewOnNavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
+        {
+            // Clearing challenge
+            if (args.Uri.PathAndQuery == "/" || string.IsNullOrEmpty(args.Uri.PathAndQuery))
             {
-                // Clearing challenge
-                if (args.Uri.PathAndQuery == "/" || string.IsNullOrEmpty(args.Uri.PathAndQuery))
-                {
-                    WebviewPopup.IsOpen = false;
-                }
+                WebviewPopup.IsOpen = false;
+            }
 
-                // Facebook OAuth Login
-                if (args.Uri.PathAndQuery.Contains("accounts/signup", StringComparison.OrdinalIgnoreCase))
+            // Facebook OAuth Login
+            if (args.Uri.PathAndQuery.Contains("accounts/signup", StringComparison.OrdinalIgnoreCase))
+            {
+                // Uri looks like this: https://www.instagram.com/accounts/signup/?#access_token=...
+                WebviewPopup.IsOpen = false;
+                FbLoginButton.IsEnabled = false;
+                try
                 {
-                    // Uri looks like this: https://www.instagram.com/accounts/signup/?#access_token=...
-                    WebviewPopup.IsOpen = false;
-                    FbLoginButton.IsEnabled = false;
-                    try
+                    var query = args.Uri.Fragment.Substring(1); // turn fragment into query (remove the '#')
+                    var urlParams = new WwwFormUrlDecoder(query);
+                    var fbToken = urlParams.GetFirstValueByName("access_token");
+                    if (string.IsNullOrEmpty(fbToken))
                     {
-                        var query = args.Uri.Fragment.Substring(1); // turn fragment into query (remove the '#')
-                        var urlParams = new WwwFormUrlDecoder(query);
-                        var fbToken = urlParams.GetFirstValueByName("access_token");
-                        if (string.IsNullOrEmpty(fbToken))
-                        {
-                            await ShowLoginErrorDialog("Failed to acquire access token");
-                            FbLoginButton.IsEnabled = true;
-                            return;
-                        }
+                        await ShowLoginErrorDialog("Failed to acquire access token");
+                        FbLoginButton.IsEnabled = true;
+                        return;
+                    }
 
-                        var result = await _viewModel.LoginWithFacebook(fbToken).ConfigureAwait(true);
-                        if (!result.IsSucceeded)
+                    var result = await _viewModel.LoginWithFacebook(fbToken).ConfigureAwait(true);
+                    if (!result.IsSucceeded)
+                    {
+                        if (result.Value == LoginResult.TwoFactorRequired)
+                        {
+                            await TwoFactorAuthAsync();
+                        }
+                        else
                         {
                             await ShowLoginErrorDialog(result.Message);
                             FbLoginButton.IsEnabled = true;
-                            return;
                         }
+                        return;
+                    }
 
-                        Frame.Navigate(typeof(MainPage));
-                    }
-                    catch (Exception e)
-                    {
-                        await ShowLoginErrorDialog(
-                            "Unexpected error occured while logging in with Facebook. Please try again later or log in with Instagram account instead.");
-                        DebugLogger.LogException(e);
-                    }
+                    Frame.Navigate(typeof(MainPage));
                 }
-            };
+                catch (Exception e)
+                {
+                    await ShowLoginErrorDialog(
+                        "Unexpected error occured while logging in with Facebook. Please try again later or log in with Instagram account instead.");
+                    DebugLogger.LogException(e);
+                }
+            }
         }
 
         private void OnWindowSizeChanged(object sender, WindowSizeChangedEventArgs e)
@@ -100,24 +110,35 @@ namespace Indirect
             var result = await _viewModel.Login(username, password);
             if (result.Status != ResultStatus.Succeeded || result.Value != LoginResult.Success)
             {
-                if (result.Value == LoginResult.ChallengeRequired)
+                switch (result.Value)
                 {
-                    if (Instagram.Instance.ChallengeInfo != null && !WebviewPopup.IsOpen)
-                    {
-                        LoginWebview.Navigate(Instagram.Instance.ChallengeInfo.Url);
-                        WebviewPopup.IsOpen = true;
-                    }
-
-                }
-                else
-                {
-                    await ShowLoginErrorDialog(result.Message);
+                    case LoginResult.ChallengeRequired:
+                        if (Instagram.Instance.ChallengeInfo != null && !WebviewPopup.IsOpen)
+                        {
+                            LoginWebview.Navigate(Instagram.Instance.ChallengeInfo.Url);
+                            WebviewPopup.IsOpen = true;
+                        }
+                        break;
+                    case LoginResult.TwoFactorRequired:
+                        await TwoFactorAuthAsync();
+                        break;
+                    default:
+                        await ShowLoginErrorDialog(result.Message);
+                        break;
                 }
 
                 LoginButton.IsEnabled = true;
                 return;
             }
             Frame.Navigate(typeof(MainPage));
+        }
+
+        private async Task TwoFactorAuthAsync()
+        {
+            var tfaDialog = new TwoFactorAuthDialog();
+            var dialogResult = await tfaDialog.ShowAsync();
+            if (dialogResult == ContentDialogResult.Primary)
+                Frame.Navigate(typeof(MainPage));
         }
 
         private async Task ShowLoginErrorDialog(string message)
@@ -127,8 +148,7 @@ namespace Indirect
                 Title = "Login failed",
                 Content = $"Reason: {message}",
                 DefaultButton = ContentDialogButton.Close,
-                CloseButtonText = "Close",
-                MaxWidth = 400
+                CloseButtonText = "Close"
             };
             try
             {
