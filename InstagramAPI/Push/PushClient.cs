@@ -35,8 +35,6 @@ namespace InstagramAPI.Push
         private const string INTERNET_AVAILABLE_ENTRY_POINT = "BackgroundPushClient.InternetAvailable";
         private const string SOCKET_ID = "mqtt_fbns";
 
-        private readonly UserSessionData _user;
-        private readonly AndroidDevice _device;
         private IBackgroundTaskRegistration _socketActivityTask;
         private IBackgroundTaskRegistration _internetAvailableTask;
 
@@ -52,8 +50,6 @@ namespace InstagramAPI.Push
         public PushClient(Instagram api, bool tryLoadData = true)
         {
             _instaApi = api ?? throw new ArgumentException("Api can't be null", nameof(api));
-            _user = api.Session;
-            _device = api.Device;
 
             if (tryLoadData) ConnectionData.LoadFromAppSettings();
 
@@ -62,7 +58,7 @@ namespace InstagramAPI.Push
 
             // Build user agent for first time setup
             if (string.IsNullOrEmpty(ConnectionData.UserAgent))
-                ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(_device);
+                ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(api.Device);
 
             NetworkInformation.NetworkStatusChanged += async sender =>
             {
@@ -412,10 +408,10 @@ namespace InstagramAPI.Push
                 {"is_main_push_channel", "true"},
                 {"device_sub_type", "2" },
                 {"device_token", token},
-                {"_csrftoken", _user.CsrfToken },
-                {"guid", _device.Uuid.ToString() },
-                {"_uuid", _device.Uuid.ToString() },
-                {"users", _user.LoggedInUser.Pk.ToString() }
+                {"_csrftoken", _instaApi.Session.CsrfToken },
+                {"guid", _instaApi.Device.Uuid.ToString() },
+                {"_uuid", _instaApi.Device.Uuid.ToString() },
+                {"users", _instaApi.Session.LoggedInUser.Pk.ToString() }
             };
             var result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields));
 

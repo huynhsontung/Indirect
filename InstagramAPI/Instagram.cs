@@ -349,7 +349,7 @@ namespace InstagramAPI
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
                 Session.RankToken = $"{loginInfo.User.Pk}_{_apiRequestMessage.PhoneId}";
-
+                TwoFactorInfo = null;
                 return Result<LoginResult>.Success(LoginResult.Success);
             }
             catch (Exception exception)

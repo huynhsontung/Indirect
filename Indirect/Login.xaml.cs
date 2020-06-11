@@ -69,12 +69,12 @@ namespace Indirect
                         else
                         {
                             await ShowLoginErrorDialog(result.Message);
-                            FbLoginButton.IsEnabled = true;
                         }
+                        FbLoginButton.IsEnabled = true;
                         return;
                     }
 
-                    Frame.Navigate(typeof(MainPage));
+                    await TryNavigateToMainPage();
                 }
                 catch (Exception e)
                 {
@@ -99,6 +99,11 @@ namespace Indirect
 
         private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
+            if (Instagram.Instance.TwoFactorInfo != null)
+            {
+                await TwoFactorAuthAsync();
+                return;
+            }
             LoginButton.IsEnabled = false;
             var username = UsernameBox.Text;
             var password = PasswordBox.Password;
@@ -130,7 +135,7 @@ namespace Indirect
                 LoginButton.IsEnabled = true;
                 return;
             }
-            Frame.Navigate(typeof(MainPage));
+            await TryNavigateToMainPage();
         }
 
         private async Task TwoFactorAuthAsync()
@@ -138,10 +143,25 @@ namespace Indirect
             var tfaDialog = new TwoFactorAuthDialog();
             var dialogResult = await tfaDialog.ShowAsync();
             if (dialogResult == ContentDialogResult.Primary)
-                Frame.Navigate(typeof(MainPage));
+                await TryNavigateToMainPage();
         }
 
-        private async Task ShowLoginErrorDialog(string message)
+        private async Task TryNavigateToMainPage()
+        {
+            var instance = Instagram.Instance;
+            if ((string.IsNullOrEmpty(instance.Session.Username) || string.IsNullOrEmpty(instance.Session.Password)) &&
+                string.IsNullOrEmpty(instance.Session.FacebookAccessToken))
+            {
+                await ShowLoginErrorDialog("Something went wrong. Please try again later.");
+                DebugLogger.LogException(new Exception("Try to navigate to MainPage but user validation failed"));
+            }
+            else
+            {
+                Frame.Navigate(typeof(MainPage));
+            }
+        }
+
+        private static async Task ShowLoginErrorDialog(string message)
         {
             var failDialog = new ContentDialog
             {
@@ -185,8 +205,13 @@ namespace Indirect
             WebviewPopup.IsOpen = false;
         }
 
-        private void FbLoginButton_OnClick(object sender, RoutedEventArgs e)
+        private async void FbLoginButton_OnClick(object sender, RoutedEventArgs e)
         {
+            if (Instagram.Instance.TwoFactorInfo != null)
+            {
+                await TwoFactorAuthAsync();
+                return;
+            }
             WebviewPopup.IsOpen = true;
             // https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/#login
             LoginWebview.Navigate(new Uri("https://m.facebook.com/v6.0/dialog/oauth?client_id=124024574287414&scope=email&response_type=token&redirect_uri=https%3A%2F%2Fwww.instagram.com%2Faccounts%2Fsignup%2F"));
