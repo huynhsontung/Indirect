@@ -327,10 +327,18 @@ namespace InstagramAPI.Push
                         switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                         {
                             case TopicIds.Message:
-                                var message = JsonConvert.DeserializeObject<PushReceivedEventArgs>(json);
-                                message.Json = json;
-                                if (message.NotificationContent.CollapseKey == "direct_v2_message")
-                                    MessageReceived?.Invoke(this, message);
+                                try
+                                {
+                                    var message = JsonConvert.DeserializeObject<PushReceivedEventArgs>(json);
+                                    message.Json = json;
+                                    if (message.NotificationContent.CollapseKey == "direct_v2_message")
+                                        MessageReceived?.Invoke(this, message);
+                                }
+                                catch (Exception e)
+                                {
+                                    // If something wrong happens here we don't need to shut down the whole push client
+                                    DebugLogger.LogException(e);
+                                }
                                 break;
                             case TopicIds.RegResp:
                                 await OnRegisterResponse(json);
@@ -348,7 +356,6 @@ namespace InstagramAPI.Push
                         _waitingForPubAck = false;
                         break;
 
-                    // todo: PingResp never arrives even though data was received. Decoder problem?
                     case PacketType.PINGRESP:
                         this.Log("Received PINGRESP");
                         break;
