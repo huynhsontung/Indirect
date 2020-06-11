@@ -21,23 +21,29 @@ namespace BackgroundPushClient
             var threadTitle = GetThreadTitleFromAppSettings(threadId);
             if (string.IsNullOrEmpty(threadTitle))
                 threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(' '));
-            var toastContent = new ToastContent()
+            var toastContent = new ToastContent
             {
                 Header = new ToastHeader(threadId, threadTitle, string.Empty),
-                Visual = new ToastVisual()
+                Visual = new ToastVisual
                 {
-                    BindingGeneric = new ToastBindingGeneric()
+                    BindingGeneric = new ToastBindingGeneric
                     {
                         Children =
                         {
-                            new AdaptiveText()
+                            new AdaptiveText
                             {
                                 Text = notificationContent.Message
                             }
                         },
+                        HeroImage = string.IsNullOrEmpty(notificationContent.OptionalImage)
+                            ? null
+                            : new ToastGenericHeroImage
+                            {
+                                Source = notificationContent.OptionalImage
+                            },
                         AppLogoOverride = string.IsNullOrEmpty(args.NotificationContent.OptionalAvatarUrl)
                             ? null
-                            : new ToastGenericAppLogo()
+                            : new ToastGenericAppLogo
                             {
                                 Source = args.NotificationContent.OptionalAvatarUrl,
                                 HintCrop = ToastGenericAppLogoCrop.Circle,
@@ -66,6 +72,7 @@ namespace BackgroundPushClient
 
         private static string GetThreadTitleFromAppSettings(string threadId)
         {
+            if (string.IsNullOrEmpty(threadId)) return null;
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             var composite = (Windows.Storage.ApplicationDataCompositeValue)localSettings.Values[Instagram.THREAD_TITLE_PERSISTENT_DICTIONARY_KEY];
             return (string) composite?[threadId];

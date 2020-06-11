@@ -68,7 +68,6 @@ namespace InstagramAPI.Push
             {
                 var internetProfile = NetworkInformation.GetInternetConnectionProfile();
                 if (internetProfile == null || _runningTokenSource.IsCancellationRequested) return;
-                Shutdown();
                 await StartFresh();
             };
         }
@@ -165,7 +164,7 @@ namespace InstagramAPI.Push
             try
             {
                 this.Log("Starting with existing socket");
-                Shutdown();
+                if (RunningAndReadable) Shutdown();
                 Socket = socket;
                 _inboundReader = new DataReader(socket.InputStream);
                 _outboundWriter = new DataWriter(socket.OutputStream);
@@ -193,7 +192,7 @@ namespace InstagramAPI.Push
             try
             {
                 this.Log("Starting fresh");
-                Shutdown();
+                if (RunningAndReadable) Shutdown();
 
                 var connectPacket = new FbnsConnectPacket
                 {
@@ -334,7 +333,8 @@ namespace InstagramAPI.Push
                             case TopicIds.Message:
                                 var message = JsonConvert.DeserializeObject<PushReceivedEventArgs>(json);
                                 message.Json = json;
-                                MessageReceived?.Invoke(this, message);
+                                if (message.NotificationContent.CollapseKey == "direct_v2_message")
+                                    MessageReceived?.Invoke(this, message);
                                 break;
                             case TopicIds.RegResp:
                                 await OnRegisterResponse(json);

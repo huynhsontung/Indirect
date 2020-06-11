@@ -17,7 +17,7 @@ namespace InstagramAPI.Push
         [JsonProperty("token")] public string Token { get; set; }
         [JsonProperty("ck")] public string ConnectionKey { get; set; }
         [JsonProperty("pn")] public string PackageName { get; set; }
-        [JsonProperty("cp")] public string CollapseKey { get; set; }
+        //[JsonProperty("cp")] public string CollapseKey { get; set; }
         [JsonProperty("fbpushnotif")]
         public string NotificationContentJson
         {
