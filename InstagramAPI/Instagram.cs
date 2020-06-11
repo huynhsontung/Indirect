@@ -40,7 +40,7 @@ namespace InstagramAPI
         }
 
         public bool IsUserAuthenticated { get; private set; }
-        public UserSessionData Session { get; } = new UserSessionData();
+        public UserSessionData Session { get; private set; } = new UserSessionData();
         public AndroidDevice Device { get; } = AndroidDevice.GetRandomAndroidDevice();
         public PushClient PushClient { get; }
         public SyncClient SyncClient { get; }
@@ -89,6 +89,7 @@ namespace InstagramAPI
         /// </returns>
         public async Task<Result<LoginResult>> LoginAsync(string username, string password, bool isNewLogin = true)
         {
+            Session = new UserSessionData();
             Session.Username = username;
             Session.Password = password;
             ValidateRequestMessage();
@@ -101,7 +102,6 @@ namespace InstagramAPI
                 }
 
                 var csrftoken = GetCsrfToken();
-                Session.CsrfToken = csrftoken;
                 var loginUri = UriCreator.GetLoginUri();
                 var signature =
                     $"SIGNATURE.{_apiRequestMessage.GetChallengeMessageString(csrftoken)}";
@@ -164,10 +164,6 @@ namespace InstagramAPI
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
                 Session.RankToken = $"{loginInfo.User.Pk}_{_apiRequestMessage.PhoneId}";
-                if (string.IsNullOrEmpty(Session.CsrfToken))
-                {
-                    Session.CsrfToken = GetCsrfToken();
-                }
                 SaveToAppSettings();
                 return Result<LoginResult>.Success(LoginResult.Success, json: json);
             }
@@ -192,6 +188,7 @@ namespace InstagramAPI
         /// </returns>
         public async Task<Result<LoginResult>> LoginWithFacebookAsync(string fbAccessToken)
         {
+            Session = new UserSessionData();
             try
             {
                 if (string.IsNullOrEmpty(fbAccessToken)) throw new ArgumentNullException(nameof(fbAccessToken));
@@ -289,7 +286,6 @@ namespace InstagramAPI
                 IsUserAuthenticated = true;
                 Session.LoggedInUser = loginInfoUser;
                 Session.RankToken = $"{Session.LoggedInUser.Pk}_{Device.PhoneId}";
-                Session.CsrfToken = GetCsrfToken();
                 Session.FacebookUserId = fbUserId;
                 Session.Username = loginInfoUser.Username;
                 Session.Password = "LOGGED_IN_THROUGH_FB";
