@@ -32,7 +32,12 @@
             </DataTemplate>
 
             <DataTemplate x:Key="VideoView" x:DataType="wrapper:InstaDirectInboxItemWrapper">
-                <controls1:AutoVideoControl x:Name="MediaPlayer" Source="{x:Bind VideoUri}"/>
+                <controls1:AutoVideoControl x:Name="MediaPlayer" Source="{x:Bind VideoUri}">
+                    <controls1:AutoVideoControl.TransportControls>
+                        <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False"
+                                                IsZoomButtonVisible="False"/>
+                    </controls1:AutoVideoControl.TransportControls>
+                </controls1:AutoVideoControl>
             </DataTemplate>
 
             <DataTemplate x:Key="ReelView" x:DataType="wrapper:ReelsWrapper">

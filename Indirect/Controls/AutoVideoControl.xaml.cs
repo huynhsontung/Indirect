@@ -142,7 +142,7 @@ namespace Indirect.Controls
         private static void OnTransportControlsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (AutoVideoControl) d;
-            view.VideoPlayer.TransportControls = (MediaTransportControls) e.NewValue;
+            view.VideoPlayer.TransportControls = (MediaTransportControls)e.NewValue;
         }
 
         private static async void OnSourceChange(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -220,7 +220,15 @@ namespace Indirect.Controls
         public AutoVideoControl()
         {
             this.InitializeComponent();
-            //VideoPlayer.TransportControls.Show();
+            VideoPlayer.TransportControls = new MediaTransportControls
+            {
+                IsFullWindowEnabled = false,
+                IsFullWindowButtonVisible = false,
+                IsSeekBarVisible = false,
+                IsZoomButtonVisible = false,
+                IsZoomEnabled = false,
+                IsCompact = true,
+            };
         }
 
         private void AutoVideoControl_OnEffectiveViewportChanged(FrameworkElement sender, EffectiveViewportChangedEventArgs args)
