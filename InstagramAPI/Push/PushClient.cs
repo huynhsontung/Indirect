@@ -172,14 +172,9 @@ namespace InstagramAPI.Push
                 await SendPing().ConfigureAwait(false);
                 StartKeepAliveLoop();
             }
-            catch (TaskCanceledException)
-            {
-                // pass
-            }
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                Shutdown();
             }
         }
 
@@ -216,7 +211,6 @@ namespace InstagramAPI.Push
                         {
                             DebugLogger.LogException(e);
                             this.Log("Failed to transfer socket completely!");
-                            Shutdown();
                             return;
                         }
                     }
@@ -236,7 +230,6 @@ namespace InstagramAPI.Push
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                Shutdown();
             }
             
         }
@@ -268,8 +261,7 @@ namespace InstagramAPI.Push
                     if (RunningAndReadable)
                     {
                         DebugLogger.LogException(e);
-                        Shutdown();
-                        Start();
+                        await StartFresh();
                     }
                     return;
                 }
@@ -282,13 +274,13 @@ namespace InstagramAPI.Push
             try
             {
                 var packet = PingReqPacket.Instance;
+                if (_outboundWriter == null) return;
                 await FbnsPacketEncoder.EncodePacket(packet, _outboundWriter);
                 this.Log("Pinging Push server");
             }
             catch (Exception)
             {
-                this.Log("Failed to ping Push server. Shutting down.");
-                Shutdown();
+                this.Log("Failed to ping Push server");
             }
         }
 
@@ -301,6 +293,8 @@ namespace InstagramAPI.Push
 
         private async Task OnPacketReceived(Packet msg)
         {
+            if (_outboundWriter == null) return;
+            var writer = _outboundWriter;
             try
             {
                 switch (msg.PacketType)
@@ -318,7 +312,7 @@ namespace InstagramAPI.Push
                             throw new Exception($"{nameof(PushClient)}: Publish packet received but payload is null");
                         if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
                         {
-                            await FbnsPacketEncoder.EncodePacket(PubAckPacket.InResponseTo(publishPacket), _outboundWriter);
+                            await FbnsPacketEncoder.EncodePacket(PubAckPacket.InResponseTo(publishPacket), writer);
                         }
 
                         var payload = DecompressPayload(publishPacket.Payload);
@@ -366,9 +360,7 @@ namespace InstagramAPI.Push
             }
             catch (Exception e)
             {
-                // Something went wrong with Push client. Shutting down.
                 DebugLogger.LogException(e);
-                Shutdown();
             }
         }
 
@@ -378,25 +370,16 @@ namespace InstagramAPI.Push
         /// </summary>
         private async Task OnRegisterResponse(string json)
         {
-            try
+            var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+
+            if (!string.IsNullOrEmpty(response["error"]))
             {
-                var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-
-                if (!string.IsNullOrEmpty(response["error"]))
-                {
-                    this.Log($"{response["error"]}");
-                    Shutdown();
-                }
-
-                var token = response["token"];
-
-                await RegisterClient(token);
+                throw new Exception(response["error"]);
             }
-            catch (Exception e)
-            {
-                DebugLogger.LogException(e);
-                Shutdown();
-            }
+
+            var token = response["token"];
+
+            await RegisterClient(token);
         }
 
         private async Task RegisterClient(string token)
@@ -463,6 +446,7 @@ namespace InstagramAPI.Push
 
             // Send PUBLISH packet then wait for PUBACK
             // Retry after TIMEOUT seconds
+            if (_outboundWriter == null) return;
             await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
             WaitForPubAck();
         }
