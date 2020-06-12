@@ -74,13 +74,13 @@ namespace Indirect.Controls
             {
                 ReelsProgressBar.Value = 0;
             }
-            else if (selected.Parent != previous?.Parent)
+            else if (selected.Parent.Id != previous?.Parent.Id)
             {
                 var start = 0;
                 var end = 0;
                 for (int i = 0; i < Source.Items.Count; i++)
                 {
-                    if (selected.Parent == Source.Items[i].Parent)
+                    if (selected.Parent.Id == Source.Items[i].Parent.Id)
                     {
                         start = i;
                         break;
@@ -89,7 +89,7 @@ namespace Indirect.Controls
 
                 for (int i = Source.Items.Count - 1; i >= 0; i--)
                 {
-                    if (selected.Parent == Source.Items[i].Parent)
+                    if (selected.Parent.Id == Source.Items[i].Parent.Id)
                     {
                         end = i;
                         break;
@@ -97,7 +97,7 @@ namespace Indirect.Controls
                 }
 
                 _reelLimit = new Tuple<int, int>(start, end);
-                ReelsProgressBar.Value = 1d / (end - start + 1) * 100;
+                ReelsProgressBar.Value = storyView.SelectedIndex == end ? 100 : 1d / (end - start + 1) * 100;
             }
             else
             {
@@ -111,6 +111,13 @@ namespace Indirect.Controls
             }
 
             if (ReelsProgressBar.Value > 99) ReelsProgressBar.Value = 100;
+
+            if (selected == null) return;
+            flipViewItem = storyView.ContainerFromItem(selected) as FlipViewItem;
+            element = flipViewItem?.ContentTemplateRoot as FrameworkElement;
+            autoVideo = element?.FindDescendant<AutoVideoControl>();
+            if (autoVideo == null) return;
+            autoVideo.MediaPlayer.Volume = 0.5;
         }
 
         private void MessageTextBox_OnKeyboardInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
