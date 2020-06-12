@@ -150,7 +150,7 @@ namespace Indirect
         {
             var instance = Instagram.Instance;
             if ((string.IsNullOrEmpty(instance.Session.Username) || string.IsNullOrEmpty(instance.Session.Password)) &&
-                string.IsNullOrEmpty(instance.Session.FacebookAccessToken))
+                string.IsNullOrEmpty(instance.Session.FacebookAccessToken) || !instance.IsUserAuthenticated)
             {
                 await ShowLoginErrorDialog("Something went wrong. Please try again later.");
                 DebugLogger.LogException(new Exception("Try to navigate to MainPage but user validation failed"));

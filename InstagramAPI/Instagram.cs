@@ -160,7 +160,7 @@ namespace InstagramAPI
                 {
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
-                IsUserAuthenticated = loginInfo.User != null;
+                IsUserAuthenticated = true;
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
                 Session.RankToken = $"{loginInfo.User.Pk}_{_apiRequestMessage.PhoneId}";
@@ -345,7 +345,7 @@ namespace InstagramAPI
                 {
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
-                IsUserAuthenticated = loginInfo.User != null;
+                IsUserAuthenticated = true;
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
                 Session.RankToken = $"{loginInfo.User.Pk}_{_apiRequestMessage.PhoneId}";
