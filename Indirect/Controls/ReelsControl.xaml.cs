@@ -37,12 +37,16 @@ namespace Indirect.Controls
         private void StoryView_OnLoaded(object sender, RoutedEventArgs e)
         {
             var storyView = (FlipView) sender;
-            Source?.AttachSelector(storyView);
+            Source?.OnLoaded(storyView);
+            var flipViewItem = StoryView.ContainerFromIndex(StoryView.SelectedIndex) as FlipViewItem;
+            var grid = flipViewItem?.ContentTemplateRoot as Grid;
+            var autoVideo = grid?.FindDescendant<AutoVideoControl>();
+            if (autoVideo == null) return;
+            autoVideo.MediaPlayer.Volume = 0.5;
         }
 
         public void OnClose()
         {
-            Source?.DetachSelector();
             var flipViewItem = StoryView.ContainerFromIndex(StoryView.SelectedIndex) as FlipViewItem;
             var grid = flipViewItem?.ContentTemplateRoot as Grid;
             var autoVideo = grid.FindDescendant<AutoVideoControl>();
@@ -63,6 +67,7 @@ namespace Indirect.Controls
         private void StoryView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var storyView = (FlipView)sender;
+            Source?.OnSelectionChanged(storyView.SelectedIndex);
             var previous = (StoryItemWrapper) e.RemovedItems.FirstOrDefault();
             var selected = (StoryItemWrapper) e.AddedItems.FirstOrDefault();
             var flipViewItem = storyView.ContainerFromItem(previous) as FlipViewItem;

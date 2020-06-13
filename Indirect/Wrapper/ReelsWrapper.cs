@@ -18,7 +18,7 @@ namespace Indirect.Wrapper
         private readonly Dictionary<string, Reel> _userReelsDictionary = new Dictionary<string, Reel>();
         private readonly List<string> _userOrder = new List<string>();
         private int _userIndex;
-        private Selector _selector;
+        private bool _loaded;
 
         public ReelsWrapper(ICollection<Reel> initialReels, int selected)
         {
@@ -30,7 +30,6 @@ namespace Indirect.Wrapper
                 _userOrder.Add(reel.Owner.Id);
                 _userReelsDictionary[reel.Owner.Id] = reel;
             }
-            SyncItems();
         }
 
         public int GetUserIndex(string userId) => _userOrder.IndexOf(userId);
@@ -38,11 +37,10 @@ namespace Indirect.Wrapper
         public bool StoriesFetched(string userId) =>
             _userReelsDictionary[userId].Items != null && _userReelsDictionary[userId].Items.Length > 0;
 
-        public async Task AttachSelector(Selector view)
+        public async Task OnLoaded(Selector view)
         {
-            _selector = view;
-            view.SelectionChanged -= SelectorOnSelectionChanged;
-            view.SelectionChanged += SelectorOnSelectionChanged;
+            if (view == null) return;
+            _loaded = true;
             var storyIndex = 0;
             for (int i = 0; i < Items.Count; i++)
             {
@@ -59,24 +57,16 @@ namespace Indirect.Wrapper
             }
             else
             {
-                await TryMarkStorySeen(storyIndex);
+                await OnSelectionChanged(storyIndex);
             }
         }
 
-        public void DetachSelector()
+        public async Task OnSelectionChanged(int selectedIndex)
         {
-            if (_selector == null) return;
-            _selector.SelectionChanged -= SelectorOnSelectionChanged;
-        }
-
-        private async void SelectorOnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems.Count == 0) return;
-            var view = (Selector) sender;
-            if (view.SelectedIndex == -1 || view.SelectedIndex >= Items.Count) return;
-            var userIndex = GetUserIndex(Items[view.SelectedIndex].Owner.Id);
+            if (selectedIndex == -1 || selectedIndex >= Items.Count || !_loaded) return;
+            var userIndex = GetUserIndex(Items[selectedIndex].Owner.Id);
             await UpdateUserIndex(userIndex);
-            await TryMarkStorySeen(view.SelectedIndex);
+            await TryMarkStorySeen(selectedIndex);
         }
 
         public async Task UpdateUserIndex(int userIndex)
@@ -108,6 +98,12 @@ namespace Indirect.Wrapper
 
                 SyncItems();
             }
+            else if(userIndex == 0 && _userOrder.Count >= 2 && !StoriesFetched(_userOrder[1]))
+            {
+                await FetchStories(_userOrder[1]);
+                SyncItems();
+            }
+
 
             if (_userIndex == userIndex) return;
             var reelsHolders = _userOrder.Select(x => _userReelsDictionary[x]).ToList();
