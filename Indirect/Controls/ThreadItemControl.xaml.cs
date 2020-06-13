@@ -2,8 +2,10 @@
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Indirect.Wrapper;
 using InstagramAPI.Classes.Direct;
@@ -100,7 +102,7 @@ namespace Indirect.Controls
 
         private void ReelShareImage_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (Item.ReelShareMedia.Media.MediaType == 1)
+            if (Item.ReelShareMedia?.Media.MediaType == 1 || Item.StoryShareMedia?.Media.MediaType == 1)
             {
                 ImageFrame_Tapped(sender, e);
             }
@@ -155,7 +157,7 @@ namespace Indirect.Controls
             var confirmDialog = new ContentDialog
             {
                 Title = "Unsend message?",
-                Content = "Unsending will remove the message for everyone. People may have seen it already.",
+                Content = "Unsending will remove the message for everyone",
                 CloseButtonText = "Cancel",
                 PrimaryButtonText = "Unsend",
                 DefaultButton = ContentDialogButton.Primary,
@@ -165,6 +167,12 @@ namespace Indirect.Controls
             {
                 await ApiContainer.Instance.UnsendMessage(Item);
             }
+        }
+
+        private async void StoryShareOwnerLink_OnClick(Hyperlink sender, HyperlinkClickEventArgs args)
+        {
+            var uri = new Uri($"https://www.instagram.com/{Item.StoryShareMedia.OwnerUsername}/");
+            await Launcher.LaunchUriAsync(uri);
         }
     }
 }

@@ -45,10 +45,10 @@ namespace InstagramAPI.Classes.Media
         public List<InstaImage> Images { get; set; }
 
         [JsonProperty("original_width", NullValueHandling = NullValueHandling.Ignore)]
-        public long? OriginalWidth { get; set; }
+        public int? OriginalWidth { get; set; }
 
         [JsonProperty("original_height", NullValueHandling = NullValueHandling.Ignore)]
-        public long? OriginalHeight { get; set; }
+        public int? OriginalHeight { get; set; }
 
         [JsonProperty("caption_is_edited", NullValueHandling = NullValueHandling.Ignore)]
         public bool? CaptionIsEdited { get; set; }

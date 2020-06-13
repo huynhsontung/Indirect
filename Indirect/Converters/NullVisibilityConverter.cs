@@ -13,6 +13,8 @@ namespace Indirect.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
+            if (value is string s)
+                return string.IsNullOrEmpty(s) ? Visibility.Collapsed : Visibility.Visible;
             return value != null ? Visibility.Visible : Visibility.Collapsed;
         }
 

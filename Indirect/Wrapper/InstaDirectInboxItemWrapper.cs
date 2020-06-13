@@ -68,60 +68,6 @@ namespace Indirect.Wrapper
             }
         }
 
-        public int PreviewImageHeight
-        {
-            get
-            {
-                switch (ItemType)
-                {
-                    case DirectItemType.Media:
-                        return GetPreviewImage(Media.Images)?.Height ?? 0;
-
-                    case DirectItemType.RavenMedia when RavenMedia != null:
-                        return GetPreviewImage(RavenMedia.Images)?.Height ?? 0;
-
-                    case DirectItemType.RavenMedia when VisualMedia != null:
-                        return GetPreviewImage(VisualMedia.Media.Images)?.Height ?? 0;
-
-                    case DirectItemType.ReelShare:
-                        return GetPreviewImage(ReelShareMedia.Media.Images)?.Height ?? 0;
-
-                    case DirectItemType.AnimatedMedia:
-                        return AnimatedMedia.Image.Height;
-
-                    default:
-                        return 0;
-                }
-            }
-        }
-
-        public int PreviewImageWidth
-        {
-            get
-            {
-                switch (ItemType)
-                {
-                    case DirectItemType.Media:
-                        return GetPreviewImage(Media.Images)?.Width ?? 0;
-
-                    case DirectItemType.RavenMedia when RavenMedia != null:
-                        return GetPreviewImage(RavenMedia.Images)?.Width ?? 0;
-
-                    case DirectItemType.RavenMedia when VisualMedia != null:
-                        return GetPreviewImage(VisualMedia.Media.Images)?.Width ?? 0;
-
-                    case DirectItemType.ReelShare:
-                        return GetPreviewImage(ReelShareMedia.Media.Images)?.Width ?? 0;
-
-                    case DirectItemType.AnimatedMedia:
-                        return AnimatedMedia.Image.Width;
-
-                    default:
-                        return 0;
-                }
-            }
-        }
-
         public int FullImageHeight
         {
             get
@@ -139,6 +85,9 @@ namespace Indirect.Wrapper
 
                     case DirectItemType.ReelShare:
                         return GetFullImage(ReelShareMedia.Media.Images)?.Height ?? 0;
+
+                    case DirectItemType.StoryShare:
+                        return GetFullImage(StoryShareMedia.Media?.Images)?.Height ?? 0;
 
                     case DirectItemType.AnimatedMedia:
                         return AnimatedMedia.Image.Height;
@@ -166,6 +115,9 @@ namespace Indirect.Wrapper
 
                     case DirectItemType.ReelShare:
                         return GetFullImage(ReelShareMedia.Media.Images)?.Width ?? 0;
+
+                    case DirectItemType.StoryShare:
+                        return GetFullImage(StoryShareMedia.Media?.Images)?.Width ?? 0;
 
                     case DirectItemType.AnimatedMedia:
                         return AnimatedMedia.Image.Width;
@@ -197,6 +149,9 @@ namespace Indirect.Wrapper
                     case DirectItemType.ReelShare:
                         return GetPreviewImage(ReelShareMedia.Media.Images)?.Url;
 
+                    case DirectItemType.StoryShare:
+                        return GetPreviewImage(StoryShareMedia.Media?.Images)?.Url;
+
                     case DirectItemType.AnimatedMedia:
                         return AnimatedMedia.Image.Url;
 
@@ -227,6 +182,9 @@ namespace Indirect.Wrapper
                     case DirectItemType.ReelShare:
                         return GetFullImageUri(ReelShareMedia.Media.Images);
 
+                    case DirectItemType.StoryShare:
+                        return GetFullImageUri(StoryShareMedia.Media?.Images);
+
                     case DirectItemType.AnimatedMedia:
                         return PreviewImageUri;
 
@@ -236,8 +194,59 @@ namespace Indirect.Wrapper
             }
         }
 
-        public int VideoWidth => (int) (RavenMedia?.Width ?? VisualMedia?.Media.Width ?? Media?.OriginalWidth ?? ReelShareMedia.Media.OriginalWidth ?? 0);
-        public int VideoHeight => (int) (RavenMedia?.Height ?? VisualMedia?.Media?.Height ?? Media?.OriginalHeight ?? ReelShareMedia.Media.OriginalHeight ?? 0);
+        public int VideoWidth
+        {
+            get
+            {
+                switch (ItemType)
+                {
+                    case DirectItemType.RavenMedia when RavenMedia != null:
+                        return RavenMedia.Width;
+
+                    case DirectItemType.RavenMedia when VisualMedia != null:
+                        return VisualMedia.Media.Width;
+
+                    case DirectItemType.Media when Media != null:
+                        return Media.OriginalWidth;
+
+                    case DirectItemType.ReelShare when ReelShareMedia != null:
+                        return ReelShareMedia.Media.OriginalWidth ?? 0;
+
+                    case DirectItemType.StoryShare when StoryShareMedia != null:
+                        return StoryShareMedia.Media?.OriginalWidth ?? 0;
+
+                    default:
+                        return 0;
+                }
+            }
+        }
+
+        public int VideoHeight
+        {
+            get
+            {
+                switch (ItemType)
+                {
+                    case DirectItemType.RavenMedia when RavenMedia != null:
+                        return RavenMedia.Height;
+
+                    case DirectItemType.RavenMedia when VisualMedia != null:
+                        return VisualMedia.Media.Height;
+
+                    case DirectItemType.Media when Media != null:
+                        return Media.OriginalHeight;
+
+                    case DirectItemType.ReelShare when ReelShareMedia != null:
+                        return ReelShareMedia.Media.OriginalHeight ?? 0;
+
+                    case DirectItemType.StoryShare when StoryShareMedia != null:
+                        return StoryShareMedia.Media?.OriginalHeight ?? 0;
+
+                    default:
+                        return 0;
+                }
+            }
+        }
 
         public Uri VideoUri
         {
@@ -246,19 +255,22 @@ namespace Indirect.Wrapper
                 switch (ItemType)
                 {
                     case DirectItemType.Media when Media.Videos.Count > 0:
-                        return Media.Videos.First().Url;
+                        return Media.Videos[0].Url;
 
                     case DirectItemType.MediaShare when MediaShare.Videos.Count > 0:
-                        return MediaShare.Videos.First().Url;
+                        return MediaShare.Videos[0].Url;
 
                     case DirectItemType.RavenMedia when RavenMedia != null && RavenMedia.Videos.Count > 0:
-                        return RavenMedia.Videos.First().Url;
+                        return RavenMedia.Videos[0].Url;
         
                     case DirectItemType.RavenMedia when VisualMedia != null && VisualMedia.Media.Videos.Count > 0:
-                        return VisualMedia.Media.Videos.First().Url;
+                        return VisualMedia.Media.Videos[0].Url;
 
                     case DirectItemType.ReelShare:
-                        return ReelShareMedia.Media.VideoVersions.First().Url;
+                        return ReelShareMedia.Media.VideoVersions[0].Url;
+
+                    case DirectItemType.StoryShare:
+                        return StoryShareMedia.Media?.VideoVersions[0].Url;
 
                     case DirectItemType.VoiceMedia:
                         return VoiceMedia.Media.Audio.AudioSrc;

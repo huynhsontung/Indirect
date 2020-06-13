@@ -63,9 +63,9 @@ namespace InstagramAPI.Classes.JsonConverters
 
                     case DirectItemType.Media:
                         if (item.Media.MediaType == InstaMediaType.Image)
-                            item.Description = item.FromMe ? "You sent them a photo" : "Sent you a photo";
+                            item.Description = item.FromMe ? "You sent a photo" : "Sent you a photo";
                         else
-                            item.Description = item.FromMe ? "You sent them a video" : "Sent you a video";
+                            item.Description = item.FromMe ? "You sent a video" : "Sent you a video";
                         break;
 
                     case DirectItemType.MediaShare:
@@ -76,9 +76,9 @@ namespace InstagramAPI.Classes.JsonConverters
                         var mediaType = item.RavenMedia?.MediaType ??
                                         item.VisualMedia.Media.MediaType;
                         if (mediaType == InstaMediaType.Image)
-                            item.Description = item.FromMe ? "You sent them a photo" : "Sent you a photo";
+                            item.Description = item.FromMe ? "You sent a photo" : "Sent you a photo";
                         else
-                            item.Description = item.FromMe ? "You sent them a video" : "Sent you a video";
+                            item.Description = item.FromMe ? "You sent a video" : "Sent you a video";
                         break;
 
                     case DirectItemType.ReelShare:
@@ -99,6 +99,10 @@ namespace InstagramAPI.Classes.JsonConverters
                                 break;
                         }
 
+                        break;
+
+                    case DirectItemType.StoryShare:
+                        item.Description = item.FromMe ? "You sent a story" : "Sent you a story";
                         break;
 
                     case DirectItemType.Text:

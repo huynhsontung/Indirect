@@ -19,6 +19,7 @@ namespace Indirect.Utilities
         public DataTemplate HyperlinkTemplate { get; set; }
         public DataTemplate HyperlinkWithPreviewTemplate { get; set; }
         public DataTemplate ReelShareTemplate { get; set; }
+        public DataTemplate StoryShareTemplate { get; set; }
         public DataTemplate VideoCallTemplate { get; set; }
         public DataTemplate NotSupportedTemplate { get; set; }
         public DataTemplate UnexpectedTemplate { get; set; }
@@ -69,6 +70,9 @@ namespace Indirect.Utilities
 
                     case DirectItemType.ReelShare:
                         return ReelShareTemplate;
+
+                    case DirectItemType.StoryShare:
+                        return StoryShareTemplate;
 
                     case DirectItemType.VoiceMedia:
                         return AudioTemplate;

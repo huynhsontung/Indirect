@@ -87,7 +87,16 @@ namespace InstagramAPI.Classes.Direct
 
         #region ReelShare
 
+        // ReelShare is for replying/reacting to stories
         [JsonProperty("reel_share")] public ReelShare ReelShareMedia { get; set; }
+
+        #endregion
+
+        #region StoryShare
+
+        // StoryShare is for sharing a third person's story to a second person (recipient)
+        // Like sharing friends' stories to another friend
+        [JsonProperty("story_share")] public StoryShare StoryShareMedia { get; set; }
 
         #endregion
 

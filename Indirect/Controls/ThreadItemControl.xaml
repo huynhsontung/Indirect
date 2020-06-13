@@ -266,7 +266,8 @@
                                       VerticalAlignment="Stretch"/>
                     <TextBlock Grid.Row="2" 
                                Style="{ThemeResource FluentCaptionTextStyle}"
-                               Text="{x:Bind MediaShare.Caption.Text}" 
+                               Visibility="{x:Bind MediaShare.Caption, Converter={StaticResource NullVisibilityConverter}}"
+                               Text="{x:Bind MediaShare.Caption.Text}"
                                TextWrapping="Wrap"
                                Margin="8,4,8,8"/>
                 </Grid>
@@ -292,6 +293,38 @@
                             CornerRadius="2,2,2,2">
                         <TextBlock Style="{ThemeResource FluentBodyTextStyle}"
                                    Text="{x:Bind ReelShareMedia.Text}"
+                                   Margin="6"
+                                   MaxWidth="250"
+                                   HorizontalAlignment="Center"
+                                   TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+            </DataTemplate>
+                
+            <DataTemplate x:Key="StoryShareTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <StackPanel Orientation="Vertical" 
+                            HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
+                    <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" IsTextSelectionEnabled="True"
+                               HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                               Visibility="{x:Bind StoryShareMedia.OwnerUsername, Converter={StaticResource NullVisibilityConverter}}"
+                               Margin="0,0,0,2">
+                        <Span>Sent <Hyperlink Click="StoryShareOwnerLink_OnClick">@<Run Text="{x:Bind StoryShareMedia.OwnerUsername}"/></Hyperlink>'s story</Span>
+                    </TextBlock>
+                    <controls:ImageEx Source="{x:Bind PreviewImageUri}"
+                                      Visibility="{Binding RelativeSource={RelativeSource Self}, Path=Source, Converter={StaticResource NullVisibilityConverter}}"
+                                      MaxWidth="100" Height="200" Stretch="UniformToFill" Margin="{x:Bind StoryShareMedia.Type, Converter={StaticResource ReelShareImageMarginConverter}}"
+                                      HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                                      CornerRadius="2" Tapped="ReelShareImage_Tapped"/>
+                    <TextBlock Text="{x:Bind StoryShareMedia.Message}" 
+                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Style="{ThemeResource FluentCaptionTextStyle}"
+                               Visibility="{x:Bind StoryShareMedia.Message, Converter={StaticResource NullVisibilityConverter}}"/>
+                    <Border x:Name="MessageContentWithBorder"
+                            Visibility="{x:Bind StoryShareMedia.Text, Converter={StaticResource NullVisibilityConverter}}"
+                            Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
+                            HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                            CornerRadius="2,2,2,2">
+                        <TextBlock Style="{ThemeResource FluentBodyTextStyle}"
+                                   Text="{x:Bind StoryShareMedia.Text}"
                                    Margin="6"
                                    MaxWidth="250"
                                    HorizontalAlignment="Center"
@@ -394,6 +427,7 @@
                                             AudioTemplate="{StaticResource AudioTemplate}"
                                             MediaShareTemplate="{StaticResource MediaShareTemplate}"
                                             ReelShareTemplate="{StaticResource ReelShareTemplate}"
+                                            StoryShareTemplate="{StaticResource StoryShareTemplate}"
                                             VideoCallTemplate="{StaticResource VideoCallTemplate}"
                                             UnexpectedTemplate="{StaticResource UnexpectedTemplate}"
                                             PlaceholderTemplate="{StaticResource PlaceholderTemplate}"/>
