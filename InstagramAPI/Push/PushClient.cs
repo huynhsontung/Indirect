@@ -12,8 +12,6 @@ using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
-using InstagramAPI.Classes;
-using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
 using InstagramAPI.Utils;
@@ -45,7 +43,7 @@ namespace InstagramAPI.Push
         private DataReader _inboundReader;
         private DataWriter _outboundWriter;
         private readonly Instagram _instaApi;
-        private bool RunningAndReadable => !(_runningTokenSource?.IsCancellationRequested ?? false) && _inboundReader != null;
+        private bool RunningAndReadable => !(_runningTokenSource?.IsCancellationRequested ?? true) && _inboundReader != null;
 
         public PushClient(Instagram api, bool tryLoadData = true)
         {
@@ -63,7 +61,7 @@ namespace InstagramAPI.Push
             NetworkInformation.NetworkStatusChanged += async sender =>
             {
                 var internetProfile = NetworkInformation.GetInternetConnectionProfile();
-                if (internetProfile == null || _runningTokenSource.IsCancellationRequested) return;
+                if (internetProfile == null || (_runningTokenSource?.IsCancellationRequested ?? true)) return;
                 await StartFresh();
             };
         }
@@ -124,7 +122,7 @@ namespace InstagramAPI.Push
         /// </summary>
         public async Task TransferPushSocket()
         {
-            if (!_instaApi.IsUserAuthenticated || _runningTokenSource.IsCancellationRequested) return;
+            if (!_instaApi.IsUserAuthenticated || (_runningTokenSource?.IsCancellationRequested ?? true)) return;
 
             // Hand over MQTT socket to socket broker
             this.Log("Transferring sockets");
@@ -251,10 +249,8 @@ namespace InstagramAPI.Push
         public void Shutdown()
         {
             _runningTokenSource?.Cancel();
-            _inboundReader = null;
             _outboundWriter?.DetachStream();
             _outboundWriter?.Dispose();
-            _outboundWriter = null;
             this.Log("Stopped pinging push server");
         }
 
@@ -288,7 +284,7 @@ namespace InstagramAPI.Push
             try
             {
                 var packet = PingReqPacket.Instance;
-                if (_outboundWriter == null) return;
+                if (_runningTokenSource?.IsCancellationRequested ?? true) return;
                 await FbnsPacketEncoder.EncodePacket(packet, _outboundWriter);
                 this.Log("Pinging Push server");
             }
@@ -307,7 +303,7 @@ namespace InstagramAPI.Push
 
         private async Task OnPacketReceived(Packet msg)
         {
-            if (_outboundWriter == null) return;
+            if (_runningTokenSource.IsCancellationRequested) return;
             var writer = _outboundWriter;
             try
             {
@@ -460,7 +456,7 @@ namespace InstagramAPI.Push
 
             // Send PUBLISH packet then wait for PUBACK
             // Retry after TIMEOUT seconds
-            if (_outboundWriter == null) return;
+            if (_runningTokenSource.IsCancellationRequested) return;
             await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
             WaitForPubAck();
         }
