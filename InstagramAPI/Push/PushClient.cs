@@ -93,21 +93,28 @@ namespace InstagramAPI.Push
                 permissionResult == BackgroundAccessStatus.DeniedBySystemPolicy ||
                 permissionResult == BackgroundAccessStatus.Unspecified)
                 return false;
-            var backgroundTaskBuilder = new BackgroundTaskBuilder
+            var activityTaskBuilder = new BackgroundTaskBuilder
             {
                 Name = BACKGROUND_SOCKET_ACTIVITY_NAME,
                 TaskEntryPoint = SOCKET_ACTIVITY_ENTRY_POINT
             };
-            backgroundTaskBuilder.SetTrigger(new SocketActivityTrigger());
-            _socketActivityTask = backgroundTaskBuilder.Register();
+            activityTaskBuilder.SetTrigger(new SocketActivityTrigger());
 
-            backgroundTaskBuilder = new BackgroundTaskBuilder
+            var internetAvailTaskBuilder = new BackgroundTaskBuilder
             {
                 Name = INTERNET_AVAILABLE_ENTRY_POINT,
                 TaskEntryPoint = INTERNET_AVAILABLE_ENTRY_POINT
             };
-            backgroundTaskBuilder.SetTrigger(new SystemTrigger(SystemTriggerType.InternetAvailable, false));
-            _internetAvailableTask = backgroundTaskBuilder.Register();
+            internetAvailTaskBuilder.SetTrigger(new SystemTrigger(SystemTriggerType.InternetAvailable, false));
+            try
+            {
+                _socketActivityTask = activityTaskBuilder.Register();
+                _internetAvailableTask = internetAvailTaskBuilder.Register();
+            }
+            catch (Exception)
+            {
+                return false;
+            }
             return true;
         }
 
@@ -165,6 +172,7 @@ namespace InstagramAPI.Push
                 _inboundReader = new DataReader(socket.InputStream);
                 _outboundWriter = new DataWriter(socket.OutputStream);
                 _inboundReader.ByteOrder = ByteOrder.BigEndian;
+                _inboundReader.InputStreamOptions = InputStreamOptions.Partial;
                 _outboundWriter.ByteOrder = ByteOrder.BigEndian;
                 _runningTokenSource = new CancellationTokenSource();
                 
@@ -215,12 +223,18 @@ namespace InstagramAPI.Push
                         }
                     }
                 }
+                else
+                {
+                    // if cannot get background access then there is no point of running push client
+                    return;
+                }
 
                 await Socket.ConnectAsync(new HostName(HOST_NAME), "443", SocketProtectionLevel.Tls12);
 
                 _inboundReader = new DataReader(Socket.InputStream);
                 _outboundWriter = new DataWriter(Socket.OutputStream);
                 _inboundReader.ByteOrder = ByteOrder.BigEndian;
+                _inboundReader.InputStreamOptions = InputStreamOptions.Partial;
                 _outboundWriter.ByteOrder = ByteOrder.BigEndian;
                 _runningTokenSource = new CancellationTokenSource();
 
