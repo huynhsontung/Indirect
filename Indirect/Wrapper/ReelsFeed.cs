@@ -77,15 +77,13 @@ namespace Indirect.Wrapper
                     if (equivalent != null)
                     {
                         PropertyCopier<Reel, Reel>.Copy(reel, equivalent);
-                        if (i != equivalentIndex)
-                        {
-                            Reels.RemoveAt(equivalentIndex);
-                            Reels.Insert(i, equivalent);
-                        }
+                        if (i == equivalentIndex) continue;
+                        Reels.RemoveAt(equivalentIndex);
+                        Reels.Insert(i > Reels.Count ? Reels.Count : i, equivalent);
                     }
                     else
                     {
-                        Reels.Insert(i, reel);
+                        Reels.Insert(i > Reels.Count ? Reels.Count : i, reel);
                     }
                 }
             }
