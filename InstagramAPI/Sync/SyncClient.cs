@@ -12,7 +12,6 @@ using Windows.Web.Http;
 using Windows.Web.Http.Filters;
 using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Utils;
-using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -53,9 +52,6 @@ namespace InstagramAPI.Sync
             catch (Exception e)
             {
                 this.Log(e);
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
             }
         }
 
@@ -166,8 +162,6 @@ namespace InstagramAPI.Sync
             try
             {
                 var dataReader = args.GetDataReader();
-                var outStream = sender.OutputStream;
-                var loggedInUser = _instaApi.Session.LoggedInUser;
                 Packet packet;
                 try
                 {
@@ -184,147 +178,11 @@ namespace InstagramAPI.Sync
                 switch (packet.PacketType)
                 {
                     case PacketType.CONNACK:
-                        var subscribePacket = new SubscribePacket(
-                            _packetId++,
-                            new SubscriptionRequest("/ig_message_sync", QualityOfService.AtMostOnce),
-                            new SubscriptionRequest("/ig_send_message_response", QualityOfService.AtMostOnce)
-                        );
-                        await WriteAndFlushPacketAsync(subscribePacket, outStream);
-
-                        var unsubPacket = new UnsubscribePacket(_packetId++, "/ig_sub_iris_response");
-                        await WriteAndFlushPacketAsync(unsubPacket, outStream);
-                        subscribePacket = new SubscribePacket(_packetId++,
-                            new SubscriptionRequest("/ig_sub_iris_response", QualityOfService.AtMostOnce));
-                        await WriteAndFlushPacketAsync(subscribePacket, outStream);
-                        var json = new JObject(
-                            new JProperty("seq_id", _seqId),
-                            new JProperty("snapshot_at_ms", _snapshotAt.ToUnixTimeMilliseconds()),
-                            new JProperty("snapshot_app_version", "web"),
-                            new JProperty("subscription_type", "message"));
-                        var jsonBytes = GetJsonBytes(json);
-                        var irisPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
-                        {
-                            PacketId = _packetId++,
-                            TopicName = "/ig_sub_iris",
-                            Payload = jsonBytes.AsBuffer()
-                        };
-                        await WriteAndFlushPacketAsync(irisPublishPacket, outStream);
-
-                        json = new JObject(new JProperty("unsub", new JArray($"ig/u/v1/{loggedInUser.Pk}")));
-                        jsonBytes = GetJsonBytes(json);
-                        var pubsubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
-                        {
-                            PacketId = _packetId++,
-                            TopicName = "/pubsub",
-                            Payload = jsonBytes.AsBuffer()
-                        };
-                        await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
-                        unsubPacket = new UnsubscribePacket(_packetId++, "/pubsub");
-                        await WriteAndFlushPacketAsync(unsubPacket, outStream);
-                        subscribePacket = new SubscribePacket(_packetId++,
-                            new SubscriptionRequest("/pubsub", QualityOfService.AtMostOnce));
-                        await WriteAndFlushPacketAsync(subscribePacket, outStream);
-                        json = new JObject(new JProperty("sub", new JArray($"ig/u/v1/{loggedInUser.Pk}")));
-                        jsonBytes = GetJsonBytes(json);
-                        pubsubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
-                        {
-                            PacketId = _packetId++,
-                            TopicName = "/pubsub",
-                            Payload = jsonBytes.AsBuffer()
-                        };
-                        await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
-
-                        var clientSubscriptionId = Guid.NewGuid().ToString();
-                        json = new JObject(new JProperty("unsub",
-                            new JArray($"1/graphqlsubscriptions/17846944882223835/{{\"input_data\":{{\"client_subscription_id\":\"{clientSubscriptionId}\"}}}}")));
-                        jsonBytes = GetJsonBytes(json);
-                        var realtimeSubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
-                        {
-                            PacketId = _packetId++,
-                            TopicName = "/ig_realtime_sub",
-                            Payload = jsonBytes.AsBuffer()
-                        };
-                        await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
-                        unsubPacket = new UnsubscribePacket(_packetId++, "/ig_realtime_sub");
-                        await WriteAndFlushPacketAsync(unsubPacket, outStream);
-                        subscribePacket = new SubscribePacket(_packetId++,
-                            new SubscriptionRequest("/ig_realtime_sub", QualityOfService.AtMostOnce));
-                        await WriteAndFlushPacketAsync(subscribePacket, outStream);
-                        json = new JObject(new JProperty("sub",
-                            new JArray($"1/graphqlsubscriptions/17846944882223835/{{\"input_data\":{{\"client_subscription_id\":\"{clientSubscriptionId}\"}}}}")));
-                        jsonBytes = GetJsonBytes(json);
-                        realtimeSubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
-                        {
-                            PacketId = _packetId++,
-                            TopicName = "/ig_realtime_sub",
-                            Payload = jsonBytes.AsBuffer()
-                        };
-                        await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
-
-                        _ = Task.Run(async () =>
-                        {
-                            while (!_pinging.IsCancellationRequested)
-                            {
-                                try
-                                {
-                                    await Task.Delay(TimeSpan.FromSeconds(8), _pinging.Token);
-                                    var pingPacket = PingReqPacket.Instance;
-                                    var pingBuffer = StandalonePacketEncoder.EncodePacket(pingPacket);
-                                    await sender.OutputStream.WriteAsync(pingBuffer);
-                                    await sender.OutputStream.FlushAsync();
-                                }
-                                catch (TaskCanceledException)
-                                {
-                                    this.Log("Stopped pinging sync server");
-                                    return;
-                                }
-                            }
-                        });
+                        await OnConnack(sender);
                         return;
 
                     case PacketType.PUBLISH:
-                        var publishPacket = (PublishPacket)packet;
-                        if (publishPacket.Payload == null) 
-                            throw new Exception($"{nameof(SyncClient)}: Publish packet received but payload is null");
-                        var payload = Encoding.UTF8.GetString(publishPacket.Payload.ToArray());
-                        this.Log($"Publish to {publishPacket.TopicName} with payload: {payload}");
-                        switch (publishPacket.TopicName)
-                        {
-                            case "/ig_message_sync":
-                                var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(payload);
-                                var latest = messageSyncPayload.Last();
-                                if (latest.SeqId > _seqId ||
-                                    latest.Data[0].Item?.Timestamp > _snapshotAt)
-                                {
-                                    _seqId = latest.SeqId;
-                                    if (latest.Data[0].Op != "remove")
-                                        _snapshotAt = latest.Data[0].Item.Timestamp;
-                                }
-                                MessageReceived?.Invoke(this, messageSyncPayload);
-                                break;
-                            
-                            case "/pubsub":
-                                payload = payload.Substring(payload.IndexOf('{'));  // pubsub is weird. It has a few non string bytes before the actual data.
-                                var pubsub = JsonConvert.DeserializeObject<PubsubEventArgs>(payload);
-                                if (pubsub.Data[0].Path.Contains("activity_indicator_id"))
-                                {
-                                    ActivityIndicatorChanged?.Invoke(this, pubsub);
-                                }
-                                break;
-
-                            case "/ig_realtime_sub":
-                                payload = payload.Substring(payload.IndexOf('{'));
-                                var container = JsonConvert.DeserializeObject<JObject>(payload);
-                                var presenceEvent = container["presence_event"].ToObject<UserPresenceEventArgs>();
-                                UserPresenceChanged?.Invoke(this, presenceEvent);
-                                break;
-                        }
-
-
-                        if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
-                        {
-                            await WriteAndFlushPacketAsync(PubAckPacket.InResponseTo(publishPacket), outStream);
-                        }
+                        await OnPublish(sender, packet);
                         return;
 
                     case PacketType.PINGRESP:
@@ -333,11 +191,157 @@ namespace InstagramAPI.Sync
             }
             catch (Exception e)
             {
-#if !DEBUG
-                Crashes.TrackError(e);
-#endif
+                DebugLogger.LogException(e);
                 this.Log("Exception occured when processing incoming sync message.");
-                this.Log(e);
+            }
+        }
+
+        private async Task OnPublish(MessageWebSocket ws, Packet packet)
+        {
+            var outStream = ws.OutputStream;
+            var publishPacket = (PublishPacket)packet;
+            if (publishPacket.Payload == null)
+                throw new Exception($"{nameof(SyncClient)}: Publish packet received but payload is null");
+            var payload = Encoding.UTF8.GetString(publishPacket.Payload.ToArray());
+            this.Log($"Publish to {publishPacket.TopicName} with payload: {payload}");
+            switch (publishPacket.TopicName)
+            {
+                case "/ig_message_sync":
+                    var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(payload);
+                    var latest = messageSyncPayload.Last();
+                    if (latest.SeqId > _seqId && latest.Data.Count > 0)
+                    {
+                        _seqId = latest.SeqId;
+                        if (latest.Data[0].Op != "remove")
+                            _snapshotAt = latest.Data[0].Item.Timestamp;
+                    }
+                    MessageReceived?.Invoke(this, messageSyncPayload);
+                    break;
+
+                case "/pubsub":
+                    payload = payload.Substring(payload.IndexOf('{'));  // pubsub is weird. It has a few non string bytes before the actual data.
+                    var pubsub = JsonConvert.DeserializeObject<PubsubEventArgs>(payload);
+                    if (pubsub.Data[0].Path.Contains("activity_indicator_id"))
+                    {
+                        ActivityIndicatorChanged?.Invoke(this, pubsub);
+                    }
+                    break;
+
+                case "/ig_realtime_sub":
+                    payload = payload.Substring(payload.IndexOf('{'));
+                    var container = JsonConvert.DeserializeObject<JObject>(payload);
+                    var presenceEvent = container["presence_event"].ToObject<UserPresenceEventArgs>();
+                    UserPresenceChanged?.Invoke(this, presenceEvent);
+                    break;
+            }
+
+
+            if (publishPacket.QualityOfService == QualityOfService.AtLeastOnce)
+            {
+                await WriteAndFlushPacketAsync(PubAckPacket.InResponseTo(publishPacket), outStream);
+            }
+        }
+
+        private async Task OnConnack(MessageWebSocket ws)
+        {
+            var outStream = ws.OutputStream;
+            var loggedInUser = _instaApi.Session.LoggedInUser;
+            var subscribePacket = new SubscribePacket(
+                            _packetId++,
+                            new SubscriptionRequest("/ig_message_sync", QualityOfService.AtMostOnce),
+                            new SubscriptionRequest("/ig_send_message_response", QualityOfService.AtMostOnce)
+                        );
+            await WriteAndFlushPacketAsync(subscribePacket, outStream);
+
+            var unsubPacket = new UnsubscribePacket(_packetId++, "/ig_sub_iris_response");
+            await WriteAndFlushPacketAsync(unsubPacket, outStream);
+            subscribePacket = new SubscribePacket(_packetId++,
+                new SubscriptionRequest("/ig_sub_iris_response", QualityOfService.AtMostOnce));
+            await WriteAndFlushPacketAsync(subscribePacket, outStream);
+            var json = new JObject(
+                new JProperty("seq_id", _seqId),
+                new JProperty("snapshot_at_ms", _snapshotAt.ToUnixTimeMilliseconds()),
+                new JProperty("snapshot_app_version", "web"),
+                new JProperty("subscription_type", "message"));
+            var jsonBytes = GetJsonBytes(json);
+            var irisPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
+            {
+                PacketId = _packetId++,
+                TopicName = "/ig_sub_iris",
+                Payload = jsonBytes.AsBuffer()
+            };
+            await WriteAndFlushPacketAsync(irisPublishPacket, outStream);
+
+            json = new JObject(new JProperty("unsub", new JArray($"ig/u/v1/{loggedInUser.Pk}")));
+            jsonBytes = GetJsonBytes(json);
+            var pubsubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
+            {
+                PacketId = _packetId++,
+                TopicName = "/pubsub",
+                Payload = jsonBytes.AsBuffer()
+            };
+            await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
+            unsubPacket = new UnsubscribePacket(_packetId++, "/pubsub");
+            await WriteAndFlushPacketAsync(unsubPacket, outStream);
+            subscribePacket = new SubscribePacket(_packetId++,
+                new SubscriptionRequest("/pubsub", QualityOfService.AtMostOnce));
+            await WriteAndFlushPacketAsync(subscribePacket, outStream);
+            json = new JObject(new JProperty("sub", new JArray($"ig/u/v1/{loggedInUser.Pk}")));
+            jsonBytes = GetJsonBytes(json);
+            pubsubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
+            {
+                PacketId = _packetId++,
+                TopicName = "/pubsub",
+                Payload = jsonBytes.AsBuffer()
+            };
+            await WriteAndFlushPacketAsync(pubsubPublishPacket, outStream);
+
+            var clientSubscriptionId = Guid.NewGuid().ToString();
+            json = new JObject(new JProperty("unsub",
+                new JArray($"1/graphqlsubscriptions/17846944882223835/{{\"input_data\":{{\"client_subscription_id\":\"{clientSubscriptionId}\"}}}}")));
+            jsonBytes = GetJsonBytes(json);
+            var realtimeSubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
+            {
+                PacketId = _packetId++,
+                TopicName = "/ig_realtime_sub",
+                Payload = jsonBytes.AsBuffer()
+            };
+            await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
+            unsubPacket = new UnsubscribePacket(_packetId++, "/ig_realtime_sub");
+            await WriteAndFlushPacketAsync(unsubPacket, outStream);
+            subscribePacket = new SubscribePacket(_packetId++,
+                new SubscriptionRequest("/ig_realtime_sub", QualityOfService.AtMostOnce));
+            await WriteAndFlushPacketAsync(subscribePacket, outStream);
+            json = new JObject(new JProperty("sub",
+                new JArray($"1/graphqlsubscriptions/17846944882223835/{{\"input_data\":{{\"client_subscription_id\":\"{clientSubscriptionId}\"}}}}")));
+            jsonBytes = GetJsonBytes(json);
+            realtimeSubPublishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
+            {
+                PacketId = _packetId++,
+                TopicName = "/ig_realtime_sub",
+                Payload = jsonBytes.AsBuffer()
+            };
+            await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
+            StartPingingLoop(ws);
+        }
+
+        private async void StartPingingLoop(MessageWebSocket ws)
+        {
+            while (!_pinging.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(8), _pinging.Token);
+                    var pingPacket = PingReqPacket.Instance;
+                    var pingBuffer = StandalonePacketEncoder.EncodePacket(pingPacket);
+                    await ws.OutputStream.WriteAsync(pingBuffer);
+                    await ws.OutputStream.FlushAsync();
+                }
+                catch (TaskCanceledException)
+                {
+                    this.Log("Stopped pinging sync server");
+                    return;
+                }
             }
         }
 

@@ -158,6 +158,7 @@ namespace Indirect
                 var updateInbox = false;
                 foreach (var syncEvent in data)
                 {
+                    if (syncEvent.Data.Count == 0) continue;
                     var itemData = syncEvent.Data[0];
                     if (syncEvent.SeqId > Inbox.SeqId)
                     {
