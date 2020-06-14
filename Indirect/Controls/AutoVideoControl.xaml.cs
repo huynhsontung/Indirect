@@ -229,6 +229,7 @@ namespace Indirect.Controls
                 IsZoomEnabled = false,
                 IsCompact = true,
             };
+            VideoPlayer.MediaPlayer.Volume = 0.5;
         }
 
         private void AutoVideoControl_OnEffectiveViewportChanged(FrameworkElement sender, EffectiveViewportChangedEventArgs args)
