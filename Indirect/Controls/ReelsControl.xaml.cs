@@ -34,15 +34,21 @@ namespace Indirect.Controls
             this.InitializeComponent();
         }
 
-        private void StoryView_OnLoaded(object sender, RoutedEventArgs e)
+        private void StoryViewOnLoadedAndOnSelectionChanged()
         {
-            var storyView = (FlipView) sender;
-            Source?.OnLoaded(storyView);
+            if (StoryView.SelectedIndex == -1) return;
             var flipViewItem = StoryView.ContainerFromIndex(StoryView.SelectedIndex) as FlipViewItem;
             var grid = flipViewItem?.ContentTemplateRoot as Grid;
             var autoVideo = grid?.FindDescendant<AutoVideoControl>();
             if (autoVideo == null) return;
             autoVideo.MediaPlayer.Volume = 0.5;
+        }
+
+        private void StoryView_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            var storyView = (FlipView) sender;
+            Source?.OnLoaded(storyView);
+            StoryViewOnLoadedAndOnSelectionChanged();
         }
 
         public void OnClose()
@@ -68,6 +74,7 @@ namespace Indirect.Controls
         {
             var storyView = (FlipView)sender;
             Source?.OnSelectionChanged(storyView.SelectedIndex);
+            StoryViewOnLoadedAndOnSelectionChanged();
             var previous = (StoryItemWrapper) e.RemovedItems.FirstOrDefault();
             var selected = (StoryItemWrapper) e.AddedItems.FirstOrDefault();
             var flipViewItem = storyView.ContainerFromItem(previous) as FlipViewItem;
@@ -116,13 +123,6 @@ namespace Indirect.Controls
             }
 
             if (ReelsProgressBar.Value > 99) ReelsProgressBar.Value = 100;
-
-            if (selected == null) return;
-            flipViewItem = storyView.ContainerFromItem(selected) as FlipViewItem;
-            element = flipViewItem?.ContentTemplateRoot as FrameworkElement;
-            autoVideo = element?.FindDescendant<AutoVideoControl>();
-            if (autoVideo == null) return;
-            autoVideo.MediaPlayer.Volume = 0.5;
         }
 
         private void MessageTextBox_OnKeyboardInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)

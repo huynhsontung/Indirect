@@ -10,6 +10,7 @@ using Windows.UI.Core;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes.Story;
+using InstagramAPI.Utils;
 
 namespace Indirect.Wrapper
 {
@@ -27,7 +28,15 @@ namespace Indirect.Wrapper
             if (!result.IsSucceeded) return;
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                SyncReels(result.Value);
+                try
+                {
+                    SyncReels(result.Value);
+                }
+                catch (ArgumentOutOfRangeException e)
+                {
+                    // TODO: investigate origin of ArgumentOutOfRangeException
+                    DebugLogger.LogException(e);
+                }
             });
             _justUpdated = true;
             _ = Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(x => { _justUpdated = false; });
@@ -37,51 +46,58 @@ namespace Indirect.Wrapper
         {
             if (target.Length == 0) return;
 
-            // Remove existing reels that are not in the target
-            for (int i = 0; i < Reels.Count; i++)
+            lock (Reels)
             {
-                var existingReel = Reels[i];
-                if (target.All(x => x.Id != existingReel.Id))
+                // Remove existing reels that are not in the target
+                for (int i = 0; i < Reels.Count; i++)
                 {
-                    Reels.RemoveAt(i);
-                    i--;
+                    var existingReel = Reels[i];
+                    if (target.All(x => x.Id != existingReel.Id))
+                    {
+                        Reels.RemoveAt(i);
+                        i--;
+                    }
                 }
-            }
 
-            // Add new reels from target and also update existing ones
-            for (int i = 0; i < target.Length; i++)
-            {
-                var reel = target[i];
-                Reel equivalent = null;
-                var equivalentIndex = -1;
-                for (int j = 0; j < Reels.Count; j++)
+                // Add new reels from target and also update existing ones
+                for (int i = 0; i < target.Length; i++)
                 {
-                    if (Reels[j].Id == reel.Id)
+                    var reel = target[i];
+                    Reel equivalent = null;
+                    var equivalentIndex = -1;
+                    for (int j = 0; j < Reels.Count; j++)
                     {
-                        equivalent = Reels[j];
-                        equivalentIndex = j;
-                        break;
+                        if (Reels[j].Id == reel.Id)
+                        {
+                            equivalent = Reels[j];
+                            equivalentIndex = j;
+                            break;
+                        }
                     }
-                }
-                if (equivalent != null)
-                {
-                    PropertyCopier<Reel, Reel>.Copy(reel, equivalent);
-                    if (i != equivalentIndex)
+                    if (equivalent != null)
                     {
-                        Reels.RemoveAt(equivalentIndex);
-                        Reels.Insert(i, equivalent);
+                        PropertyCopier<Reel, Reel>.Copy(reel, equivalent);
+                        if (i != equivalentIndex)
+                        {
+                            Reels.RemoveAt(equivalentIndex);
+                            Reels.Insert(i, equivalent);
+                        }
                     }
-                }
-                else
-                {
-                    Reels.Insert(i, reel);
+                    else
+                    {
+                        Reels.Insert(i, reel);
+                    }
                 }
             }
         }
 
         public async Task<ReelsWrapper> PrepareReelsWrapper(int selectedIndex)
         {
-            var reelsWrapper = new ReelsWrapper(Reels, selectedIndex);
+            ReelsWrapper reelsWrapper;
+            lock (Reels)
+            {
+                reelsWrapper = new ReelsWrapper(Reels, selectedIndex);
+            }
             await reelsWrapper.UpdateUserIndex(selectedIndex);
             return reelsWrapper;
         }
