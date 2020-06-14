@@ -41,7 +41,12 @@ namespace Indirect.Controls
 
         private async void ConfirmSecurityCode(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
-            if (CodeBox.Text.Length != 6) return;
+            if (CodeBox.Text.Length < 6)
+            {
+                args.Cancel = true;
+                ErrorMessage = "Please enter a valid security code";
+                return;
+            }
             var deferral = args.GetDeferral();
             this.IsPrimaryButtonEnabled = false;
             var result = await InstagramAPI.Instagram.Instance.LoginWithTwoFactorAsync(CodeBox.Text);
