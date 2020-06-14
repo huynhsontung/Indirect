@@ -58,6 +58,13 @@ namespace Indirect.Controls
                         view.PrepareVideoView();
                     break;
 
+                case DirectItemType.StoryShare when item.StoryShareMedia.Media != null:
+                    if (item.StoryShareMedia.Media.MediaType == 1)
+                        view.PrepareImageView();
+                    else
+                        view.PrepareVideoView();
+                    break;
+
                 default:
                     view.MainControl.ContentTemplate = null;
                     break;

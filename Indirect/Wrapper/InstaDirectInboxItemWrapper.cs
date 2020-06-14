@@ -306,22 +306,22 @@ namespace Indirect.Wrapper
         private static InstaImage GetPreviewImage(List<InstaImage> imageCandidates)
         {
             if (imageCandidates == null || imageCandidates.Count == 0) return null;
-            var image = imageCandidates.OrderBy(x => x.Height + x.Width).First();
+            var candidates = imageCandidates.OrderBy(x => x.Height + x.Width).ToArray();
+            var image = candidates.FirstOrDefault(x => x.Height != x.Width) ?? candidates[0];
             return image;
         }
 
         private static InstaImage GetFullImage(List<InstaImage> imageCandidates)
         {
             if (imageCandidates == null || imageCandidates.Count == 0) return null;
-            var image = imageCandidates.OrderByDescending(x => x.Height + x.Width).First();
+            var candidates = imageCandidates.OrderByDescending(x => x.Height + x.Width).ToArray();
+            var image = candidates.FirstOrDefault(x => x.Height != x.Width) ?? candidates[0];
             return image;
         }
 
         private static Uri GetFullImageUri(List<InstaImage> imageCandidates)
         {
-            if (imageCandidates == null || imageCandidates.Count == 0) return null;
-            var image = imageCandidates.OrderByDescending(x => x.Height + x.Width).First();
-            return image.Url;
+            return GetFullImage(imageCandidates)?.Url;
         }
 
         public async void LikeItem()
