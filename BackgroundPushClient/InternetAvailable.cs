@@ -2,11 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
-using Windows.Networking;
-using Windows.Networking.Sockets;
 using InstagramAPI;
-using InstagramAPI.Push;
-using InstagramAPI.Push.Packets;
 
 namespace BackgroundPushClient
 {

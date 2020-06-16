@@ -247,10 +247,10 @@ namespace InstagramAPI.Sync
             var outStream = ws.OutputStream;
             var loggedInUser = _instaApi.Session.LoggedInUser;
             var subscribePacket = new SubscribePacket(
-                            _packetId++,
-                            new SubscriptionRequest("/ig_message_sync", QualityOfService.AtMostOnce),
-                            new SubscriptionRequest("/ig_send_message_response", QualityOfService.AtMostOnce)
-                        );
+                _packetId++,
+                new SubscriptionRequest("/ig_message_sync", QualityOfService.AtMostOnce),
+                new SubscriptionRequest("/ig_send_message_response", QualityOfService.AtMostOnce)
+            );
             await WriteAndFlushPacketAsync(subscribePacket, outStream);
 
             var unsubPacket = new UnsubscribePacket(_packetId++, "/ig_sub_iris_response");
@@ -331,7 +331,7 @@ namespace InstagramAPI.Sync
             {
                 try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(8), _pinging.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(8), _pinging.Token).ConfigureAwait(false);
                     var pingPacket = PingReqPacket.Instance;
                     var pingBuffer = StandalonePacketEncoder.EncodePacket(pingPacket);
                     await ws.OutputStream.WriteAsync(pingBuffer);
