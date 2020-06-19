@@ -199,8 +199,6 @@
                                   MaxWidth="250" MaxHeight="350"
                                   IsCacheEnabled="True"
                                   CornerRadius="2"
-                                  BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                                  BorderThickness="1"
                                   Source="{x:Bind PreviewImageUri}"
                                   HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                                   Tapped="ImageFrame_Tapped"/>
