@@ -2,8 +2,10 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
+using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using InstagramAPI;
+using InstagramAPI.Utils;
 
 namespace BackgroundPushClient
 {
@@ -17,14 +19,26 @@ namespace BackgroundPushClient
             var deferral = taskInstance.GetDeferral();
             try
             {
-                var instagram = Instagram.Instance;
                 var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
-                if (details.Reason == SocketActivityTriggerReason.SocketClosed) return;
-                Debug.WriteLine($"{typeof(SocketActivity).FullName}: {details.Reason}");
-                
-                var socket = details.SocketInformation.StreamSocket;
+                if (details.Reason == SocketActivityTriggerReason.None) return;
+                this.Log($"{typeof(SocketActivity).FullName}: {details.Reason}");
+                var internetProfile = NetworkInformation.GetInternetConnectionProfile();
+                if (internetProfile == null)
+                {
+                    this.Log("No internet. Stop.");
+                    return;
+                }
+                var instagram = Instagram.Instance;
                 instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
-                await instagram.PushClient.StartWithExistingSocket(socket);
+                if (details.Reason == SocketActivityTriggerReason.SocketClosed)
+                {
+                    await instagram.PushClient.StartFresh();
+                }
+                else
+                {
+                    var socket = details.SocketInformation.StreamSocket;
+                    await instagram.PushClient.StartWithExistingSocket(socket);
+                }
                 await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
                 instagram.PushClient.ConnectionData.SaveToAppSettings();
                 await instagram.PushClient.TransferPushSocket();

@@ -120,14 +120,17 @@ namespace InstagramAPI.Push
         /// Transfer socket as well as necessary context for background push notification client. 
         /// Transfer only happens if user is logged in.
         /// </summary>
-        public async Task TransferPushSocket()
+        public async Task TransferPushSocket(bool ping = true)
         {
             if (!_instaApi.IsUserAuthenticated || (_runningTokenSource?.IsCancellationRequested ?? true)) return;
 
             // Hand over MQTT socket to socket broker
             this.Log("Transferring sockets");
-            await SendPing().ConfigureAwait(false);
-            await Task.Delay(TimeSpan.FromSeconds(2));  // grace period
+            if (ping)
+            {
+                await SendPing().ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(2));  // grace period
+            }
             Shutdown();
             await Socket.CancelIOAsync();
             Socket.TransferOwnership(
@@ -165,7 +168,11 @@ namespace InstagramAPI.Push
             try
             {
                 this.Log("Starting with existing socket");
-                if (RunningAndReadable) Shutdown();
+                if (RunningAndReadable)
+                {
+                    Shutdown();
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
                 Socket = socket;
                 _inboundReader = new DataReader(socket.InputStream);
                 _outboundWriter = new DataWriter(socket.OutputStream);
@@ -189,7 +196,11 @@ namespace InstagramAPI.Push
             try
             {
                 this.Log("Starting fresh");
-                if (RunningAndReadable) Shutdown();
+                if (RunningAndReadable)
+                {
+                    Shutdown();
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
 
                 var connectPacket = new FbnsConnectPacket
                 {
