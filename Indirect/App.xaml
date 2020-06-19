@@ -17,11 +17,13 @@
                     <Style x:Key="ProfilePicturePlaceholderStyle" TargetType="controls:ImageEx">
                         <Setter Property="PlaceholderSource" Value="Assets/ProfilePicturePlaceholder.jpg"/>
                     </Style>
+                    <SolidColorBrush x:Key="MainBackground" Color="#fafafa"/>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <Style x:Key="ProfilePicturePlaceholderStyle" TargetType="controls:ImageEx">
                         <Setter Property="PlaceholderSource" Value="Assets/ProfilePicturePlaceholder-Dark.jpg"/>
                     </Style>
+                    <SolidColorBrush x:Key="MainBackground" Color="#1a1a1a"/>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 

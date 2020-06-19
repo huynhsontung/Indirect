@@ -432,14 +432,17 @@
             </ContentControl.ContentTemplateSelector>
         </ContentControl>
 
-        <StackPanel x:Name="Reactions" Orientation="Horizontal" Margin="10,2,10,0"
-                    HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
-                    Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
-            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
-                    Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
-            <TextBlock Text="{x:Bind Item.Reactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"
-                       Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
-                       Style="{ThemeResource FluentCaptionTextStyle}"/>
-        </StackPanel>
+        <Border Margin="6,-2,6,0" Background="{ThemeResource FromThemItemBackground}" CornerRadius="6" Padding="6,2,6,2"
+                BorderBrush="{ThemeResource MainBackground}" BorderThickness="2"
+                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
+                Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
+            <StackPanel x:Name="Reactions" Orientation="Horizontal">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
+                        Style="{x:Bind Item.Reactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
+                <TextBlock Text="{x:Bind Item.Reactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"
+                           Visibility="{x:Bind Item.Reactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
+                           Style="{ThemeResource FluentCaptionTextStyle}"/>
+            </StackPanel>
+        </Border>
     </StackPanel>
 </UserControl>
