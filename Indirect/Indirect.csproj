@@ -130,6 +130,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ApiContainer.Send.cs" />
+    <Compile Include="Controls\AnimatedImagePicker.xaml.cs">
+      <DependentUpon>AnimatedImagePicker.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\TwoFactorAuthDialog.xaml.cs">
       <DependentUpon>TwoFactorAuthDialog.xaml</DependentUpon>
     </Compile>
@@ -281,6 +284,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Controls\AnimatedImagePicker.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\TwoFactorAuthDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

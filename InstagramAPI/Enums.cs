@@ -24,4 +24,10 @@
         Female = 2,
         Unknown = 3
     }
+
+    public enum AnimatedImageType
+    {
+        Sticker,
+        Gif,
+    }
 }

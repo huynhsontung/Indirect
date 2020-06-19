@@ -7,6 +7,7 @@ using Windows.System;
 using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
+using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;

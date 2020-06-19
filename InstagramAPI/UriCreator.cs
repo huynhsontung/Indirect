@@ -241,5 +241,15 @@ namespace InstagramAPI
                 throw new Exception("Cant create URI for user presence");
             return instaUri;
         }
+
+        public static Uri GetAnimatedImageSearchUri(string query, string type)
+        {
+            if (!Uri.TryCreate(BaseInstagramUri,
+                API_SUFFIX +
+                $"/creatives/story_media_search_keyed_format/?request_surface=direct&q={query}&media_types=[\"{type}\"]",
+                out var instaUri))
+                throw new Exception("Cant create URI for searching animated image");
+            return instaUri;
+        }
     }
 }

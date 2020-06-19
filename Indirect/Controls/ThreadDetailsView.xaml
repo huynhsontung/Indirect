@@ -153,7 +153,8 @@
 
         <Grid x:Name="MessageInputGrid" Grid.Row="3" HorizontalAlignment="Stretch" Margin="0,2,0,2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="44"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="64"/>
             </Grid.ColumnDefinitions>
@@ -164,20 +165,30 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <ProgressBar Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Margin="2"
+            <ProgressBar Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="4" Margin="2"
                          x:Name="UploadProgress" Visibility="Collapsed" HorizontalAlignment="Stretch"
                          IsIndeterminate="True"/>
 
-            <Button x:Name="AddFilesButton" ToolTipService.ToolTip="Add photos/videos"
+            <Button x:Name="AddFilesButton" ToolTipService.ToolTip="Add photos"
                     Grid.Column="0" Grid.Row="2"
-                    HorizontalAlignment="Stretch"
                     Margin="2,0,0,0"
                     Click="AddFilesButton_OnClick">
-                <SymbolIcon Symbol="Add"/>
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEB9F;"/>
+            </Button>
+
+            <Button x:Name="AddGifButton" ToolTipService.ToolTip="Add a GIF"
+                    Grid.Column="1" Grid.Row="2"
+                    Margin="2,0,0,0">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF4A9;"/>
+                <Button.Flyout>
+                    <Flyout>
+                        <controls1:AnimatedImagePicker/>
+                    </Flyout>
+                </Button.Flyout>
             </Button>
 
             <TextBox x:Name="MessageTextBox" Text="{x:Bind Thread.DraftMessage, Mode=TwoWay}" SelectionStart="{Binding RelativeSource={RelativeSource Self}, Path=Text.Length}"
-                     Grid.Column="1" Grid.Row="1" Grid.RowSpan="2"
+                     Grid.Column="2" Grid.Row="1" Grid.RowSpan="2"
                      VerticalAlignment="Stretch"
                      TextWrapping="Wrap"
                      PlaceholderText="Type a message"
@@ -187,7 +198,7 @@
 
             <Button x:Name="SendButton" ToolTipService.ToolTip="Send"
                     HorizontalAlignment="Stretch"
-                    Grid.Column="2" Grid.Row="2"
+                    Grid.Column="3" Grid.Row="2"
                     Margin="0,0,4,0" Click="SendButton_Click">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" 
                           Glyph="{x:Bind MessageTextBox.Text, Mode=OneWay, Converter={StaticResource SendButtonGlyphConverter}}"/>

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.Story;
 using InstagramAPI.Utils;
@@ -692,6 +693,43 @@ namespace InstagramAPI
             {
                 DebugLogger.LogException(exception);
                 return Result<UserPresenceResponse>.Except(exception);
+            }
+        }
+
+        public async Task<Result<GiphyMedia[]>> SearchAnimatedImageAsync(string query, AnimatedImageType type)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                string typeString;
+                switch (type)
+                {
+                    case AnimatedImageType.Sticker:
+                        typeString = "giphy";
+                        break;
+                    case AnimatedImageType.Gif:
+                        typeString = "giphy_gifs";
+                        break;
+                    default:
+                        typeString = "giphy";
+                        break;
+                }
+                var uri = UriCreator.GetAnimatedImageSearchUri(query, typeString);
+                var response = await _httpClient.GetAsync(uri);
+                var json = await response.Content.ReadAsStringAsync();
+                DebugLogger.LogResponse(response);
+                if (!response.IsSuccessStatusCode)
+                    return Result<GiphyMedia[]>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<JObject>(json);
+                if (obj["status"]?.ToString() != "ok" || !obj.ContainsKey("results"))
+                    return Result<GiphyMedia[]>.Fail(json);
+                var giphyResults = obj["results"]?[typeString]?.ToObject<GiphyMedia[]>();
+                return Result<GiphyMedia[]>.Success(giphyResults, json);
+            }
+            catch (Exception exception)
+            {
+                DebugLogger.LogException(exception);
+                return Result<GiphyMedia[]>.Except(exception);
             }
         }
     }

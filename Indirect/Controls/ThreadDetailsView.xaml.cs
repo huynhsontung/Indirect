@@ -14,7 +14,9 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Indirect.Converters;
 using Indirect.Wrapper;
+using InstagramAPI;
 using InstagramAPI.Classes;
+using InstagramAPI.Utils;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
