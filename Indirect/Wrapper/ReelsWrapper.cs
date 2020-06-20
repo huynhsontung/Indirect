@@ -13,10 +13,10 @@ namespace Indirect.Wrapper
 {
     public class ReelsWrapper
     {
-        public readonly ObservableCollection<StoryItemWrapper> Items = new ObservableCollection<StoryItemWrapper>();
+        public ObservableCollection<StoryItemWrapper> Items { get; } = new ObservableCollection<StoryItemWrapper>();
+        public List<string> UserOrder { get; } = new List<string>();
 
         private readonly Dictionary<string, Reel> _userReelsDictionary = new Dictionary<string, Reel>();
-        private readonly List<string> _userOrder = new List<string>();
         private int _userIndex;
         private bool _loaded;
 
@@ -27,12 +27,12 @@ namespace Indirect.Wrapper
             _userIndex = selected;
             foreach (var reel in initialReels)
             {
-                _userOrder.Add(reel.Owner.Id);
+                UserOrder.Add(reel.Owner.Id);
                 _userReelsDictionary[reel.Owner.Id] = reel;
             }
         }
 
-        public int GetUserIndex(string userId) => _userOrder.IndexOf(userId);
+        public int GetUserIndex(string userId) => UserOrder.IndexOf(userId);
 
         public bool StoriesFetched(string userId) =>
             _userReelsDictionary[userId].Items != null && _userReelsDictionary[userId].Items.Length > 0;
@@ -44,7 +44,7 @@ namespace Indirect.Wrapper
             var storyIndex = 0;
             for (int i = 0; i < Items.Count; i++)
             {
-                if (Items[i].Owner.Id == _userOrder[_userIndex])
+                if (Items[i].Owner.Id == UserOrder[_userIndex])
                 {
                     storyIndex = i;
                     break;
@@ -71,52 +71,52 @@ namespace Indirect.Wrapper
 
         public async Task UpdateUserIndex(int userIndex)
         {
-            var selectedUserId = _userOrder[userIndex];
+            var selectedUserId = UserOrder[userIndex];
             if (Items.FirstOrDefault(x => x.Owner.Id == selectedUserId) == null)
             {
                 if (!StoriesFetched(selectedUserId))
                 {
                     // If user index doesn't have any story, fetch some
-                    if (_userOrder.Count <= 3)
+                    if (UserOrder.Count <= 3)
                     {
-                        await FetchStories(_userOrder.ToArray());
+                        await FetchStories(UserOrder.ToArray());
                     }
                     else if (userIndex == 0)
                     {
-                        await FetchStories(_userOrder[0], _userOrder[1], _userOrder[2]);
+                        await FetchStories(UserOrder[0], UserOrder[1], UserOrder[2]);
                     }
-                    else if (userIndex == _userOrder.Count-1)
+                    else if (userIndex == UserOrder.Count-1)
                     {
-                        var c = _userOrder.Count;
-                        await FetchStories(_userOrder[c - 3], _userOrder[c - 2], _userOrder[c - 1]);
+                        var c = UserOrder.Count;
+                        await FetchStories(UserOrder[c - 3], UserOrder[c - 2], UserOrder[c - 1]);
                     }
                     else
                     {
-                        await FetchStories(_userOrder[userIndex - 1], _userOrder[userIndex], _userOrder[userIndex + 1]);
+                        await FetchStories(UserOrder[userIndex - 1], UserOrder[userIndex], UserOrder[userIndex + 1]);
                     }
                 }
 
                 SyncItems();
             }
-            else if(userIndex == 0 && _userOrder.Count >= 2 && !StoriesFetched(_userOrder[1]))
+            else if(userIndex == 0 && UserOrder.Count >= 2 && !StoriesFetched(UserOrder[1]))
             {
-                await FetchStories(_userOrder[1]);
+                await FetchStories(UserOrder[1]);
                 SyncItems();
             }
 
 
             if (_userIndex == userIndex) return;
-            var reelsHolders = _userOrder.Select(x => _userReelsDictionary[x]).ToList();
-            if (_userOrder.Count <= 3)
+            var reelsHolders = UserOrder.Select(x => _userReelsDictionary[x]).ToList();
+            if (UserOrder.Count <= 3)
             {
                 var userList = reelsHolders.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.Owner.Id);
                 await FetchStories(userList.ToArray());
                 SyncItems();
             }
-            else if (_userIndex < userIndex && _userIndex + 2 < _userOrder.Count)
+            else if (_userIndex < userIndex && _userIndex + 2 < UserOrder.Count)
             {
                 // Moving forward
-                var count = _userIndex + 4 < _userOrder.Count ? 3 : _userOrder.Count - (_userIndex + 2);
+                var count = _userIndex + 4 < UserOrder.Count ? 3 : UserOrder.Count - (_userIndex + 2);
                 var reels = reelsHolders.GetRange(_userIndex + 2, count);
                 var userList = reels.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.Owner.Id);
                 await FetchStories(userList.ToArray());
@@ -160,7 +160,7 @@ namespace Indirect.Wrapper
         private void SyncItems()
         {
             var indexAdder = 0;
-            foreach (var userId in _userOrder)
+            foreach (var userId in UserOrder)
             {
                 var reel = _userReelsDictionary[userId];
                 if (reel.Items == null) continue;

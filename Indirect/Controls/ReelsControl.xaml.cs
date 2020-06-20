@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using Windows.System;
@@ -13,8 +14,10 @@ using Microsoft.Toolkit.Uwp.UI.Extensions;
 
 namespace Indirect.Controls
 {
-    public sealed partial class ReelsControl : UserControl
+    public sealed partial class ReelsControl : UserControl, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
             nameof(Source),
             typeof(ReelsWrapper),
@@ -25,6 +28,26 @@ namespace Indirect.Controls
         {
             get => (ReelsWrapper) GetValue(SourceProperty);
             set => SetValue(SourceProperty, value);
+        }
+
+        private bool MorePreviousReels
+        {
+            get
+            {
+                var story = (StoryItemWrapper)StoryView.SelectedItem;
+                if (story == null) return true;
+                return Source.UserOrder.IndexOf(story.Parent.Owner.Id) != 0;
+            }
+        }
+
+        private bool MoreNextReels
+        {
+            get
+            {
+                var story = (StoryItemWrapper)StoryView.SelectedItem;
+                if (story == null) return true;
+                return Source.UserOrder.LastIndexOf(story.Parent.Owner.Id) != Source.UserOrder.Count - 1;
+            }
         }
 
         private Tuple<int, int> _reelLimit;
@@ -48,7 +71,7 @@ namespace Indirect.Controls
         {
             var storyView = (FlipView) sender;
             Source?.OnLoaded(storyView);
-            StoryViewOnLoadedAndOnSelectionChanged();
+            //StoryViewOnLoadedAndOnSelectionChanged();
         }
 
         public void OnClose()
@@ -74,7 +97,7 @@ namespace Indirect.Controls
         {
             var storyView = (FlipView)sender;
             Source?.OnSelectionChanged(storyView.SelectedIndex);
-            StoryViewOnLoadedAndOnSelectionChanged();
+            //StoryViewOnLoadedAndOnSelectionChanged();
             var previous = (StoryItemWrapper) e.RemovedItems.FirstOrDefault();
             var selected = (StoryItemWrapper) e.AddedItems.FirstOrDefault();
             var flipViewItem = storyView.ContainerFromItem(previous) as FlipViewItem;
@@ -82,6 +105,13 @@ namespace Indirect.Controls
             var autoVideo = element?.FindDescendant<AutoVideoControl>();
             autoVideo?.Pause();
 
+            UpdateProgressBar(selected, previous);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MorePreviousReels)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MoreNextReels)));
+        }
+
+        private void UpdateProgressBar(StoryItemWrapper selected, StoryItemWrapper previous)
+        {
             if (selected == null)
             {
                 ReelsProgressBar.Value = 0;
@@ -109,7 +139,7 @@ namespace Indirect.Controls
                 }
 
                 _reelLimit = new Tuple<int, int>(start, end);
-                ReelsProgressBar.Value = storyView.SelectedIndex == end ? 100 : 1d / (end - start + 1) * 100;
+                ReelsProgressBar.Value = StoryView.SelectedIndex == end ? 100 : 1d / (end - start + 1) * 100;
             }
             else
             {
@@ -125,7 +155,7 @@ namespace Indirect.Controls
             if (ReelsProgressBar.Value > 99) ReelsProgressBar.Value = 100;
         }
 
-        private void MessageTextBox_OnKeyboardInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        private void MessageTextBox_OnEnterPressed(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
         {
             args.Handled = true;
             SendButton_Click(sender, null);
@@ -145,6 +175,60 @@ namespace Indirect.Controls
                     await ApiContainer.Instance.CreateThread();
                 });
 
+        }
+
+        private void PreviousReelButtonClick(object sender, RoutedEventArgs e)
+        {
+            var items = Source?.Items;
+            var selectedIndex = StoryView.SelectedIndex;
+            if (items == null || selectedIndex == -1) return;
+            var userId = items[selectedIndex].Parent.Owner.Id;
+            var previousReelIndex = -1;
+            for (int i = selectedIndex; i >= 0; i--)
+            {
+                if (userId == items[i].Parent.Owner.Id) continue;
+                previousReelIndex = i;
+                userId = items[i].Parent.Owner.Id;
+                break;
+            }
+
+            // Getting to the start of the reel
+            for (int i = previousReelIndex; i >= 0; i--)
+            {
+                if (userId == items[i].Parent.Owner.Id && i == 0)
+                {
+                    previousReelIndex = 0;
+                    break;
+                }
+                if (userId == items[i].Parent.Owner.Id) continue;
+                previousReelIndex = i + 1;
+                break;
+            }
+
+            if (previousReelIndex != -1)
+            {
+                StoryView.SelectedIndex = previousReelIndex;
+            }
+        }
+
+        private void NextReelButtonClick(object sender, RoutedEventArgs e)
+        {
+            var items = Source?.Items;
+            var selectedIndex = StoryView.SelectedIndex;
+            if (items == null || selectedIndex == -1) return;
+            var userId = items[selectedIndex].Parent.Owner.Id;
+            var nextReelIndex = -1;
+            for (int i = selectedIndex; i < items.Count; i++)
+            {
+                if (userId == items[i].Parent.Owner.Id) continue;
+                nextReelIndex = i;
+                break;
+            }
+
+            if (nextReelIndex != -1)
+            {
+                StoryView.SelectedIndex = nextReelIndex;
+            }
         }
     }
 }
