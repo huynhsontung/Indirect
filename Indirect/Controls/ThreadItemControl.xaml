@@ -243,13 +243,14 @@
             <DataTemplate x:Name="MediaShareTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
                 <Grid x:Name="MediaShareView"
                       CornerRadius="2" Tapped="OpenWebLink"
-                      Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}" 
-                      MaxWidth="250" MaxHeight="350"
+                      Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
+                      MaxWidth="250"
                       HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="36"/>
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,6,8,6">
                         <controls:ImageEx Source="{x:Bind MediaShare.User.ProfilePictureUrl}" Height="24" Width="24" CornerRadius="99" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -262,12 +263,15 @@
                                       Source="{x:Bind PreviewImageUri}"
                                       HorizontalAlignment="Stretch"
                                       VerticalAlignment="Stretch"/>
-                    <TextBlock Grid.Row="2" 
-                               Style="{ThemeResource FluentCaptionTextStyle}"
-                               Visibility="{x:Bind MediaShare.Caption, Converter={StaticResource NullVisibilityConverter}}"
-                               Text="{x:Bind MediaShare.Caption.Text}"
-                               TextWrapping="Wrap"
-                               Margin="8,4,8,8"/>
+                    <ScrollViewer Grid.Row="2" MaxHeight="160" Margin="8,4,8,4">
+                        <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
+                                   Visibility="{x:Bind MediaShare.Caption, Converter={StaticResource NullVisibilityConverter}}"
+                                   Text="{x:Bind MediaShare.Caption.Text}" IsTextSelectionEnabled="True"
+                                   TextWrapping="Wrap"/>
+                    </ScrollViewer>
+                    <Border Grid.Row="3" HorizontalAlignment="Stretch" BorderBrush="{ThemeResource MainBackground}" BorderThickness="0,1,0,0"></Border>
+                    <HyperlinkButton Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource SystemControlHyperlinkBaseHighBrush}"
+                                     NavigateUri="{x:Bind NavigateUri}" FontWeight="SemiBold" Content="See full post on instagram.com →"/>
                 </Grid>
             </DataTemplate>
 
