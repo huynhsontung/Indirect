@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
@@ -14,13 +13,29 @@ using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Utils;
-using Microsoft.AppCenter.Crashes;
-using Buffer = System.Buffer;
 
 namespace Indirect
 {
     internal partial class ApiContainer
     {
+        public async Task SendAnimatedImage(string imageId, bool isSticker)
+        {
+            try
+            {
+                var selectedThread = SelectedThread;
+                if (string.IsNullOrEmpty(selectedThread?.ThreadId)) return;
+                var result = await _instaApi.SendAnimatedImageAsync(imageId, isSticker, selectedThread.ThreadId);
+                if (result.IsSucceeded && result.Value.Length > 0)
+                {
+                    selectedThread.Update(result.Value[0]);
+                }
+            }
+            catch (Exception)
+            {
+                await HandleException("Failed to send GIF");
+            }
+        }
+
         public async Task SendLike()
         {
             try
@@ -28,7 +43,7 @@ namespace Indirect
                 var selectedThread = SelectedThread;
                 if (string.IsNullOrEmpty(selectedThread.ThreadId)) return;
                 var result = await _instaApi.SendLikeAsync(selectedThread.ThreadId);
-                if (result.IsSucceeded) UpdateInboxAndSelectedThread();
+                //if (result.IsSucceeded) UpdateInboxAndSelectedThread();
             }
             catch (Exception)
             {
@@ -48,7 +63,7 @@ namespace Indirect
                 x.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
                 x.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase) ||
                 x.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase)).ToList();
-            Result<List<DirectThread>> result;
+            Result<DirectThread[]> result;
             Result<ItemAckPayloadResponse> ackResult;   // for links and hashtags
             try
             {
@@ -82,7 +97,7 @@ namespace Indirect
                 return;
             }
 
-            if (result.IsSucceeded && result.Value.Count > 0)
+            if (result.IsSucceeded && result.Value.Length > 0)
             {
                 // SyncClient will take care of updating. Update here is just for precaution.
                 selectedThread.Update(result.Value[0]);

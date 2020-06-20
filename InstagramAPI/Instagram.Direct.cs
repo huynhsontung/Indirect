@@ -370,12 +370,11 @@ namespace InstagramAPI
         /// <param name="threadId"></param>
         /// <param name="text">Message text</param>
         /// <returns>List of threads</returns>
-        public async Task<Result<List<DirectThread>>> SendTextAsync(IEnumerable<long> recipients,
+        public async Task<Result<DirectThread[]>> SendTextAsync(IEnumerable<long> recipients,
             string threadId,
             string text)
         {
             ValidateLoggedIn();
-            var threads = new List<DirectThread>();
             try
             {
                 if (string.IsNullOrEmpty(text)) throw new ArgumentException("Message text is empty", nameof(text));
@@ -393,16 +392,16 @@ namespace InstagramAPI
                 DebugLogger.LogResponse(response);
 
                 if (response.StatusCode != HttpStatusCode.Ok)
-                    return Result<List<DirectThread>>.Fail(json);
-                var result = JsonConvert.DeserializeObject<TextSentResponse>(json);
+                    return Result<DirectThread[]>.Fail(json);
+                var result = JsonConvert.DeserializeObject<ItemAddedResponse>(json);
                 return result.IsOk()
-                    ? Result<List<DirectThread>>.Success(threads, json)
-                    : Result<List<DirectThread>>.Fail(json, response.ReasonPhrase);
+                    ? Result<DirectThread[]>.Success(result.Threads, json)
+                    : Result<DirectThread[]>.Fail(json, response.ReasonPhrase);
             }
             catch (Exception exception)
             {
                 DebugLogger.LogException(exception);
-                return Result<List<DirectThread>>.Except(exception);
+                return Result<DirectThread[]>.Except(exception);
             }
         }
 
@@ -522,6 +521,42 @@ namespace InstagramAPI
             {
                 DebugLogger.LogException(exception);
                 return Result<ItemAckPayloadResponse>.Except(exception);
+            }
+        }
+
+        public async Task<Result<DirectThread[]>> SendAnimatedImageAsync(string mediaId, bool isSticker, string threadId)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var uri = UriCreator.GetSendAnimatedImageUri();
+                var clientContext = Guid.NewGuid().ToString();
+                var data = new Dictionary<string, string>
+                {
+                    {"thread_ids", $"[{threadId}]"},
+                    {"client_context", clientContext},
+                    {"is_sticker", isSticker.ToString().ToLower()},
+                    {"_csrftoken", Session.CsrfToken},
+                    {"id", mediaId},
+                    {"device_id", Device.DeviceId},
+                    {"mutation_token", clientContext},
+                    {"_uuid", Device.Uuid.ToString()},
+                };
+                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                DebugLogger.LogResponse(response);
+
+                if (!response.IsSuccessStatusCode)
+                    return Result<DirectThread[]>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<ItemAddedResponse>(json);
+                return obj.IsOk()
+                    ? Result<DirectThread[]>.Success(obj.Threads, json)
+                    : Result<DirectThread[]>.Fail(json);
+            }
+            catch (Exception exception)
+            {
+                DebugLogger.LogException(exception);
+                return Result<DirectThread[]>.Except(exception);
             }
         }
 

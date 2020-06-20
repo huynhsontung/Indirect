@@ -13,6 +13,8 @@ namespace Indirect.Controls
 {
     public sealed partial class AnimatedImagePicker : UserControl
     {
+        public event EventHandler<GiphyMedia> ImageSelected; 
+
         public ObservableCollection<GiphyMedia> ImageList { get; } = new ObservableCollection<GiphyMedia>();
 
         private GiphyMedia[] _stickers;
@@ -88,6 +90,11 @@ namespace Indirect.Controls
             {
                 ImageList.Add(media);
             }
+            if (ImageList.Count > 0)
+            {
+                PickerView.UpdateLayout();
+                PickerView.ScrollIntoView(ImageList[0]);
+            }
         }
 
         private async Task<bool> SearchReady()
@@ -118,9 +125,14 @@ namespace Indirect.Controls
             TypeSelectBox.SelectedIndex = 0;
         }
 
-        private void PickerOnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void PickerOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // todo: to be implemented
+            if (e.AddedItems.Count == 0 || e.AddedItems[0] == null) return;
+            var image = (GiphyMedia)e.AddedItems[0];
+            await ApiContainer.Instance.SendAnimatedImage(image.Id, image.IsSticker);
+            var gridView = (GridView) sender;
+            gridView.SelectedItem = null;
+            ImageSelected?.Invoke(this, image);
         }
     }
 }

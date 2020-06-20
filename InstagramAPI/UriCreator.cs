@@ -251,5 +251,12 @@ namespace InstagramAPI
                 throw new Exception("Cant create URI for searching animated image");
             return instaUri;
         }
+
+        public static Uri GetSendAnimatedImageUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/threads/broadcast/animated_media/", out var instaUri))
+                throw new Exception("Cant create URI for sending animated media");
+            return instaUri;
+        }
     }
 }

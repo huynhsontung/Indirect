@@ -202,7 +202,7 @@
     <Compile Include="Classes\Responses\LoginFailedResponse.cs" />
     <Compile Include="Classes\Responses\LoginResponse.cs" />
     <Compile Include="Classes\Responses\RankedRecipientsResponse.cs" />
-    <Compile Include="Classes\Responses\TextSentResponse.cs" />
+    <Compile Include="Classes\Responses\ItemAddedResponse.cs" />
     <Compile Include="Classes\Result.cs" />
     <Compile Include="Classes\StoryUploadOptions.cs" />
     <Compile Include="Classes\TwoFactorLoginInfo.cs" />

@@ -181,8 +181,8 @@
                     Margin="2,0,0,0">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF4A9;"/>
                 <Button.Flyout>
-                    <Flyout>
-                        <controls1:AnimatedImagePicker/>
+                    <Flyout x:Name="GifPickerFlyout">
+                        <controls1:AnimatedImagePicker x:Name="GifPicker"/>
                     </Flyout>
                 </Button.Flyout>
             </Button>

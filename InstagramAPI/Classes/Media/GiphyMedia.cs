@@ -59,7 +59,7 @@ namespace InstagramAPI.Classes.Media
         public Uri SourcePostUrl { get; set; }
 
         [JsonProperty("is_sticker")]
-        public long IsSticker { get; set; }
+        public bool IsSticker { get; set; }
 
         [JsonProperty("import_datetime")]
         public DateTimeOffset ImportDatetime { get; set; }

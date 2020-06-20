@@ -27,7 +27,8 @@
             <x:String>Sticker</x:String>
             <x:String>GIF</x:String>
         </ComboBox>
-        <GridView Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Width="360" Height="400" Margin="0,8,0,0"
+        <GridView x:Name="PickerView"
+                  Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Width="360" Height="400" Margin="0,8,0,0"
                   ItemsSource="{x:Bind ImageList}"
                   SelectionChanged="PickerOnSelectionChanged">
             <GridView.ItemsPanel>
@@ -40,7 +41,7 @@
             </GridView.ItemsPanel>
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="im:GiphyMedia">
-                    <controls:ImageEx Source="{x:Bind Images['original'].Url}" HorizontalAlignment="Stretch"/>
+                    <controls:ImageEx Source="{x:Bind Images['preview_gif'].Url}" HorizontalAlignment="Stretch"/>
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>

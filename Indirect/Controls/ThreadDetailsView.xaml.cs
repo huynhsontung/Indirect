@@ -66,6 +66,7 @@ namespace Indirect.Controls
                 if (args.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
                 OnUserPresenceChanged();
             };
+            GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
         }
 
         private void OnUserPresenceChanged()
