@@ -171,7 +171,6 @@ namespace InstagramAPI.Push
                 if (RunningAndReadable)
                 {
                     Shutdown();
-                    await Task.Delay(TimeSpan.FromSeconds(1));
                 }
                 Socket = socket;
                 _inboundReader = new DataReader(socket.InputStream);
@@ -199,7 +198,6 @@ namespace InstagramAPI.Push
                 if (RunningAndReadable)
                 {
                     Shutdown();
-                    await Task.Delay(TimeSpan.FromSeconds(1));
                 }
 
                 var connectPacket = new FbnsConnectPacket
@@ -282,6 +280,7 @@ namespace InstagramAPI.Push
                     if (RunningAndReadable)
                     {
                         DebugLogger.LogException(e);
+                        await Task.Delay(TimeSpan.FromSeconds(1));
                         await StartFresh();
                     }
                     return;

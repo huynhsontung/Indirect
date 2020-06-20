@@ -42,7 +42,7 @@
             </GridView.ItemsPanel>
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="im:GiphyMedia">
-                    <controls:ImageEx Source="{x:Bind Images['preview_gif'].Url}" HorizontalAlignment="Stretch"/>
+                    <controls:ImageEx Source="{x:Bind Images['fixed_width_downsampled'].Url}" HorizontalAlignment="Stretch"/>
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>
