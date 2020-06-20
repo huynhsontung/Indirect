@@ -28,8 +28,9 @@
             <x:String>GIF</x:String>
         </ComboBox>
         <GridView x:Name="PickerView"
-                  Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Width="360" Height="400" Margin="0,8,0,0"
+                  Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Width="352" MaxHeight="360" Margin="0,8,0,0"
                   ItemsSource="{x:Bind ImageList}"
+                  Loaded="PickerView_OnLoaded"
                   SelectionChanged="PickerOnSelectionChanged">
             <GridView.ItemsPanel>
                 <ItemsPanelTemplate>

@@ -134,5 +134,11 @@ namespace Indirect.Controls
             gridView.SelectedItem = null;
             ImageSelected?.Invoke(this, image);
         }
+
+        private void PickerView_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            var winHeight = Window.Current.Bounds.Height;
+            ((FrameworkElement) sender).Height = winHeight * 3 / 5;
+        }
     }
 }
