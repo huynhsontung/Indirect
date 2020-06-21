@@ -171,7 +171,7 @@ namespace Indirect
                     var segments = itemData.Path.Trim('/').Split('/');
                     var threadId = segments[2];
                     if (string.IsNullOrEmpty(threadId)) continue;
-                    var thread = Inbox.Threads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
+                    var thread = Inbox.Threads.FirstOrDefault(wrapper => wrapper.ThreadId == threadId);
                     if (thread == null)
                     {
                         if (!updateInbox) updateInbox = itemData.Op == "add";
@@ -201,7 +201,7 @@ namespace Indirect
                                     () => thread.UpdateLastSeenAt(userId, itemData.Item.Timestamp, itemData.Item.ItemId));
                                 continue;
                             }
-                            var item = thread.ObservableItems.SingleOrDefault(x => x.ItemId == itemData.Item.ItemId);
+                            var item = thread.ObservableItems.LastOrDefault(x => x.ItemId == itemData.Item.ItemId);
                             if (item == null) continue;
 
                             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
