@@ -110,6 +110,48 @@ namespace InstagramAPI.Classes.Direct.ItemContent
 
         [JsonProperty("location", NullValueHandling = NullValueHandling.Ignore)]
         public LocationContainer Location { get; set; }
+
+        [JsonProperty("carousel_media_count", NullValueHandling = NullValueHandling.Ignore)]
+        public long? CarouselMediaCount { get; set; }
+
+        [JsonProperty("carousel_media", NullValueHandling = NullValueHandling.Ignore)]
+        public CarouselMedia[] CarouselMedia { get; set; }
+
+        [JsonProperty("can_see_insights_as_brand")]
+        public bool CanSeeInsightsAsBrand { get; set; }
+
+        [JsonProperty("lat", NullValueHandling = NullValueHandling.Ignore)]
+        public double? Lat { get; set; }
+
+        [JsonProperty("lng", NullValueHandling = NullValueHandling.Ignore)]
+        public double? Lng { get; set; }
+
+        [JsonProperty("usertags", NullValueHandling = NullValueHandling.Ignore)]
+        public Tags Usertags { get; set; }
+
+        [JsonProperty("fb_user_tags", NullValueHandling = NullValueHandling.Ignore)]
+        public Tags FbUserTags { get; set; }
+    }
+
+    public partial class Tags
+    {
+        [JsonProperty("in")]
+        public TagPosition[] In { get; set; }
+    }
+
+    public class TagPosition
+    {
+        [JsonProperty("user")]
+        public BaseUser User { get; set; }
+
+        [JsonProperty("position")]
+        public double[] Position { get; set; }
+
+        [JsonProperty("start_time_in_video_in_sec")]
+        public object StartTimeInVideoInSec { get; set; }
+
+        [JsonProperty("duration_in_video_in_sec")]
+        public object DurationInVideoInSec { get; set; }
     }
 
     public partial class LikerConfig

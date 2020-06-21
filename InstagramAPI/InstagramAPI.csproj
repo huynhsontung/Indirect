@@ -147,6 +147,7 @@
     <Compile Include="Classes\Direct\ItemContent\VoiceShare.cs" />
     <Compile Include="Classes\Direct\RankedRecipientThread.cs" />
     <Compile Include="Classes\JsonConverters\TolerantEnumConverter.cs" />
+    <Compile Include="Classes\Media\CarouselMedia.cs" />
     <Compile Include="Classes\Media\GiphyMedia.cs" />
     <Compile Include="Classes\Mqtt\Exceptions.cs" />
     <Compile Include="Classes\Mqtt\Packets\ConnAckPacket.cs" />

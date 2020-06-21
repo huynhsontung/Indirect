@@ -263,8 +263,14 @@
                                       Source="{x:Bind PreviewImageUri}"
                                       HorizontalAlignment="Stretch"
                                       VerticalAlignment="Stretch"/>
-                    <ScrollViewer Grid.Row="2" MaxHeight="160" Margin="8,4,8,4">
-                        <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                Margin="4" Padding="4,2,4,2" Background="{StaticResource SystemControlBackgroundBaseLowBrush}" CornerRadius="4"
+                                Visibility="{x:Bind MediaShare.CarouselMediaCount, Converter={StaticResource NullVisibilityConverter}}">
+                        <FontIcon Glyph="&#xE8B9;" FontSize="16" Margin="0,0,6,0"/>
+                        <TextBlock Text="{x:Bind MediaShare.CarouselMediaCount}" FontSize="14"/>
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="2" MaxHeight="160" Margin="0,4,0,4">
+                        <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Margin="8,0,8,0"
                                    Visibility="{x:Bind MediaShare.Caption, Converter={StaticResource NullVisibilityConverter}}"
                                    Text="{x:Bind MediaShare.Caption.Text}" IsTextSelectionEnabled="True"
                                    TextWrapping="Wrap"/>

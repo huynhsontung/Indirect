@@ -137,6 +137,9 @@ namespace Indirect.Wrapper
                     case DirectItemType.Media:
                         return GetPreviewImage(Media.Images)?.Url;
 
+                    case DirectItemType.MediaShare when MediaShare.CarouselMedia?.Length > 0:
+                        return GetPreviewImage(MediaShare.CarouselMedia[0].ImageCandidates)?.Url;
+
                     case DirectItemType.MediaShare:
                         return GetPreviewImage(MediaShare.Images)?.Url;
 
@@ -169,6 +172,9 @@ namespace Indirect.Wrapper
                 {
                     case DirectItemType.Media:
                         return GetFullImageUri(Media.Images);
+
+                    case DirectItemType.MediaShare when MediaShare.CarouselMedia?.Length > 0:
+                        return GetFullImageUri(MediaShare.CarouselMedia[0].ImageCandidates);
 
                     case DirectItemType.MediaShare:
                         return GetFullImageUri(MediaShare.Images);
@@ -303,7 +309,7 @@ namespace Indirect.Wrapper
                 };
         }
 
-        private static InstaImage GetPreviewImage(List<InstaImage> imageCandidates)
+        private static InstaImage GetPreviewImage(ICollection<InstaImage> imageCandidates)
         {
             if (imageCandidates == null || imageCandidates.Count == 0) return null;
             var candidates = imageCandidates.OrderBy(x => x.Height + x.Width).ToArray();
@@ -311,7 +317,7 @@ namespace Indirect.Wrapper
             return image;
         }
 
-        private static InstaImage GetFullImage(List<InstaImage> imageCandidates)
+        private static InstaImage GetFullImage(ICollection<InstaImage> imageCandidates)
         {
             if (imageCandidates == null || imageCandidates.Count == 0) return null;
             var candidates = imageCandidates.OrderByDescending(x => x.Height + x.Width).ToArray();
@@ -319,7 +325,7 @@ namespace Indirect.Wrapper
             return image;
         }
 
-        private static Uri GetFullImageUri(List<InstaImage> imageCandidates)
+        private static Uri GetFullImageUri(ICollection<InstaImage> imageCandidates)
         {
             return GetFullImage(imageCandidates)?.Url;
         }
