@@ -61,17 +61,17 @@ namespace InstagramAPI.Classes.Media
         [JsonProperty("is_sticker")]
         public bool IsSticker { get; set; }
 
-        [JsonProperty("import_datetime")]
-        public DateTimeOffset ImportDatetime { get; set; }
+        //[JsonProperty("import_datetime")]
+        //public DateTimeOffset ImportDatetime { get; set; }
 
-        [JsonProperty("trending_datetime")]
-        public string TrendingDatetime { get; set; }
+        //[JsonProperty("trending_datetime")]
+        //public string TrendingDatetime { get; set; }
 
-        [JsonProperty("create_datetime")]
-        public DateTimeOffset CreateDatetime { get; set; }
+        //[JsonProperty("create_datetime")]
+        //public DateTimeOffset CreateDatetime { get; set; }
 
-        [JsonProperty("update_datetime")]
-        public DateTimeOffset UpdateDatetime { get; set; }
+        //[JsonProperty("update_datetime")]
+        //public DateTimeOffset UpdateDatetime { get; set; }
 
         [JsonProperty("images")]
         public Dictionary<string, InstaAnimatedImage> Images { get; set; }
