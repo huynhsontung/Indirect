@@ -269,12 +269,10 @@
                         <FontIcon Glyph="&#xE8B9;" FontSize="16" Margin="0,0,6,0"/>
                         <TextBlock Text="{x:Bind MediaShare.CarouselMediaCount}" FontSize="14"/>
                     </StackPanel>
-                    <ScrollViewer Grid.Row="2" MaxHeight="160" Margin="0,4,0,4">
-                        <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" Margin="8,0,8,0"
-                                   Visibility="{x:Bind MediaShare.Caption, Converter={StaticResource NullVisibilityConverter}}"
-                                   Text="{x:Bind MediaShare.Caption.Text}" IsTextSelectionEnabled="True"
-                                   TextWrapping="Wrap"/>
-                    </ScrollViewer>
+                    <TextBlock Grid.Row="2" Style="{ThemeResource FluentCaptionTextStyle}" Margin="8,4,8,4"
+                               Visibility="{x:Bind MediaShare.Caption, Converter={StaticResource NullVisibilityConverter}}"
+                               Text="{x:Bind MediaShare.Caption.Text}" IsTextSelectionEnabled="True"
+                               TextWrapping="Wrap"/>
                     <Border Grid.Row="3" HorizontalAlignment="Stretch" BorderBrush="{ThemeResource MainBackground}" BorderThickness="0,1,0,0"></Border>
                     <HyperlinkButton Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource SystemControlHyperlinkBaseHighBrush}"
                                      NavigateUri="{x:Bind NavigateUri}" FontWeight="SemiBold" Content="See full post on instagram.com →"/>
