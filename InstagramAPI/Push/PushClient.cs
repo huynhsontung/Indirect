@@ -467,8 +467,15 @@ namespace InstagramAPI.Push
             // Send PUBLISH packet then wait for PUBACK
             // Retry after TIMEOUT seconds
             if (_runningTokenSource.IsCancellationRequested) return;
-            await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
-            WaitForPubAck();
+            try
+            {
+                await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
+                WaitForPubAck();
+            }
+            catch (ObjectDisposedException)
+            {
+                // pass
+            }
         }
 
         private async void WaitForPubAck()
