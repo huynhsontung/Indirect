@@ -187,14 +187,18 @@
                 </Button.Flyout>
             </Button>
 
-            <TextBox x:Name="MessageTextBox" Text="{x:Bind Thread.DraftMessage, Mode=TwoWay}" SelectionStart="{Binding RelativeSource={RelativeSource Self}, Path=Text.Length}"
+            <TextBox x:Name="MessageTextBox" Text="{x:Bind Thread.DraftMessage, Mode=TwoWay}" TextChanged="MessageTextBox_OnTextChanged"
                      Grid.Column="2" Grid.Row="1" Grid.RowSpan="2"
                      VerticalAlignment="Stretch"
                      TextWrapping="Wrap"
                      PlaceholderText="Type a message"
                      Margin="4,0,4,0" MaxLength="2200" 
-                     AcceptsReturn="True"
-                     ProcessKeyboardAccelerators="MessageTextBox_OnProcessKeyboardAccelerators"/>
+                     AcceptsReturn="True" 
+                     KeyboardAcceleratorPlacementMode="Hidden">
+                <TextBox.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="Enter" Modifiers="None" Invoked="MessageTextBox_OnEnterPressed"/>
+                </TextBox.KeyboardAccelerators>
+            </TextBox>
 
             <Button x:Name="SendButton" ToolTipService.ToolTip="Send"
                     HorizontalAlignment="Stretch"

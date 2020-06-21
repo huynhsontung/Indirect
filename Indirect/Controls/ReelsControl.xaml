@@ -24,9 +24,9 @@
                              TextWrapping="Wrap" Background="Transparent"
                              PlaceholderText="Type a message"
                              Margin="4,0,4,0" MaxLength="2200" 
-                             AcceptsReturn="True">
+                             AcceptsReturn="True" KeyboardAcceleratorPlacementMode="Hidden">
                         <TextBox.KeyboardAccelerators>
-                            <KeyboardAccelerator Key="Enter" Invoked="MessageTextBox_OnEnterPressed"/>
+                            <KeyboardAccelerator Key="Enter" Modifiers="None" Invoked="MessageTextBox_OnEnterPressed"/>
                         </TextBox.KeyboardAccelerators>
                     </TextBox>
                     <Button ToolTipService.ToolTip="Send" Margin="0,0,4,0" Click="SendButton_Click" VerticalAlignment="Bottom" Width="60">

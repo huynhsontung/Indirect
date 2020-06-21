@@ -41,6 +41,8 @@ namespace Indirect.Controls
             set => SetValue(ThreadProperty, value);
         }
 
+        private bool _needUpdateCaret;   // For moving the caret to the end of text on thread change. This is a bad idea. ¯\_(ツ)_/¯
+
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ThreadDetailsView)d;
@@ -53,6 +55,7 @@ namespace Indirect.Controls
             view.ViewProfileAppBarButton.Visibility = thread.Users?.Count == 1 ? Visibility.Visible : Visibility.Collapsed;
             view.MessageInputGrid.Visibility = thread.Pending ? Visibility.Collapsed : Visibility.Visible;
             view.RefreshButton.Visibility = thread.Pending ? Visibility.Collapsed : Visibility.Visible;
+            view._needUpdateCaret = true;
             view.OnUserPresenceChanged();
         }
 
@@ -108,8 +111,9 @@ namespace Indirect.Controls
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
+            if (Thread == null) return;
             var message = MessageTextBox.Text;
-            MessageTextBox.Text = "";
+            Thread.DraftMessage = string.Empty;
             if(string.IsNullOrEmpty(message))
             {
                 _ = ViewModel.SendLike();
@@ -231,15 +235,11 @@ namespace Indirect.Controls
             }
         }
 
-        private void MessageTextBox_OnProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)
+        private void MessageTextBox_OnEnterPressed(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
         {
-            if (args.Key == VirtualKey.Enter && args.Modifiers == VirtualKeyModifiers.None)
-            {
-                args.Handled = true;
-                if (!string.IsNullOrEmpty(MessageTextBox.Text))
-                    SendButton_Click(sender, new RoutedEventArgs());
-            }
-
+            args.Handled = true;
+            if (!string.IsNullOrEmpty(MessageTextBox.Text))
+                SendButton_Click(sender, new RoutedEventArgs());
         }
 
         private async void OnThreadPropertyChanged(object sender, PropertyChangedEventArgs args)
@@ -277,6 +277,14 @@ namespace Indirect.Controls
 
             UserInfoView.User = Thread.DetailedUserInfo;
             FlyoutBase.ShowAttachedFlyout(ThreadInfoHeader);
+        }
+
+        private void MessageTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!_needUpdateCaret) return;
+            var tb = (TextBox) sender;
+            tb.SelectionStart = tb.Text.Length;
+            _needUpdateCaret = false;
         }
     }
 }
