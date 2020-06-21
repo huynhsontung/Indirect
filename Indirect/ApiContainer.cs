@@ -137,7 +137,7 @@ namespace Indirect
                 var segments = indicatorData.Path.Trim('/').Split('/');
                 var threadId = segments[2];
                 if (string.IsNullOrEmpty(threadId)) return;
-                var thread = Inbox.Threads.SingleOrDefault(wrapper => wrapper.ThreadId == threadId);
+                var thread = Inbox.Threads.FirstOrDefault(wrapper => wrapper.ThreadId == threadId);
                 if (thread == null) return;
                 if (indicatorData.Indicator.ActivityStatus == 1)
                     thread.PingTypingIndicator(indicatorData.Indicator.TimeToLive);
@@ -147,7 +147,6 @@ namespace Indirect
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                Debug.WriteLine(e);
             }
         }
 
@@ -272,7 +271,7 @@ namespace Indirect
             }
             else
             {
-                var preferSelectedThread = Inbox.Threads.SingleOrDefault(x => x.ThreadId == SelectedThread.ThreadId);
+                var preferSelectedThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == SelectedThread.ThreadId);
                 if (preferSelectedThread != null)
                 {
                     SelectedThread = preferSelectedThread;
@@ -343,7 +342,7 @@ namespace Indirect
             var result = await _instaApi.CreateGroupThreadAsync(userIds);
             if (!result.IsSucceeded) return;
             var thread = result.Value;
-            var existingThread = Inbox.Threads.SingleOrDefault(x => x.ThreadId == thread.ThreadId);
+            var existingThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == thread.ThreadId);
             SelectedThread = existingThread ?? new InstaDirectInboxThreadWrapper(thread, _instaApi);
         }
 

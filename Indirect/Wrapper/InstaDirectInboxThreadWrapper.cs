@@ -225,7 +225,7 @@ namespace Indirect.Wrapper
 
                 foreach (var item in convertedSource)
                 {
-                    var existingItem = ObservableItems.SingleOrDefault(x => x.Equals(item));
+                    var existingItem = ObservableItems.LastOrDefault(x => x.Equals(item));
                     var existed = existingItem != null;
 
                     if (existed)
