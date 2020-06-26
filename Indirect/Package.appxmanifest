@@ -52,11 +52,6 @@
             <Task Type="systemEvent"/>
           </BackgroundTasks>
         </Extension>
-        <Extension Category="windows.backgroundTasks" EntryPoint="BackgroundPushClient.InternetAvailable">
-          <BackgroundTasks>
-            <Task Type="systemEvent"/>
-          </BackgroundTasks>
-        </Extension>
       </Extensions>
     </Application>
   </Applications>

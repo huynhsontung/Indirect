@@ -29,13 +29,10 @@ namespace InstagramAPI.Push
 
         private const string HOST_NAME = "mqtt-mini.facebook.com";
         private const string BACKGROUND_SOCKET_ACTIVITY_NAME = "BackgroundPushClient.SocketActivity";
-        private const string BACKGROUND_INTERNET_AVAILABLE_NAME = "BackgroundPushClient.InternetAvailable";
         private const string SOCKET_ACTIVITY_ENTRY_POINT = "BackgroundPushClient.SocketActivity";
-        private const string INTERNET_AVAILABLE_ENTRY_POINT = "BackgroundPushClient.InternetAvailable";
         public const string SOCKET_ID = "mqtt_fbns";
 
         private IBackgroundTaskRegistration _socketActivityTask;
-        private IBackgroundTaskRegistration _internetAvailableTask;
 
         public const int KEEP_ALIVE = 900;    // seconds
         private const int TIMEOUT = 5;
@@ -72,15 +69,7 @@ namespace InstagramAPI.Push
         {
             foreach (var task in BackgroundTaskRegistration.AllTasks)
             {
-                switch (task.Value.Name)
-                {
-                    case BACKGROUND_SOCKET_ACTIVITY_NAME:
-                        task.Value.Unregister(false);
-                        break;
-                    case BACKGROUND_INTERNET_AVAILABLE_NAME:
-                        task.Value.Unregister(false);
-                        break;
-                }
+                if (task.Value.Name == BACKGROUND_SOCKET_ACTIVITY_NAME) task.Value.Unregister(true);
             }
         }
 
@@ -123,8 +112,6 @@ namespace InstagramAPI.Push
                 return false;
             var activityTaskRegistered = TryRegisterBackgroundTaskOnce(BACKGROUND_SOCKET_ACTIVITY_NAME, SOCKET_ACTIVITY_ENTRY_POINT,
                 new SocketActivityTrigger(), out _socketActivityTask);
-            //var internetTaskRegistered = TryRegisterBackgroundTaskOnce(BACKGROUND_INTERNET_AVAILABLE_NAME, INTERNET_AVAILABLE_ENTRY_POINT,
-            //    new SystemTrigger(SystemTriggerType.InternetAvailable, false), out _internetAvailableTask);
             return activityTaskRegistered;
         }
 
@@ -282,13 +269,10 @@ namespace InstagramAPI.Push
                 }
                 catch (Exception e)
                 {
-                    // If client is still active then retry
                     if (Running)
                     {
                         DebugLogger.LogException(e);
                         Shutdown();
-                        //await Task.Delay(TimeSpan.FromSeconds(1));
-                        //await StartFresh();
                     }
                     return;
                 }
