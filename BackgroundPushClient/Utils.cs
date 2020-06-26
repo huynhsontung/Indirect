@@ -1,9 +1,13 @@
-﻿using System.Web;
+﻿using System.Threading.Tasks;
+using System.Web;
 using Windows.Foundation.Metadata;
+using Windows.Storage;
 using Windows.UI.Notifications;
 using InstagramAPI;
 using InstagramAPI.Push;
 using Microsoft.Toolkit.Uwp.Notifications;
+using System;
+using System.IO;
 
 namespace BackgroundPushClient
 {
@@ -76,6 +80,26 @@ namespace BackgroundPushClient
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             var composite = (Windows.Storage.ApplicationDataCompositeValue)localSettings.Values[Instagram.THREAD_TITLE_PERSISTENT_DICTIONARY_KEY];
             return (string) composite?[threadId];
+        }
+
+        public static async Task<bool> TryAcquireSyncLock()
+        {
+            var storageFolder = ApplicationData.Current.LocalFolder;
+            var storageItem = await storageFolder.TryGetItemAsync("SyncLock.mutex");
+            if (storageItem is StorageFile)
+            {
+                try
+                {
+                    var lockFile = new FileStream(storageItem.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                    lockFile.Dispose();
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

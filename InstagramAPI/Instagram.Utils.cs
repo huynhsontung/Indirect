@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Windows.Networking.Connectivity;
 using Windows.Web.Http.Filters;
 using InstagramAPI.Classes.User;
 using Newtonsoft.Json;
@@ -91,6 +92,12 @@ namespace InstagramAPI
             {
                 cookieManager.DeleteCookie(cookie);
             }
+        }
+
+        public static bool InternetAvailable()
+        {
+            var internetProfile = NetworkInformation.GetInternetConnectionProfile();
+            return internetProfile != null;
         }
     }
 }

@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using InstagramAPI;
+using InstagramAPI.Push;
 using InstagramAPI.Utils;
 
 namespace BackgroundPushClient
@@ -20,8 +20,12 @@ namespace BackgroundPushClient
             try
             {
                 var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
-                if (details.Reason == SocketActivityTriggerReason.None) return;
-                this.Log($"{typeof(SocketActivity).FullName}: {details.Reason}");
+                this.Log($"{details.Reason}");
+                if (!await Utils.TryAcquireSyncLock())
+                {
+                    this.Log("Failed to open SyncLock file. Main application might be running. Exit background task.");
+                    return;
+                }
                 var internetProfile = NetworkInformation.GetInternetConnectionProfile();
                 if (internetProfile == null)
                 {
@@ -30,14 +34,36 @@ namespace BackgroundPushClient
                 }
                 var instagram = Instagram.Instance;
                 instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
-                if (details.Reason == SocketActivityTriggerReason.SocketClosed)
+                switch (details.Reason)
                 {
-                    await instagram.PushClient.StartFresh();
-                }
-                else
-                {
-                    var socket = details.SocketInformation.StreamSocket;
-                    await instagram.PushClient.StartWithExistingSocket(socket);
+                    case SocketActivityTriggerReason.None:
+                    {
+                        var socket = details.SocketInformation.StreamSocket;
+                        if (socket == null) return;
+                        await socket.CancelIOAsync();
+                        socket.TransferOwnership(
+                            PushClient.SOCKET_ID,
+                            null,
+                            TimeSpan.FromSeconds(900 - 60));
+                        return;
+                    }
+                    case SocketActivityTriggerReason.SocketClosed:
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(5));
+                        if (!await Utils.TryAcquireSyncLock())
+                        {
+                            this.Log("Failed to open SyncLock file after extended wait. Main application might be running. Exit background task.");
+                            return;
+                        }
+                        await instagram.PushClient.StartFresh();
+                        break;
+                    }
+                    default:
+                    {
+                        var socket = details.SocketInformation.StreamSocket;
+                        instagram.PushClient.StartWithExistingSocket(socket);
+                        break;
+                    }
                 }
                 await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
                 instagram.PushClient.ConnectionData.SaveToAppSettings();
@@ -45,8 +71,8 @@ namespace BackgroundPushClient
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
-                Debug.WriteLine($"{typeof(SocketActivity).FullName}: Can't finish push cycle. Abort.");
+                DebugLogger.LogException(e);
+                this.Log($"{typeof(SocketActivity).FullName}: Can't finish push cycle. Abort.");
             }
             finally
             {

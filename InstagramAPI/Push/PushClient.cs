@@ -25,13 +25,14 @@ namespace InstagramAPI.Push
         public event EventHandler<PushReceivedEventArgs> MessageReceived;
         public FbnsConnectionData ConnectionData { get; } = new FbnsConnectionData();
         public StreamSocket Socket { get; private set; }
+        public bool Running => !(_runningTokenSource?.IsCancellationRequested ?? true);
 
         private const string HOST_NAME = "mqtt-mini.facebook.com";
         private const string BACKGROUND_SOCKET_ACTIVITY_NAME = "BackgroundPushClient.SocketActivity";
         private const string BACKGROUND_INTERNET_AVAILABLE_NAME = "BackgroundPushClient.InternetAvailable";
         private const string SOCKET_ACTIVITY_ENTRY_POINT = "BackgroundPushClient.SocketActivity";
         private const string INTERNET_AVAILABLE_ENTRY_POINT = "BackgroundPushClient.InternetAvailable";
-        private const string SOCKET_ID = "mqtt_fbns";
+        public const string SOCKET_ID = "mqtt_fbns";
 
         private IBackgroundTaskRegistration _socketActivityTask;
         private IBackgroundTaskRegistration _internetAvailableTask;
@@ -43,7 +44,6 @@ namespace InstagramAPI.Push
         private DataReader _inboundReader;
         private DataWriter _outboundWriter;
         private readonly Instagram _instaApi;
-        private bool RunningAndReadable => !(_runningTokenSource?.IsCancellationRequested ?? true) && _inboundReader != null;
 
         public PushClient(Instagram api, bool tryLoadData = true)
         {
@@ -58,12 +58,14 @@ namespace InstagramAPI.Push
             if (string.IsNullOrEmpty(ConnectionData.UserAgent))
                 ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(api.Device);
 
-            NetworkInformation.NetworkStatusChanged += async sender =>
-            {
-                var internetProfile = NetworkInformation.GetInternetConnectionProfile();
-                if (internetProfile == null || (_runningTokenSource?.IsCancellationRequested ?? true)) return;
-                await StartFresh();
-            };
+            NetworkInformation.NetworkStatusChanged += OnNetworkStatusChanged;
+        }
+
+        private async void OnNetworkStatusChanged(object sender)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            if (!Instagram.InternetAvailable() || Running) return;
+            await StartFresh();
         }
 
         public void UnregisterTasks()
@@ -82,38 +84,48 @@ namespace InstagramAPI.Push
             }
         }
 
+        public bool TryRegisterBackgroundTaskOnce(string name, string entryPoint, IBackgroundTrigger trigger, out IBackgroundTaskRegistration registeredTask)
+        {
+            foreach (var task in BackgroundTaskRegistration.AllTasks)
+            {
+                if (task.Value.Name == name)
+                {
+                    registeredTask = task.Value;
+                    return true;
+                }
+            }
+            var taskBuilder = new BackgroundTaskBuilder
+            {
+                Name = name,
+                TaskEntryPoint = entryPoint
+            };
+            taskBuilder.SetTrigger(trigger);
+            try
+            {
+                registeredTask = taskBuilder.Register();
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+                registeredTask = null;
+                return false;
+            }
+
+            return true;
+        }
+
         private async Task<bool> RequestBackgroundAccess()
         {
-            UnregisterTasks();
-
             var permissionResult = await BackgroundExecutionManager.RequestAccessAsync();
             if (permissionResult == BackgroundAccessStatus.DeniedByUser ||
                 permissionResult == BackgroundAccessStatus.DeniedBySystemPolicy ||
                 permissionResult == BackgroundAccessStatus.Unspecified)
                 return false;
-            var activityTaskBuilder = new BackgroundTaskBuilder
-            {
-                Name = BACKGROUND_SOCKET_ACTIVITY_NAME,
-                TaskEntryPoint = SOCKET_ACTIVITY_ENTRY_POINT
-            };
-            activityTaskBuilder.SetTrigger(new SocketActivityTrigger());
-
-            var internetAvailTaskBuilder = new BackgroundTaskBuilder
-            {
-                Name = INTERNET_AVAILABLE_ENTRY_POINT,
-                TaskEntryPoint = INTERNET_AVAILABLE_ENTRY_POINT
-            };
-            internetAvailTaskBuilder.SetTrigger(new SystemTrigger(SystemTriggerType.InternetAvailable, false));
-            try
-            {
-                _socketActivityTask = activityTaskBuilder.Register();
-                _internetAvailableTask = internetAvailTaskBuilder.Register();
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-            return true;
+            var activityTaskRegistered = TryRegisterBackgroundTaskOnce(BACKGROUND_SOCKET_ACTIVITY_NAME, SOCKET_ACTIVITY_ENTRY_POINT,
+                new SocketActivityTrigger(), out _socketActivityTask);
+            //var internetTaskRegistered = TryRegisterBackgroundTaskOnce(BACKGROUND_INTERNET_AVAILABLE_NAME, INTERNET_AVAILABLE_ENTRY_POINT,
+            //    new SystemTrigger(SystemTriggerType.InternetAvailable, false), out _internetAvailableTask);
+            return activityTaskRegistered;
         }
 
         /// <summary>
@@ -122,7 +134,7 @@ namespace InstagramAPI.Push
         /// </summary>
         public async Task TransferPushSocket(bool ping = true)
         {
-            if (!_instaApi.IsUserAuthenticated || (_runningTokenSource?.IsCancellationRequested ?? true)) return;
+            if (!_instaApi.IsUserAuthenticated || !Running) return;
 
             // Hand over MQTT socket to socket broker
             this.Log("Transferring sockets");
@@ -141,7 +153,7 @@ namespace InstagramAPI.Push
 
         public async void Start()
         {
-            if (!_instaApi.IsUserAuthenticated) return;
+            if (!_instaApi.IsUserAuthenticated || Running) return;
             try
             {
                 if (SocketActivityInformation.AllSockets.TryGetValue(SOCKET_ID, out var socketInformation))
@@ -150,7 +162,7 @@ namespace InstagramAPI.Push
                     if (string.IsNullOrEmpty(ConnectionData.FbnsToken)) // if we don't have any push data, start fresh
                         await StartFresh().ConfigureAwait(false);
                     else
-                        await StartWithExistingSocket(socket).ConfigureAwait(false);
+                        StartWithExistingSocket(socket);
                 }
                 else
                 {
@@ -163,15 +175,12 @@ namespace InstagramAPI.Push
             }
         }
 
-        public async Task StartWithExistingSocket(StreamSocket socket)
+        public void StartWithExistingSocket(StreamSocket socket)
         {
             try
             {
                 this.Log("Starting with existing socket");
-                if (RunningAndReadable)
-                {
-                    Shutdown();
-                }
+                if (Running) Shutdown();
                 Socket = socket;
                 _inboundReader = new DataReader(socket.InputStream);
                 _outboundWriter = new DataWriter(socket.OutputStream);
@@ -181,7 +190,6 @@ namespace InstagramAPI.Push
                 _runningTokenSource = new CancellationTokenSource();
                 
                 StartPollingLoop();
-                await SendPing().ConfigureAwait(false);
                 StartKeepAliveLoop();
             }
             catch (Exception e)
@@ -195,10 +203,7 @@ namespace InstagramAPI.Push
             try
             {
                 this.Log("Starting fresh");
-                if (RunningAndReadable)
-                {
-                    Shutdown();
-                }
+                if (Running) Shutdown();
 
                 var connectPacket = new FbnsConnectPacket
                 {
@@ -257,6 +262,7 @@ namespace InstagramAPI.Push
 
         public void Shutdown()
         {
+            NetworkInformation.NetworkStatusChanged -= OnNetworkStatusChanged;
             _runningTokenSource?.Cancel();
             _outboundWriter?.DetachStream();
             _outboundWriter?.Dispose();
@@ -265,7 +271,7 @@ namespace InstagramAPI.Push
 
         private async void StartPollingLoop()
         {
-            while (RunningAndReadable)
+            while (Running)
             {
                 var reader = _inboundReader;
                 Packet packet;
@@ -277,11 +283,12 @@ namespace InstagramAPI.Push
                 catch (Exception e)
                 {
                     // If client is still active then retry
-                    if (RunningAndReadable)
+                    if (Running)
                     {
                         DebugLogger.LogException(e);
-                        await Task.Delay(TimeSpan.FromSeconds(1));
-                        await StartFresh();
+                        Shutdown();
+                        //await Task.Delay(TimeSpan.FromSeconds(1));
+                        //await StartFresh();
                     }
                     return;
                 }
@@ -294,7 +301,7 @@ namespace InstagramAPI.Push
             try
             {
                 var packet = PingReqPacket.Instance;
-                if (_runningTokenSource?.IsCancellationRequested ?? true) return;
+                if (!Running) return;
                 await FbnsPacketEncoder.EncodePacket(packet, _outboundWriter);
                 this.Log("Pinging Push server");
             }
@@ -313,7 +320,7 @@ namespace InstagramAPI.Push
 
         private async Task OnPacketReceived(Packet msg)
         {
-            if (_runningTokenSource.IsCancellationRequested) return;
+            if (!Running) return;
             var writer = _outboundWriter;
             try
             {
@@ -466,7 +473,7 @@ namespace InstagramAPI.Push
 
             // Send PUBLISH packet then wait for PUBACK
             // Retry after TIMEOUT seconds
-            if (_runningTokenSource.IsCancellationRequested) return;
+            if (!Running) return;
             try
             {
                 await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
@@ -490,10 +497,9 @@ namespace InstagramAPI.Push
 
         private async void StartKeepAliveLoop()
         {
-            if (_runningTokenSource == null) return;
             try
             {
-                while (!_runningTokenSource.IsCancellationRequested)
+                while (Running)
                 {
                     await SendPing();
                     await Task.Delay(TimeSpan.FromSeconds(KEEP_ALIVE - 60), _runningTokenSource.Token);

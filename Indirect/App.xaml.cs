@@ -4,6 +4,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
+using Windows.Storage;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -14,7 +15,6 @@ using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp.UI;
-using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 
 namespace Indirect
 {
@@ -23,8 +23,8 @@ namespace Indirect
     /// </summary>
     sealed partial class App : Application
     {
-        private readonly Windows.Storage.ApplicationDataContainer _localSettings =
-            Windows.Storage.ApplicationData.Current.LocalSettings;
+        private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
+        private readonly ApiContainer _viewModel = ApiContainer.Instance;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -74,8 +74,9 @@ namespace Indirect
             OnLaunchedOrActivated(e);
         }
 
-        private void OnLaunchedOrActivated(IActivatedEventArgs e)
+        private async void OnLaunchedOrActivated(IActivatedEventArgs e)
         {
+            await _viewModel.TryAcquireSyncLock();
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(380,300));
             Frame rootFrame = Window.Current.Content as Frame;
             var titleBar = ApplicationView.GetForCurrentView().TitleBar;
@@ -130,14 +131,14 @@ namespace Indirect
         /// <param name="e">Details about the suspend request.</param>
         private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
-            var viewModel = ApiContainer.Instance;
-            if (!viewModel.IsUserAuthenticated) return;
+            if (!_viewModel.IsUserAuthenticated) return;
             var deferral = e.SuspendingOperation.GetDeferral();
             try
             {
-                viewModel.ReelsFeed.StopReelsFeedUpdateLoop();
-                viewModel.SyncClient.Shutdown();    // Shutdown cleanly is not important here.
-                await viewModel.PushClient.TransferPushSocket();    // Has to wait for Dotnetty to shutdown
+                _viewModel.ReelsFeed.StopReelsFeedUpdateLoop();
+                _viewModel.SyncClient.Shutdown();    // Shutdown cleanly is not important here.
+                await _viewModel.PushClient.TransferPushSocket();    // Has to wait for Dotnetty to shutdown
+                _viewModel.ReleaseSyncLock();
             }
             catch (Exception exception)
             {
@@ -151,6 +152,7 @@ namespace Indirect
 
         private async void OnResuming(object sender, object e)
         {
+            await _viewModel.TryAcquireSyncLock();
             var viewModel = ApiContainer.Instance;
             viewModel.PushClient.Start();
             await viewModel.SyncClient.Start(viewModel.Inbox.SeqId, viewModel.Inbox.SnapshotAt);

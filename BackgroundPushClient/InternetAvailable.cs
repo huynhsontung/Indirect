@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using InstagramAPI;
+using InstagramAPI.Utils;
 
 namespace BackgroundPushClient
 {
@@ -13,6 +13,12 @@ namespace BackgroundPushClient
             var deferral = taskInstance.GetDeferral();
             try
             {
+                this.Log("Internet available background task triggered");
+                if (!await Utils.TryAcquireSyncLock())
+                {
+                    this.Log("Failed to open SyncLock file. Main application might be running. Exit background task.");
+                    return;
+                }
                 var instagram = Instagram.Instance;
                 instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
                 await instagram.PushClient.StartFresh();
@@ -23,8 +29,8 @@ namespace BackgroundPushClient
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
-                Debug.WriteLine($"{typeof(InternetAvailable).FullName}: Can't finish push cycle. Abort.");
+                DebugLogger.LogException(e);
+                this.Log($"{typeof(InternetAvailable).FullName}: Can't finish push cycle. Abort.");
             }
             finally
             {

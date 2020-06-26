@@ -3,34 +3,27 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Storage;
-using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media.Imaging;
-using Indirect.Utilities;
 using Indirect.Wrapper;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Direct;
-using InstagramAPI.Classes.Media;
-using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
 using InstagramAPI.Sync;
 using InstagramAPI.Utils;
-using Microsoft.AppCenter.Crashes;
-using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.UI;
-using Buffer = Windows.Storage.Streams.Buffer;
 
 namespace Indirect
 {
@@ -52,9 +45,11 @@ namespace Indirect
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
         private CancellationTokenSource _searchCancellationToken;
         private InstaDirectInboxThreadWrapper _selectedThread;
+        private FileStream _lockFile;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public bool BackgroundSyncLocked => _lockFile != null;
         public PushClient PushClient => _instaApi.PushClient;
         public SyncClient SyncClient => _instaApi.SyncClient;
 
@@ -468,6 +463,36 @@ namespace Indirect
         public void Dispose()
         {
             _searchCancellationToken?.Dispose();
+            ReleaseSyncLock();
+        }
+
+        internal async Task<bool> TryAcquireSyncLock()
+        {
+            if (BackgroundSyncLocked) return true;
+            var storageFolder = ApplicationData.Current.LocalFolder;
+            var storageItem = await storageFolder.CreateFileAsync("SyncLock.mutex", CreationCollisionOption.OpenIfExists);
+            try
+            {
+                _lockFile = new FileStream(storageItem.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        internal void ReleaseSyncLock()
+        {
+            try
+            {
+                _lockFile?.Dispose();
+                _lockFile = null;
+            }
+            catch (Exception)
+            {
+                // pass
+            }
         }
     }
 }
