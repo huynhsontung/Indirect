@@ -136,6 +136,7 @@ namespace InstagramAPI.Push
                 SOCKET_ID,
                 null,
                 TimeSpan.FromSeconds(KEEP_ALIVE - 60));
+            Socket.Dispose();
         }
 
         public async void Start()
@@ -251,6 +252,7 @@ namespace InstagramAPI.Push
         {
             NetworkInformation.NetworkStatusChanged -= OnNetworkStatusChanged;
             _runningTokenSource?.Cancel();
+            _inboundReader?.Dispose();
             _outboundWriter?.DetachStream();
             _outboundWriter?.Dispose();
             this.Log("Stopped pinging push server");

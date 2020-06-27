@@ -137,7 +137,7 @@ namespace Indirect
             {
                 _viewModel.ReelsFeed.StopReelsFeedUpdateLoop();
                 _viewModel.SyncClient.Shutdown();    // Shutdown cleanly is not important here.
-                await _viewModel.PushClient.TransferPushSocket();    // Has to wait for Dotnetty to shutdown
+                await _viewModel.PushClient.TransferPushSocket();
                 _viewModel.ReleaseSyncLock();
             }
             catch (Exception exception)

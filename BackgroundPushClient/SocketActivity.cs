@@ -9,44 +9,38 @@ using InstagramAPI.Utils;
 
 namespace BackgroundPushClient
 {
-    /// <summary>
-    /// A more compact version of InstantMessaging.Notification.PushClient including <see cref="HttpRequestProcessor"/>
-    /// </summary>
     public sealed class SocketActivity : IBackgroundTask
     {
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
             var deferral = taskInstance.GetDeferral();
+            this.Log("-------------- Start of background task --------------");
             try
             {
                 var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
                 this.Log($"{details.Reason}");
-                if (!await Utils.TryAcquireSyncLock())
-                {
-                    this.Log("Failed to open SyncLock file. Main application might be running. Exit background task.");
-                    return;
-                }
                 var internetProfile = NetworkInformation.GetInternetConnectionProfile();
                 if (internetProfile == null)
                 {
                     this.Log("No internet. Stop.");
                     return;
                 }
+                if (!await Utils.TryAcquireSyncLock())
+                {
+                    this.Log("Failed to open SyncLock file. Main application might be running. Exit background task.");
+                    var socket = details.SocketInformation.StreamSocket;
+                    if (socket == null) return;
+                    await socket.CancelIOAsync();
+                    socket.TransferOwnership(
+                        PushClient.SOCKET_ID,
+                        null,
+                        TimeSpan.FromSeconds(PushClient.KEEP_ALIVE - 60));
+                    return;
+                }
                 var instagram = Instagram.Instance;
                 instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
                 switch (details.Reason)
                 {
-                    case SocketActivityTriggerReason.None:
-                    {
-                        var socket = details.SocketInformation.StreamSocket;
-                        if (socket == null) return;
-                        await socket.CancelIOAsync();
-                        socket.TransferOwnership(
-                            PushClient.SOCKET_ID,
-                            null,
-                            TimeSpan.FromSeconds(900 - 60));
-                        return;
-                    }
                     case SocketActivityTriggerReason.SocketClosed:
                     {
                         await Task.Delay(TimeSpan.FromSeconds(5));
@@ -67,7 +61,7 @@ namespace BackgroundPushClient
                 }
                 await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
                 instagram.PushClient.ConnectionData.SaveToAppSettings();
-                await instagram.PushClient.TransferPushSocket();
+                await instagram.PushClient.TransferPushSocket(false);
             }
             catch (Exception e)
             {
@@ -76,6 +70,7 @@ namespace BackgroundPushClient
             }
             finally
             {
+                this.Log("-------------- End of background task --------------");
                 deferral.Complete();
             }
         }
