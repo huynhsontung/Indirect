@@ -337,7 +337,7 @@ namespace InstagramAPI.Sync
                     await ws.OutputStream.WriteAsync(pingBuffer);
                     await ws.OutputStream.FlushAsync();
                 }
-                catch (TaskCanceledException)
+                catch (Exception)
                 {
                     this.Log("Stopped pinging sync server");
                     return;
