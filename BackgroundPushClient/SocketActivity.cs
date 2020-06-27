@@ -28,6 +28,7 @@ namespace BackgroundPushClient
                 if (!await Utils.TryAcquireSyncLock())
                 {
                     this.Log("Failed to open SyncLock file. Main application might be running. Exit background task.");
+                    if (details.Reason == SocketActivityTriggerReason.SocketClosed) return;
                     var socket = details.SocketInformation.StreamSocket;
                     if (socket == null) return;
                     await socket.CancelIOAsync();

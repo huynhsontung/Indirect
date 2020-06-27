@@ -168,7 +168,7 @@ namespace InstagramAPI.Push
             try
             {
                 this.Log("Starting with existing socket");
-                if (Running) Shutdown();
+                if (Running) throw new Exception("Push client is already running");
                 Socket = socket;
                 _inboundReader = new DataReader(socket.InputStream);
                 _outboundWriter = new DataWriter(socket.OutputStream);
@@ -188,74 +188,92 @@ namespace InstagramAPI.Push
 
         public async Task StartFresh()
         {
-            try
+            this.Log("Starting fresh");
+            if (!Instagram.InternetAvailable())
             {
-                this.Log("Starting fresh");
-                if (Running) Shutdown();
+                this.Log("Internet not available. Exiting.");
+                return;
+            }
 
-                var connectPacket = new FbnsConnectPacket
-                {
-                    Payload = await PayloadProcessor.BuildPayload(ConnectionData)
-                };
+            if (Running) throw new Exception("Push client is already running");
+            var connectPacket = new FbnsConnectPacket
+            {
+                Payload = await PayloadProcessor.BuildPayload(ConnectionData)
+            };
 
-                Socket = new StreamSocket();
-                Socket.Control.KeepAlive = true;
-                Socket.Control.NoDelay = true;
-                if (await RequestBackgroundAccess())
+            Socket = new StreamSocket();
+            Socket.Control.KeepAlive = true;
+            Socket.Control.NoDelay = true;
+            if (await RequestBackgroundAccess())
+            {
+                try
                 {
+                    Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
+                }
+                catch (Exception connectedStandby)
+                {
+                    this.Log(connectedStandby);
+                    this.Log("Connected standby not available");
                     try
                     {
-                        Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
+                        Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
                     }
-                    catch (Exception connectedStandby)
+                    catch (Exception e)
                     {
-                        this.Log(connectedStandby);
-                        this.Log("Connected standby not available");
-                        try
-                        {
-                            Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
-                        }
-                        catch (Exception e)
-                        {
-                            DebugLogger.LogException(e);
-                            this.Log("Failed to transfer socket completely!");
-                            return;
-                        }
+                        DebugLogger.LogException(e);
+                        this.Log("Failed to transfer socket completely!");
+                        return;
                     }
                 }
-                else
-                {
-                    // if cannot get background access then there is no point of running push client
-                    return;
-                }
+            }
+            else
+            {
+                // if cannot get background access then there is no point of running push client
+                return;
+            }
 
+            try
+            {
                 await Socket.ConnectAsync(new HostName(HOST_NAME), "443", SocketProtectionLevel.Tls12);
-
                 _inboundReader = new DataReader(Socket.InputStream);
                 _outboundWriter = new DataWriter(Socket.OutputStream);
                 _inboundReader.ByteOrder = ByteOrder.BigEndian;
                 _inboundReader.InputStreamOptions = InputStreamOptions.Partial;
                 _outboundWriter.ByteOrder = ByteOrder.BigEndian;
                 _runningTokenSource = new CancellationTokenSource();
-
                 await FbnsPacketEncoder.EncodePacket(connectPacket, _outboundWriter);
-                StartPollingLoop();
             }
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
+                Restart();
+                return;
             }
-            
+            StartPollingLoop();
         }
 
         public void Shutdown()
         {
+            this.Log("Stopping push server");
             NetworkInformation.NetworkStatusChanged -= OnNetworkStatusChanged;
             _runningTokenSource?.Cancel();
             _inboundReader?.Dispose();
             _outboundWriter?.DetachStream();
             _outboundWriter?.Dispose();
-            this.Log("Stopped pinging push server");
+        }
+
+        private async void Restart()
+        {
+            this.Log("Restarting push server");
+            NetworkInformation.NetworkStatusChanged -= OnNetworkStatusChanged;
+            _runningTokenSource?.Cancel();
+            _inboundReader?.Dispose();
+            _outboundWriter?.DetachStream();
+            _outboundWriter?.Dispose();
+            await Task.Delay(TimeSpan.FromSeconds(3));
+            if (Running) return;
+            await StartFresh();
+            NetworkInformation.NetworkStatusChanged += OnNetworkStatusChanged;
         }
 
         private async void StartPollingLoop()
@@ -274,7 +292,7 @@ namespace InstagramAPI.Push
                     if (Running)
                     {
                         DebugLogger.LogException(e);
-                        Shutdown();
+                        Restart();
                     }
                     return;
                 }
