@@ -203,10 +203,7 @@ namespace Indirect.Controls
                     };
                     _ = dialog.ShowAsync();
                 }
-                else
-                {
-                    ViewModel.UpdateInboxAndSelectedThread();
-                }
+                // Rely on sync client for update
             }
 
             if (FilePickerPreview.Source is StorageFile file)
