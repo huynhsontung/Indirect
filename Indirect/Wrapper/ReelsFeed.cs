@@ -16,7 +16,7 @@ namespace Indirect.Wrapper
 {
     class ReelsFeed
     {
-        public readonly ObservableCollection<Reel> Reels = new ObservableCollection<Reel>();
+        public readonly ObservableCollection<ReelWrapper> Reels = new ObservableCollection<ReelWrapper>();
 
         private CancellationTokenSource _reelsUpdateLoop;
         private bool _justUpdated;
@@ -79,11 +79,11 @@ namespace Indirect.Wrapper
                         PropertyCopier<Reel, Reel>.Copy(reel, equivalent);
                         if (i == equivalentIndex) continue;
                         Reels.RemoveAt(equivalentIndex);
-                        Reels.Insert(i > Reels.Count ? Reels.Count : i, equivalent);
+                        Reels.Insert(i > Reels.Count ? Reels.Count : i, new ReelWrapper(equivalent));
                     }
                     else
                     {
-                        Reels.Insert(i > Reels.Count ? Reels.Count : i, reel);
+                        Reels.Insert(i > Reels.Count ? Reels.Count : i, new ReelWrapper(reel));
                     }
                 }
             }

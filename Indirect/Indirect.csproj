@@ -209,6 +209,7 @@
     <Compile Include="Wrapper\ReelsFeed.cs" />
     <Compile Include="Wrapper\ReelsWrapper.cs" />
     <Compile Include="Wrapper\ReelItemWrapper.cs" />
+    <Compile Include="Wrapper\ReelWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

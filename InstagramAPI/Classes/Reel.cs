@@ -76,6 +76,8 @@ namespace InstagramAPI.Classes
         [JsonProperty("is_cacheable", NullValueHandling = NullValueHandling.Ignore)]
         public bool? IsCacheable { get; set; }
 
+        [JsonIgnore] public bool HasUnseenItems => Seen != LatestReelMedia;
+
         public bool Equals(Reel other)
         {
             return Id == other?.Id;

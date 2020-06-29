@@ -17,11 +17,11 @@ namespace Indirect.Wrapper
         public ObservableCollection<ReelItemWrapper> Items { get; } = new ObservableCollection<ReelItemWrapper>();
         public List<long> UserOrder { get; } = new List<long>();
 
-        private readonly Dictionary<long, Reel> _userReelsDictionary = new Dictionary<long, Reel>();
+        private readonly Dictionary<long, ReelWrapper> _userReelsDictionary = new Dictionary<long, ReelWrapper>();
         private int _userIndex;
         private bool _loaded;
 
-        public ReelsWrapper(ICollection<Reel> initialReels, int selected)
+        public ReelsWrapper(ICollection<ReelWrapper> initialReels, int selected)
         {
             if (initialReels.Count == 0)
                 throw new ArgumentException("Initial reels has to have at least 1 item.", nameof(initialReels));
@@ -143,6 +143,7 @@ namespace Indirect.Wrapper
             if (story.Parent.Seen != null && story.Parent.Seen >= story.TakenAt) return;
             await Instagram.Instance.MarkStorySeenAsync(story.Id, story.User.Pk, story.TakenAt ?? DateTimeOffset.Now);
             story.Parent.Seen = story.TakenAt;
+            story.Parent.OnSeenChanged();
         }
 
         private async Task FetchStories(params long[] users)
@@ -159,7 +160,7 @@ namespace Indirect.Wrapper
                     }
                     else
                     {
-                        _userReelsDictionary[userId] = reel;
+                        _userReelsDictionary[userId] = new ReelWrapper(reel);
                     }
                 }
             }

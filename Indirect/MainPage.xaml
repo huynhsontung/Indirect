@@ -36,6 +36,7 @@
             <converters:EqualityConverter x:Key="DisableWhenEqualZero" ReferenceValue="0" Invert="True"/>
             <converters:EqualityConverter x:Key="DisableWhenEqual32" ReferenceValue="32" Invert="True"/>
             <converters:VisibleWhenZeroConverter x:Key="VisibleWhenNotZeroConverter" Invert="True"/>
+            <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
         </ResourceDictionary>
     </Page.Resources>
 
@@ -128,13 +129,29 @@
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="classes:Reel">
-                                <StackPanel Orientation="Vertical" Width="50" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,8">
-                                    <controls:ImageEx Source="{x:Bind User.ProfilePictureUrl}" 
-                                                          Width="46" Height="46" CornerRadius="99"
-                                                          HorizontalAlignment="Center"/>
-                                    <TextBlock Text="{x:Bind User.Username}" Style="{ThemeResource FluentCaptionTextStyle}" MaxWidth="50" HorizontalAlignment="Center"/>
-                                </StackPanel>
+                            <DataTemplate x:DataType="wrapper:ReelWrapper">
+                                <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <controls:ImageEx Grid.Row="0"
+                                                      Source="{x:Bind User.ProfilePictureUrl}" 
+                                                      Width="46" Height="46" CornerRadius="99"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Border Grid.Row="0" Width="48" Height="48" BorderThickness="2" CornerRadius="99"
+                                            Visibility="{x:Bind HasUnseenItems, Mode=OneWay, Converter={StaticResource BooleanVisibilityConverter}}">
+                                        <Border.BorderBrush>
+                                            <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
+                                                <GradientStop Color="#962fbf" Offset="0"/>
+                                                <GradientStop Color="#d62976" Offset="0.5"/>
+                                                <GradientStop Color="#feda75" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.BorderBrush>
+                                    </Border>
+                                    <TextBlock Grid.Row="1" Text="{x:Bind User.Username}" 
+                                               Style="{ThemeResource FluentCaptionTextStyle}" MaxWidth="50" HorizontalAlignment="Center"/>
+                                </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>

@@ -15,7 +15,7 @@ namespace Indirect.Wrapper
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public Reel Parent { get; }
+        public ReelWrapper Parent { get; }
 
         private string _draftMessage;
         public string DraftMessage
@@ -28,7 +28,7 @@ namespace Indirect.Wrapper
             }
         }
 
-        public ReelItemWrapper(ReelMedia source, Reel parent)
+        public ReelItemWrapper(ReelMedia source, ReelWrapper parent)
         {
             PropertyCopier<ReelMedia, ReelItemWrapper>.Copy(source, this);
             Parent = parent;
