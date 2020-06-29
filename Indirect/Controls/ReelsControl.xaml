@@ -70,7 +70,13 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <ProgressBar x:Name="ReelsProgressBar" Grid.Row="0" Canvas.ZIndex="1" Opacity="0.3" HorizontalAlignment="Stretch"/>
-        <Grid Grid.Row="1" Canvas.ZIndex="1" Background="Transparent">
+        <Grid Grid.Row="1" Canvas.ZIndex="1">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="{StaticResource SystemAltMediumLowColor}" Offset="0.0"/>
+                    <GradientStop Color="{ThemeResource TintedTransparent}" Offset="1.0"/>
+                </LinearGradientBrush>
+            </Grid.Background>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>

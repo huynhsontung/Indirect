@@ -18,12 +18,14 @@
                         <Setter Property="PlaceholderSource" Value="Assets/ProfilePicturePlaceholder.jpg"/>
                     </Style>
                     <SolidColorBrush x:Key="MainBackground" Color="#fafafa"/>
+                    <Color x:Key="TintedTransparent">#00FFFFFF</Color>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <Style x:Key="ProfilePicturePlaceholderStyle" TargetType="controls:ImageEx">
                         <Setter Property="PlaceholderSource" Value="Assets/ProfilePicturePlaceholder-Dark.jpg"/>
                     </Style>
                     <SolidColorBrush x:Key="MainBackground" Color="#1a1a1a"/>
+                    <Color x:Key="TintedTransparent">#00000000</Color>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
