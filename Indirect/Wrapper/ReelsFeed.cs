@@ -89,15 +89,15 @@ namespace Indirect.Wrapper
             }
         }
 
-        public async Task<ReelsWrapper> PrepareReelsWrapper(int selectedIndex)
+        public async Task<FlatReelsContainer> PrepareFlatReelsContainer(int selectedIndex)
         {
-            ReelsWrapper reelsWrapper;
+            FlatReelsContainer flatReelsContainer;
             lock (Reels)
             {
-                reelsWrapper = new ReelsWrapper(Reels, selectedIndex);
+                flatReelsContainer = new FlatReelsContainer(Reels, selectedIndex);
             }
-            await reelsWrapper.UpdateUserIndex(selectedIndex);
-            return reelsWrapper;
+            await flatReelsContainer.UpdateUserIndex(selectedIndex);
+            return flatReelsContainer;
         }
 
         public async void StartReelsFeedUpdateLoop()

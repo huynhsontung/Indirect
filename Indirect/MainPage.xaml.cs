@@ -312,7 +312,7 @@ namespace Indirect
         {
             var reelsFeed = (ListView) sender;
             if (reelsFeed.SelectedIndex == -1) return;
-            var reelsWrapper = await _viewModel.ReelsFeed.PrepareReelsWrapper(reelsFeed.SelectedIndex);
+            var reelsWrapper = await _viewModel.ReelsFeed.PrepareFlatReelsContainer(reelsFeed.SelectedIndex);
             OpenImmersiveView(reelsWrapper);
             reelsFeed.SelectedIndex = -1;
         }

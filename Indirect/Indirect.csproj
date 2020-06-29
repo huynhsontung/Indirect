@@ -207,7 +207,7 @@
     <Compile Include="Wrapper\InstaDirectInboxWrapper.cs" />
     <Compile Include="Wrapper\InstaDirectReactionsWrapper.cs" />
     <Compile Include="Wrapper\ReelsFeed.cs" />
-    <Compile Include="Wrapper\ReelsWrapper.cs" />
+    <Compile Include="Wrapper\FlatReelsContainer.cs" />
     <Compile Include="Wrapper\ReelItemWrapper.cs" />
     <Compile Include="Wrapper\ReelWrapper.cs" />
   </ItemGroup>

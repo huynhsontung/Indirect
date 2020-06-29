@@ -12,7 +12,7 @@ using InstagramAPI.Classes;
 
 namespace Indirect.Wrapper
 {
-    public class ReelsWrapper
+    public class FlatReelsContainer
     {
         public ObservableCollection<ReelItemWrapper> Items { get; } = new ObservableCollection<ReelItemWrapper>();
         public List<long> UserOrder { get; } = new List<long>();
@@ -21,7 +21,7 @@ namespace Indirect.Wrapper
         private int _userIndex;
         private bool _loaded;
 
-        public ReelsWrapper(ICollection<ReelWrapper> initialReels, int selected)
+        public FlatReelsContainer(ICollection<ReelWrapper> initialReels, int selected)
         {
             if (initialReels.Count == 0)
                 throw new ArgumentException("Initial reels has to have at least 1 item.", nameof(initialReels));

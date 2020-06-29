@@ -20,13 +20,13 @@ namespace Indirect.Controls
 
         public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
             nameof(Source),
-            typeof(ReelsWrapper),
+            typeof(FlatReelsContainer),
             typeof(ReelsControl),
             new PropertyMetadata(null));
 
-        public ReelsWrapper Source
+        public FlatReelsContainer Source
         {
-            get => (ReelsWrapper) GetValue(SourceProperty);
+            get => (FlatReelsContainer) GetValue(SourceProperty);
             set => SetValue(SourceProperty, value);
         }
 

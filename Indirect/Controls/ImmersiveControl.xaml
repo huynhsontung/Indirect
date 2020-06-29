@@ -40,7 +40,7 @@
                 </controls1:AutoVideoControl>
             </DataTemplate>
 
-            <DataTemplate x:Key="ReelView" x:DataType="wrapper:ReelsWrapper">
+            <DataTemplate x:Key="ReelView" x:DataType="wrapper:FlatReelsContainer">
                 <controls1:ReelsControl Source="{x:Bind Mode=OneWay}"/>
             </DataTemplate>
         </ResourceDictionary>

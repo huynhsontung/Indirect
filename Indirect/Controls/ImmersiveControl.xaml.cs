@@ -30,7 +30,7 @@ namespace Indirect.Controls
         {
             var view = (ImmersiveControl)d;
 
-            if (e.NewValue is ReelsWrapper reel && e.NewValue != null)
+            if (e.NewValue is FlatReelsContainer)
             {
                 view.PrepareReelView();
             }
