@@ -22,6 +22,7 @@ namespace Indirect
     public sealed partial class Login : Page
     {
         private ApiContainer _viewModel;
+        private bool _loading;
         public Login()
         {
             this.InitializeComponent();
@@ -31,6 +32,20 @@ namespace Indirect
             LoginWebview.Height = Window.Current.Bounds.Height * 0.8;
             WebviewPopup.VerticalOffset = -(LoginWebview.Height / 2);
             LoginWebview.NavigationStarting += LoginWebviewOnNavigationStarting;
+        }
+
+        private void DisableButtons()
+        {
+            _loading = true;
+            LoginButton.IsEnabled = false;
+            FbLoginButton.IsEnabled = false;
+        }
+
+        private void EnableButtons()
+        {
+            _loading = false;
+            LoginButton.IsEnabled = true;
+            FbLoginButton.IsEnabled = true;
         }
 
         private async void LoginWebviewOnNavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
@@ -46,7 +61,9 @@ namespace Indirect
             {
                 // Uri looks like this: https://www.instagram.com/accounts/signup/?#access_token=...
                 WebviewPopup.IsOpen = false;
-                FbLoginButton.IsEnabled = false;
+                
+                if (_loading) return;
+                DisableButtons();
                 try
                 {
                     var query = args.Uri.Fragment.Substring(1); // turn fragment into query (remove the '#')
@@ -55,7 +72,6 @@ namespace Indirect
                     if (string.IsNullOrEmpty(fbToken))
                     {
                         await ShowLoginErrorDialog("Failed to acquire access token");
-                        FbLoginButton.IsEnabled = true;
                         return;
                     }
 
@@ -70,7 +86,6 @@ namespace Indirect
                         {
                             await ShowLoginErrorDialog(result.Message);
                         }
-                        FbLoginButton.IsEnabled = true;
                         return;
                     }
 
@@ -81,6 +96,10 @@ namespace Indirect
                     await ShowLoginErrorDialog(
                         "Unexpected error occured while logging in with Facebook. Please try again later or log in with Instagram account instead.");
                     DebugLogger.LogException(e);
+                }
+                finally
+                {
+                    EnableButtons();
                 }
             }
         }
@@ -104,38 +123,48 @@ namespace Indirect
                 await TwoFactorAuthAsync();
                 return;
             }
-            LoginButton.IsEnabled = false;
-            var username = UsernameBox.Text;
-            var password = PasswordBox.Password;
-            if (username.Length <= 0 || password.Length <= 0)
+
+            if (_loading) return;
+            DisableButtons();
+            try
             {
-                LoginButton.IsEnabled = true;
-                return;
-            }
-            var result = await _viewModel.Login(username, password);
-            if (result.Status != ResultStatus.Succeeded || result.Value != LoginResult.Success)
-            {
-                switch (result.Value)
+                var username = UsernameBox.Text;
+                var password = PasswordBox.Password;
+                if (username.Length <= 0 || password.Length <= 0)
                 {
-                    case LoginResult.ChallengeRequired:
-                        if (Instagram.Instance.ChallengeInfo != null && !WebviewPopup.IsOpen)
-                        {
-                            LoginWebview.Navigate(Instagram.Instance.ChallengeInfo.Url);
-                            WebviewPopup.IsOpen = true;
-                        }
-                        break;
-                    case LoginResult.TwoFactorRequired:
-                        await TwoFactorAuthAsync();
-                        break;
-                    default:
-                        await ShowLoginErrorDialog(result.Message);
-                        break;
+                    return;
                 }
 
-                LoginButton.IsEnabled = true;
-                return;
+                var result = await _viewModel.Login(username, password);
+                if (result.Status != ResultStatus.Succeeded || result.Value != LoginResult.Success)
+                {
+                    switch (result.Value)
+                    {
+                        case LoginResult.ChallengeRequired:
+                            if (Instagram.Instance.ChallengeInfo != null && !WebviewPopup.IsOpen)
+                            {
+                                LoginWebview.Navigate(Instagram.Instance.ChallengeInfo.Url);
+                                WebviewPopup.IsOpen = true;
+                            }
+
+                            break;
+                        case LoginResult.TwoFactorRequired:
+                            await TwoFactorAuthAsync();
+                            break;
+                        default:
+                            await ShowLoginErrorDialog(result.Message);
+                            break;
+                    }
+
+                    return;
+                }
+
+                await TryNavigateToMainPage();
             }
-            await TryNavigateToMainPage();
+            finally
+            {
+                EnableButtons();
+            }
         }
 
         private async Task TwoFactorAuthAsync()

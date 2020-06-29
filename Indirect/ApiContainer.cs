@@ -230,7 +230,6 @@ namespace Indirect
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                Debug.WriteLine(e);
                 if (DateTimeOffset.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
                     UpdateInboxAndSelectedThread();
             }
