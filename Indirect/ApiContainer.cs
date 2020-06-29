@@ -179,6 +179,7 @@ namespace Indirect
                             var item = itemData.Item;
                             if (item.ItemType == DirectItemType.Placeholder)
                             {
+                                if (syncEvent.Realtime) await Task.Delay(1000);
                                 var result = await _instaApi.GetItemsInDirectThreadAsync(threadId, itemData.Item.ItemId);
                                 if (result.IsSucceeded && result.Value.Items.Count > 0) 
                                     item = result.Value.Items[0];
