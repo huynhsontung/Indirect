@@ -6,11 +6,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Indirect.Utilities;
 using InstagramAPI;
-using InstagramAPI.Classes.Story;
+using InstagramAPI.Classes;
+using InstagramAPI.Classes.Media;
 
 namespace Indirect.Wrapper
 {
-    public class StoryItemWrapper : StoryItem, INotifyPropertyChanged
+    public class ReelItemWrapper : ReelMedia, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -27,26 +28,19 @@ namespace Indirect.Wrapper
             }
         }
 
-        public StoryItemWrapper(StoryItem source, Reel parent)
+        public ReelItemWrapper(ReelMedia source, Reel parent)
         {
-            PropertyCopier<StoryItem, StoryItemWrapper>.Copy(source, this);
+            PropertyCopier<ReelMedia, ReelItemWrapper>.Copy(source, this);
             Parent = parent;
-        }
-
-        public Uri GetBestVideoResourceUri(VideoResource[] resources)
-        {
-            var main = resources.FirstOrDefault(x => x.Profile == VideoProfile.Main);
-            return main != null ? main.Src : resources.FirstOrDefault(x => x.Profile == VideoProfile.Baseline)?.Src;
         }
 
         public async Task Reply(string message)
         {
-            var userId = long.Parse(Owner.Id);
+            var userId = User.Pk;
             var resultThread = await Instagram.Instance.CreateGroupThreadAsync(new[] { userId });
             if (!resultThread.IsSucceeded) return;
             var thread = resultThread.Value;
-            var mediaId = Id + "_" + Owner.Id;
-            await Instagram.Instance.SendReelShareAsync(Owner.Id, mediaId, Typename, thread.ThreadId, message);
+            await Instagram.Instance.SendReelShareAsync(Parent.Id, Id, MediaType, thread.ThreadId, message);
         }
     }
 }

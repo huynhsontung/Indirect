@@ -7,10 +7,10 @@ using Newtonsoft.Json;
 namespace InstagramAPI.Classes.Media
 {
     [JsonConverter(typeof(JsonPathConverter))]
-    public partial class ReelMedia
+    public class ReelMedia
     {
         [JsonProperty("user")]
-        public BaseUser User { get; set; }
+        public BaseUser User { get; set; }  // Only contains Pk and IsPrivate
 
         [JsonProperty("expiring_at")]
         [JsonConverter(typeof(TimestampConverter))]
@@ -30,7 +30,7 @@ namespace InstagramAPI.Classes.Media
         public long? DeviceTimestamp { get; set; }
 
         [JsonProperty("media_type", NullValueHandling = NullValueHandling.Ignore)]
-        public long? MediaType { get; set; }
+        public ReelMediaType MediaType { get; set; }
 
         [JsonProperty("code", NullValueHandling = NullValueHandling.Ignore)]
         public string Code { get; set; }
@@ -42,7 +42,7 @@ namespace InstagramAPI.Classes.Media
         public long? FilterType { get; set; }
 
         [JsonProperty("image_versions2.candidates", NullValueHandling = NullValueHandling.Ignore)]
-        public List<InstaImage> Images { get; set; }
+        public InstaImage[] Images { get; set; }
 
         [JsonProperty("original_width", NullValueHandling = NullValueHandling.Ignore)]
         public int? OriginalWidth { get; set; }
@@ -115,12 +115,19 @@ namespace InstagramAPI.Classes.Media
         public DateTimeOffset? ImportedTakenAt { get; set; }
 
         [JsonProperty("video_versions", NullValueHandling = NullValueHandling.Ignore)]
-        public List<InstaVideo> VideoVersions { get; set; }
+        public InstaVideo[] VideoVersions { get; set; }
 
         [JsonProperty("has_audio", NullValueHandling = NullValueHandling.Ignore)]
         public bool? HasAudio { get; set; }
 
         [JsonProperty("video_duration", NullValueHandling = NullValueHandling.Ignore)]
         public double? VideoDuration { get; set; }
+    }
+
+    public enum ReelMediaType
+    {
+        Unknown = 0,
+        Image = 1,
+        Video = 2,
     }
 }

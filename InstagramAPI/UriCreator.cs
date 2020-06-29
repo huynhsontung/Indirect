@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using InstagramAPI.Classes.Story;
+using InstagramAPI.Classes.Media;
 
 namespace InstagramAPI
 {
@@ -133,9 +133,9 @@ namespace InstagramAPI
             return instaUri;
         }
 
-        public static Uri GetDirectReelShareUri(StoryItemType mediaType)
+        public static Uri GetDirectReelShareUri(ReelMediaType mediaType)
         {
-            var mediaTypeStr = mediaType == StoryItemType.GraphStoryVideo ? "video" : "image";
+            var mediaTypeStr = mediaType == ReelMediaType.Video ? "video" : "image";
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/broadcast/reel_share/?media_type={mediaTypeStr}", out var instaUri))
                 throw new Exception("Can't create URI for sending reel share");
             return instaUri; 
@@ -180,6 +180,20 @@ namespace InstagramAPI
         {
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/threads/broadcast/configure_video/", out var instaUri))
                 throw new Exception("Cant create URI for direct config video");
+            return instaUri;
+        }
+
+        public static Uri GetReelsTrayUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/feed/reels_tray/", out var instaUri))
+                throw new Exception("Cant create URI for getting reels tray");
+            return instaUri;
+        }
+
+        public static Uri GetReelsMediaUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/feed/reels_media/", out var instaUri))
+                throw new Exception("Cant create URI for getting reels media");
             return instaUri;
         }
 

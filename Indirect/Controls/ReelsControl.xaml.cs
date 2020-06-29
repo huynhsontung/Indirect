@@ -34,9 +34,9 @@ namespace Indirect.Controls
         {
             get
             {
-                var story = (StoryItemWrapper)StoryView.SelectedItem;
+                var story = (ReelItemWrapper)StoryView.SelectedItem;
                 if (story == null) return true;
-                return Source.UserOrder.IndexOf(story.Parent.Owner.Id) != 0;
+                return Source.UserOrder.IndexOf(story.Parent.User.Pk) != 0;
             }
         }
 
@@ -44,9 +44,9 @@ namespace Indirect.Controls
         {
             get
             {
-                var story = (StoryItemWrapper)StoryView.SelectedItem;
+                var story = (ReelItemWrapper)StoryView.SelectedItem;
                 if (story == null) return true;
-                return Source.UserOrder.LastIndexOf(story.Parent.Owner.Id) != Source.UserOrder.Count - 1;
+                return Source.UserOrder.LastIndexOf(story.Parent.User.Pk) != Source.UserOrder.Count - 1;
             }
         }
 
@@ -84,7 +84,7 @@ namespace Indirect.Controls
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            var story = (StoryItemWrapper) StoryView.SelectedItem;
+            var story = (ReelItemWrapper) StoryView.SelectedItem;
             var container = StoryView.ContainerFromItem(story) as FlipViewItem;
             var textBox = container.FindDescendant<TextBox>();
             if (string.IsNullOrEmpty(textBox?.Text) || story == null) return;
@@ -98,8 +98,8 @@ namespace Indirect.Controls
             var storyView = (FlipView)sender;
             Source?.OnSelectionChanged(storyView.SelectedIndex);
             //StoryViewOnLoadedAndOnSelectionChanged();
-            var previous = (StoryItemWrapper) e.RemovedItems.FirstOrDefault();
-            var selected = (StoryItemWrapper) e.AddedItems.FirstOrDefault();
+            var previous = (ReelItemWrapper) e.RemovedItems.FirstOrDefault();
+            var selected = (ReelItemWrapper) e.AddedItems.FirstOrDefault();
             var flipViewItem = storyView.ContainerFromItem(previous) as FlipViewItem;
             var element = flipViewItem?.ContentTemplateRoot as FrameworkElement;
             var autoVideo = element?.FindDescendant<AutoVideoControl>();
@@ -110,7 +110,7 @@ namespace Indirect.Controls
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MoreNextReels)));
         }
 
-        private void UpdateProgressBar(StoryItemWrapper selected, StoryItemWrapper previous)
+        private void UpdateProgressBar(ReelItemWrapper selected, ReelItemWrapper previous)
         {
             if (selected == null)
             {
@@ -165,7 +165,7 @@ namespace Indirect.Controls
         {
             if (!(Window.Current.Content is Frame frame)) return;
             if (!(frame.Content is MainPage mainPage)) return;
-            var owner = (StoryView.SelectedItem as StoryItemWrapper)?.Owner;
+            var owner = (StoryView.SelectedItem as ReelItemWrapper)?.Parent.User;
             if (owner != null && !string.IsNullOrEmpty(owner.Username))
                 ApiContainer.Instance.SearchWithoutThreads(owner.Username, async userList =>
                 {
@@ -182,25 +182,25 @@ namespace Indirect.Controls
             var items = Source?.Items;
             var selectedIndex = StoryView.SelectedIndex;
             if (items == null || selectedIndex == -1) return;
-            var userId = items[selectedIndex].Parent.Owner.Id;
+            var userId = items[selectedIndex].Parent.User.Pk;
             var previousReelIndex = -1;
             for (int i = selectedIndex; i >= 0; i--)
             {
-                if (userId == items[i].Parent.Owner.Id) continue;
+                if (userId == items[i].Parent.User.Pk) continue;
                 previousReelIndex = i;
-                userId = items[i].Parent.Owner.Id;
+                userId = items[i].Parent.User.Pk;
                 break;
             }
 
             // Getting to the start of the reel
             for (int i = previousReelIndex; i >= 0; i--)
             {
-                if (userId == items[i].Parent.Owner.Id && i == 0)
+                if (userId == items[i].Parent.User.Pk && i == 0)
                 {
                     previousReelIndex = 0;
                     break;
                 }
-                if (userId == items[i].Parent.Owner.Id) continue;
+                if (userId == items[i].Parent.User.Pk) continue;
                 previousReelIndex = i + 1;
                 break;
             }
@@ -216,11 +216,11 @@ namespace Indirect.Controls
             var items = Source?.Items;
             var selectedIndex = StoryView.SelectedIndex;
             if (items == null || selectedIndex == -1) return;
-            var userId = items[selectedIndex].Parent.Owner.Id;
+            var userId = items[selectedIndex].Parent.User.Pk;
             var nextReelIndex = -1;
             for (int i = selectedIndex; i < items.Count; i++)
             {
-                if (userId == items[i].Parent.Owner.Id) continue;
+                if (userId == items[i].Parent.User.Pk) continue;
                 nextReelIndex = i;
                 break;
             }

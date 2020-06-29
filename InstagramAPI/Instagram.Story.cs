@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Responses;
-using InstagramAPI.Classes.Story;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -14,24 +13,31 @@ namespace InstagramAPI
 {
     public partial class Instagram
     {
+        private const string ReelsCapabilities =
+            "[{\"name\":\"SUPPORTED_SDK_VERSIONS\",\"value\":\"66.0,67.0,68.0,69.0,70.0,71.0,72.0,73.0,74.0,75.0,76.0,77.0,78.0,79.0,80.0,81.0,82.0,83.0,84.0,85.0,86.0,87.0,88.0\"},{\"name\":\"FACE_TRACKER_VERSION\",\"value\":\"14\"},{\"name\":\"segmentation\",\"value\":\"segmentation_enabled\"},{\"name\":\"COMPRESSION\",\"value\":\"ETC2_COMPRESSION\"}]";
+
         public async Task<Result<Reel[]>> GetReelsTrayFeed()
         {
             ValidateLoggedIn();
             try
             {
-                const string queryHash = "04334405dbdef91f2c4e207b84c204d7";
-                const string variables =
-                    "{\"only_stories\":true,\"stories_prefetch\":true,\"stories_video_dash_manifest\":false}";
-                var uri = UriCreator.GetGraphQlUri(queryHash, variables);
-                var response = await _httpClient.GetAsync(uri);
+                var uri = UriCreator.GetReelsTrayUri();
+                var data = new Dictionary<string, string>
+                {
+                    {"supported_capabilities_new", ReelsCapabilities},
+                    {"reason", "cold_start"},    // this can be "cold_start", "warm_start_with_feed", or "pull_to_refresh"
+                    {"timezone_offset", ((int) DateTimeOffset.Now.Offset.TotalSeconds).ToString()},
+                    {"_csrftoken", Session.CsrfToken},
+                    {"_uuid", Device.Uuid.ToString()}
+                };
+                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
                 DebugLogger.LogResponse(response);
                 if (response.StatusCode != HttpStatusCode.Ok)
                     return Result<Reel[]>.Fail(json, response.ReasonPhrase);
                 var payload = JsonConvert.DeserializeObject<JObject>(json);
-                if (payload["status"].ToString() != "ok") return Result<Reel[]>.Fail(json);
-                var reelsJson = payload["data"]["user"]["feed_reels_tray"]["edge_reels_tray_to_reel"]["edges"];
-                var reels = reelsJson.Select(x => x["node"].ToObject<Reel>()).ToArray();
+                if (payload["status"]?.ToString() != "ok") return Result<Reel[]>.Fail(json);
+                var reels = payload["tray"].ToObject<Reel[]>();
                 return Result<Reel[]>.Success(reels, json);
             }
             catch (Exception e)
@@ -41,45 +47,45 @@ namespace InstagramAPI
             }
         }
 
-        public async Task<Result<Reel[]>> GetReels(ICollection<string> userIds)
+        public async Task<Result<Dictionary<long, Reel>>> GetReels(ICollection<long> userIds)
         {
             ValidateLoggedIn();
             try
             {
                 if (userIds == null || userIds.Count == 0) 
-                    return Result<Reel[]>.Fail(Array.Empty<Reel>(), "user ids is empty");
-                const string queryHash = "f5dc1457da7a4d3f88762dae127e0238";
-                var reelIds = new JArray(userIds);
-                var variables =
-                    $"{{\"reel_ids\": {reelIds.ToString(Formatting.None)}," +
-                    $"\"tag_names\": []," +
-                    $"\"location_ids\": []," +
-                    $"\"highlight_reel_ids\": []," +
-                    $"\"precomposed_overlay\": true," +
-                    $"\"show_story_viewer_list\": true," +
-                    $"\"story_viewer_fetch_count\": 50," +
-                    $"\"story_viewer_cursor\": \"\"," +
-                    $"\"stories_video_dash_manifest\": false}}";
-                var uri = UriCreator.GetGraphQlUri(queryHash, variables);
-                var response = await _httpClient.GetAsync(uri);
+                    throw new ArgumentException("user ids is empty", nameof(userIds));
+                var uri = UriCreator.GetReelsMediaUri();
+                var data = new JObject
+                {
+                    {"supported_capabilities_new", ReelsCapabilities},
+                    {"source", "reel_feed_timeline"},
+                    {"_csrftoken", Session.CsrfToken},
+                    {"_uid", Session.LoggedInUser.Pk.ToString()},
+                    {"_uuid", Device.Uuid.ToString()},
+                    {"user_ids", new JArray(userIds.Select(x => x.ToString()).ToArray())}
+                };
+                var body = new Dictionary<string,string>
+                {
+                    {"signed_body", $"SIGNATURE.{data.ToString(Formatting.None)}"}
+                };
+                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(body));
                 var json = await response.Content.ReadAsStringAsync();
                 DebugLogger.LogResponse(response);
                 if (response.StatusCode != HttpStatusCode.Ok)
-                    return Result<Reel[]>.Fail(json, response.ReasonPhrase);
+                    return Result<Dictionary<long, Reel>>.Fail(json, response.ReasonPhrase);
                 var payload = JsonConvert.DeserializeObject<JObject>(json);
-                if (payload["status"].ToString() != "ok") return Result<Reel[]>.Fail(json);
-                var reelsJson = payload["data"]["reels_media"];
-                var reels = reelsJson.ToObject<Reel[]>();
-                return Result<Reel[]>.Success(reels, json);
+                if (payload["status"]?.ToString() != "ok") return Result<Dictionary<long, Reel>>.Fail(json);
+                var reels = payload["reels"].ToObject<Dictionary<long, Reel>>();
+                return Result<Dictionary<long, Reel>>.Success(reels, json);
             }
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                return Result<Reel[]>.Except(e);
+                return Result<Dictionary<long, Reel>>.Except(e);
             }
         }
 
-        public async Task<Result<BaseStatusResponse>> MarkStorySeenAsync(string mediaId, string ownerId,
+        public async Task<Result<BaseStatusResponse>> MarkStorySeenAsync(string mediaId, long ownerId,
             DateTimeOffset storyTakenAt)
         {
             ValidateLoggedIn();
@@ -100,7 +106,7 @@ namespace InstagramAPI
                         "reels", new JObject
                         {
                             {
-                                $"{mediaId}_{ownerId}_{ownerId}",
+                                $"{mediaId}_{ownerId}",
                                 new JArray
                                 {
                                     $"{storyTakenAt.ToUnixTimeSeconds()}_{DateTimeOffset.Now.ToUnixTimeSeconds()}"

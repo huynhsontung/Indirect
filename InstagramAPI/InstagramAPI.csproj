@@ -171,14 +171,9 @@
     <Compile Include="Classes\Mqtt\Packets\UnsubAckPacket.cs" />
     <Compile Include="Classes\Mqtt\Packets\UnsubscribePacket.cs" />
     <Compile Include="Classes\Responses\UserInfoResponse.cs" />
-    <Compile Include="Classes\Story\DisplayResource.cs" />
-    <Compile Include="Classes\Story\Reel.cs" />
-    <Compile Include="Classes\Story\StoryItem.cs" />
-    <Compile Include="Classes\Story\Owner.cs" />
+    <Compile Include="Classes\Reel.cs" />
     <Compile Include="Classes\Responses\FacebookResponse.cs" />
     <Compile Include="Classes\Responses\RuploadResponse.cs" />
-    <Compile Include="Classes\Story\TappableObject.cs" />
-    <Compile Include="Classes\Story\VideoResource.cs" />
     <Compile Include="Classes\UploaderProgress.cs" />
     <Compile Include="Classes\JsonConverters\DirectItemConverter.cs" />
     <Compile Include="Classes\JsonConverters\JsonPathConverter.cs" />

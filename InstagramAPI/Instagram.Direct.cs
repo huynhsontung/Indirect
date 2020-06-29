@@ -7,7 +7,6 @@ using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Responses;
-using InstagramAPI.Classes.Story;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -483,8 +482,8 @@ namespace InstagramAPI
             }
         }
 
-        public async Task<Result<ItemAckPayloadResponse>> SendReelShareAsync(string reelId, string mediaId,
-            StoryItemType mediaType, string threadId,
+        public async Task<Result<ItemAckPayloadResponse>> SendReelShareAsync(long reelId, string mediaId,
+            ReelMediaType mediaType, string threadId,
             string text)
         {
             ValidateLoggedIn();
@@ -497,7 +496,7 @@ namespace InstagramAPI
                     {"action", "send_item"},
                     {"client_context", clientContext},
                     {"mutation_token", clientContext},
-                    {"reel_id", reelId},
+                    {"reel_id", reelId.ToString()},
                     {"media_id", mediaId},
                     {"thread_ids", $"[{threadId}]"},
                     {"text", text},

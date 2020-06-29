@@ -52,14 +52,14 @@ namespace Indirect.Controls
                     break;
 
                 case DirectItemType.ReelShare:
-                    if (item.ReelShareMedia.Media.MediaType == 1)
+                    if (item.ReelShareMedia.Media.MediaType == ReelMediaType.Image)
                         view.PrepareImageView();
                     else
                         view.PrepareVideoView();
                     break;
 
                 case DirectItemType.StoryShare when item.StoryShareMedia.Media != null:
-                    if (item.StoryShareMedia.Media.MediaType == 1)
+                    if (item.StoryShareMedia.Media.MediaType == ReelMediaType.Image)
                         view.PrepareImageView();
                     else
                         view.PrepareVideoView();

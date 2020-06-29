@@ -9,7 +9,7 @@ using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using Indirect.Utilities;
 using InstagramAPI;
-using InstagramAPI.Classes.Story;
+using InstagramAPI.Classes;
 using InstagramAPI.Utils;
 
 namespace Indirect.Wrapper

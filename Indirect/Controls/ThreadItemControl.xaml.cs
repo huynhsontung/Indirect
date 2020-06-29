@@ -9,6 +9,7 @@ using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Indirect.Wrapper;
 using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.Media;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -102,7 +103,8 @@ namespace Indirect.Controls
 
         private void ReelShareImage_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (Item.ReelShareMedia?.Media.MediaType == 1 || Item.StoryShareMedia?.Media.MediaType == 1)
+            if (Item.ReelShareMedia?.Media.MediaType == ReelMediaType.Image ||
+                Item.StoryShareMedia?.Media.MediaType == ReelMediaType.Image)
             {
                 ImageFrame_Tapped(sender, e);
             }

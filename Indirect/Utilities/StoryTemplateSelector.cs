@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Indirect.Wrapper;
+using InstagramAPI.Classes.Media;
 
 namespace Indirect.Utilities
 {
@@ -17,7 +18,7 @@ namespace Indirect.Utilities
 
         protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
         {
-            if (item is StoryItemWrapper story && story.IsVideo)
+            if (item is ReelItemWrapper story && story.MediaType == ReelMediaType.Video)
                 return VideoTemplate;
             return ImageTemplate;
         }

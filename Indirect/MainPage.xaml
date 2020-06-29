@@ -10,8 +10,8 @@
     xmlns:converters="using:Indirect.Converters"
     xmlns:wrapper="using:Indirect.Wrapper"
     xmlns:users="using:InstagramAPI.Classes.User" 
-    xmlns:controls1="using:Indirect.Controls" 
-    xmlns:story="using:InstagramAPI.Classes.Story"
+    xmlns:controls1="using:Indirect.Controls"
+    xmlns:classes="using:InstagramAPI.Classes"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -128,12 +128,12 @@
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="story:Reel">
+                            <DataTemplate x:DataType="classes:Reel">
                                 <StackPanel Orientation="Vertical" Width="50" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,8">
-                                    <controls:ImageEx Source="{x:Bind Owner.ProfilePicUrl}" 
+                                    <controls:ImageEx Source="{x:Bind User.ProfilePictureUrl}" 
                                                           Width="46" Height="46" CornerRadius="99"
                                                           HorizontalAlignment="Center"/>
-                                    <TextBlock Text="{x:Bind Owner.Username}" Style="{ThemeResource FluentCaptionTextStyle}" MaxWidth="50" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{x:Bind User.Username}" Style="{ThemeResource FluentCaptionTextStyle}" MaxWidth="50" HorizontalAlignment="Center"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>

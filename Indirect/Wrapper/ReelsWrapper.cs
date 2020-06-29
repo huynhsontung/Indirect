@@ -6,17 +6,18 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Indirect.Utilities;
 using InstagramAPI;
-using InstagramAPI.Classes.Story;
+using InstagramAPI.Classes;
 
 namespace Indirect.Wrapper
 {
     public class ReelsWrapper
     {
-        public ObservableCollection<StoryItemWrapper> Items { get; } = new ObservableCollection<StoryItemWrapper>();
-        public List<string> UserOrder { get; } = new List<string>();
+        public ObservableCollection<ReelItemWrapper> Items { get; } = new ObservableCollection<ReelItemWrapper>();
+        public List<long> UserOrder { get; } = new List<long>();
 
-        private readonly Dictionary<string, Reel> _userReelsDictionary = new Dictionary<string, Reel>();
+        private readonly Dictionary<long, Reel> _userReelsDictionary = new Dictionary<long, Reel>();
         private int _userIndex;
         private bool _loaded;
 
@@ -27,14 +28,14 @@ namespace Indirect.Wrapper
             _userIndex = selected;
             foreach (var reel in initialReels)
             {
-                UserOrder.Add(reel.Owner.Id);
-                _userReelsDictionary[reel.Owner.Id] = reel;
+                UserOrder.Add(reel.User.Pk);
+                _userReelsDictionary[reel.User.Pk] = reel;
             }
         }
 
-        public int GetUserIndex(string userId) => UserOrder.IndexOf(userId);
+        public int GetUserIndex(long userId) => UserOrder.IndexOf(userId);
 
-        public bool StoriesFetched(string userId) =>
+        public bool StoriesFetched(long userId) =>
             _userReelsDictionary[userId].Items != null && _userReelsDictionary[userId].Items.Length > 0;
 
         public async Task OnLoaded(Selector view)
@@ -44,7 +45,7 @@ namespace Indirect.Wrapper
             var storyIndex = 0;
             for (int i = 0; i < Items.Count; i++)
             {
-                if (Items[i].Owner.Id == UserOrder[_userIndex])
+                if (Items[i].User.Pk == UserOrder[_userIndex])
                 {
                     storyIndex = i;
                     break;
@@ -64,7 +65,7 @@ namespace Indirect.Wrapper
         public async Task OnSelectionChanged(int selectedIndex)
         {
             if (selectedIndex == -1 || selectedIndex >= Items.Count || !_loaded) return;
-            var userIndex = GetUserIndex(Items[selectedIndex].Owner.Id);
+            var userIndex = GetUserIndex(Items[selectedIndex].User.Pk);
             await UpdateUserIndex(userIndex);
             await TryMarkStorySeen(selectedIndex);
         }
@@ -72,7 +73,7 @@ namespace Indirect.Wrapper
         public async Task UpdateUserIndex(int userIndex)
         {
             var selectedUserId = UserOrder[userIndex];
-            if (Items.FirstOrDefault(x => x.Owner.Id == selectedUserId) == null)
+            if (Items.FirstOrDefault(x => x.User.Pk == selectedUserId) == null)
             {
                 if (!StoriesFetched(selectedUserId))
                 {
@@ -109,7 +110,7 @@ namespace Indirect.Wrapper
             var reelsHolders = UserOrder.Select(x => _userReelsDictionary[x]).ToList();
             if (UserOrder.Count <= 3)
             {
-                var userList = reelsHolders.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.Owner.Id);
+                var userList = reelsHolders.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.User.Pk);
                 await FetchStories(userList.ToArray());
                 SyncItems();
             }
@@ -118,7 +119,7 @@ namespace Indirect.Wrapper
                 // Moving forward
                 var count = _userIndex + 4 < UserOrder.Count ? 3 : UserOrder.Count - (_userIndex + 2);
                 var reels = reelsHolders.GetRange(_userIndex + 2, count);
-                var userList = reels.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.Owner.Id);
+                var userList = reels.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.User.Pk);
                 await FetchStories(userList.ToArray());
                 SyncItems();
             }
@@ -128,7 +129,7 @@ namespace Indirect.Wrapper
                 var startIndex = _userIndex - 4 >= 0 ? _userIndex - 4 : 0;
                 var count = _userIndex - 2 - startIndex + 1;
                 var reels = reelsHolders.GetRange(startIndex, count);
-                var userList = reels.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.Owner.Id);
+                var userList = reels.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.User.Pk);
                 await FetchStories(userList.ToArray());
                 SyncItems();
             }
@@ -139,19 +140,27 @@ namespace Indirect.Wrapper
         private async Task TryMarkStorySeen(int storyIndex)
         {
             var story = Items[storyIndex];
-            if (story.Parent.Seen != null && story.Parent.Seen >= story.TakenAtTimestamp) return;
-            await Instagram.Instance.MarkStorySeenAsync(story.Id, story.Owner.Id, story.TakenAtTimestamp);
-            story.Parent.Seen = story.TakenAtTimestamp;
+            if (story.Parent.Seen != null && story.Parent.Seen >= story.TakenAt) return;
+            await Instagram.Instance.MarkStorySeenAsync(story.Id, story.User.Pk, story.TakenAt ?? DateTimeOffset.Now);
+            story.Parent.Seen = story.TakenAt;
         }
 
-        private async Task FetchStories(params string[] users)
+        private async Task FetchStories(params long[] users)
         {
+            if (users == null || users.Length == 0) return;
             var result = await Instagram.Instance.GetReels(users);
             if (result.IsSucceeded)
             {
-                foreach (var reel in result.Value)
+                foreach (var (userId, reel) in result.Value)
                 {
-                    _userReelsDictionary[reel.Owner.Id] = reel;
+                    if (_userReelsDictionary.ContainsKey(userId) && _userReelsDictionary[userId] != null)
+                    {
+                        PropertyCopier<Reel, Reel>.Copy(reel, _userReelsDictionary[userId]);
+                    }
+                    else
+                    {
+                        _userReelsDictionary[userId] = reel;
+                    }
                 }
             }
             
@@ -169,11 +178,11 @@ namespace Indirect.Wrapper
                 {
                     if (i + indexAdder >= Items.Count)
                     {
-                        Items.Add(new StoryItemWrapper(reel.Items[i], reel));
+                        Items.Add(new ReelItemWrapper(reel.Items[i], reel));
                     }
                     else if (reel.Items[i].Id != Items[i+indexAdder].Id)
                     {
-                        Items.Insert(i+indexAdder, new StoryItemWrapper(reel.Items[i], reel));
+                        Items.Insert(i+indexAdder, new ReelItemWrapper(reel.Items[i], reel));
                     }
                 }
 
