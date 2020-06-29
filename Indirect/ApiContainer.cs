@@ -207,7 +207,7 @@ namespace Indirect
                                 }
                                 else
                                 {
-                                    item.Reactions?.Update(new InstaDirectReactionsWrapper(itemData.Item.Reactions, thread.ViewerId),
+                                    item.Reactions?.Update(new InstaDirectReactionsWrapper(itemData.Item.Reactions),
                                         thread.Users);
                                 }
                             });

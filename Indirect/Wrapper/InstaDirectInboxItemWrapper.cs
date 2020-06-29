@@ -296,7 +296,7 @@ namespace Indirect.Wrapper
             _sourceItem = source;
             Parent = parent;
             PropertyCopier<DirectItem, InstaDirectInboxItemWrapper>.Copy(source, this);
-            Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions, parent.ViewerId) : new InstaDirectReactionsWrapper();
+            Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions) : new InstaDirectReactionsWrapper();
 
             // Lookup BaseUser from user id
             var userExist = api.CentralUserRegistry.TryGetValue(UserId, out var sender);

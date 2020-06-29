@@ -42,10 +42,10 @@ namespace Indirect.Wrapper
             LikesCount = 0;
         }
 
-        public InstaDirectReactionsWrapper(ReactionsContainer source, long viewerId)
+        public InstaDirectReactionsWrapper(ReactionsContainer source)
         {
             Likes = source.Likes;
-            MeLiked = source.MeLiked ? source.MeLiked : source.Likes.Any(x => x.SenderId == viewerId);
+            MeLiked = source.MeLiked;
             LikesCount = source.LikesCount;
         }
 
