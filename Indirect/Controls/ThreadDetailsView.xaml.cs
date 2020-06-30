@@ -273,7 +273,7 @@ namespace Indirect.Controls
             }
 
             UserInfoView.User = Thread.DetailedUserInfo;
-            FlyoutBase.ShowAttachedFlyout(ThreadInfoHeader);
+            UserInfoFlyout.ShowAt((FrameworkElement) sender);
         }
 
         private void MessageTextBox_OnTextChanged(object sender, TextChangedEventArgs e)

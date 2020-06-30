@@ -49,6 +49,11 @@
         <Border Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1" Background="{ThemeResource SystemControlAcrylicElementBrush}"/>
 
         <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Right" IsDynamicOverflowEnabled="False">
+            <FlyoutBase.AttachedFlyout>
+                <Flyout x:Name="UserInfoFlyout" Placement="BottomEdgeAlignedLeft">
+                    <controls1:UserInfoView x:Name="UserInfoView"/>
+                </Flyout>
+            </FlyoutBase.AttachedFlyout>
             <AppBarButton x:Name="ViewProfileAppBarButton" Icon="Contact2" Label="View profile" Click="ShowUserInfoFlyout"/>
             <AppBarButton x:Name="RefreshButton" Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
             <CommandBar.Content>
@@ -61,12 +66,6 @@
                                    Opacity="0.6"
                                    Style="{ThemeResource FluentCaptionTextStyle}"/>
                     </StackPanel>
-
-                    <FlyoutBase.AttachedFlyout>
-                        <Flyout Placement="BottomEdgeAlignedLeft">
-                            <controls1:UserInfoView x:Name="UserInfoView"/>
-                        </Flyout>
-                    </FlyoutBase.AttachedFlyout>
                 </StackPanel>
             </CommandBar.Content>
         </CommandBar>
