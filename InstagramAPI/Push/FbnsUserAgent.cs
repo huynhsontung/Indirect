@@ -28,7 +28,7 @@ namespace InstagramAPI.Push
                 {"FBMF", device.HardwareManufacturer},
                 {"FBBD", device.HardwareManufacturer},
                 {"FBPN", "com.instagram.android"},
-                {"FBDV", device.HardwareModel},
+                {"FBDV", device.HardwareModel.Replace(" ", "")},
                 {"FBSV", device.AndroidVersion.VersionNumber},
                 {"FBLR", "0"},  // android.hardware.ram.low
                 {"FBBK", "1"},  // Const (at least in 10.12.0)
