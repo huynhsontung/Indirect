@@ -132,7 +132,7 @@
                             <DataTemplate x:DataType="wrapper:ReelWrapper">
                                 <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,8">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="54"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
                                     <controls:ImageEx Grid.Row="0"

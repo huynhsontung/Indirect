@@ -139,7 +139,10 @@ namespace Indirect.Controls
                 }
 
                 _reelLimit = new Tuple<int, int>(start, end);
-                ReelsProgressBar.Value = StoryView.SelectedIndex == end ? 100 : 1d / (end - start + 1) * 100;
+                var selectedIndex = StoryView.SelectedIndex;
+                ReelsProgressBar.Value = selectedIndex == end
+                    ? 100
+                    : (selectedIndex - start + 1d) / (end - start + 1) * 100;
             }
             else
             {
@@ -192,18 +195,10 @@ namespace Indirect.Controls
                 break;
             }
 
-            // Getting to the start of the reel
-            for (int i = previousReelIndex; i >= 0; i--)
-            {
-                if (userId == items[i].Parent.User.Pk && i == 0)
-                {
-                    previousReelIndex = 0;
-                    break;
-                }
-                if (userId == items[i].Parent.User.Pk) continue;
-                previousReelIndex = i + 1;
-                break;
-            }
+            if (previousReelIndex == -1) return;
+            var previousStories = items.Where(x => x.Parent.User.Pk == userId).ToArray();
+            var unseenStory = previousStories.FirstOrDefault(x => x.TakenAt > x.Parent.Seen);
+            previousReelIndex = items.IndexOf(unseenStory ?? previousStories[0]);
 
             if (previousReelIndex != -1)
             {
@@ -220,9 +215,22 @@ namespace Indirect.Controls
             var nextReelIndex = -1;
             for (int i = selectedIndex; i < items.Count; i++)
             {
-                if (userId == items[i].Parent.User.Pk) continue;
-                nextReelIndex = i;
-                break;
+                if (nextReelIndex == -1)
+                {
+                    if (userId == items[i].Parent.User.Pk) continue;
+                    nextReelIndex = i;
+                    userId = items[i].Parent.User.Pk;
+                }
+                else
+                {
+                    // Go to unseen story
+                    if (userId != items[i].Parent.User.Pk) break;
+                    if (items[i].TakenAt > items[i].Parent.Seen)
+                    {
+                        nextReelIndex = i;
+                        break;
+                    }
+                }
             }
 
             if (nextReelIndex != -1)

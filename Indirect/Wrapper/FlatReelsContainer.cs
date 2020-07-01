@@ -42,15 +42,10 @@ namespace Indirect.Wrapper
         {
             if (view == null) return;
             _loaded = true;
-            var storyIndex = 0;
-            for (int i = 0; i < Items.Count; i++)
-            {
-                if (Items[i].User.Pk == UserOrder[_userIndex])
-                {
-                    storyIndex = i;
-                    break;
-                }
-            }
+            var userItems = Items.Where(x => x.User.Pk == UserOrder[_userIndex]).ToArray();
+            if (userItems.Length == 0) return;
+            var firstUnseenItem = userItems.FirstOrDefault(x => x.TakenAt > x.Parent.Seen);
+            var storyIndex = Items.IndexOf(firstUnseenItem ?? userItems[0]);
 
             if (view.SelectedIndex != storyIndex)
             {
