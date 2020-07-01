@@ -10,23 +10,8 @@ using Newtonsoft.Json;
 namespace InstagramAPI.Classes.Media
 {
     [JsonConverter(typeof(JsonPathConverter))]
-    public class CarouselMedia
+    public class CarouselMedia : InstaMedia
     {
-        [JsonProperty("id")]
-        public string Id { get; set; }
-
-        [JsonProperty("media_type")]
-        public long MediaType { get; set; }
-
-        [JsonProperty("image_versions2.candidates")]
-        public InstaImage[] ImageCandidates { get; set; }
-
-        [JsonProperty("original_width")]
-        public long OriginalWidth { get; set; }
-
-        [JsonProperty("original_height")]
-        public long OriginalHeight { get; set; }
-
         [JsonProperty("pk")]
         public long Pk { get; set; }
 

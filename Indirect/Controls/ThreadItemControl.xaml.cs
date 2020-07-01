@@ -103,8 +103,8 @@ namespace Indirect.Controls
 
         private void ReelShareImage_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (Item.ReelShareMedia?.Media.MediaType == ReelMediaType.Image ||
-                Item.StoryShareMedia?.Media.MediaType == ReelMediaType.Image)
+            if (Item.ReelShareMedia?.Media.MediaType == InstaMediaType.Image ||
+                Item.StoryShareMedia?.Media.MediaType == InstaMediaType.Image)
             {
                 ImageFrame_Tapped(sender, e);
             }

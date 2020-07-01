@@ -1,8 +1,11 @@
 ﻿using System;
 using InstagramAPI.Classes.Direct.ItemContent;
 using InstagramAPI.Classes.JsonConverters;
+using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Responses;
+using InstagramAPI.Classes.User;
 using Newtonsoft.Json;
+using Hashtag = InstagramAPI.Classes.Direct.ItemContent.Hashtag;
 
 namespace InstagramAPI.Classes.Direct
 {
@@ -48,7 +51,7 @@ namespace InstagramAPI.Classes.Direct
 
         #region DirectMedia
 
-        [JsonProperty("media")] public DirectMedia Media { get; set; }
+        [JsonProperty("media")] public InstaMedia Media { get; set; }
 
         #endregion
 
@@ -115,6 +118,16 @@ namespace InstagramAPI.Classes.Direct
         #region VideoCallEvent
 
         [JsonProperty("video_call_event")] public VideoCallEvent VideoCallEvent { get; set; }
+
+        #endregion
+
+        #region Profile
+
+        [JsonProperty("profile", NullValueHandling = NullValueHandling.Ignore)]
+        public BaseUser Profile { get; set; }
+
+        [JsonProperty("preview_medias", NullValueHandling = NullValueHandling.Ignore)]
+        public InstaMedia[] PreviewMedias { get; set; }
 
         #endregion
 

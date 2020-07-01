@@ -11,7 +11,7 @@ namespace InstagramAPI.Classes.Direct.ItemContent
     /// Share version of Instagram post through Direct. Not complete.
     /// </summary>
     [JsonConverter(typeof(JsonPathConverter))]
-    public class DirectMediaShare
+    public class DirectMediaShare : InstaMedia
     {
         [JsonProperty("taken_at")]
         [JsonConverter(typeof(TimestampConverter))]
@@ -20,15 +20,9 @@ namespace InstagramAPI.Classes.Direct.ItemContent
         [JsonProperty("pk")]
         public string Pk { get; set; }
 
-        [JsonProperty("id")]
-        public string Id { get; set; }
-
         [JsonProperty("device_timestamp")]
         [JsonConverter(typeof(TimestampConverter))]
         public DateTimeOffset DeviceTimestamp { get; set; }
-
-        [JsonProperty("media_type")]
-        public InstaMediaType MediaType { get; set; }
 
         [JsonProperty("code")]
         public string Code { get; set; }
@@ -38,18 +32,6 @@ namespace InstagramAPI.Classes.Direct.ItemContent
 
         [JsonProperty("filter_type")]
         public int FilterType { get; set; }
-
-        [JsonProperty("image_versions2.candidates")]
-        public List<InstaImage> Images { get; set; }
-
-        [JsonProperty("video_versions")] 
-        public List<InstaVideo> Videos { get; set; }
-
-        [JsonProperty("original_width")]
-        public int OriginalWidth { get; set; }
-
-        [JsonProperty("original_height")]
-        public int OriginalHeight { get; set; }
 
         [JsonProperty("user")]
         public BaseUser User { get; set; }
@@ -94,7 +76,7 @@ namespace InstagramAPI.Classes.Direct.ItemContent
         public string[] TopLikers { get; set; }
 
         [JsonProperty("facepile_top_likers")]
-        public List<BaseUser> FacepileTopLikers { get; set; }
+        public BaseUser[] FacepileTopLikers { get; set; }
 
         [JsonProperty("photo_of_you")]
         public bool PhotoOfYou { get; set; }

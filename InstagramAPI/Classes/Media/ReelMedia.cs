@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace InstagramAPI.Classes.Media
 {
     [JsonConverter(typeof(JsonPathConverter))]
-    public class ReelMedia
+    public class ReelMedia : InstaMedia
     {
         [JsonProperty("user")]
         public BaseUser User { get; set; }  // Only contains Pk and IsPrivate
@@ -23,14 +23,8 @@ namespace InstagramAPI.Classes.Media
         [JsonProperty("pk", NullValueHandling = NullValueHandling.Ignore)]
         public long? Pk { get; set; }
 
-        [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
-        public string Id { get; set; }
-
         [JsonProperty("device_timestamp", NullValueHandling = NullValueHandling.Ignore)]
         public long? DeviceTimestamp { get; set; }
-
-        [JsonProperty("media_type", NullValueHandling = NullValueHandling.Ignore)]
-        public ReelMediaType MediaType { get; set; }
 
         [JsonProperty("code", NullValueHandling = NullValueHandling.Ignore)]
         public string Code { get; set; }
@@ -40,15 +34,6 @@ namespace InstagramAPI.Classes.Media
 
         [JsonProperty("filter_type", NullValueHandling = NullValueHandling.Ignore)]
         public long? FilterType { get; set; }
-
-        [JsonProperty("image_versions2.candidates", NullValueHandling = NullValueHandling.Ignore)]
-        public InstaImage[] Images { get; set; }
-
-        [JsonProperty("original_width", NullValueHandling = NullValueHandling.Ignore)]
-        public int? OriginalWidth { get; set; }
-
-        [JsonProperty("original_height", NullValueHandling = NullValueHandling.Ignore)]
-        public int? OriginalHeight { get; set; }
 
         [JsonProperty("caption_is_edited", NullValueHandling = NullValueHandling.Ignore)]
         public bool? CaptionIsEdited { get; set; }
@@ -116,18 +101,5 @@ namespace InstagramAPI.Classes.Media
 
         [JsonProperty("video_versions", NullValueHandling = NullValueHandling.Ignore)]
         public InstaVideo[] VideoVersions { get; set; }
-
-        [JsonProperty("has_audio", NullValueHandling = NullValueHandling.Ignore)]
-        public bool? HasAudio { get; set; }
-
-        [JsonProperty("video_duration", NullValueHandling = NullValueHandling.Ignore)]
-        public double? VideoDuration { get; set; }
-    }
-
-    public enum ReelMediaType
-    {
-        Unknown = 0,
-        Image = 1,
-        Video = 2,
     }
 }

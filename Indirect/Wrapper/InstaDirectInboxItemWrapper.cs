@@ -138,7 +138,7 @@ namespace Indirect.Wrapper
                         return GetPreviewImage(Media.Images)?.Url;
 
                     case DirectItemType.MediaShare when MediaShare.CarouselMedia?.Length > 0:
-                        return GetPreviewImage(MediaShare.CarouselMedia[0].ImageCandidates)?.Url;
+                        return GetPreviewImage(MediaShare.CarouselMedia[0].Images)?.Url;
 
                     case DirectItemType.MediaShare:
                         return GetPreviewImage(MediaShare.Images)?.Url;
@@ -174,7 +174,7 @@ namespace Indirect.Wrapper
                         return GetFullImageUri(Media.Images);
 
                     case DirectItemType.MediaShare when MediaShare.CarouselMedia?.Length > 0:
-                        return GetFullImageUri(MediaShare.CarouselMedia[0].ImageCandidates);
+                        return GetFullImageUri(MediaShare.CarouselMedia[0].Images);
 
                     case DirectItemType.MediaShare:
                         return GetFullImageUri(MediaShare.Images);
@@ -207,13 +207,13 @@ namespace Indirect.Wrapper
                 switch (ItemType)
                 {
                     case DirectItemType.RavenMedia when RavenMedia != null:
-                        return RavenMedia.Width;
+                        return RavenMedia.OriginalWidth ?? 0;
 
                     case DirectItemType.RavenMedia when VisualMedia != null:
-                        return VisualMedia.Media.Width;
+                        return VisualMedia.Media.OriginalWidth ?? 0;
 
                     case DirectItemType.Media when Media != null:
-                        return Media.OriginalWidth;
+                        return Media.OriginalWidth ?? 0;
 
                     case DirectItemType.ReelShare when ReelShareMedia != null:
                         return ReelShareMedia.Media.OriginalWidth ?? 0;
@@ -234,13 +234,13 @@ namespace Indirect.Wrapper
                 switch (ItemType)
                 {
                     case DirectItemType.RavenMedia when RavenMedia != null:
-                        return RavenMedia.Height;
+                        return RavenMedia.OriginalHeight ?? 0;
 
                     case DirectItemType.RavenMedia when VisualMedia != null:
-                        return VisualMedia.Media.Height;
+                        return VisualMedia.Media.OriginalHeight ?? 0;
 
                     case DirectItemType.Media when Media != null:
-                        return Media.OriginalHeight;
+                        return Media.OriginalHeight ?? 0;
 
                     case DirectItemType.ReelShare when ReelShareMedia != null:
                         return ReelShareMedia.Media.OriginalHeight ?? 0;
@@ -260,16 +260,16 @@ namespace Indirect.Wrapper
             {
                 switch (ItemType)
                 {
-                    case DirectItemType.Media when Media.Videos.Count > 0:
+                    case DirectItemType.Media when Media.Videos.Length > 0:
                         return Media.Videos[0].Url;
 
-                    case DirectItemType.MediaShare when MediaShare.Videos.Count > 0:
+                    case DirectItemType.MediaShare when MediaShare.Videos.Length > 0:
                         return MediaShare.Videos[0].Url;
 
-                    case DirectItemType.RavenMedia when RavenMedia != null && RavenMedia.Videos.Count > 0:
+                    case DirectItemType.RavenMedia when RavenMedia != null && RavenMedia.Videos.Length > 0:
                         return RavenMedia.Videos[0].Url;
         
-                    case DirectItemType.RavenMedia when VisualMedia != null && VisualMedia.Media.Videos.Count > 0:
+                    case DirectItemType.RavenMedia when VisualMedia != null && VisualMedia.Media.Videos.Length > 0:
                         return VisualMedia.Media.Videos[0].Url;
 
                     case DirectItemType.ReelShare:

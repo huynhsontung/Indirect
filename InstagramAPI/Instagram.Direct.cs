@@ -483,7 +483,7 @@ namespace InstagramAPI
         }
 
         public async Task<Result<ItemAckPayloadResponse>> SendReelShareAsync(long reelId, string mediaId,
-            ReelMediaType mediaType, string threadId,
+            InstaMediaType mediaType, string threadId,
             string text)
         {
             ValidateLoggedIn();

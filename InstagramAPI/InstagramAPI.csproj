@@ -130,7 +130,7 @@
     <Compile Include="Classes\Direct\DirectThreadItemsOnly.cs" />
     <Compile Include="Classes\Direct\ItemContent\AnimatedMedia.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectActionLog.cs" />
-    <Compile Include="Classes\Direct\ItemContent\DirectMedia.cs" />
+    <Compile Include="Classes\Media\InstaMedia.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectMediaShare.cs" />
     <Compile Include="Classes\Direct\Inbox.cs" />
     <Compile Include="Classes\Direct\InboxContainer.cs" />

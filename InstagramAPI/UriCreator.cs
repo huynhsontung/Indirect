@@ -133,9 +133,9 @@ namespace InstagramAPI
             return instaUri;
         }
 
-        public static Uri GetDirectReelShareUri(ReelMediaType mediaType)
+        public static Uri GetDirectReelShareUri(InstaMediaType mediaType)
         {
-            var mediaTypeStr = mediaType == ReelMediaType.Video ? "video" : "image";
+            var mediaTypeStr = mediaType == InstaMediaType.Video ? "video" : "image";
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/broadcast/reel_share/?media_type={mediaTypeStr}", out var instaUri))
                 throw new Exception("Can't create URI for sending reel share");
             return instaUri; 
