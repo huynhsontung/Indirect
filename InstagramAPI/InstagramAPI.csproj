@@ -230,8 +230,11 @@
     <Compile Include="Sync\StandalonePacketDecoder.cs" />
     <Compile Include="Sync\StandalonePacketEncoder.cs" />
     <Compile Include="Sync\MessageSyncEventArgs.cs" />
+    <Compile Include="Sync\Subs\GraphQL.cs" />
+    <Compile Include="Sync\Subs\SkyWalker.cs" />
     <Compile Include="Sync\SyncBaseData.cs" />
     <Compile Include="Sync\SyncClient.cs" />
+    <Compile Include="Sync\SyncClientX.cs" />
     <Compile Include="Sync\UserPresenceEventArgs.cs" />
     <Compile Include="Utils\CryptoHelper.cs" />
     <Compile Include="Utils\DebugLogger.cs" />
@@ -257,6 +260,9 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.3</Version>
+    </PackageReference>
+    <PackageReference Include="System.Threading.Tasks.Extensions">
+      <Version>4.5.4</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

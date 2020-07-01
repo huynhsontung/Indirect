@@ -5,6 +5,7 @@ using Windows.Storage.Streams;
 using InstagramAPI.Classes.Mqtt;
 using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Utils;
+using System.Collections.Generic;
 
 namespace InstagramAPI.Push.Packets
 {
@@ -12,7 +13,7 @@ namespace InstagramAPI.Push.Packets
     {
         const uint PACKET_ID_LENGTH = 2;
         const uint STRING_SIZE_LENGTH = 2;
-        // const uint MAX_VARIABLE_LENGTH = 4;
+        const uint MAX_VARIABLE_LENGTH = 4;
 
         public static async Task EncodePacket(Packet packet, DataWriter writer)
         {
@@ -29,6 +30,9 @@ namespace InstagramAPI.Push.Packets
                         EncodeConnectMessage((ConnectPacket) packet, writer);
                     }
                     break;
+                case PacketType.CONNACK:
+                    EncodeConnAckMessage((ConnAckPacket)packet, writer);
+                    break;
                 case PacketType.PUBLISH:
                     EncodePublishPacket((PublishPacket) packet, writer);
                     break;
@@ -44,6 +48,16 @@ namespace InstagramAPI.Push.Packets
                 case PacketType.DISCONNECT:
                     EncodePacketWithFixedHeaderOnly(packet, writer);
                     break;
+
+                case PacketType.SUBACK:
+                    EncodeSubAckMessage((SubAckPacket)packet, writer);
+                    break;
+                case PacketType.SUBSCRIBE:
+                    EncodeSubscribeMessage((SubscribePacket)packet, writer);
+                    break;
+                case PacketType.UNSUBSCRIBE:
+                    EncodeUnsubscribeMessage((UnsubscribePacket)packet, writer);
+                    break;
                 default:
                     throw new ArgumentException("Unsupported packet type: " + packet.PacketType, nameof(packet));
             }
@@ -51,6 +65,20 @@ namespace InstagramAPI.Push.Packets
             await writer.FlushAsync();
         }
 
+        static void EncodeConnAckMessage(ConnAckPacket message, DataWriter writer)
+        {
+            writer.WriteByte(CalculateFirstByteOfFixedHeader(message));
+            writer.WriteByte(2); // remaining length
+            if (message.SessionPresent)
+            {
+                writer.WriteByte(1); // 7 reserved 0-bits and SP = 1
+            }
+            else
+            {
+                writer.WriteByte(0); // 7 reserved 0-bits and SP = 0
+            }
+            writer.WriteByte((byte)message.ReturnCode);
+        }
         static void EncodeConnectMessage(ConnectPacket packet, DataWriter writer)
         {
             uint payloadwriterferSize = 0;
@@ -168,6 +196,35 @@ namespace InstagramAPI.Push.Packets
                 writer.WriteBuffer(payload);
             }
         }
+        static void EncodeUnsubscribeMessage(UnsubscribePacket packet, DataWriter writer)
+        {
+            const uint VariableHeaderSize = 2;
+            uint payloadBufferSize = 0;
+
+            var encodedTopicFilters = new List<byte[]>();
+
+            foreach (string topic in packet.TopicFilters)
+            {
+                byte[] topicFilterBytes = EncodeStringInUtf8(topic);
+                payloadBufferSize += STRING_SIZE_LENGTH + (uint)topicFilterBytes.Length; // length, value
+                encodedTopicFilters.Add(topicFilterBytes);
+            }
+
+            uint variablePartSize = VariableHeaderSize + payloadBufferSize;
+
+            writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
+            WriteVariableLengthInt(writer, variablePartSize);
+
+            // Variable Header
+            writer.WriteInt16((short)packet.PacketId); // todo: review: validate?
+
+            // Payload
+            foreach (var topic in encodedTopicFilters)
+            {
+                writer.WriteInt16((short)topic.Length);
+                writer.WriteBytes(topic);
+            }
+        }
 
         private static void EncodePublishPacket(PublishPacket packet, DataWriter writer)
         {
@@ -195,7 +252,51 @@ namespace InstagramAPI.Push.Packets
                 writer.WriteBuffer(payload);
             }
         }
+        static void EncodeSubscribeMessage(SubscribePacket packet, DataWriter writer)
+        {
+            uint VariableHeaderSize = (int)PACKET_ID_LENGTH;
+            uint payloadBufferSize = 0;
 
+            var encodedTopicFilters = new List<byte[]>();
+
+            foreach (var topic in packet.Requests)
+            {
+                byte[] topicFilterBytes = EncodeStringInUtf8(topic.TopicFilter);
+                payloadBufferSize += STRING_SIZE_LENGTH + (uint)topicFilterBytes.Length + 1; // length, value, QoS
+                encodedTopicFilters.Add(topicFilterBytes);
+            }
+
+            uint variablePartSize = VariableHeaderSize + payloadBufferSize;
+
+            writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
+            WriteVariableLengthInt(writer, (uint)variablePartSize);
+
+            // Variable Header
+            writer.WriteInt16((short)packet.PacketId); // todo: review: validate?
+
+            // Payload
+            for (int i = 0; i < encodedTopicFilters.Count; i++)
+            {
+                var topicFilterBytes = encodedTopicFilters[i];
+                writer.WriteInt16((short)topicFilterBytes.Length);
+                writer.WriteBytes(topicFilterBytes);
+                writer.WriteByte((byte)packet.Requests[i].QualityOfService);
+            }
+        }
+
+        static void EncodeSubAckMessage(SubAckPacket message, DataWriter writer )
+        {
+            uint payloadBufferSize = (uint)message.ReturnCodes.Count;
+            uint variablePartSize = PACKET_ID_LENGTH + payloadBufferSize;
+
+            writer.WriteByte(CalculateFirstByteOfFixedHeader(message));
+            WriteVariableLengthInt(writer, variablePartSize);
+            writer.WriteInt16((short)message.PacketId);
+            foreach (QualityOfService qos in message.ReturnCodes)
+            {
+                writer.WriteByte((byte)qos);
+            }
+        }
         static void EncodePacketWithIdOnly(PacketWithId packet, DataWriter writer)
         {
             var msgId = packet.PacketId;

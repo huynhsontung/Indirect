@@ -71,7 +71,7 @@ namespace InstagramAPI.Sync
             var device = Instagram.Device;
             var baseHttpFilter = new HttpBaseProtocolFilter();
             var cookies = baseHttpFilter.CookieManager.GetCookies(new Uri("https://i.instagram.com"));
-            var sessionId = cookies.FirstOrDefault(xx => xx.Name == "sessionid");
+            var sessionId = cookies.FirstOrDefault(xx => xx.Name == "sessionid")?.Value;
 
             await WriteString(CLIENT_ID, device.Uuid.ToString().Substring(0, 20));
 

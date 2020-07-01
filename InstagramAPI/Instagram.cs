@@ -45,6 +45,7 @@ namespace InstagramAPI
         public AndroidDevice Device { get; } = AndroidDevice.GetRandomAndroidDevice();
         public PushClient PushClient { get; }
         public SyncClient SyncClient { get; }
+        public SyncClientX SyncClientX { get; }
         public Dictionary<long, BaseUser> CentralUserRegistry { get; } = new Dictionary<long, BaseUser>();
 
         // For push notification to look up thread title from thread id. Instagram doesn't pass thread title for push notifications.
@@ -68,6 +69,7 @@ namespace InstagramAPI
             IsUserAuthenticated = IsUserAuthenticatedPersistent;
             PushClient = new PushClient(this, IsUserAuthenticated);
             SyncClient = new SyncClient(this);
+            SyncClientX = new SyncClientX(this);
 
             if (!IsUserAuthenticated) return;
             ThreadTitlePersistentDictionary.LoadFromAppSettings();

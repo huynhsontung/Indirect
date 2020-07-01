@@ -52,6 +52,7 @@ namespace Indirect
         public bool BackgroundSyncLocked => _lockFile != null;
         public PushClient PushClient => _instaApi.PushClient;
         public SyncClient SyncClient => _instaApi.SyncClient;
+        public SyncClientX SyncClientX => _instaApi.SyncClientX;
 
         public Dictionary<long, UserPresenceValue> UserPresenceDictionary { get; } = new Dictionary<long, UserPresenceValue>();
         public InstaDirectInboxWrapper PendingInbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance, true);
@@ -74,15 +75,16 @@ namespace Indirect
 
         private ApiContainer()
         {
-            _instaApi.SyncClient.MessageReceived += OnMessageSyncReceived;
-            _instaApi.SyncClient.ActivityIndicatorChanged += OnActivityIndicatorChanged;
-            _instaApi.SyncClient.UserPresenceChanged += OnUserPresenceChanged;
-            _instaApi.SyncClient.FailedToStart += async (sender, exception) =>
+            _instaApi.SyncClientX.MessageReceived += OnMessageSyncReceived;
+            _instaApi.SyncClientX.ActivityIndicatorChanged += OnActivityIndicatorChanged;
+            _instaApi.SyncClientX.UserPresenceChanged += OnUserPresenceChanged;
+            _instaApi.SyncClientX.FailedToStart += async (sender, exception) =>
             {
                 DebugLogger.LogException(exception);
                 await HandleException();
             };
-            Inbox.FirstUpdated += async (seqId, snapshotAt) => await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
+            //Inbox.FirstUpdated += async (seqId, snapshotAt) => await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
+            Inbox.FirstUpdated += async (seqId, snapshotAt) => await _instaApi.SyncClientX.Start(seqId, snapshotAt).ConfigureAwait(false);
             PushClient.MessageReceived += (sender, args) =>
             {
                 Debug.Write("Background notification: ");
@@ -95,7 +97,7 @@ namespace Indirect
             if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
             await UpdateLoggedInUser();
             GetUserPresence();
-            PushClient.Start();
+            //PushClient.Start();
             await ReelsFeed.UpdateReelsFeed();
             ReelsFeed.StartReelsFeedUpdateLoop();
         }
