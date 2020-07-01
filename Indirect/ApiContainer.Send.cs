@@ -75,7 +75,11 @@ namespace Indirect
                         return;
                     }
 
-                    result = await _instaApi.SendTextAsync(null, selectedThread.ThreadId, content);
+                    //result = await _instaApi.SendTextAsync(null, selectedThread.ThreadId, content);
+
+                    await _instaApi.SyncClientX.SendDirectTextAsync(selectedThread.ThreadId, content);
+
+                    return;
                 }
                 else
                 {

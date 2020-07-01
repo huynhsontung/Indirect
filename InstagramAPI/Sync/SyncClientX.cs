@@ -140,6 +140,37 @@ namespace InstagramAPI.Push
             }
             StartPollingLoop();
         }
+        public async Task SendDirectTextAsync(string threadId, string text)
+        {
+            var data = new Dictionary<string, string>
+            {
+                {"action", "send_item"},
+                {"client_context", Guid.NewGuid().ToString()},
+                {"thread_id",  threadId},
+                {"item_type", "text"},
+                {"text", text},
+            };
+
+            var json = JsonConvert.SerializeObject(data);
+            var bytes = Encoding.UTF8.GetBytes(json);
+
+
+            var dataStream = new MemoryStream(512);
+            using (var zlibStream = new ZlibStream(dataStream, CompressionMode.Compress, CompressionLevel.Level9, true))
+            {
+                await zlibStream.WriteAsync(bytes, 0, bytes.Length);
+            }
+            var compressed = dataStream.GetWindowsRuntimeBuffer(0, (int)dataStream.Length);
+            var publishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
+            {
+                Payload = compressed,
+                PacketId = (ushort)CryptographicBuffer.GenerateRandomNumber(),
+                TopicName = "132"
+            };
+
+            await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
+
+        }
         async Task SubscribeForDM()
         {
             var messageSync = new SubscriptionRequest("/ig_message_sync", QualityOfService.AtLeastOnce);
@@ -291,9 +322,10 @@ namespace InstagramAPI.Push
         }
         public enum TopicIds
         {
-            MessageSync = 146, //  /ig_message_sync
-            PubSub = 88, // /pubsub,
-            RealtimeSub = 149 // /ig_realtime_sub
+            MessageSync = 146,          //      /ig_message_sync
+            PubSub = 88,                //      /pubsub,
+            RealtimeSub = 149,          //      /ig_realtime_sub
+            SendMessageResponse = 133,  //      /ig_send_message_response,
         }
 
         private async Task OnPacketReceived(Packet msg)
@@ -325,9 +357,9 @@ namespace InstagramAPI.Push
 
                         var payload = DecompressPayload(publishPacket.Payload);
                         var json = await GetJsonFromThrift(payload);
-                        if (string.IsNullOrEmpty(json)) break;
                         this.Log($"MQTT json: {json}");
-                        
+                        if (string.IsNullOrEmpty(json)) break;
+
                         switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                         {
                             case TopicIds.MessageSync:
@@ -355,7 +387,7 @@ namespace InstagramAPI.Push
                             case TopicIds.RealtimeSub:
                                 json = json.Substring(json.IndexOf('{'));
                                 var container = JsonConvert.DeserializeObject<JObject>(json);
-                                if(container["presence_event"] != null)
+                                if (container["presence_event"] != null)
                                 {
                                     var presenceEvent = container["presence_event"].ToObject<UserPresenceEventArgs>();
                                     UserPresenceChanged?.Invoke(this, presenceEvent);
@@ -384,8 +416,10 @@ namespace InstagramAPI.Push
                                     //MessageReceived?.Invoke(this, messageSyncPayload);
                                 }
                                 break;
+                            case TopicIds.SendMessageResponse:
+                                //whatever
+                                break;
                         }
-
                         break;
 
                     case PacketType.PUBACK:
@@ -408,24 +442,28 @@ namespace InstagramAPI.Push
         }
         async Task<string> GetJsonFromThrift(byte[] bytes)
         {
-            var _memoryBufferTransport = new TMemoryBufferTransport(bytes);
-            var _thrift = new TCompactProtocol(_memoryBufferTransport);
-            while (true)
+            try
             {
-                var field = await _thrift.ReadFieldBeginAsync(CancellationToken.None);
-                if (field.Type == TType.Stop)
-                    break;
-
-                if (field.Type == TType.String)
+                var _memoryBufferTransport = new TMemoryBufferTransport(bytes);
+                var _thrift = new TCompactProtocol(_memoryBufferTransport);
+                while (true)
                 {
-                    var json = await _thrift.ReadStringAsync(CancellationToken.None);
-                    if (!string.IsNullOrEmpty(json))
-                        if (json.Contains("{") && json.EndsWith("}"))
-                            return json;
+                    var field = await _thrift.ReadFieldBeginAsync(CancellationToken.None);
+                    if (field.Type == TType.Stop)
+                        break;
+
+                    if (field.Type == TType.String)
+                    {
+                        var json = await _thrift.ReadStringAsync(CancellationToken.None);
+                        if (!string.IsNullOrEmpty(json))
+                            if (json.Contains("{") && json.EndsWith("}"))
+                                return json;
+                    }
+                    await _thrift.ReadFieldEndAsync(CancellationToken.None);
                 }
-                await _thrift.ReadFieldEndAsync(CancellationToken.None);
             }
-            return null;
+            catch { }
+            return Encoding.UTF8.GetString(bytes);
         }
 
 
