@@ -137,9 +137,9 @@
                                     </Grid.RowDefinitions>
                                     <controls:ImageEx Grid.Row="0"
                                                       Source="{x:Bind User.ProfilePictureUrl}" 
-                                                      Width="46" Height="46" CornerRadius="99"
+                                                      Width="46" Height="46" CornerRadius="99" Margin="4"
                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    <Border Grid.Row="0" Width="48" Height="48" BorderThickness="2" CornerRadius="99"
+                                    <Border Grid.Row="0" Width="54" Height="54" BorderThickness="2" CornerRadius="99"
                                             Visibility="{x:Bind HasUnseenItems, Mode=OneWay, Converter={StaticResource BooleanVisibilityConverter}}">
                                         <Border.BorderBrush>
                                             <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
@@ -150,7 +150,7 @@
                                         </Border.BorderBrush>
                                     </Border>
                                     <TextBlock Grid.Row="1" Text="{x:Bind User.Username}" 
-                                               Style="{ThemeResource FluentCaptionTextStyle}" MaxWidth="50" HorizontalAlignment="Center"/>
+                                               Style="{ThemeResource FluentCaptionTextStyle}" MaxWidth="54" HorizontalAlignment="Center"/>
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>

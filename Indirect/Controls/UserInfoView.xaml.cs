@@ -38,7 +38,7 @@ namespace Indirect.Controls
             var view = (UserInfoView)d;
             var item = (UserInfo) e.NewValue;
             if (item == null) return;
-            view.GoToProfileHyperlinkButton.NavigateUri = new Uri($"https://www.instagram.com/{item.Username}/");
+            view.GoToProfileHyperlinkButton.NavigateUri = item.ProfileUrl;
             if (!string.IsNullOrEmpty(item.ExternalUrl))
             {
                 view.ExternalUrl.Content = item.ExternalUrl;

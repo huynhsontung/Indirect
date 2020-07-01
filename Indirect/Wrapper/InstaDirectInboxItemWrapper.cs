@@ -61,6 +61,9 @@ namespace Indirect.Wrapper
 
                     case DirectItemType.Hashtag:
                         return new Uri("https://www.instagram.com/explore/tags/" + HashtagMedia.Name.ToLower(CultureInfo.CurrentCulture));
+
+                    case DirectItemType.Profile:
+                        return Profile.ProfileUrl;
                     
                     default:
                         return null;

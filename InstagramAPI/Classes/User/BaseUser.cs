@@ -25,6 +25,8 @@ namespace InstagramAPI.Classes.User
 
         public static BaseUser Empty => new BaseUser {FullName = string.Empty, Username = string.Empty};
 
+        public Uri ProfileUrl => string.IsNullOrEmpty(Username) ? null : new Uri($"https://www.instagram.com/{Username}/");
+
         public bool Equals(BaseUser user)
         {
             return Pk == user?.Pk;

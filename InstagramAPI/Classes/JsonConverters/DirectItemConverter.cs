@@ -124,8 +124,11 @@ namespace InstagramAPI.Classes.JsonConverters
                         }
                         break;
 
+                    case DirectItemType.Profile:
+                        item.Description = item.FromMe ? "You sent a profile" : "Sent a profile";
+                        break;
+
                     default:
-                        item = itemJson.ToObject<DirectItem>(serializer);
                         item.Description = item.ItemType.ToString();
                         break;
                 }

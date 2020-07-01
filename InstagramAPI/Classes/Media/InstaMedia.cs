@@ -1,4 +1,5 @@
-﻿using InstagramAPI.Classes.JsonConverters;
+﻿using System;
+using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Media
@@ -30,5 +31,14 @@ namespace InstagramAPI.Classes.Media
 
         [JsonProperty("video_duration", NullValueHandling = NullValueHandling.Ignore)]
         public double? VideoDuration { get; set; }
+
+        /// <summary>
+        ///     Get last image url in Images. Mostly used for easy XAML binding.
+        /// </summary>
+        public Uri GetLastImageUrl()
+        {
+            if (Images == null || Images.Length == 0) return null;
+            return Images[Images.Length - 1]?.Url;
+        }
     }
 }

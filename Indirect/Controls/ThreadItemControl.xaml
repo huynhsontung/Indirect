@@ -10,7 +10,8 @@
     xmlns:converters="using:Indirect.Converters"
     xmlns:wrappers="using:Indirect.Wrapper" 
     xmlns:controls1="using:Indirect.Controls" 
-    xmlns:utilities="using:Indirect.Utilities"
+    xmlns:utilities="using:Indirect.Utilities" 
+    xmlns:media="using:InstagramAPI.Classes.Media"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400"
@@ -242,7 +243,7 @@
 
             <DataTemplate x:Name="MediaShareTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
                 <Grid x:Name="MediaShareView"
-                      CornerRadius="2" Tapped="OpenWebLink"
+                      CornerRadius="2"
                       Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
                       MaxWidth="250"
                       HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
@@ -253,14 +254,14 @@
                         <RowDefinition Height="36"/>
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,6,8,6">
-                        <controls:ImageEx Source="{x:Bind MediaShare.User.ProfilePictureUrl}" Height="24" Width="24" CornerRadius="99" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="{x:Bind MediaShare.User.Username}" 
+                        <controls:ImageEx Height="24" Width="24" CornerRadius="99" Margin="0,0,8,0" VerticalAlignment="Center"
+                                          Source="{x:Bind MediaShare.User.ProfilePictureUrl}"/>
+                        <TextBlock Text="{x:Bind MediaShare.User.Username}"
                                    Style="{ThemeResource FluentBaseTextStyle}"
-                                   MaxLines="1" 
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                     <controls:ImageEx x:Name="MediaShareImageFrame" Grid.Row="1" 
-                                      Source="{x:Bind PreviewImageUri}"
+                                      Source="{x:Bind PreviewImageUri}" Tapped="OpenWebLink"
                                       HorizontalAlignment="Stretch"
                                       VerticalAlignment="Stretch"/>
                     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom"
@@ -369,6 +370,45 @@
                 </Border>
             </DataTemplate>
 
+            <DataTemplate x:Key="ProfileTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+                <Grid Padding="0,8,0,0"
+                      CornerRadius="2" Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
+                      HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="36"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*" MaxWidth="180"/>
+                    </Grid.ColumnDefinitions>
+                    <controls:ImageEx Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Width="40" Height="40" Margin="14,0,10,0"
+                                      Source="{x:Bind Profile.ProfilePictureUrl}" CornerRadius="99" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind Profile.Username}" Style="{ThemeResource FluentBaseTextStyle}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind Profile.FullName}" Style="{ThemeResource FluentCaptionTextStyle}"
+                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                    <GridView Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Width="252" SelectionMode="None" Tapped="OpenWebLink"
+                              ItemsSource="{x:Bind PreviewMedias}" Margin="0,6,0,-10">
+                        <GridView.ItemContainerStyle>
+                            <Style TargetType="GridViewItem">
+                                <Setter Property="Margin" Value="0"/>
+                            </Style>
+                        </GridView.ItemContainerStyle>
+                        <GridView.ItemTemplate>
+                            <DataTemplate x:DataType="media:InstaMedia">
+                                <controls:ImageEx Source="{x:Bind GetLastImageUrl()}" Stretch="UniformToFill" Height="84" Width="84"/>
+                            </DataTemplate>
+                        </GridView.ItemTemplate>
+                    </GridView>
+                    <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="{ThemeResource MainBackground}" BorderThickness="0,1,0,0">
+                        <HyperlinkButton HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource SystemControlHyperlinkBaseHighBrush}"
+                                         NavigateUri="{x:Bind Profile.ProfileUrl}" FontWeight="SemiBold" Content="See full profile on instagram.com →"/>
+                    </Border>
+                </Grid>
+            </DataTemplate>
+
             <DataTemplate x:Key="PlaceholderTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
                 <Border Background="Transparent" 
                         MaxWidth="190"
@@ -435,6 +475,7 @@
                                             ReelShareTemplate="{StaticResource ReelShareTemplate}"
                                             StoryShareTemplate="{StaticResource StoryShareTemplate}"
                                             VideoCallTemplate="{StaticResource VideoCallTemplate}"
+                                            ProfileTemplate="{StaticResource ProfileTemplate}"
                                             UnexpectedTemplate="{StaticResource UnexpectedTemplate}"
                                             PlaceholderTemplate="{StaticResource PlaceholderTemplate}"/>
             </ContentControl.ContentTemplateSelector>

@@ -21,6 +21,7 @@ namespace Indirect.Utilities
         public DataTemplate ReelShareTemplate { get; set; }
         public DataTemplate StoryShareTemplate { get; set; }
         public DataTemplate VideoCallTemplate { get; set; }
+        public DataTemplate ProfileTemplate { get; set; }
         public DataTemplate NotSupportedTemplate { get; set; }
         public DataTemplate UnexpectedTemplate { get; set; }
         public DataTemplate PlaceholderTemplate { get; set; }
@@ -82,6 +83,9 @@ namespace Indirect.Utilities
 
                     case DirectItemType.VideoCallEvent:
                         return VideoCallTemplate;
+
+                    case DirectItemType.Profile:
+                        return ProfileTemplate;
 
                     case DirectItemType.Placeholder:
                         return PlaceholderTemplate;
