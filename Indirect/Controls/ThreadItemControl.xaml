@@ -160,38 +160,27 @@
                         MaxWidth="250"
                         Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}" 
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
-                        CornerRadius="2,2,2,2" Padding="6,0,6,0">
-                    <HyperlinkButton Content="{x:Bind Text}" NavigateUri="{x:Bind NavigateUri}" Foreground="{StaticResource SystemControlForegroundBaseHighBrush}"/>
+                        CornerRadius="2,2,2,2" Padding="6,6,6,8">
+                    <TextBlock TextWrapping="Wrap" Style="{ThemeResource FluentBodyTextStyle}">
+                        <Hyperlink NavigateUri="{x:Bind NavigateUri}" Foreground="{StaticResource SystemControlForegroundBaseHighBrush}"><Run Text="{x:Bind Text}"/></Hyperlink>
+                    </TextBlock>
                 </Border>
             </DataTemplate>
 
             <DataTemplate x:Key="HyperlinkWithPreviewTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
-                <StackPanel Orientation="Vertical">
-                    <Border x:Name="HyperlinkContent" 
-                            MaxWidth="250"
-                            Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}" 
-                            HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
-                            CornerRadius="2,2,2,2" Padding="6,0,6,0">
-                        <HyperlinkButton Content="{x:Bind Text}" NavigateUri="{x:Bind NavigateUri}" Foreground="{StaticResource SystemControlForegroundBaseHighBrush}"/>
-                    </Border>
+                <StackPanel Orientation="Vertical" MaxWidth="250" CornerRadius="2"
+                            Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}">
+                    <TextBlock TextWrapping="Wrap" Style="{ThemeResource FluentBodyTextStyle}" Margin="6,6,6,8">
+                        <Hyperlink NavigateUri="{x:Bind NavigateUri}" Foreground="{StaticResource SystemControlForegroundBaseHighBrush}"><Run Text="{x:Bind Text}"/></Hyperlink>
+                    </TextBlock>
 
-                    <Border x:Name="HyperlinkPreview" Visibility="{x:Bind IsNavigateUriValid, Converter={StaticResource BooleanVisibilityConverter}}"
-                            Background="Transparent" 
-                            MaxWidth="250"
-                            HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
-                            CornerRadius="2" Padding="8,6,8,6" Tapped="OpenWebLink"
-                            BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
-                        <StackPanel Orientation="Vertical">
-                            <controls:ImageEx Source="{x:Bind Link.LinkContext.LinkImageUrl}" IsCacheEnabled="False" 
-                                              Margin="-8,-6,-8,8" 
-                                              CornerRadius="0"/>
-                            <TextBlock Text="{x:Bind Link.LinkContext.LinkTitle}" Style="{ThemeResource FluentBaseTextStyle}"/>
-                            <NavigationViewItemSeparator/>
-                            <TextBlock Text="{x:Bind Link.LinkContext.LinkSummary}" 
-                                       Style="{ThemeResource FluentCaptionTextStyle}"
-                                       Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Border>
+                    <controls:ImageEx Source="{x:Bind Link.LinkContext.LinkImageUrl}" IsCacheEnabled="False"/>
+                    <StackPanel Orientation="Vertical" Margin="6,6,6,8">
+                        <TextBlock Text="{x:Bind Link.LinkContext.LinkTitle}" Style="{ThemeResource FluentBaseTextStyle}"/>
+                        <TextBlock Text="{x:Bind Link.LinkContext.LinkSummary}"
+                                   Style="{ThemeResource FluentCaptionTextStyle}"
+                                   Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
                 </StackPanel>
             </DataTemplate>
 
