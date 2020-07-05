@@ -578,8 +578,8 @@
                         <Grid.Resources>
                             <Style x:Key="AppBarButtonStyle" BasedOn="{StaticResource AppBarButtonRevealStyle}" TargetType="AppBarButton">
                                 <Setter Property="Width" Value="{ThemeResource MTCMediaButtonWidth}"/>
-                                <Setter Property="Height" Value="{ThemeResource MTCMediaButtonHeight}"/>
                                 <Setter Property="AllowFocusOnInteraction" Value="True"/>
+                                <Setter Property="LabelPosition" Value="Collapsed"/>
                             </Style>
                             <Style x:Key="AppBarToggleButtonStyle" BasedOn="{StaticResource AppBarToggleButtonRevealStyle}" TargetType="AppBarToggleButton">
                                 <Setter Property="Width" Value="{ThemeResource MTCMediaButtonWidth}"/>
@@ -977,7 +977,7 @@
                                             <RowDefinition/>
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
-                                        <Slider x:Name="ProgressSlider" Height="33" IsThumbToolTipEnabled="False" MinWidth="80" Margin="12,0" Style="{StaticResource MediaSliderStyle}" VerticalAlignment="Center"/>
+                                        <Slider x:Name="ProgressSlider" Height="33" IsThumbToolTipEnabled="False" MinWidth="80" Margin="12,0" Style="{StaticResource MediaSliderStyle}" VerticalAlignment="Top"/>
                                         <ProgressBar x:Name="BufferingProgressBar" Height="4" IsIndeterminate="True" IsHitTestVisible="False" Margin="0,2,0,0" VerticalAlignment="Top" Visibility="Collapsed"/>
                                         <Grid x:Name="TimeTextGrid" Height="15" Margin="12,0" Grid.Row="1">
                                             <TextBlock x:Name="TimeElapsedElement" HorizontalAlignment="Left" Margin="0" Style="{StaticResource MediaTextBlockStyle}" Text="00:00" VerticalAlignment="Bottom"/>
@@ -986,7 +986,7 @@
                                     </Grid>
                                 </Border>
                                 <Border x:Name="LeftSidePlayBorder" Grid.Column="0" Grid.Row="1" Visibility="Collapsed">
-                                    <AppBarButton x:Name="PlayPauseButtonOnLeft" Margin="0" Style="{StaticResource AppBarButtonStyle}" VerticalAlignment="Center">
+                                    <AppBarButton x:Name="PlayPauseButtonOnLeft" Margin="0" Style="{StaticResource AppBarButtonStyle}" VerticalAlignment="Top">
                                         <AppBarButton.Icon>
                                             <SymbolIcon x:Name="PlayPauseSymbolLeft" Symbol="Play"/>
                                         </AppBarButton.Icon>

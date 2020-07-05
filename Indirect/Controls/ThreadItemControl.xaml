@@ -339,7 +339,7 @@
                         <controls1:AutoVideoControl.TransportControls>
                             <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False" 
                                                     IsZoomButtonVisible="False" ShowAndHideAutomatically="False"
-                                                    IsCompact="True"/>
+                                                    IsCompact="True" Margin="0,0,0,-8"/>
                         </controls1:AutoVideoControl.TransportControls>
                     </controls1:AutoVideoControl>
                 </Border>
