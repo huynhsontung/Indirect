@@ -7,8 +7,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
-using Indirect.Utilities;
-using Microsoft.Toolkit.Uwp.UI;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -46,6 +44,11 @@ namespace Indirect.Controls
             typeof(object),
             typeof(AutoVideoControl),
             new PropertyMetadata(null, OnPosterSourceChanged));
+        public static readonly DependencyProperty IsAudioPlayerProperty = DependencyProperty.Register(
+            nameof(IsAudioPlayer),
+            typeof(bool),
+            typeof(AutoVideoControl),
+            new PropertyMetadata(false, PropertyChangedCallback));
         public static readonly DependencyProperty AutoPlayProperty = DependencyProperty.Register(
             nameof(AutoPlay),
             typeof(bool),
@@ -77,6 +80,12 @@ namespace Indirect.Controls
             }
             
             view.VideoPlayer.PosterSource = new BitmapImage(uri);
+        }
+
+        private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var view = (AutoVideoControl) d;
+            view.VideoPlayer.Style = (bool) e.NewValue ? (Style) view.Resources["AudioOnlyMediaPlayerElement"] : null;
         }
 
         private static void AreTransportControlsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -203,6 +212,12 @@ namespace Indirect.Controls
         {
             get => (bool) GetValue(AreTransportControlsEnabledProperty);
             set => SetValue(AreTransportControlsEnabledProperty, value);
+        }
+
+        public bool IsAudioPlayer
+        {
+            get => (bool) GetValue(IsAudioPlayerProperty);
+            set => SetValue(IsAudioPlayerProperty, value);
         }
         public bool AutoPlay
         {

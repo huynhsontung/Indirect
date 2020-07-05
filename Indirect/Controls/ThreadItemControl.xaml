@@ -19,7 +19,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="CustomTransportControl.xaml"/>
+                <ResourceDictionary Source="Styles/CustomTransportControl.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
@@ -216,10 +216,7 @@
                         <SymbolIcon Symbol="NewWindow"/>
                     </Button>
 
-                    <Border Grid.Column="1"
-                            CornerRadius="2"
-                            BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                            BorderThickness="1">
+                    <Border Grid.Column="1" CornerRadius="2">
                         <controls1:AutoVideoControl x:Name="MediaFrame"
                                                 MaxWidth="250" MaxHeight="350" 
                                                 VideoHeight="{x:Bind VideoHeight}" VideoWidth="{x:Bind VideoWidth}"
@@ -335,7 +332,8 @@
             <DataTemplate x:Key="AudioTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
                 <Border CornerRadius="2"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
-                    <controls1:AutoVideoControl Width="250" Source="{x:Bind VideoUri}">
+                    <controls1:AutoVideoControl Width="250" Source="{x:Bind VideoUri}" IsAudioPlayer="True" 
+                                                Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}">
                         <controls1:AutoVideoControl.TransportControls>
                             <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False" 
                                                     IsZoomButtonVisible="False" ShowAndHideAutomatically="False"

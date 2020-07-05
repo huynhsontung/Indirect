@@ -10,7 +10,27 @@
     d:DesignWidth="400"
     EffectiveViewportChanged="AutoVideoControl_OnEffectiveViewportChanged"
     SizeChanged="AutoVideoControl_OnSizeChanged">
+    <UserControl.Resources>
+        <Style TargetType="MediaPlayerElement" x:Key="AudioOnlyMediaPlayerElement">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MediaPlayerElement">
+                        <Grid x:Name="LayoutRoot" Background="{TemplateBinding Background}">
+                            <Border Background="Transparent"/>
+                            <!--<Image x:Name="PosterImage" Stretch="{TemplateBinding Stretch}" Source="{TemplateBinding PosterSource}" Visibility="Collapsed"/>-->
+                            <!--<MediaPlayerPresenter x:Name="MediaPlayerPresenter" IsFullWindow="{TemplateBinding IsFullWindow}" MediaPlayer="{TemplateBinding MediaPlayer}" Stretch="{TemplateBinding Stretch}"/>-->
+                            <ContentPresenter x:Name="TransportControlsPresenter" Visibility="{TemplateBinding AreTransportControlsEnabled}"/>
+                            <Grid x:Name="TimedTextSourcePresenter"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
 
     <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" AutoPlay="False" IsFullWindow="False"
-                        MaxWidth="{x:Bind MaxWidth}" MaxHeight="{x:Bind MaxHeight}"/>
+                        MaxWidth="{x:Bind MaxWidth}" MaxHeight="{x:Bind MaxHeight}" Background="{x:Bind Background}"/>
 </UserControl>
