@@ -18,6 +18,9 @@
     HorizontalAlignment="Stretch">
     <UserControl.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="CustomTransportControl.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="FromThemItemBackground" Color="#333333"></SolidColorBrush>
@@ -331,12 +334,10 @@
 
             <DataTemplate x:Key="AudioTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
                 <Border CornerRadius="2"
-                        HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
-                        BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                        BorderThickness="1">
+                        HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
                     <controls1:AutoVideoControl Width="250" Source="{x:Bind VideoUri}">
                         <controls1:AutoVideoControl.TransportControls>
-                            <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False"
+                            <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False" 
                                                     IsZoomButtonVisible="False" ShowAndHideAutomatically="False"
                                                     IsCompact="True"/>
                         </controls1:AutoVideoControl.TransportControls>
