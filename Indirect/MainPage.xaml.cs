@@ -300,6 +300,7 @@ namespace Indirect
         {
             MediaPopup.IsOpen = true;
             ImmersiveControl.Item = item;
+            ImmersiveControl.Focus(FocusState.Programmatic);
         }
 
         internal void CloseImmersiveView()
