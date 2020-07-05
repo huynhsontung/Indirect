@@ -69,7 +69,10 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <ProgressBar x:Name="ReelsProgressBar" Grid.Row="0" Canvas.ZIndex="1" Opacity="0.3" HorizontalAlignment="Stretch"/>
+        <!--<controls1:ReelProgressIndicator x:Name="NewReelProgressIndicator" Grid.Row="0" Canvas.ZIndex="1" HorizontalAlignment="Stretch"
+                                         BaseBrush="{ThemeResource MainBackground}"
+                                         HighlightBrush="{ThemeResource MainBackground}"/>-->
+        <ProgressBar x:Name="ReelsProgressBar" Grid.Row="0" Canvas.ZIndex="1" Opacity="0.5" HorizontalAlignment="Stretch"/>
         <Grid Grid.Row="1" Canvas.ZIndex="1">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">

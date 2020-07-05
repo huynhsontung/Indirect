@@ -11,7 +11,8 @@
     xmlns:wrapper="using:Indirect.Wrapper"
     xmlns:users="using:InstagramAPI.Classes.User" 
     xmlns:controls1="using:Indirect.Controls"
-    xmlns:classes="using:InstagramAPI.Classes"
+    xmlns:classes="using:InstagramAPI.Classes" 
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -112,7 +113,7 @@
 
                     <ListView Grid.Row="1" ItemsSource="{x:Bind _viewModel.ReelsFeed.Reels}" Canvas.ZIndex="1" VerticalAlignment="Stretch"
                               ScrollViewer.HorizontalScrollMode="Enabled" 
-                              ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
                               ScrollViewer.VerticalScrollMode="Disabled"
                               ScrollViewer.VerticalScrollBarVisibility="Hidden"
                               SelectionChanged="ReelsFeed_OnSelectionChanged">

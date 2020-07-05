@@ -143,6 +143,10 @@ namespace Indirect.Controls
                 ReelsProgressBar.Value = selectedIndex == end
                     ? 100
                     : (selectedIndex - start + 1d) / (end - start + 1) * 100;
+
+                //
+                //NewReelProgressIndicator.Count = end - start + 1;
+                //NewReelProgressIndicator.Selected = selectedIndex - start;
             }
             else
             {
@@ -153,6 +157,7 @@ namespace Indirect.Controls
                     ReelsProgressBar.Value = (selectedIndex - _reelLimit.Item1 + 1d) /
                         (_reelLimit.Item2 - _reelLimit.Item1 + 1d) * 100;
                 }
+                //NewReelProgressIndicator.Selected = selectedIndex - _reelLimit.Item1;
             }
 
             if (ReelsProgressBar.Value > 99) ReelsProgressBar.Value = 100;
