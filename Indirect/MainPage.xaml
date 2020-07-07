@@ -230,7 +230,7 @@
                             Padding="6"
                             VerticalAlignment="Center"
                             ToolTipService.ToolTip="New message">
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF716;" Width="32" Height="32"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8FA;" Width="32" Height="32"/>
                         <Button.Flyout>
                             <Flyout x:Name="NewThreadFlyout" Placement="RightEdgeAlignedTop">
                                 <Grid Width="240">
