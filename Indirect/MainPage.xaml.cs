@@ -87,14 +87,12 @@ namespace Indirect
         {
             if (e.WindowActivationState == CoreWindowActivationState.Deactivated)
             {
-                BackButton.IsEnabled = false;
-                AppTitleTextBlock.Opacity = 0.5;
+                BackButton.IsEnabled = false;                
             }
             else
             {
 
-                BackButton.IsEnabled = true;
-                AppTitleTextBlock.Opacity = 1;
+                BackButton.IsEnabled = true;                
             }
         }
 
