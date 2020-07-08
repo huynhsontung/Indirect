@@ -6,6 +6,9 @@ using Windows.Networking.Sockets;
 using InstagramAPI;
 using InstagramAPI.Push;
 using InstagramAPI.Utils;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 
 namespace BackgroundPushClient
 {
@@ -13,6 +16,9 @@ namespace BackgroundPushClient
     {
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
+#if !DEBUG
+            AppCenter.Start(Secrets.APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
+#endif
             var deferral = taskInstance.GetDeferral();
             this.Log("-------------- Start of background task --------------");
             try

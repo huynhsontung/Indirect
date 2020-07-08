@@ -33,7 +33,7 @@ namespace Indirect
         public App()
         {
 #if !DEBUG
-            AppCenter.Start(APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
+            AppCenter.Start(Secrets.APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
 #endif
             this.InitializeComponent();
             SetTheme();

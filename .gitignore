@@ -270,3 +270,4 @@ __pycache__/
 /InstantMessaging/MqttHelpers/Thrift
 /InstantMessaging/Notification/Thrift
 /Indirect/SECRETS.cs
+/InstagramAPI/SECRETS.cs
