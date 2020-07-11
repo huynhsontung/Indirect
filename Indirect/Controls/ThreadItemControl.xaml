@@ -179,7 +179,7 @@
 
                     <controls:ImageEx Source="{x:Bind Link.LinkContext.LinkImageUrl}" IsCacheEnabled="False"/>
                     <StackPanel Orientation="Vertical" Margin="6,6,6,8">
-                        <TextBlock Text="{x:Bind Link.LinkContext.LinkTitle}" Style="{ThemeResource FluentBaseTextStyle}"/>
+                        <TextBlock Text="{x:Bind Link.LinkContext.LinkTitle}" Style="{ThemeResource FluentBaseTextStyle}" TextWrapping="Wrap"/>
                         <TextBlock Text="{x:Bind Link.LinkContext.LinkSummary}"
                                    Style="{ThemeResource FluentCaptionTextStyle}"
                                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" TextWrapping="Wrap"/>
