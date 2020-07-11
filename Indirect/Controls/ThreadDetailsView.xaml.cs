@@ -283,5 +283,70 @@ namespace Indirect.Controls
             tb.SelectionStart = tb.Text.Length;
             _needUpdateCaret = false;
         }
+
+        private void OnDragOver(object sender, DragEventArgs e)
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+            if (e.DragUIOverride == null) return;
+            if (e.DataView.Contains(StandardDataFormats.StorageItems) || 
+                e.DataView.Contains(StandardDataFormats.Bitmap))
+            {
+                e.DragUIOverride.Caption = "Send";
+            }
+            else
+            {
+                e.DragUIOverride.IsCaptionVisible = false;
+            }
+        }
+
+        private async void OnDrop(object sender, DragEventArgs e)
+        {
+            var count = 0;
+            void MultiUploadAction(UploaderProgress progress)
+            {
+                if (progress.UploadState != InstaUploadState.Completed &&
+                    progress.UploadState != InstaUploadState.Error) return;
+                count--;
+                if (count <= 0) UploadProgress.Visibility = Visibility.Collapsed;
+            }
+
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
+            {
+                var items = await e.DataView.GetStorageItemsAsync();
+                foreach (var item in items)
+                {
+                    var file = (StorageFile) item;
+                    if (file.FileType.EndsWith("png", StringComparison.OrdinalIgnoreCase) ||
+                        file.FileType.EndsWith("jpeg", StringComparison.OrdinalIgnoreCase) ||
+                        file.FileType.EndsWith("jpg", StringComparison.OrdinalIgnoreCase))
+                    {
+                        UploadProgress.Visibility = Visibility.Visible;
+                        count++;
+                        await ViewModel.SendFile(file, MultiUploadAction);
+                    }
+                }
+            }
+
+            if (e.DataView.Contains(StandardDataFormats.Bitmap))
+            {
+                var reference = await e.DataView.GetBitmapAsync();
+                var bitmap = await reference.OpenReadAsync();
+                UploadProgress.Visibility = Visibility.Visible;
+                count++;
+                await ViewModel.SendStream(bitmap, MultiUploadAction);
+            }
+
+            if (e.DataView.Contains(StandardDataFormats.WebLink))
+            {
+                var link = await e.DataView.GetWebLinkAsync();
+                MessageTextBox.Text = link.ToString();
+            }
+
+            if (e.DataView.Contains(StandardDataFormats.Text))
+            {
+                var text = await e.DataView.GetTextAsync();
+                MessageTextBox.Text = text;
+            }
+        }
     }
 }

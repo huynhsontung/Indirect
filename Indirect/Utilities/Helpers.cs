@@ -23,8 +23,9 @@ namespace Indirect.Utilities
 
         public static async Task<IBuffer> CompressImage(StorageFile imagefile, int reqWidth, int reqHeight)
         {
+            if (imagefile == null) throw new ArgumentNullException(nameof(imagefile));
             //open file as stream
-            using (IRandomAccessStream fileStream = await imagefile.OpenAsync(FileAccessMode.ReadWrite))
+            using (IRandomAccessStream fileStream = await imagefile.OpenAsync(FileAccessMode.Read))
             {
                 return await CompressImage(fileStream, reqWidth, reqHeight).ConfigureAwait(false);
             }
@@ -63,7 +64,7 @@ namespace Indirect.Utilities
             resizedStream.Seek(0);
             var outBuffer = new Windows.Storage.Streams.Buffer((uint)resizedStream.Size);
             await resizedStream.ReadAsync(outBuffer, (uint)resizedStream.Size, InputStreamOptions.None);
-            
+            resizedStream.Dispose();
             return outBuffer;
         }
     }

@@ -21,7 +21,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid ProcessKeyboardAccelerators="Details_OnProcessKeyboardAccelerators" Background="Transparent">
+    <Grid ProcessKeyboardAccelerators="Details_OnProcessKeyboardAccelerators" Background="Transparent" AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="Auto"/>
