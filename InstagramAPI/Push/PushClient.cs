@@ -54,16 +54,7 @@ namespace InstagramAPI.Push
             // Build user agent for first time setup
             if (string.IsNullOrEmpty(ConnectionData.UserAgent))
                 ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(api.Device);
-
-            //NetworkInformation.NetworkStatusChanged += OnNetworkStatusChanged;
         }
-
-        //private async void OnNetworkStatusChanged(object sender)
-        //{
-        //    await Task.Delay(TimeSpan.FromSeconds(2));
-        //    if (!Instagram.InternetAvailable() || Running) return;
-        //    await StartFresh();
-        //}
 
         public void UnregisterTasks()
         {
@@ -255,7 +246,6 @@ namespace InstagramAPI.Push
         public void Shutdown()
         {
             this.Log("Stopping push server");
-            //NetworkInformation.NetworkStatusChanged -= OnNetworkStatusChanged;
             _runningTokenSource?.Cancel();
             _inboundReader?.Dispose();
             _outboundWriter?.DetachStream();
@@ -265,14 +255,12 @@ namespace InstagramAPI.Push
         private async void Restart()
         {
             this.Log("Restarting push server");
-            //NetworkInformation.NetworkStatusChanged -= OnNetworkStatusChanged;
             _runningTokenSource?.Cancel();
             _inboundReader?.Dispose();
             _outboundWriter?.Dispose();
             await Task.Delay(TimeSpan.FromSeconds(3));
             if (Running) return;
             await StartFresh();
-            //NetworkInformation.NetworkStatusChanged += OnNetworkStatusChanged;
         }
 
         private async void StartPollingLoop()
