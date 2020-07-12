@@ -1,25 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+﻿using System.ComponentModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
+using Indirect.Utilities;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
 namespace Indirect.Controls
 {
-    public sealed partial class ReelProgressIndicator : UserControl
+    public sealed partial class ReelProgressIndicator : UserControl, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public static readonly DependencyProperty CountProperty = DependencyProperty.Register(
             nameof(Count),
             typeof(int),
@@ -68,7 +60,20 @@ namespace Indirect.Controls
             set => SetValue(CountProperty, value);
         }
 
-        private readonly ObservableCollection<(double value, Brush foreground)> _indicatorCollection = new ObservableCollection<(double value, Brush foreground)>();
+        private double _singleWidth = 4;
+        private double SingleWidth
+        {
+            get => _singleWidth;
+            set
+            {
+                if (value == _singleWidth) return;
+                _singleWidth = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SingleWidth)));
+            }
+        }
+
+        // Maximum number of stories at a time is 100. Source: https://mashable.com/2017/10/20/how-i-broke-instagram-stories/
+        private readonly ProgressItem[] _indicatorCollection = new ProgressItem[100];
 
         private static void StaticOnSelectOrCountChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -79,46 +84,25 @@ namespace Indirect.Controls
                 return;
             }
             if (e.OldValue == e.NewValue) return;
+            owner.CalculateIndicatorWidth();
             owner.OnSelectOrCountChanged();
         }
 
         private void OnSelectOrCountChanged()
         {
-            if (Count != _indicatorCollection.Count)
+            for (var i = 0; i < Count; i++)
             {
-                _indicatorCollection.Clear();
-                for (var i = 0; i < Count; i++)
+                if (i < Selected)
                 {
-                    if (i < Selected)
-                    {
-                        _indicatorCollection.Add((100, BaseBrush));
-                    }
-                    else if (i == Selected)
-                    {
-                        _indicatorCollection.Add((100, HighlightBrush));
-                    }
-                    else
-                    {
-                        _indicatorCollection.Add((0, BaseBrush));
-                    }
+                    _indicatorCollection[i].Update(100, BaseBrush, SingleWidth);
                 }
-            }
-            else
-            {
-                for (var i = 0; i < Selected && i < _indicatorCollection.Count; i++)
+                else if (i == Selected)
                 {
-                    if (i < Selected)
-                    {
-                        _indicatorCollection[i] = (100, BaseBrush);
-                    }
-                    else if (i == Selected)
-                    {
-                        _indicatorCollection[i] = (100, HighlightBrush);
-                    }
-                    else
-                    {
-                        _indicatorCollection[i] = (0, BaseBrush);
-                    }
+                    _indicatorCollection[i].Update(100, HighlightBrush, SingleWidth);
+                }
+                else
+                {
+                    _indicatorCollection[i].Update(0, BaseBrush, SingleWidth);
                 }
             }
         }
@@ -126,6 +110,31 @@ namespace Indirect.Controls
         public ReelProgressIndicator()
         {
             this.InitializeComponent();
+            for (var i = 0; i < _indicatorCollection.Length; i++)
+            {
+                _indicatorCollection[i] = new ProgressItem();
+            }
+        }
+
+        private void CalculateIndicatorWidth()
+        {
+            var availableWidth = this.ActualWidth - (Count - 1) * 2d;  // 2 is spacing between indicators
+            SingleWidth = availableWidth <= 0 ? 4 : availableWidth / Count;
+        }
+
+        private void UpdateIndicatorWidth()
+        {
+            for (var i = 0; i < Count; i++)
+            {
+                var item = _indicatorCollection[i];
+                item.Update(item.Value, item.ForegroundBrush, SingleWidth);
+            }
+        }
+
+        private void ReelProgressIndicator_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            CalculateIndicatorWidth();
+            UpdateIndicatorWidth();
         }
     }
 }

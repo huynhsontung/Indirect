@@ -114,7 +114,7 @@ namespace Indirect.Controls
         {
             if (selected == null)
             {
-                ReelsProgressBar.Value = 0;
+                return;
             }
             else if (selected.Parent.Id != previous?.Parent.Id)
             {
@@ -140,27 +140,14 @@ namespace Indirect.Controls
 
                 _reelLimit = new Tuple<int, int>(start, end);
                 var selectedIndex = StoryView.SelectedIndex;
-                ReelsProgressBar.Value = selectedIndex == end
-                    ? 100
-                    : (selectedIndex - start + 1d) / (end - start + 1) * 100;
-
-                //
-                //NewReelProgressIndicator.Count = end - start + 1;
-                //NewReelProgressIndicator.Selected = selectedIndex - start;
+                NewReelProgressIndicator.Count = end - start + 1;
+                NewReelProgressIndicator.Selected = selectedIndex - start;
             }
             else
             {
                 var selectedIndex = StoryView.SelectedIndex;
-                if (_reelLimit.Item2 < selectedIndex) ReelsProgressBar.Value = 0;
-                else
-                {
-                    ReelsProgressBar.Value = (selectedIndex - _reelLimit.Item1 + 1d) /
-                        (_reelLimit.Item2 - _reelLimit.Item1 + 1d) * 100;
-                }
-                //NewReelProgressIndicator.Selected = selectedIndex - _reelLimit.Item1;
+                NewReelProgressIndicator.Selected = selectedIndex - _reelLimit.Item1;
             }
-
-            if (ReelsProgressBar.Value > 99) ReelsProgressBar.Value = 100;
         }
 
         private void MessageTextBox_OnEnterPressed(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
