@@ -13,14 +13,11 @@ namespace Indirect.Utilities
 
         public double Value { get; private set; }
 
-        public Brush ForegroundBrush { get; private set; }
-
         public double Width { get; private set; }
 
-        public void Update(double value, Brush foreground, double width)
+        public void Update(double value, double width)
         {
             Value = value;
-            ForegroundBrush = foreground;
             Width = width;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
         }

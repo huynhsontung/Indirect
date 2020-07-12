@@ -24,30 +24,6 @@ namespace Indirect.Controls
             typeof(ReelProgressIndicator),
             new PropertyMetadata(0, StaticOnSelectOrCountChanged));
 
-        public static readonly DependencyProperty BaseBrushProperty = DependencyProperty.Register(
-            nameof(BaseBrush),
-            typeof(Brush),
-            typeof(ReelProgressIndicator),
-            new PropertyMetadata(null));
-
-        public static readonly DependencyProperty HighlightBrushProperty = DependencyProperty.Register(
-            nameof(HighlightBrush),
-            typeof(Brush),
-            typeof(ReelProgressIndicator),
-            new PropertyMetadata(null));
-
-        public Brush BaseBrush
-        {
-            get => (Brush) GetValue(BaseBrushProperty);
-            set => SetValue(BaseBrushProperty, value);
-        }
-
-        public Brush HighlightBrush
-        {
-            get => (Brush) GetValue(HighlightBrushProperty);
-            set => SetValue(HighlightBrushProperty, value);
-        }
-
         public int Selected
         {
             get => (int) GetValue(SelectedProperty);
@@ -94,15 +70,15 @@ namespace Indirect.Controls
             {
                 if (i < Selected)
                 {
-                    _indicatorCollection[i].Update(100, BaseBrush, SingleWidth);
+                    _indicatorCollection[i].Update(100, SingleWidth);
                 }
                 else if (i == Selected)
                 {
-                    _indicatorCollection[i].Update(100, HighlightBrush, SingleWidth);
+                    _indicatorCollection[i].Update(100, SingleWidth);
                 }
                 else
                 {
-                    _indicatorCollection[i].Update(0, BaseBrush, SingleWidth);
+                    _indicatorCollection[i].Update(0, SingleWidth);
                 }
             }
         }
@@ -127,7 +103,7 @@ namespace Indirect.Controls
             for (var i = 0; i < Count; i++)
             {
                 var item = _indicatorCollection[i];
-                item.Update(item.Value, item.ForegroundBrush, SingleWidth);
+                item.Update(item.Value, SingleWidth);
             }
         }
 
