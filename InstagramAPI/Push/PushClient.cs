@@ -268,7 +268,6 @@ namespace InstagramAPI.Push
             //NetworkInformation.NetworkStatusChanged -= OnNetworkStatusChanged;
             _runningTokenSource?.Cancel();
             _inboundReader?.Dispose();
-            _outboundWriter?.DetachStream();
             _outboundWriter?.Dispose();
             await Task.Delay(TimeSpan.FromSeconds(3));
             if (Running) return;
