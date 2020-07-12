@@ -7,8 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:wrapper="using:Indirect.Wrapper"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
-    xmlns:utilities="using:Indirect.Utilities" 
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:Indirect.Controls"
     mc:Ignorable="d"
     d:DesignHeight="300"
@@ -70,7 +69,7 @@
             </CommandBar.Content>
         </CommandBar>
 
-        <utilities:ChatListView x:Name="ItemsHolder" Grid.Row="0" Grid.RowSpan="3"
+        <controls1:ChatListView x:Name="ItemsHolder" Grid.Row="0" Grid.RowSpan="3"
                             ItemsSource="{x:Bind Thread.ObservableItems, Mode=OneWay}"
                             IncrementalLoadingThreshold="1"
                             SelectionMode="None">
@@ -147,7 +146,7 @@
                     <controls1:ThreadItemControl Item="{x:Bind}"/>
                 </DataTemplate>
             </ListView.ItemTemplate>
-        </utilities:ChatListView>
+        </controls1:ChatListView>
         
 
         <Grid x:Name="MessageInputGrid" Grid.Row="3" HorizontalAlignment="Stretch" Margin="0,2,0,2">

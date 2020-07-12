@@ -12,11 +12,10 @@
 using System;
 using System.Threading.Tasks;
 using Windows.Foundation;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 
-namespace Indirect.Utilities
+namespace Indirect.Controls
 {
     /// <summary>
     /// This ListView is tailored to a Chat experience where the focus is on the last item in the list

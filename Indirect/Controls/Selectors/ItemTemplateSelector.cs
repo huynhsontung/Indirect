@@ -5,7 +5,7 @@ using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Direct.ItemContent;
 using InstagramAPI.Classes.Media;
 
-namespace Indirect.Utilities
+namespace Indirect.Controls.Selectors
 {
     class ItemTemplateSelector : DataTemplateSelector
     {

@@ -6,12 +6,11 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:core="using:FluiFramework.UWP.Core" 
     xmlns:converters="using:Indirect.Converters"
     xmlns:wrappers="using:Indirect.Wrapper" 
     xmlns:controls1="using:Indirect.Controls" 
-    xmlns:utilities="using:Indirect.Utilities" 
-    xmlns:media="using:InstagramAPI.Classes.Media"
+    xmlns:media="using:InstagramAPI.Classes.Media" 
+    xmlns:selectors="using:Indirect.Controls.Selectors"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400"
@@ -450,7 +449,7 @@
                 </MenuFlyout>
             </ContentControl.ContextFlyout>
             <ContentControl.ContentTemplateSelector>
-                <utilities:ItemTemplateSelector TextTemplate="{StaticResource TextTemplate}"
+                <selectors:ItemTemplateSelector TextTemplate="{StaticResource TextTemplate}"
                                             LikeTemplate="{StaticResource LikeTemplate}"
                                             HyperlinkTemplate="{StaticResource HyperlinkTemplate}"
                                             HyperlinkWithPreviewTemplate="{StaticResource HyperlinkWithPreviewTemplate}"
