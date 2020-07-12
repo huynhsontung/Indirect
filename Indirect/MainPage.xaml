@@ -38,6 +38,7 @@
             <converters:EqualityConverter x:Key="DisableWhenEqual32" ReferenceValue="32" Invert="True"/>
             <converters:VisibleWhenZeroConverter x:Key="VisibleWhenNotZeroConverter" Invert="True"/>
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
+            <converters:BooleanVisibilityConverter x:Key="InvertBooleanVisibilityConverter" Invert="True"/>
         </ResourceDictionary>
     </Page.Resources>
 
@@ -104,7 +105,7 @@
                                     SelectionChanged="MainLayout_OnSelectionChanged"
                                     CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}">
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
-                <Grid x:Name="ReelsFeed" Visibility="{x:Bind _viewModel.ReelsFeed.Reels.Count, Converter={StaticResource VisibleWhenNotZeroConverter}, Mode=OneWay}" Margin="0,0,0,8">
+                <Grid x:Name="ReelsTray" Visibility="{x:Bind _viewModel.ReelsFeed.Reels.Count, Converter={StaticResource VisibleWhenNotZeroConverter}, Mode=OneWay}" Margin="0,0,0,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -126,7 +127,7 @@
                         </ListView.ItemContainerStyle>
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <ItemsStackPanel Orientation="Horizontal" Margin="0" GroupPadding="0"></ItemsStackPanel>
+                                <ItemsStackPanel Orientation="Horizontal" Margin="0" GroupPadding="0"/>
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
@@ -155,6 +156,22 @@
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
+                        <ListView.Header>
+                            <ListViewItem HorizontalContentAlignment="Stretch" MinWidth="0" MinHeight="0" Padding="0" 
+                                          Tapped="StoriesSectionTitle_OnTapped">
+                                <Grid Margin="10,4,10,8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="54"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Ellipse Width="46" Height="46" Fill="{StaticResource SystemControlPageBackgroundListLowBrush}"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <SymbolIcon Grid.Row="0" Symbol="Refresh" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="1" Text="Refresh"
+                                               Style="{ThemeResource FluentCaptionTextStyle}" MaxWidth="54" HorizontalAlignment="Center"/>
+                                </Grid>
+                            </ListViewItem>
+                        </ListView.Header>
                     </ListView>
                 </Grid>
             </controls1:ExtendedMasterDetailsView.MasterListHeader>
@@ -363,7 +380,7 @@
                         <Setter Target="MasterHeading.Visibility" Value="Collapsed"/>
                         <Setter Target="MasterMenuButton.Visibility" Value="Collapsed"/>
                         <Setter Target="SearchBox.Visibility" Value="Collapsed"/>
-                        <Setter Target="ReelsFeed.Visibility" Value="Collapsed"/>
+                        <Setter Target="ReelsTray.Visibility" Value="Collapsed"/>
                     </VisualState.Setters>
                 </VisualState>
 

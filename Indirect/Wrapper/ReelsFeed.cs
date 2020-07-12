@@ -21,10 +21,10 @@ namespace Indirect.Wrapper
         private CancellationTokenSource _reelsUpdateLoop;
         private bool _justUpdated;
 
-        public async Task UpdateReelsFeed()
+        public async Task UpdateReelsFeed(ReelsTrayFetchReason fetchReason = ReelsTrayFetchReason.ColdStart)
         {
             if (_justUpdated) return;
-            var result = await Instagram.Instance.GetReelsTrayFeed();
+            var result = await Instagram.Instance.GetReelsTrayFeed(fetchReason);
             if (!result.IsSucceeded) return;
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {

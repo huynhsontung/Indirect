@@ -30,4 +30,11 @@
         Sticker,
         Gif,
     }
+
+    public enum ReelsTrayFetchReason
+    {
+        ColdStart,
+        WarmStartWithFeed,
+        PullToRefresh,
+    }
 }

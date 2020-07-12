@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Numerics;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
@@ -10,6 +9,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Controls;
 using Indirect.Wrapper;
+using InstagramAPI;
 using InstagramAPI.Classes.User;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
@@ -320,7 +320,7 @@ namespace Indirect
 
         private async void StoriesSectionTitle_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            await _viewModel.ReelsFeed.UpdateReelsFeed();
+            await _viewModel.ReelsFeed.UpdateReelsFeed(ReelsTrayFetchReason.PullToRefresh);
         }
     }
 }
