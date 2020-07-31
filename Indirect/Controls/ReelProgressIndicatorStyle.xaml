@@ -1,0 +1,29 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Indirect.Controls"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:utilities="using:Indirect.Utilities">
+    <Style TargetType="local:ReelProgressIndicator" x:Key="ReelProgressIndicatorStyle">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:ReelProgressIndicator">
+                    <controls:ItemsRepeaterScrollHost>
+                        <ScrollViewer HorizontalScrollMode="Disabled" VerticalScrollMode="Disabled" ZoomMode="Disabled" Height="4" MaxHeight="4">
+                            <controls:ItemsRepeater ItemsSource="{Binding IndicatorCollection, RelativeSource={RelativeSource TemplatedParent}}" Height="4">
+                                <controls:ItemsRepeater.Layout>
+                                    <controls:StackLayout Orientation="Horizontal" Spacing="2"/>
+                                </controls:ItemsRepeater.Layout>
+                                <controls:ItemsRepeater.ItemTemplate>
+                                    <DataTemplate>
+                                        <ProgressBar Value="{Binding Value}" Width="{Binding SingleWidth, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                    </DataTemplate>
+                                </controls:ItemsRepeater.ItemTemplate>
+                            </controls:ItemsRepeater>
+                        </ScrollViewer>
+                    </controls:ItemsRepeaterScrollHost>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

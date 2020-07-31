@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -8,10 +9,8 @@ using Indirect.Utilities;
 
 namespace Indirect.Controls
 {
-    public sealed partial class ReelProgressIndicator : UserControl, INotifyPropertyChanged
+    public sealed partial class ReelProgressIndicator : UserControl
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
         public static readonly DependencyProperty CountProperty = DependencyProperty.Register(
             nameof(Count),
             typeof(int),
@@ -23,6 +22,12 @@ namespace Indirect.Controls
             typeof(int),
             typeof(ReelProgressIndicator),
             new PropertyMetadata(0, StaticOnSelectOrCountChanged));
+
+        public static readonly DependencyProperty SingleWidthProperty = DependencyProperty.Register(
+            nameof(SingleWidth),
+            typeof(double),
+            typeof(ReelProgressIndicator),
+            new PropertyMetadata(60d));
 
         public int Selected
         {
@@ -36,20 +41,25 @@ namespace Indirect.Controls
             set => SetValue(CountProperty, value);
         }
 
-        private double _singleWidth = 4;
-        private double SingleWidth
+        //private double _singleWidth = 4;
+        //public double SingleWidth
+        //{
+        //    get => _singleWidth;
+        //    private set
+        //    {
+        //        if (value == _singleWidth) return;
+        //        _singleWidth = value;
+        //        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SingleWidth)));
+        //    }
+        //}
+
+        public double SingleWidth
         {
-            get => _singleWidth;
-            set
-            {
-                if (value == _singleWidth) return;
-                _singleWidth = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SingleWidth)));
-            }
+            get => (double) GetValue(SingleWidthProperty);
+            set => SetValue(SingleWidthProperty, value);
         }
 
-        // Maximum number of stories at a time is 100. Source: https://mashable.com/2017/10/20/how-i-broke-instagram-stories/
-        private readonly ProgressItem[] _indicatorCollection = new ProgressItem[100];
+        public ObservableCollection<ProgressItem> IndicatorCollection { get; } = new ObservableCollection<ProgressItem>();
 
         private static void StaticOnSelectOrCountChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -66,19 +76,37 @@ namespace Indirect.Controls
 
         private void OnSelectOrCountChanged()
         {
-            for (var i = 0; i < Count; i++)
+            if (IndicatorCollection.Count > Count)
+            {
+                var diff = IndicatorCollection.Count - Count;
+                for (int i = 0; i < diff; i++)
+                {
+                    IndicatorCollection.RemoveAt(IndicatorCollection.Count - 1);
+                }
+            }
+
+            if (IndicatorCollection.Count < Count)
+            {
+                var diff = Count - IndicatorCollection.Count;
+                for (int i = 0; i < diff; i++)
+                {
+                    IndicatorCollection.Add(new ProgressItem());
+                }
+            }
+
+            for (var i = 0; i < IndicatorCollection.Count; i++)
             {
                 if (i < Selected)
                 {
-                    _indicatorCollection[i].Update(100, SingleWidth);
+                    IndicatorCollection[i].Update(100, SingleWidth);
                 }
                 else if (i == Selected)
                 {
-                    _indicatorCollection[i].Update(100, SingleWidth);
+                    IndicatorCollection[i].Update(100, SingleWidth);
                 }
                 else
                 {
-                    _indicatorCollection[i].Update(0, SingleWidth);
+                    IndicatorCollection[i].Update(0, SingleWidth);
                 }
             }
         }
@@ -86,10 +114,6 @@ namespace Indirect.Controls
         public ReelProgressIndicator()
         {
             this.InitializeComponent();
-            for (var i = 0; i < _indicatorCollection.Length; i++)
-            {
-                _indicatorCollection[i] = new ProgressItem();
-            }
         }
 
         private void CalculateIndicatorWidth()
@@ -98,19 +122,19 @@ namespace Indirect.Controls
             SingleWidth = availableWidth <= 0 ? 4 : availableWidth / Count;
         }
 
-        private void UpdateIndicatorWidth()
-        {
-            for (var i = 0; i < Count; i++)
-            {
-                var item = _indicatorCollection[i];
-                item.Update(item.Value, SingleWidth);
-            }
-        }
+        //private void UpdateIndicatorWidth()
+        //{
+        //    for (var i = 0; i < Count; i++)
+        //    {
+        //        var item = IndicatorCollection[i];
+        //        item.Update(item.Value, SingleWidth);
+        //    }
+        //}
 
         private void ReelProgressIndicator_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             CalculateIndicatorWidth();
-            UpdateIndicatorWidth();
+            //UpdateIndicatorWidth();
         }
     }
 }

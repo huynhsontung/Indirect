@@ -15,6 +15,9 @@
     d:DesignWidth="400">
     <UserControl.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ReelProgressIndicatorStyle.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
             <converters:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
 
@@ -90,7 +93,7 @@
             </Grid.ColumnDefinitions>
             <controls:ImageEx Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
                               Source="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.Parent).User.ProfilePictureUrl, Mode=OneWay}" 
-                              Height="32" Width="32" Margin="54,0,12,0" CornerRadius="99" VerticalAlignment="Center" Tapped="RedirectToThread"/>
+                              Height="32" Width="32" Margin="12,0,12,0" CornerRadius="99" VerticalAlignment="Center" Tapped="RedirectToThread"/>
             <TextBlock Grid.Row="0" Grid.Column="1" 
                        Text="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.Parent).User.Username, Mode=OneWay}" 
                        Style="{ThemeResource FluentTitleTextStyle}" MaxLines="1" 
@@ -108,7 +111,7 @@
                 </Button>
             </StackPanel>
         </Grid>
-        <FlipView x:Name="StoryView" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{x:Bind Source.Items, Mode=OneWay}"
+        <FlipView x:Name="StoryView" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{x:Bind Source.Items, Mode=OneWay}" Background="{ThemeResource SystemControlAcrylicWindowBrush}"
                   Loaded="StoryView_OnLoaded" SelectionChanged="StoryView_OnSelectionChanged">
             <FlipView.ItemTemplateSelector>
                 <selectors:StoryTemplateSelector ImageTemplate="{StaticResource ImageTemplate}"

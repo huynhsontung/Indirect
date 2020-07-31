@@ -62,7 +62,10 @@ namespace Indirect
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            await _viewModel.OnLoggedIn();
+            if (e?.SourcePageType == typeof(MainPage) || e?.SourcePageType == typeof(Login))
+            {
+                await _viewModel.OnLoggedIn();
+            }
         }
 
         private async void LogoutButton_Click(object sender, RoutedEventArgs e)
@@ -312,10 +315,15 @@ namespace Indirect
         private async void ReelsFeed_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var reelsFeed = (ListView) sender;
-            if (reelsFeed.SelectedIndex == -1) return;
-            var reelsWrapper = await _viewModel.ReelsFeed.PrepareFlatReelsContainer(reelsFeed.SelectedIndex);
-            OpenImmersiveView(reelsWrapper);
-            reelsFeed.SelectedIndex = -1;
+            int selected;
+            lock (sender)
+            {
+                if (reelsFeed.SelectedIndex == -1) return;
+                selected = reelsFeed.SelectedIndex;
+                reelsFeed.SelectedIndex = -1;
+            }
+            var reelsWrapper = await _viewModel.ReelsFeed.PrepareFlatReelsContainer(selected);
+            this.Frame.Navigate(typeof(ReelPage), reelsWrapper);
         }
 
         private async void StoriesSectionTitle_OnTapped(object sender, TappedRoutedEventArgs e)
