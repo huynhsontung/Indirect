@@ -41,18 +41,6 @@ namespace Indirect.Controls
             set => SetValue(CountProperty, value);
         }
 
-        //private double _singleWidth = 4;
-        //public double SingleWidth
-        //{
-        //    get => _singleWidth;
-        //    private set
-        //    {
-        //        if (value == _singleWidth) return;
-        //        _singleWidth = value;
-        //        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SingleWidth)));
-        //    }
-        //}
-
         public double SingleWidth
         {
             get => (double) GetValue(SingleWidthProperty);
@@ -122,19 +110,9 @@ namespace Indirect.Controls
             SingleWidth = availableWidth <= 0 ? 4 : availableWidth / Count;
         }
 
-        //private void UpdateIndicatorWidth()
-        //{
-        //    for (var i = 0; i < Count; i++)
-        //    {
-        //        var item = IndicatorCollection[i];
-        //        item.Update(item.Value, SingleWidth);
-        //    }
-        //}
-
         private void ReelProgressIndicator_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             CalculateIndicatorWidth();
-            //UpdateIndicatorWidth();
         }
     }
 }

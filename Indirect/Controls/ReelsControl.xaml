@@ -9,7 +9,8 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:converters="using:Indirect.Converters"
     xmlns:controls1="using:Indirect.Controls" 
-    xmlns:selectors="using:Indirect.Controls.Selectors"
+    xmlns:selectors="using:Indirect.Controls.Selectors" 
+    xmlns:media="using:Microsoft.UI.Xaml.Media"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
@@ -18,8 +19,17 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="ReelProgressIndicatorStyle.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <media:AcrylicBrush x:Key="CustomAcrylicBrush" BackgroundSource="Backdrop" TintOpacity="0.3" TintColor="White"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <media:AcrylicBrush x:Key="CustomAcrylicBrush" BackgroundSource="Backdrop" TintOpacity="0.3" TintColor="Black"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
             <converters:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
+            
 
             <DataTemplate x:Key="ReplyControlTemplate" x:DataType="wrapper:ReelItemWrapper">
                 <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
@@ -73,40 +83,40 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <controls1:ReelProgressIndicator x:Name="NewReelProgressIndicator" Grid.Row="0" Canvas.ZIndex="1" HorizontalAlignment="Stretch"/>
-        <!--<ProgressBar x:Name="ReelsProgressBar" Grid.Row="0" Canvas.ZIndex="1" Opacity="0.5" HorizontalAlignment="Stretch" Visibility="Collapsed"/>-->
+        <controls1:ReelProgressIndicator x:Name="NewReelProgressIndicator" Grid.Row="0" Canvas.ZIndex="1" HorizontalAlignment="Stretch" Margin="4,0,4,0"/>
         <Grid Grid.Row="1" Canvas.ZIndex="1">
-            <Grid.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="{StaticResource SystemAltMediumLowColor}" Offset="0.0"/>
-                    <GradientStop Color="{ThemeResource TintedTransparent}" Offset="1.0"/>
-                </LinearGradientBrush>
-            </Grid.Background>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <controls:ImageEx Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
-                              Source="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.Parent).User.ProfilePictureUrl, Mode=OneWay}" 
-                              Height="32" Width="32" Margin="12,0,12,0" CornerRadius="99" VerticalAlignment="Center" Tapped="RedirectToThread"/>
-            <TextBlock Grid.Row="0" Grid.Column="1" 
-                       Text="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.Parent).User.Username, Mode=OneWay}" 
-                       Style="{ThemeResource FluentTitleTextStyle}" MaxLines="1" 
-                       VerticalAlignment="Center"/>
-            <TextBlock Grid.Row="1" Grid.Column="1" Style="{ThemeResource FluentCaptionTextStyle}"
-                       Text="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.TakenAt), Converter={StaticResource RelativeTimeConverter}, Mode=OneWay}"/>
-            <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+            <Grid Margin="4,6,4,4" Padding="10,4,10,6" CornerRadius="2" Background="{ThemeResource CustomAcrylicBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <controls:ImageEx Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                                  Source="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.Parent).User.ProfilePictureUrl, Mode=OneWay}" 
+                                  Height="34" Width="34" Margin="0,0,12,0" CornerRadius="99" VerticalAlignment="Center" Tapped="RedirectToThread"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" 
+                           Text="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.Parent).User.Username, Mode=OneWay}"
+                           Style="{ThemeResource FluentTitleTextStyle}" MaxLines="1" 
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Style="{ThemeResource FluentCaptionTextStyle}"
+                           Text="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.TakenAt), Converter={StaticResource RelativeTimeConverter}, Mode=OneWay}"/>
+            </Grid>
+            <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top"
+                        Margin="4,6,4,4" Padding="4" Background="{ThemeResource CustomAcrylicBrush}" CornerRadius="2">
                 <Button IsEnabled="{x:Bind MorePreviousReels, Mode=OneWay}" ToolTipService.ToolTip="Go to previous reel"
                         Background="Transparent" Margin="2" Click="PreviousReelButtonClick">
                     <FontIcon Glyph="&#xE760;"/>
                 </Button>
                 <Button IsEnabled="{x:Bind MoreNextReels, Mode=OneWay}" ToolTipService.ToolTip="Go to next reel"
-                        Background="Transparent" Margin="2,2,4,2" Click="NextReelButtonClick">
+                        Background="Transparent" Margin="2" Click="NextReelButtonClick">
                     <FontIcon Glyph="&#xE761;"/>
                 </Button>
             </StackPanel>
