@@ -62,7 +62,7 @@ namespace Indirect
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            if (e?.SourcePageType == typeof(MainPage) || e?.SourcePageType == typeof(Login))
+            if (e?.NavigationMode != NavigationMode.Back)
             {
                 await _viewModel.OnLoggedIn();
             }
