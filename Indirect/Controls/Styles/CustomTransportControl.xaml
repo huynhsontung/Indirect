@@ -996,7 +996,7 @@
                                     <CommandBar x:Name="MediaControlsCommandBar" IsDynamicOverflowEnabled="False" Margin="0,0" Style="{StaticResource CommandBarStyle}">
                                         <AppBarButton x:Name="VolumeMuteButton" MediaTransportControlsHelper.DropoutOrder="19" Style="{StaticResource AppBarButtonStyle}">
                                             <AppBarButton.Flyout>
-                                                <Flyout x:Name="VolumeFlyout" FlyoutPresenterStyle="{StaticResource FlyoutStyle}" ShouldConstrainToRootBounds="False">
+                                                <Flyout x:Name="VolumeFlyout" FlyoutPresenterStyle="{StaticResource FlyoutStyle}">
                                                     <StackPanel Orientation="Horizontal">
                                                         <AppBarButton x:Name="AudioMuteButton" HorizontalAlignment="Center" Margin="12" Style="{StaticResource AppBarButtonStyle}" VerticalAlignment="Center">
                                                             <AppBarButton.Icon>
