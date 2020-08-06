@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Foundation;
 using Windows.UI.Core;
 using Indirect.Utilities;
 using InstagramAPI;
@@ -63,6 +62,7 @@ namespace Indirect.Wrapper
 
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
         public new ObservableCollection<BaseUser> Users { get; } = new ObservableCollection<BaseUser>();
+        public ObservableCollection<string> UsersSeenLatestMessage { get; } = new ObservableCollection<string>(); // If Users.Count == 1 then this is always empty
 
         private InstaDirectInboxThreadWrapper(Instagram api)
         {
@@ -414,23 +414,54 @@ namespace Indirect.Wrapper
             {
                 if (ObservableItems.Count == 0)
                 {
-                    if (ShowSeenIndicator) ShowSeenIndicator = false;
+                    if (ShowSeenIndicator)
+                    {
+                        UsersSeenLatestMessage.Clear();
+                        ShowSeenIndicator = false;
+                    }
                     return;
                 }
 
                 var latestItem = ObservableItems.Last();
                 if (!latestItem.FromMe || LastSeenAt.Count == 0)
                 {
-                    if (ShowSeenIndicator) ShowSeenIndicator = false;
+                    if (ShowSeenIndicator)
+                    {
+                        UsersSeenLatestMessage.Clear();
+                        ShowSeenIndicator = false;
+                    }
                     return;
                 }
 
-                var value = LastSeenAt.Any(pair =>
+                // When Users.Count == 1 don't use the list
+                if (Users.Count == 1)
                 {
-                    if (pair.Key == ViewerId) return false;
-                    return pair.Value.Timestamp >= latestItem.Timestamp;
-                });
-                if (value != ShowSeenIndicator) ShowSeenIndicator = value;
+                    var value = LastSeenAt.Any(pair =>
+                        pair.Key != ViewerId && pair.Value.Timestamp >= latestItem.Timestamp);
+                    if (value != ShowSeenIndicator) ShowSeenIndicator = value;
+                    return;
+                }
+
+                var seenUsers = LastSeenAt.Where(x => x.Key != ViewerId && x.Value.Timestamp >= latestItem.Timestamp)
+                    .Select(x => Users.SingleOrDefault(y => y.Pk == x.Key));
+                foreach (var user in seenUsers)
+                {
+                    if (user == null) continue;
+                    // Only add users to the seen list since user can't unsee a message
+                    if (!UsersSeenLatestMessage.Contains(user.Username))
+                    {
+                        UsersSeenLatestMessage.Add(user.Username);
+                    }
+                }
+
+                var showIndicator = UsersSeenLatestMessage.Count > 0;
+                if (UsersSeenLatestMessage.Count == Users.Count)
+                {
+                    UsersSeenLatestMessage.Clear();
+                    UsersSeenLatestMessage.Add("@everyone");
+                }
+                if (showIndicator != ShowSeenIndicator)
+                    ShowSeenIndicator = showIndicator;
             });
         }
     }

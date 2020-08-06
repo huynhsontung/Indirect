@@ -17,6 +17,8 @@
             <converters:SendButtonGlyphConverter x:Key="SendButtonGlyphConverter"/>
             <converters:VisibleWhenZeroConverter x:Key="VisibleWhenZeroConverter"/>
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
+            <converters:StringListToTextConverter x:Key="StringListToTextConverter"/>
+            <converters:SeenTextConverter x:Key="SeenTextConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -79,10 +81,17 @@
             </ListView.Header>
             <ListView.Footer>
                 <StackPanel HorizontalAlignment="Stretch">
-                    <TextBlock x:Name="SeenIndicator" Margin="18,2,18,8" Text="Seen"
-                               Style="{ThemeResource FluentCaptionTextStyle}"
+                    <TextBlock x:Name="SeenIndicator" Margin="18,2,18,8" Text="{x:Bind Thread.UsersSeenLatestMessage, Converter={StaticResource SeenTextConverter},Mode=OneWay}"
+                               Tapped="SeenIndicator_OnTapped"
+                               Style="{ThemeResource FluentCaptionTextStyle}" TextWrapping="Wrap"
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                               HorizontalAlignment="Right" Visibility="{x:Bind Thread.ShowSeenIndicator, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}"/>
+                               HorizontalAlignment="Right" Visibility="{x:Bind Thread.ShowSeenIndicator, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
+                        <FlyoutBase.AttachedFlyout>
+                            <Flyout>
+                                <TextBlock Text="{x:Bind Thread.UsersSeenLatestMessage, Converter={StaticResource StringListToTextConverter}, Mode=OneWay}"/>
+                            </Flyout>
+                        </FlyoutBase.AttachedFlyout>
+                    </TextBlock>
                     <TextBlock x:Name="TypingIndicator" Margin="14,6,14,10" Text="Typing..."
                                Style="{ThemeResource FluentCaptionTextStyle}"
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"

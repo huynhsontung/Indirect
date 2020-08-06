@@ -348,5 +348,13 @@ namespace Indirect.Controls
                 MessageTextBox.Text = text;
             }
         }
+
+        private void SeenIndicator_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (Thread.UsersSeenLatestMessage.Count > 3)
+            {
+                FlyoutBase.ShowAttachedFlyout(SeenIndicator);
+            }
+        }
     }
 }
