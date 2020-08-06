@@ -29,7 +29,7 @@ namespace Indirect.Converters
                 return "Seen by " + _listConverter.Convert(list, typeof(ObservableCollection<string>), null, "");
             }
 
-            return $"Seen by {list[0]}, {list[1]}, {list[2]} and {list.Count - 3} other";
+            return $"Seen by {list[0]}, {list[1]}, {list[2]} and {list.Count - 3} others";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
