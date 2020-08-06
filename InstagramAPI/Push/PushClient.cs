@@ -96,11 +96,18 @@ namespace InstagramAPI.Push
 
         private async Task<bool> RequestBackgroundAccess()
         {
-            var permissionResult = await BackgroundExecutionManager.RequestAccessAsync();
-            if (permissionResult == BackgroundAccessStatus.DeniedByUser ||
-                permissionResult == BackgroundAccessStatus.DeniedBySystemPolicy ||
-                permissionResult == BackgroundAccessStatus.Unspecified)
+            try
+            {
+                var permissionResult = await BackgroundExecutionManager.RequestAccessAsync();
+                if (permissionResult == BackgroundAccessStatus.DeniedByUser ||
+                    permissionResult == BackgroundAccessStatus.DeniedBySystemPolicy ||
+                    permissionResult == BackgroundAccessStatus.Unspecified)
+                    return false;
+            }
+            catch (Exception)
+            {
                 return false;
+            }
             var activityTaskRegistered = TryRegisterBackgroundTaskOnce(BACKGROUND_SOCKET_ACTIVITY_NAME, SOCKET_ACTIVITY_ENTRY_POINT,
                 new SocketActivityTrigger(), out _socketActivityTask);
             return activityTaskRegistered;
