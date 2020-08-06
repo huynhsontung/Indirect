@@ -260,9 +260,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.AppCenter.Crashes">
-      <HintPath>..\..\..\..\.nuget\packages\microsoft.appcenter.crashes\3.0.0\lib\uap10.0\Microsoft.AppCenter.Crashes.dll</HintPath>
-    </Reference>
     <Reference Include="Thrift">
       <HintPath>..\Thrift\Thrift.dll</HintPath>
     </Reference>
