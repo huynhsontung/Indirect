@@ -523,6 +523,52 @@ namespace InstagramAPI
             }
         }
 
+        public async Task<Result<ItemAckPayloadResponse>> SendReelReactAsync(long reelId, string mediaId, string threadId, string text)
+        {
+            ValidateLoggedIn();
+            try
+            {
+                var uri = UriCreator.GetDirectReelReactUri();
+                var clientContext = Guid.NewGuid().ToString();
+                var jsonObject = new JObject
+                {
+                    {"action", "send_item"},
+                    {"client_context", clientContext},
+                    {"mutation_token", clientContext},
+                    {"reel_id", reelId.ToString()},
+                    {"media_id", mediaId},
+                    {"thread_ids", $"[{threadId}]"},
+                    {"text", text},
+                    {"reaction_emoji", text},
+                    {"entry", "reel"},
+                    {"device_id", Device.DeviceId},
+                    {"_csrftoken", Session.CsrfToken},
+                    {"_uuid", Device.Uuid.ToString()},
+                    {"_uid", Session.LoggedInUser.Pk.ToString()}
+                };
+                var signature = $"SIGNATURE.{jsonObject.ToString(Formatting.None)}";
+                var data = new Dictionary<string,string>
+                {
+                    {"signed_body", signature}
+                };
+                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var json = await response.Content.ReadAsStringAsync();
+                DebugLogger.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<ItemAckPayloadResponse>.Fail(json, response.ReasonPhrase);
+                var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
+                return obj.IsOk()
+                    ? Result<ItemAckPayloadResponse>.Success(obj.Payload, json, obj.Message)
+                    : Result<ItemAckPayloadResponse>.Fail(json, obj.Message);
+            }
+            catch (Exception exception)
+            {
+                DebugLogger.LogException(exception);
+                return Result<ItemAckPayloadResponse>.Except(exception);
+            }
+        }
+
         public async Task<Result<DirectThread[]>> SendAnimatedImageAsync(string mediaId, bool isSticker, string threadId)
         {
             ValidateLoggedIn();

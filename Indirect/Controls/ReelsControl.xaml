@@ -36,7 +36,8 @@
                             Visibility="{x:Bind Parent.CanReply, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
                     <TextBox Text="{x:Bind DraftMessage, Mode=TwoWay}" Width="300"
                              TextWrapping="Wrap" Background="Transparent"
-                             PlaceholderText="Type a message"
+                             PlaceholderText="Type a message to reply or an emoji to react"
+                             ToolTipService.ToolTip="Press &quot;Windows key + period (.)&quot; to open Emoji picker"
                              Margin="4,0,4,0" MaxLength="2200" 
                              AcceptsReturn="True" KeyboardAcceleratorPlacementMode="Hidden">
                         <TextBox.KeyboardAccelerators>

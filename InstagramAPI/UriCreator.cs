@@ -141,6 +141,13 @@ namespace InstagramAPI
             return instaUri; 
         }
 
+        public static Uri GetDirectReelReactUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/threads/broadcast/reel_react/", out var instaUri))
+                throw new Exception("Cant create URI for send link to direct thread");
+            return instaUri;
+        }
+
         public static Uri GetDirectSendPhotoUri(string uploadId)
         {
             if (!Uri.TryCreate(BaseInstagramUri, $"/rupload_igphoto/{uploadId}", out var instaUri))
