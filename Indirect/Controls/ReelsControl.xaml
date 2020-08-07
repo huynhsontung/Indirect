@@ -90,7 +90,12 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Grid Margin="4,6,4,4" Padding="10,4,10,6" CornerRadius="2" Background="{ThemeResource CustomAcrylicBrush}">
+            <Grid x:Name="UserInfoGrid" Margin="4,6,4,4" Padding="10,4,10,6" CornerRadius="2" Background="{ThemeResource CustomAcrylicBrush}" Tapped="UserInfo_OnTapped">
+                <FlyoutBase.AttachedFlyout>
+                    <Flyout Placement="BottomEdgeAlignedLeft">
+                        <controls1:UserInfoView x:Name="UserInfoView"/>
+                    </Flyout>
+                </FlyoutBase.AttachedFlyout>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>

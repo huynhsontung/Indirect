@@ -230,5 +230,18 @@ namespace Indirect.Controls
                 StoryView.SelectedIndex = nextReelIndex;
             }
         }
+
+        private async void UserInfo_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            var userId = (StoryView.SelectedItem as ReelItemWrapper)?.User.Pk ?? 0;
+            if (userId == 0) return;
+            if (UserInfoView.User?.Pk != userId)
+            {
+                var userInfoResult = await InstagramAPI.Instagram.Instance.GetUserInfoAsync(userId);
+                if (!userInfoResult.IsSucceeded) return;
+                UserInfoView.User = userInfoResult.Value;
+            }
+            FlyoutBase.ShowAttachedFlyout(UserInfoGrid);
+        }
     }
 }
