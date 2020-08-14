@@ -133,6 +133,9 @@
     <Compile Include="Controls\AnimatedImagePicker.xaml.cs">
       <DependentUpon>AnimatedImagePicker.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.cs" />
+    <Compile Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.Events.cs" />
+    <Compile Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.Properties.cs" />
     <Compile Include="Controls\ReelProgressIndicator.xaml.cs">
       <DependentUpon>ReelProgressIndicator.xaml</DependentUpon>
     </Compile>
@@ -142,7 +145,6 @@
     <Compile Include="Controls\AboutDialog.xaml.cs">
       <DependentUpon>AboutDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ExtendedMasterDetailsView.cs" />
     <Compile Include="Controls\ReelsControl.xaml.cs">
       <DependentUpon>ReelsControl.xaml</DependentUpon>
     </Compile>
@@ -298,6 +300,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Controls\ReelProgressIndicatorStyle.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -319,10 +325,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\AutoVideoControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\ExtendedMasterDetailsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

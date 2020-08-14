@@ -20,7 +20,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Controls/MasterDetailsViewStyle.xaml"/>
-                <ResourceDictionary Source="Controls/ExtendedMasterDetailsView.xaml"/>
+                <ResourceDictionary Source="Controls/ExtendedMasterDetailsView/ExtendedMasterDetailsView.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <converters:HasNewMessageStyleConverter x:Key="HasNewMessageStyleConverter"
@@ -103,7 +103,8 @@
                                     BorderThickness="0"
                                     MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
                                     SelectionChanged="MainLayout_OnSelectionChanged"
-                                    CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}">
+                                    CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}"
+                                    IntermediateModeThresholdWidth="{StaticResource FullWindowWidth}">
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
                 <Grid x:Name="ReelsTray" Visibility="{x:Bind _viewModel.ReelsFeed.Reels.Count, Converter={StaticResource VisibleWhenNotZeroConverter}, Mode=OneWay}" Margin="0,0,0,8">
                     <Grid.RowDefinitions>
@@ -216,7 +217,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Button x:Name="MasterMenuButton" Grid.Row="1" Grid.Column="0" Padding="6"
+                    <Button x:Name="MasterMenuButton" Grid.Row="1" Grid.Column="0" Padding="6" ToolTipService.ToolTip="Menu"
                             Margin="0,0,6,0" VerticalAlignment="Center" Background="Transparent">
                         <controls:ImageEx Source="{x:Bind _viewModel.LoggedInUser.ProfilePictureUrl, Mode=OneWay}" 
                                           Style="{ThemeResource ProfilePicturePlaceholderStyle}"
