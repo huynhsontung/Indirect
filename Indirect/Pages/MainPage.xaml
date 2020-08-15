@@ -260,7 +260,7 @@
                                     <TextBlock Grid.Row="0" Text="To:" Style="{ThemeResource FluentBaseTextStyle}" VerticalAlignment="Center"/>
                                     <Button Grid.Row="0" HorizontalAlignment="Right" Content="Chat"
                                             Style="{StaticResource AccentButtonStyle}"
-                                            IsEnabled="{x:Bind ViewModel.NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"
+                                            IsEnabled="{x:Bind NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"
                                             Click="ChatButton_OnClick"/>
                                     <AutoSuggestBox x:Name="NewMessageSuggestBox" Grid.Row="1" Margin="0,8,0,0"
                                                     TextChanged="NewMessageSuggestBox_OnTextChanged"
@@ -270,7 +270,7 @@
                                                     UpdateTextOnSelect="False"
                                                     QueryIcon="Find"
                                                     ProcessKeyboardAccelerators="NewMessageSuggestBox_OnProcessKeyboardAccelerators"
-                                                    IsEnabled="{x:Bind ViewModel.NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqual32}, Mode=OneWay}">
+                                                    IsEnabled="{x:Bind NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqual32}, Mode=OneWay}">
                                         <AutoSuggestBox.ItemTemplate>
                                             <DataTemplate x:DataType="users:BaseUser">
                                                 <StackPanel Orientation="Horizontal">
@@ -282,7 +282,7 @@
                                         </AutoSuggestBox.ItemTemplate>
                                     </AutoSuggestBox>
                                     <ListView x:Name="NewMessageCandidateList" Grid.Row="2"
-                                              ItemsSource="{x:Bind ViewModel.NewMessageCandidates}" 
+                                              ItemsSource="{x:Bind NewMessageCandidates}" 
                                               SelectionMode="None" MaxHeight="400" Margin="0,8,0,4">
                                         <ListView.ItemTemplate>
                                             <DataTemplate x:DataType="users:BaseUser">
@@ -321,7 +321,7 @@
                                         </ListView.ItemContainerStyle>
                                     </ListView>
                                     <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
-                                        <TextBlock Text="{x:Bind ViewModel.NewMessageCandidates.Count, Mode=OneWay}" 
+                                        <TextBlock Text="{x:Bind NewMessageCandidates.Count, Mode=OneWay}" 
                                                    Style="{ThemeResource FluentCaptionTextStyle}"
                                                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
                                         <TextBlock Text="recipient(s)" Margin="4,0,0,0" 

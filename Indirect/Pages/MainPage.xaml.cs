@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Windows.System;
 using Windows.UI.Core;
@@ -37,6 +38,8 @@ namespace Indirect.Pages
         }
 
         private ApiContainer ViewModel => ((App) Application.Current).ViewModel;
+        private ObservableCollection<BaseUser> NewMessageCandidates { get; } = new ObservableCollection<BaseUser>();
+
         private readonly Windows.Storage.ApplicationDataContainer _localSettings =
             Windows.Storage.ApplicationData.Current.LocalSettings;
 
@@ -226,15 +229,15 @@ namespace Indirect.Pages
             if (args.ChosenSuggestion != null)
             {
                 var selectedRecipient = (BaseUser) args.ChosenSuggestion;
-                if (ViewModel.NewMessageCandidates.All(x => selectedRecipient.Username != x.Username))
-                    ViewModel.NewMessageCandidates.Add(selectedRecipient);
+                if (NewMessageCandidates.All(x => selectedRecipient.Username != x.Username))
+                    NewMessageCandidates.Add(selectedRecipient);
             }
             else if (!string.IsNullOrEmpty(sender.Text))
             {
                 ViewModel.SearchWithoutThreads(sender.Text, updatedList =>
                 {
                     if (updatedList.Count == 0) return;
-                    ViewModel.NewMessageCandidates.Add(updatedList[0]);
+                    NewMessageCandidates.Add(updatedList[0]);
                 });
             }
             sender.Text = string.Empty;
@@ -243,21 +246,23 @@ namespace Indirect.Pages
 
         private void NewMessageClearAll_OnClick(object sender, RoutedEventArgs e)
         {
-            ViewModel.NewMessageCandidates.Clear();
+            NewMessageCandidates.Clear();
         }
 
         private async void ChatButton_OnClick(object sender, RoutedEventArgs e)
         {
             NewThreadFlyout.Hide();
-            await ViewModel.CreateThread();
-            ViewModel.NewMessageCandidates.Clear();
+            if (NewMessageCandidates.Count == 0 || NewMessageCandidates.Count > 32) return;
+            var userIds = NewMessageCandidates.Select(x => x.Pk);
+            await ViewModel.CreateThread(userIds);
+            NewMessageCandidates.Clear();
         }
 
         private void ClearSingleCandidateButton_OnClick(object sender, RoutedEventArgs e)
         {
             var target = (BaseUser) (sender as FrameworkElement)?.DataContext;
             if (target == null) return;
-            ViewModel.NewMessageCandidates.Remove(target);
+            NewMessageCandidates.Remove(target);
         }
 
         private void Candidate_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -274,7 +279,7 @@ namespace Indirect.Pages
         {
             var target = (BaseUser) args.SwipeControl.DataContext;
             if (target == null) return;
-            ViewModel.NewMessageCandidates.Remove(target);
+            NewMessageCandidates.Remove(target);
         }
 
         private void NewMessageSuggestBox_OnProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)

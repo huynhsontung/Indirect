@@ -57,7 +57,6 @@ namespace Indirect
         public InstaDirectInboxWrapper PendingInbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance, true);
         public InstaDirectInboxWrapper Inbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance);
         public CurrentUser LoggedInUser { get; private set; }
-        public ObservableCollection<BaseUser> NewMessageCandidates { get; } = new ObservableCollection<BaseUser>();
         public InstaDirectInboxThreadWrapper SelectedThread
         {
             get => _selectedThread;
@@ -327,14 +326,8 @@ namespace Indirect
                 updateAction?.Invoke(recipients);
         }
 
-        /// <summary>
-        /// User ids will be fetched from NewMessageCandidates
-        /// </summary>
-        /// <returns></returns>
-        public async Task CreateThread()
+        public async Task CreateThread(IEnumerable<long> userIds)
         {
-            if (NewMessageCandidates.Count == 0 || NewMessageCandidates.Count > 32) return;
-            var userIds = NewMessageCandidates.Select(x => x.Pk);
             var result = await _instaApi.CreateGroupThreadAsync(userIds);
             if (!result.IsSucceeded) return;
             var thread = result.Value;
