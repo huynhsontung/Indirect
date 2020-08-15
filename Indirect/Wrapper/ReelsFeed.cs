@@ -14,7 +14,7 @@ using InstagramAPI.Utils;
 
 namespace Indirect.Wrapper
 {
-    class ReelsFeed
+    class ReelsFeed : IDisposable
     {
         public readonly ObservableCollection<ReelWrapper> Reels = new ObservableCollection<ReelWrapper>();
 
@@ -121,6 +121,11 @@ namespace Indirect.Wrapper
         public void StopReelsFeedUpdateLoop()
         {
             _reelsUpdateLoop?.Cancel();
+        }
+
+        public void Dispose()
+        {
+            _reelsUpdateLoop?.Dispose();
         }
     }
 }

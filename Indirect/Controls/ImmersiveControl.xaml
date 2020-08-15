@@ -41,7 +41,7 @@
             </DataTemplate>
 
             <DataTemplate x:Key="ReelView" x:DataType="wrapper:FlatReelsContainer">
-                <controls1:ReelsControl Source="{x:Bind Mode=OneWay}"/>
+                <controls1:ReelsControl Source="{x:Bind}"/>
             </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>

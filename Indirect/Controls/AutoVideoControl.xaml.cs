@@ -154,7 +154,7 @@ namespace Indirect.Controls
             view.VideoPlayer.TransportControls = (MediaTransportControls)e.NewValue;
         }
 
-        private static async void OnSourceChange(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnSourceChange(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (AutoVideoControl) d;
             var source = e.NewValue;

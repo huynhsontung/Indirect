@@ -18,7 +18,7 @@ using Microsoft.Toolkit.Collections;
 namespace Indirect.Wrapper
 {
     /// Wrapper of <see cref="DirectThread"/> with Observable lists
-    class InstaDirectInboxThreadWrapper : DirectThread, INotifyPropertyChanged, IIncrementalSource<InstaDirectInboxItemWrapper>
+    class InstaDirectInboxThreadWrapper : DirectThread, INotifyPropertyChanged, IIncrementalSource<InstaDirectInboxItemWrapper>, IDisposable
     {
         private readonly Instagram _instaApi;
         private CancellationTokenSource _typingCancellationTokenSource;
@@ -463,6 +463,11 @@ namespace Indirect.Wrapper
                 if (showIndicator != ShowSeenIndicator)
                     ShowSeenIndicator = showIndicator;
             });
+        }
+
+        public void Dispose()
+        {
+            _typingCancellationTokenSource?.Dispose();
         }
     }
 }

@@ -11,7 +11,7 @@ using InstagramAPI.Classes.Media;
 
 namespace Indirect.Controls
 {
-    public sealed partial class AnimatedImagePicker : UserControl
+    public sealed partial class AnimatedImagePicker : UserControl, IDisposable
     {
         public event EventHandler<GiphyMedia> ImageSelected; 
 
@@ -139,6 +139,11 @@ namespace Indirect.Controls
         {
             var winHeight = Window.Current.Bounds.Height;
             ((FrameworkElement) sender).Height = winHeight * 3 / 5;
+        }
+
+        public void Dispose()
+        {
+            _searchDebounce?.Dispose();
         }
     }
 }
