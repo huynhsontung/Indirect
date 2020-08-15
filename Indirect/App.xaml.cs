@@ -107,7 +107,7 @@ namespace Indirect
 
             if (rootFrame.Content == null)
             {
-                rootFrame.Navigate(Instagram.IsUserAuthenticatedPersistent ? typeof(MainPage) : typeof(Login));
+                rootFrame.Navigate(Instagram.IsUserAuthenticatedPersistent ? typeof(MainPage) : typeof(LoginPage));
             }
             // Ensure the current window is active
             Window.Current.Activate();

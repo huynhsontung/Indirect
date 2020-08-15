@@ -81,7 +81,7 @@ namespace Indirect.Pages
             var confirmation = await confirmDialog.ShowAsync();
             if (confirmation != ContentDialogResult.Primary) return;
             ViewModel.Logout();
-            Frame.Navigate(typeof(Login));
+            Frame.Navigate(typeof(LoginPage));
         }
         
         private void DetailsBackButton_OnClick(object sender, RoutedEventArgs e) => ViewModel.SetSelectedThreadNull();
