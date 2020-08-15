@@ -24,7 +24,8 @@ namespace Indirect
     sealed partial class App : Application
     {
         private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
-        private readonly ApiContainer _viewModel = ApiContainer.Instance;
+
+        internal ApiContainer ViewModel { get; } = ApiContainer.Instance;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -76,7 +77,7 @@ namespace Indirect
 
         private async void OnLaunchedOrActivated(IActivatedEventArgs e)
         {
-            await _viewModel.TryAcquireSyncLock();
+            await ViewModel.TryAcquireSyncLock();
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(380,300));
             Frame rootFrame = Window.Current.Content as Frame;
             var titleBar = ApplicationView.GetForCurrentView().TitleBar;
@@ -131,14 +132,14 @@ namespace Indirect
         /// <param name="e">Details about the suspend request.</param>
         private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
-            if (!_viewModel.IsUserAuthenticated) return;
+            if (!ViewModel.IsUserAuthenticated) return;
             var deferral = e.SuspendingOperation.GetDeferral();
             try
             {
-                _viewModel.ReelsFeed.StopReelsFeedUpdateLoop();
-                _viewModel.SyncClient.Shutdown();    // Shutdown cleanly is not important here.
-                await _viewModel.PushClient.TransferPushSocket();
-                _viewModel.ReleaseSyncLock();
+                ViewModel.ReelsFeed.StopReelsFeedUpdateLoop();
+                ViewModel.SyncClient.Shutdown();    // Shutdown cleanly is not important here.
+                await ViewModel.PushClient.TransferPushSocket();
+                ViewModel.ReleaseSyncLock();
             }
             catch (Exception exception)
             {
@@ -152,12 +153,11 @@ namespace Indirect
 
         private async void OnResuming(object sender, object e)
         {
-            await _viewModel.TryAcquireSyncLock();
-            var viewModel = ApiContainer.Instance;
-            viewModel.PushClient.Start();
-            await viewModel.SyncClient.Start(viewModel.Inbox.SeqId, viewModel.Inbox.SnapshotAt);
-            viewModel.UpdateInboxAndSelectedThread();
-            viewModel.ReelsFeed.StartReelsFeedUpdateLoop();
+            await ViewModel.TryAcquireSyncLock();
+            ViewModel.PushClient.Start();
+            await ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt);
+            ViewModel.UpdateInboxAndSelectedThread();
+            ViewModel.ReelsFeed.StartReelsFeedUpdateLoop();
         }
 
         private void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)

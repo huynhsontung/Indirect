@@ -21,7 +21,7 @@ namespace Indirect
     /// </summary>
     public sealed partial class Login : Page
     {
-        private ApiContainer _viewModel;
+        private ApiContainer ViewModel => ((App)Application.Current).ViewModel;
         private bool _loading;
         public Login()
         {
@@ -75,7 +75,7 @@ namespace Indirect
                         return;
                     }
 
-                    var result = await _viewModel.LoginWithFacebook(fbToken).ConfigureAwait(true);
+                    var result = await ViewModel.LoginWithFacebook(fbToken).ConfigureAwait(true);
                     if (!result.IsSucceeded)
                     {
                         if (result.Value == LoginResult.TwoFactorRequired)
@@ -135,7 +135,7 @@ namespace Indirect
                     return;
                 }
 
-                var result = await _viewModel.Login(username, password);
+                var result = await ViewModel.Login(username, password);
                 if (result.Status != ResultStatus.Succeeded || result.Value != LoginResult.Success)
                 {
                     switch (result.Value)
@@ -207,13 +207,6 @@ namespace Indirect
             {
                 // pass
             }
-        }
-
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            base.OnNavigatedTo(e);
-            _viewModel = ApiContainer.Instance;
-            this.Bindings.Update();
         }
 
         private void OnWindowFocusChange(object sender, WindowActivatedEventArgs e)

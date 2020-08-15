@@ -57,21 +57,10 @@ namespace Indirect.Controls
             this.InitializeComponent();
         }
 
-        private void StoryViewOnLoadedAndOnSelectionChanged()
-        {
-            if (StoryView.SelectedIndex == -1) return;
-            var flipViewItem = StoryView.ContainerFromIndex(StoryView.SelectedIndex) as FlipViewItem;
-            var grid = flipViewItem?.ContentTemplateRoot as Grid;
-            var autoVideo = grid?.FindDescendant<AutoVideoControl>();
-            if (autoVideo == null) return;
-            autoVideo.MediaPlayer.Volume = 0.5;
-        }
-
         private void StoryView_OnLoaded(object sender, RoutedEventArgs e)
         {
             var storyView = (FlipView) sender;
             Source?.OnLoaded(storyView);
-            //StoryViewOnLoadedAndOnSelectionChanged();
         }
 
         public void OnClose()
@@ -154,22 +143,6 @@ namespace Indirect.Controls
         {
             args.Handled = true;
             SendButton_Click(sender, null);
-        }
-
-        private void RedirectToThread(object sender, TappedRoutedEventArgs e)
-        {
-            if (!(Window.Current.Content is Frame frame)) return;
-            if (!(frame.Content is MainPage mainPage)) return;
-            var owner = (StoryView.SelectedItem as ReelItemWrapper)?.Parent.User;
-            if (owner != null && !string.IsNullOrEmpty(owner.Username))
-                ApiContainer.Instance.SearchWithoutThreads(owner.Username, async userList =>
-                {
-                    ApiContainer.Instance.NewMessageCandidates.Clear();
-                    ApiContainer.Instance.NewMessageCandidates.Add(userList[0]);
-                    mainPage.CloseImmersiveView();
-                    await ApiContainer.Instance.CreateThread();
-                });
-
         }
 
         private void PreviousReelButtonClick(object sender, RoutedEventArgs e)

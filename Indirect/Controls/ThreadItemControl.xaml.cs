@@ -17,12 +17,6 @@ namespace Indirect.Controls
 {
     internal sealed partial class ThreadItemControl : UserControl
     {
-        // public static readonly DependencyProperty ThreadProperty = DependencyProperty.Register(
-        //     nameof(Thread),
-        //     typeof(InstaDirectInboxThreadWrapper),
-        //     typeof(ThreadItemControl),
-        //     new PropertyMetadata(null, OnThreadChanged));
-
         public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
             nameof(Item),
             typeof(InstaDirectInboxItemWrapper),
@@ -33,17 +27,6 @@ namespace Indirect.Controls
         {
             get => (InstaDirectInboxItemWrapper) GetValue(ItemProperty);
             set => SetValue(ItemProperty, value);
-        }
-
-        // public InstaDirectInboxThreadWrapper Thread
-        // {
-        //     get => (InstaDirectInboxThreadWrapper) GetValue(ThreadProperty);
-        //     set => SetValue(ThreadProperty, value);
-        // }
-
-        private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var view = (ThreadItemControl)d;
         }
 
         private static void OnItemSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -167,7 +150,7 @@ namespace Indirect.Controls
             var confirmation = await confirmDialog.ShowAsync();
             if (confirmation == ContentDialogResult.Primary)
             {
-                await ApiContainer.Instance.UnsendMessage(Item);
+                await ((App)Application.Current).ViewModel.UnsendMessage(Item);
             }
         }
 

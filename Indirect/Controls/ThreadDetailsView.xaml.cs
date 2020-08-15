@@ -29,11 +29,6 @@ namespace Indirect.Controls
             typeof(InstaDirectInboxThreadWrapper),
             typeof(ThreadDetailsView),
             new PropertyMetadata(null, OnThreadChanged));
-        // public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
-        //     nameof(ViewModel),
-        //     typeof(ApiContainer),
-        //     typeof(ThreadDetailsView),
-        //     new PropertyMetadata(null));
 
         public InstaDirectInboxThreadWrapper Thread
         {
@@ -59,12 +54,12 @@ namespace Indirect.Controls
             view.OnUserPresenceChanged();
         }
 
-        private static ApiContainer ViewModel => ApiContainer.Instance;
+        private static ApiContainer ViewModel => ((App)Application.Current).ViewModel;
 
         public ThreadDetailsView()
         {
             this.InitializeComponent();
-            ApiContainer.Instance.PropertyChanged += (sender, args) =>
+            ViewModel.PropertyChanged += (sender, args) =>
             {
                 if (args.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
                 OnUserPresenceChanged();
@@ -80,7 +75,7 @@ namespace Indirect.Controls
                 LastActiveText.Visibility = Visibility.Collapsed;
                 return;
             }
-            if (ApiContainer.Instance.UserPresenceDictionary.TryGetValue(Thread.Users[0].Pk, out var value))
+            if (ViewModel.UserPresenceDictionary.TryGetValue(Thread.Users[0].Pk, out var value))
             {
                 LastActiveText.Visibility = Visibility.Visible;
                 if (value.IsActive)

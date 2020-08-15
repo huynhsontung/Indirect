@@ -36,7 +36,7 @@ namespace Indirect
             set => SetValue(InboxProperty, value);
         }
 
-        private readonly ApiContainer _viewModel = ApiContainer.Instance;
+        private ApiContainer ViewModel => ((App) Application.Current).ViewModel;
         private readonly Windows.Storage.ApplicationDataContainer _localSettings =
             Windows.Storage.ApplicationData.Current.LocalSettings;
 
@@ -48,7 +48,7 @@ namespace Indirect
             MainLayout.ViewStateChanged += OnViewStateChange;
             Window.Current.Activated += OnWindowFocusChange;
             Window.Current.SizeChanged += OnWindowSizeChanged;
-            Inbox = _viewModel.Inbox;
+            Inbox = ViewModel.Inbox;
             MediaPopup.Width = Window.Current.Bounds.Width;
             MediaPopup.Height = Window.Current.Bounds.Height - 32;
         }
@@ -64,7 +64,7 @@ namespace Indirect
             base.OnNavigatedTo(e);
             if (e?.NavigationMode != NavigationMode.Back)
             {
-                await _viewModel.OnLoggedIn();
+                await ViewModel.OnLoggedIn();
             }
         }
 
@@ -80,11 +80,11 @@ namespace Indirect
             };
             var confirmation = await confirmDialog.ShowAsync();
             if (confirmation != ContentDialogResult.Primary) return;
-            _viewModel.Logout();
-            Frame.Navigate(typeof(Login), _viewModel);
+            ViewModel.Logout();
+            Frame.Navigate(typeof(Login));
         }
         
-        private void DetailsBackButton_OnClick(object sender, RoutedEventArgs e) => _viewModel.SetSelectedThreadNull();
+        private void DetailsBackButton_OnClick(object sender, RoutedEventArgs e) => ViewModel.SetSelectedThreadNull();
 
         private void OnWindowFocusChange(object sender, WindowActivatedEventArgs e)
         {
@@ -116,7 +116,7 @@ namespace Indirect
             var inboxThread = (InstaDirectInboxThreadWrapper) e.AddedItems[0];
             if (!string.IsNullOrEmpty(inboxThread.ThreadId)) 
                 ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
-            _viewModel.MarkLatestItemSeen(inboxThread);
+            ViewModel.MarkLatestItemSeen(inboxThread);
             
             var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
             details?.Focus(FocusState.Programmatic);    // Focus to chat box after selecting a thread
@@ -130,7 +130,7 @@ namespace Indirect
                 return;
             }
 
-            _viewModel.Search(sender.Text,
+            ViewModel.Search(sender.Text,
                 updatedList => SearchBox.ItemsSource = updatedList);
         }
 
@@ -144,14 +144,14 @@ namespace Indirect
         {
             if (args.ChosenSuggestion != null)
             {
-                _viewModel.MakeProperInboxThread((InstaDirectInboxThreadWrapper) args.ChosenSuggestion);
+                ViewModel.MakeProperInboxThread((InstaDirectInboxThreadWrapper) args.ChosenSuggestion);
             }
             else if (!string.IsNullOrEmpty(sender.Text))
             {
-                _viewModel.Search(sender.Text, updatedList =>
+                ViewModel.Search(sender.Text, updatedList =>
                 {
                     if (updatedList.Count == 0) return;
-                    _viewModel.MakeProperInboxThread(updatedList[0]);
+                    ViewModel.MakeProperInboxThread(updatedList[0]);
                 });
             }
             sender.Text = string.Empty;
@@ -195,8 +195,8 @@ namespace Indirect
 
         private async void Profile_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(_viewModel?.LoggedInUser?.Username)) return;
-            var username = _viewModel.LoggedInUser.Username;
+            if (string.IsNullOrEmpty(ViewModel?.LoggedInUser?.Username)) return;
+            var username = ViewModel.LoggedInUser.Username;
             var uri = new Uri("https://www.instagram.com/" + username);
             await Windows.System.Launcher.LaunchUriAsync(uri);
         }
@@ -211,7 +211,7 @@ namespace Indirect
                 return;
             }
 
-            _viewModel.SearchWithoutThreads(sender.Text,
+            ViewModel.SearchWithoutThreads(sender.Text,
                 updatedList => NewMessageSuggestBox.ItemsSource = updatedList);
         }
 
@@ -226,15 +226,15 @@ namespace Indirect
             if (args.ChosenSuggestion != null)
             {
                 var selectedRecipient = (BaseUser) args.ChosenSuggestion;
-                if (_viewModel.NewMessageCandidates.All(x => selectedRecipient.Username != x.Username))
-                    _viewModel.NewMessageCandidates.Add(selectedRecipient);
+                if (ViewModel.NewMessageCandidates.All(x => selectedRecipient.Username != x.Username))
+                    ViewModel.NewMessageCandidates.Add(selectedRecipient);
             }
             else if (!string.IsNullOrEmpty(sender.Text))
             {
-                _viewModel.SearchWithoutThreads(sender.Text, updatedList =>
+                ViewModel.SearchWithoutThreads(sender.Text, updatedList =>
                 {
                     if (updatedList.Count == 0) return;
-                    _viewModel.NewMessageCandidates.Add(updatedList[0]);
+                    ViewModel.NewMessageCandidates.Add(updatedList[0]);
                 });
             }
             sender.Text = string.Empty;
@@ -243,21 +243,21 @@ namespace Indirect
 
         private void NewMessageClearAll_OnClick(object sender, RoutedEventArgs e)
         {
-            _viewModel.NewMessageCandidates.Clear();
+            ViewModel.NewMessageCandidates.Clear();
         }
 
         private async void ChatButton_OnClick(object sender, RoutedEventArgs e)
         {
             NewThreadFlyout.Hide();
-            await _viewModel.CreateThread();
-            _viewModel.NewMessageCandidates.Clear();
+            await ViewModel.CreateThread();
+            ViewModel.NewMessageCandidates.Clear();
         }
 
         private void ClearSingleCandidateButton_OnClick(object sender, RoutedEventArgs e)
         {
             var target = (BaseUser) (sender as FrameworkElement)?.DataContext;
             if (target == null) return;
-            _viewModel.NewMessageCandidates.Remove(target);
+            ViewModel.NewMessageCandidates.Remove(target);
         }
 
         private void Candidate_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -274,7 +274,7 @@ namespace Indirect
         {
             var target = (BaseUser) args.SwipeControl.DataContext;
             if (target == null) return;
-            _viewModel.NewMessageCandidates.Remove(target);
+            ViewModel.NewMessageCandidates.Remove(target);
         }
 
         private void NewMessageSuggestBox_OnProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)
@@ -291,7 +291,7 @@ namespace Indirect
 
         private void TogglePendingInbox_OnClick(object sender, RoutedEventArgs e)
         {
-            Inbox = Inbox == _viewModel.Inbox ? _viewModel.PendingInbox : _viewModel.Inbox;
+            Inbox = Inbox == ViewModel.Inbox ? ViewModel.PendingInbox : ViewModel.Inbox;
         }
 
         private void CloseMediaPopup_OnClick(object sender, RoutedEventArgs e)
@@ -322,13 +322,13 @@ namespace Indirect
                 selected = reelsFeed.SelectedIndex;
                 reelsFeed.SelectedIndex = -1;
             }
-            var reelsWrapper = await _viewModel.ReelsFeed.PrepareFlatReelsContainer(selected);
+            var reelsWrapper = await ViewModel.ReelsFeed.PrepareFlatReelsContainer(selected);
             this.Frame.Navigate(typeof(ReelPage), reelsWrapper);
         }
 
         private async void StoriesSectionTitle_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            await _viewModel.ReelsFeed.UpdateReelsFeed(ReelsTrayFetchReason.PullToRefresh);
+            await ViewModel.ReelsFeed.UpdateReelsFeed(ReelsTrayFetchReason.PullToRefresh);
         }
     }
 }

@@ -184,7 +184,7 @@ namespace Indirect
                                 if (result.IsSucceeded && result.Value.Items.Count > 0) 
                                     item = result.Value.Items[0];
                             }
-                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                            await thread.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                                 () => thread.AddItem(item));
                             break;
                         }
@@ -192,14 +192,15 @@ namespace Indirect
                         {
                             if (itemData.Path.Contains("has_seen", StringComparison.Ordinal) && long.TryParse(segments[4], out var userId))
                             {
-                                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                                await thread.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                                     () => thread.UpdateLastSeenAt(userId, itemData.Item.Timestamp, itemData.Item.ItemId));
                                 continue;
                             }
+
                             var item = thread.ObservableItems.LastOrDefault(x => x.ItemId == itemData.Item.ItemId);
                             if (item == null) continue;
 
-                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                            await thread.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
                             {
                                 if (itemData.Item.Reactions == null)
                                 {
@@ -214,7 +215,7 @@ namespace Indirect
                             break;
                         }
                         case "remove":
-                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                            await thread.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                                 () => thread.RemoveItem(itemData.Value));
                             break;
                         default:
@@ -244,7 +245,7 @@ namespace Indirect
             {
                 var result = await _instaApi.GetThreadAsync(SelectedThread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
                 if (result.IsSucceeded)
-                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+                    await SelectedThread.Dispatcher.RunAsync(
                         CoreDispatcherPriority.Normal,
                         () => { SelectedThread.Update(result.Value); });
             }

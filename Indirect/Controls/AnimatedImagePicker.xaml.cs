@@ -129,7 +129,7 @@ namespace Indirect.Controls
         {
             if (e.AddedItems.Count == 0 || e.AddedItems[0] == null) return;
             var image = (GiphyMedia)e.AddedItems[0];
-            await ApiContainer.Instance.SendAnimatedImage(image.Id, image.IsSticker);
+            await ((App)Application.Current).ViewModel.SendAnimatedImage(image.Id, image.IsSticker);
             var gridView = (GridView) sender;
             gridView.SelectedItem = null;
             ImageSelected?.Invoke(this, image);

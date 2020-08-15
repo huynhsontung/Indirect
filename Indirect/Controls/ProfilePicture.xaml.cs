@@ -52,20 +52,20 @@ namespace Indirect.Controls
                 view.Group.Visibility = Visibility.Collapsed;
                 view.Single.Source = item[0]?.ProfilePictureUrl;
             }
-            view.ViewModelOnPropertyChanged(view, new PropertyChangedEventArgs(string.Empty));
+            view.OnUserPresenceChanged(view, new PropertyChangedEventArgs(string.Empty));
         }
 
         public ProfilePicture()
         {
             this.InitializeComponent();
-            ApiContainer.Instance.PropertyChanged += ViewModelOnPropertyChanged;
+            ((App)Application.Current).ViewModel.PropertyChanged += OnUserPresenceChanged;
         }
 
-        private void ViewModelOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void OnUserPresenceChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(e.PropertyName)) return;
             if (Source == null) return;
-            if (Source.Any(user => ApiContainer.Instance.UserPresenceDictionary.TryGetValue(user.Pk, out var value) && value.IsActive))
+            if (Source.Any(user => ((App)Application.Current).ViewModel.UserPresenceDictionary.TryGetValue(user.Pk, out var value) && value.IsActive))
             {
                 IsUserActive = true;
                 return;

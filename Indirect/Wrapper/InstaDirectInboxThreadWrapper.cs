@@ -22,6 +22,12 @@ namespace Indirect.Wrapper
     {
         private readonly Instagram _instaApi;
         private CancellationTokenSource _typingCancellationTokenSource;
+        private CoreDispatcher _dispatcher;
+        public CoreDispatcher Dispatcher
+        {
+            get => _dispatcher ?? CoreApplication.MainView.CoreWindow.Dispatcher;
+            set => _dispatcher = value;
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -364,33 +370,32 @@ namespace Indirect.Wrapper
         public async void PingTypingIndicator(int ttl)
         {
             if (!IsSomeoneTyping && ttl == 0) return;
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                CoreDispatcherPriority.Normal, async () =>
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                _typingCancellationTokenSource?.Cancel();
+                _typingCancellationTokenSource = new CancellationTokenSource();
+                var cancellationToken = _typingCancellationTokenSource.Token;
+                if (ttl > 0)
+                {
+                    if (!IsSomeoneTyping) IsSomeoneTyping = true;
+                    try
+                    {
+                        await Task.Delay(ttl, cancellationToken);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        return;
+                    }
+
+                    IsSomeoneTyping = false;
+                }
+                else
                 {
                     _typingCancellationTokenSource?.Cancel();
-                    _typingCancellationTokenSource = new CancellationTokenSource();
-                    var cancellationToken = _typingCancellationTokenSource.Token;
-                    if (ttl > 0)
-                    {
-                        if (!IsSomeoneTyping) IsSomeoneTyping = true;
-                        try
-                        {
-                            await Task.Delay(ttl, cancellationToken);
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            return;
-                        }
-
-                        IsSomeoneTyping = false;
-                    }
-                    else
-                    {
-                        _typingCancellationTokenSource?.Cancel();
-                        _typingCancellationTokenSource = null;
-                        IsSomeoneTyping = false;
-                    }
-                });
+                    _typingCancellationTokenSource = null;
+                    IsSomeoneTyping = false;
+                }
+            });
         }
 
         private void HideTypingIndicatorOnItemReceived(object sender, NotifyCollectionChangedEventArgs e)
@@ -410,7 +415,7 @@ namespace Indirect.Wrapper
 
         private async void SeenCheckCollection(object sender, NotifyCollectionChangedEventArgs e)
         {
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 if (ObservableItems.Count == 0)
                 {

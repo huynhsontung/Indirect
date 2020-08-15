@@ -107,7 +107,7 @@
                 </Grid.RowDefinitions>
                 <controls:ImageEx Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
                                   Source="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.Parent).User.ProfilePictureUrl, Mode=OneWay}" 
-                                  Height="34" Width="34" Margin="0,0,12,0" CornerRadius="99" VerticalAlignment="Center" Tapped="RedirectToThread"/>
+                                  Height="34" Width="34" Margin="0,0,12,0" CornerRadius="99" VerticalAlignment="Center"/>
                 <TextBlock Grid.Row="0" Grid.Column="1" 
                            Text="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.Parent).User.Username, Mode=OneWay}"
                            Style="{ThemeResource FluentTitleTextStyle}" MaxLines="1" 

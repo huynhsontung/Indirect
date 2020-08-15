@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
+using Windows.UI.Xaml;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
@@ -149,7 +150,7 @@ namespace Indirect.Wrapper
                 // If not satisfied, Threads[j] has to move to index i
                 // ObservableCollection.Move() calls RemoveItem() under the hood which refreshes all items in collection
                 // Removing Selected thread from collection will deselect the thread
-                if (ApiContainer.Instance.SelectedThread != Threads[j])
+                if (((App)Application.Current).ViewModel.SelectedThread != Threads[j])
                 {
                     var tmp = Threads[j];
                     Threads.RemoveAt(j);

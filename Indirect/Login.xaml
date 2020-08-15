@@ -60,7 +60,7 @@
                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}">
                 <Paragraph>
                     Current identity:
-                    <Run FontWeight="Bold" Text="{x:Bind _viewModel.Device.DeviceName}"/>
+                    <Run FontWeight="Bold" Text="{x:Bind ViewModel.Device.DeviceName}"/>
                 </Paragraph>
             </RichTextBlock>
         </StackPanel>
