@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="Indirect.Login"
+    x:Class="Indirect.Pages.Login"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Indirect"
@@ -46,7 +46,7 @@
             <NavigationViewItemSeparator/>
             <Button x:Name="FbLoginButton" HorizontalAlignment="Center" Margin="0,16,0,0" Click="FbLoginButton_OnClick" Width="200" Background="#1877f2">
                 <StackPanel Orientation="Horizontal">
-                    <Image Source="Assets/facebook-logo.svg" Height="20" Width="20" Margin="0,2,0,0" VerticalAlignment="Center"/>
+                    <Image Source="/Assets/facebook-logo.svg" Height="20" Width="20" Margin="0,2,0,0" VerticalAlignment="Center"/>
                     <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" Foreground="White">Log in with Facebook</TextBlock>
                 </StackPanel>
             </Button>

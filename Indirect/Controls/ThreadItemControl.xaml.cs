@@ -7,6 +7,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
+using Indirect.Pages;
 using Indirect.Wrapper;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;

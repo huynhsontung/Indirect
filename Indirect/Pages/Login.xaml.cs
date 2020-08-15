@@ -5,16 +5,14 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Navigation;
 using Indirect.Controls;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Utils;
-using Microsoft.AppCenter.Crashes;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
-namespace Indirect
+namespace Indirect.Pages
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
