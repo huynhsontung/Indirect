@@ -110,7 +110,7 @@ namespace Indirect.Pages
             BackButtonPlaceholder.Visibility = BackButton.Visibility;
         }
 
-        private void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count == 0 || e.AddedItems[0] == null)
             {
@@ -119,10 +119,10 @@ namespace Indirect.Pages
             var inboxThread = (InstaDirectInboxThreadWrapper) e.AddedItems[0];
             if (!string.IsNullOrEmpty(inboxThread.ThreadId)) 
                 ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
-            ViewModel.MarkLatestItemSeen(inboxThread);
             
             var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
             details?.Focus(FocusState.Programmatic);    // Focus to chat box after selecting a thread
+            await inboxThread.MarkLatestItemSeen();
         }
 
         private void SearchBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)

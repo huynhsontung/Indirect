@@ -191,6 +191,9 @@
     <Compile Include="Pages\ReelPage.xaml.cs">
       <DependentUpon>ReelPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\ThreadPage.xaml.cs">
+      <DependentUpon>ThreadPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Utilities\Helpers.cs" />
     <Compile Include="Controls\Selectors\ItemTemplateSelector.cs" />
     <Compile Include="Controls\PhotoVideoControl.xaml.cs">
@@ -369,6 +372,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\ReelPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\ThreadPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

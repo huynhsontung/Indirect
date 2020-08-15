@@ -17,6 +17,7 @@
             <converters:SendButtonGlyphConverter x:Key="SendButtonGlyphConverter"/>
             <converters:VisibleWhenZeroConverter x:Key="VisibleWhenZeroConverter"/>
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
+            <converters:BooleanVisibilityConverter x:Key="InvertBooleanVisibilityConverter" Invert="True"/>
             <converters:StringListToTextConverter x:Key="StringListToTextConverter"/>
             <converters:SeenTextConverter x:Key="SeenTextConverter"/>
         </ResourceDictionary>
@@ -49,7 +50,7 @@
 
         <Border Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1" Background="{ThemeResource SystemControlAcrylicElementBrush}"/>
 
-        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Right" IsDynamicOverflowEnabled="False">
+        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Right" IsDynamicOverflowEnabled="False" OverflowButtonVisibility="Collapsed">
             <FlyoutBase.AttachedFlyout>
                 <Flyout x:Name="UserInfoFlyout" Placement="BottomEdgeAlignedLeft">
                     <controls1:UserInfoView x:Name="UserInfoView"/>
@@ -57,6 +58,12 @@
             </FlyoutBase.AttachedFlyout>
             <AppBarButton x:Name="ViewProfileAppBarButton" Icon="Contact2" Label="View profile" Click="ShowUserInfoFlyout"/>
             <AppBarButton x:Name="RefreshButton" Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
+            <AppBarButton Click="OpenInNewWindow_OnClick" Width="48" ToolTipService.ToolTip="Open thread in a new window" LabelPosition="Collapsed"
+                          Visibility="{x:Bind Thread.IsSecondaryView, Converter={StaticResource InvertBooleanVisibilityConverter}}">
+                <AppBarButton.Icon>
+                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8A7;" VerticalAlignment="Center"/>
+                </AppBarButton.Icon>
+            </AppBarButton>
             <CommandBar.Content>
                 <StackPanel x:Name="ThreadInfoHeader" Orientation="Horizontal" Background="Transparent" Tapped="ShowUserInfoFlyout" Margin="8,0,0,0">
                     <controls1:ProfilePicture Source="{x:Bind Thread.Users, Mode=OneWay}" Height="32" Width="32" Margin="4,0,12,0" VerticalAlignment="Center"/>

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Storage;
+using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -163,6 +165,29 @@ namespace Indirect
         private void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)
         {
             Instagram.Instance.SaveToAppSettings();
+        }
+
+        public static async Task<bool> CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)
+        {
+            var newView = view ?? CoreApplication.CreateNewView();
+            int newViewId = 0;
+            await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(380, 300));
+                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
+                titleBar.ButtonBackgroundColor = Windows.UI.Colors.Transparent;
+                titleBar.ButtonInactiveBackgroundColor = Windows.UI.Colors.Transparent;
+                CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
+
+                var frame = new Frame();
+                frame.Navigate(targetPage, parameter);
+                Window.Current.Content = frame;
+                // You have to activate the window in order to show it later.
+                Window.Current.Activate();
+
+                newViewId = ApplicationView.GetForCurrentView().Id;
+            });
+            return await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
         }
     }
 }

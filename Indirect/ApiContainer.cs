@@ -14,6 +14,7 @@ using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Indirect.Pages;
 using Indirect.Wrapper;
 using InstagramAPI;
 using InstagramAPI.Classes;
@@ -56,6 +57,7 @@ namespace Indirect
         public Dictionary<long, UserPresenceValue> UserPresenceDictionary { get; } = new Dictionary<long, UserPresenceValue>();
         public InstaDirectInboxWrapper PendingInbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance, true);
         public InstaDirectInboxWrapper Inbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance);
+        public List<InstaDirectInboxThreadWrapper> SecondaryThreadViews { get; } = new List<InstaDirectInboxThreadWrapper>();
         public CurrentUser LoggedInUser { get; private set; }
         public InstaDirectInboxThreadWrapper SelectedThread
         {
@@ -262,7 +264,7 @@ namespace Indirect
             if (Inbox.Threads.Contains(SelectedThread))
             {
                 await UpdateSelectedThread();
-                MarkLatestItemSeen(SelectedThread);
+                await SelectedThread.MarkLatestItemSeen();
             }
             else
             {
@@ -324,6 +326,13 @@ namespace Indirect
             var recipients = result.Value.Users;
             if (recipients?.Count > 0)
                 updateAction?.Invoke(recipients);
+        }
+
+        public static async Task OpenThreadInNewWindow(InstaDirectInboxThreadWrapper thread)
+        {
+            var newView = CoreApplication.CreateNewView();
+            var cloneThread = await thread.CloneThreadForSecondaryView(newView.Dispatcher);
+            await App.CreateAndShowNewView(typeof(ThreadPage), cloneThread, newView);
         }
 
         public async Task CreateThread(IEnumerable<long> userIds)

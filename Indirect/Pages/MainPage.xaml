@@ -19,7 +19,6 @@
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Controls/MasterDetailsViewStyle.xaml"/>
                 <ResourceDictionary Source="/Controls/ExtendedMasterDetailsView/ExtendedMasterDetailsView.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 

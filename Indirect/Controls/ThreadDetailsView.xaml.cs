@@ -351,5 +351,10 @@ namespace Indirect.Controls
                 FlyoutBase.ShowAttachedFlyout(SeenIndicator);
             }
         }
+
+        private async void OpenInNewWindow_OnClick(object sender, RoutedEventArgs e)
+        {
+            await ApiContainer.OpenThreadInNewWindow(Thread);
+        }
     }
 }

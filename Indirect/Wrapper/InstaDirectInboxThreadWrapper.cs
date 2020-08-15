@@ -13,6 +13,7 @@ using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.User;
+using InstagramAPI.Utils;
 using Microsoft.Toolkit.Collections;
 
 namespace Indirect.Wrapper
@@ -26,8 +27,9 @@ namespace Indirect.Wrapper
         public CoreDispatcher Dispatcher
         {
             get => _dispatcher ?? CoreApplication.MainView.CoreWindow.Dispatcher;
-            set => _dispatcher = value;
+            private set => _dispatcher = value;
         }
+        public bool IsSecondaryView { get; private set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -113,6 +115,15 @@ namespace Indirect.Wrapper
             }
             if (Users.Count == 0) Users.Add(new BaseUser());
             UpdateItemList(source.Items);
+        }
+
+        public async Task<InstaDirectInboxThreadWrapper> CloneThreadForSecondaryView(CoreDispatcher dispatcher)
+        {
+            var result = await _instaApi.GetThreadAsync(ThreadId, PaginationParameters.MaxPagesToLoad(1));
+            if (!result.IsSucceeded) return null;
+            var clone = new InstaDirectInboxThreadWrapper(result.Value, _instaApi)
+                {Dispatcher = dispatcher, IsSecondaryView = true};
+            return clone;
         }
 
         public void AddItems(List<DirectItem> items)
@@ -339,6 +350,25 @@ namespace Indirect.Wrapper
             {
                 var duplicate = duplicateGroup.First();
                 ObservableItems.Remove(duplicate);
+            }
+        }
+
+        public async Task MarkLatestItemSeen()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(ThreadId) || LastSeenAt == null) return;
+                if (LastSeenAt.TryGetValue(ViewerId, out var lastSeen))
+                {
+                    if (string.IsNullOrEmpty(LastPermanentItem?.ItemId) ||
+                        lastSeen.ItemId == LastPermanentItem.ItemId ||
+                        LastPermanentItem.FromMe) return;
+                    await _instaApi.MarkItemSeenAsync(ThreadId, LastPermanentItem.ItemId).ConfigureAwait(false);
+                }
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
             }
         }
 
