@@ -25,13 +25,12 @@
                 <ColumnDefinition x:Name="RightPaddingColumn" Width="0"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <TextBlock x:Name="AppTitleTextBlock"
-                           Text="{x:Bind _thread.Title}" 
+            <StackPanel x:Name="AppTitle" Grid.Column="1" Orientation="Horizontal">
+                <TextBlock Text="{x:Bind _thread.Title}" 
                            VerticalAlignment="Center"
                            Style="{ThemeResource FluentCaptionTextStyle}" 
                            Margin="13,0,0,0"/>
-                <TextBlock Text=" - Indirect" 
+                <TextBlock Text=" - Thread - Indirect" 
                            VerticalAlignment="Center"
                            Style="{ThemeResource FluentCaptionTextStyle}" />
             </StackPanel>

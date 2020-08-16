@@ -30,6 +30,7 @@ namespace Indirect.Pages
             _thread = (InstaDirectInboxThreadWrapper) e?.Parameter ??
                       throw new ArgumentException("Did not receive chat thread to create page");
             ApplicationView.GetForCurrentView().Consolidated += ViewConsolidated;
+            ApplicationView.GetForCurrentView().Title = _thread.Title + " - Thread";
             Bindings.Update();
         }
 
@@ -37,11 +38,11 @@ namespace Indirect.Pages
         {
             if (e.WindowActivationState == CoreWindowActivationState.Deactivated)
             {
-                AppTitleTextBlock.Opacity = 0.5;
+                AppTitle.Opacity = 0.5;
             }
             else
             {
-                AppTitleTextBlock.Opacity = 1;
+                AppTitle.Opacity = 1;
             }
         }
 
