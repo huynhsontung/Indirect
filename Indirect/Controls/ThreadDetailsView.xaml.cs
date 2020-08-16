@@ -59,10 +59,10 @@ namespace Indirect.Controls
         public ThreadDetailsView()
         {
             this.InitializeComponent();
-            ViewModel.PropertyChanged += (sender, args) =>
+            ViewModel.PropertyChanged += async (sender, args) =>
             {
                 if (args.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
-                OnUserPresenceChanged();
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, OnUserPresenceChanged);
             };
             GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
         }
@@ -248,7 +248,7 @@ namespace Indirect.Controls
                 chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 2)
             {
                 await Task.Delay(100);
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                     () =>
                     {
                         ItemsHolder.ScrollIntoView(ItemsHolder.Footer);
@@ -354,7 +354,8 @@ namespace Indirect.Controls
 
         private async void OpenInNewWindow_OnClick(object sender, RoutedEventArgs e)
         {
-            await ApiContainer.OpenThreadInNewWindow(Thread);
+            var viewmodel = ((App) Application.Current).ViewModel;
+            await viewmodel.OpenThreadInNewWindow(Thread);
         }
     }
 }

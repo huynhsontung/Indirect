@@ -23,12 +23,7 @@ namespace Indirect.Wrapper
     {
         private readonly Instagram _instaApi;
         private CancellationTokenSource _typingCancellationTokenSource;
-        private CoreDispatcher _dispatcher;
-        public CoreDispatcher Dispatcher
-        {
-            get => _dispatcher ?? CoreApplication.MainView.CoreWindow.Dispatcher;
-            private set => _dispatcher = value;
-        }
+        public CoreDispatcher Dispatcher { get; private set; } = CoreApplication.MainView.CoreWindow.Dispatcher;
         public bool IsSecondaryView { get; private set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -40,7 +35,10 @@ namespace Indirect.Wrapper
             private set
             {
                 _isSomeoneTyping = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSomeoneTyping)));
+                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSomeoneTyping)));
+                });
             }
         }
 
@@ -51,7 +49,10 @@ namespace Indirect.Wrapper
             private set
             {
                 _showSeenIndicator = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowSeenIndicator)));
+                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowSeenIndicator)));
+                });
             }
         }
 
@@ -62,7 +63,10 @@ namespace Indirect.Wrapper
             set
             {
                 _draftMessage = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DraftMessage)));
+                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DraftMessage)));
+                });
             }
         }
 
@@ -114,7 +118,7 @@ namespace Indirect.Wrapper
                 Users.Add(instaUserShortFriendship);
             }
             if (Users.Count == 0) Users.Add(new BaseUser());
-            UpdateItemList(source.Items);
+            _ = UpdateItemList(source.Items);
         }
 
         public async Task<InstaDirectInboxThreadWrapper> CloneThreadForSecondaryView(CoreDispatcher dispatcher)
@@ -126,9 +130,9 @@ namespace Indirect.Wrapper
             return clone;
         }
 
-        public void AddItems(List<DirectItem> items)
+        public async Task AddItems(List<DirectItem> items)
         {
-            UpdateItemList(items);
+            await UpdateItemList(items);
 
             var latestItem = ObservableItems.Last();    // Assuming order of item is maintained. Last item after update should be the latest.
             if (latestItem.Timestamp > LastPermanentItem.Timestamp)
@@ -141,29 +145,36 @@ namespace Indirect.Wrapper
                 {
                     LastNonSenderItemAt = latestItem.Timestamp;
                 }
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastPermanentItem)));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastActivity)));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewestCursor)));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreadMessage))); // LastNonSenderItemAt
+
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastPermanentItem)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastActivity)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewestCursor)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreadMessage))); // LastNonSenderItemAt
+                });
             }
         }
 
-        public void AddItem(DirectItem item) => AddItems(new List<DirectItem> {item});
+        public Task AddItem(DirectItem item) => AddItems(new List<DirectItem> {item});
 
-        public void RemoveItem(string itemId)
+        public async Task RemoveItem(string itemId)
         {
             if (string.IsNullOrEmpty(itemId)) return;
-            lock (ObservableItems)
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                for (int i = ObservableItems.Count - 1; i >= 0; i--)
+                lock (ObservableItems)
                 {
-                    if (ObservableItems[i].ItemId == itemId)
+                    for (int i = ObservableItems.Count - 1; i >= 0; i--)
                     {
-                        ObservableItems.RemoveAt(i);
-                        break;
+                        if (ObservableItems[i].ItemId == itemId)
+                        {
+                            ObservableItems.RemoveAt(i);
+                            break;
+                        }
                     }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -171,14 +182,14 @@ namespace Indirect.Wrapper
         /// </summary>
         /// <param name="source"></param>
         /// <param name="fromInbox"></param>
-        public void Update(DirectThread source, bool fromInbox = false)
+        public async void Update(DirectThread source, bool fromInbox = false)
         {
-            UpdateExcludeItemList(source);
+            await UpdateExcludeItemList(source);
             if (fromInbox) return;  // Items from GetInbox request will interfere with GetPagedItemsAsync
-            UpdateItemList(source.Items);
+            await UpdateItemList(source.Items);
         }
 
-        private void UpdateExcludeItemList(DirectThread source)
+        private async Task UpdateExcludeItemList(DirectThread source)
         {
             Canonical = source.Canonical;
             //HasNewer = source.HasNewer;
@@ -222,71 +233,82 @@ namespace Indirect.Wrapper
                 // This implementation never has HasNewer = true
             }
 
-            UpdateUserList(source.Users);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+            await UpdateUserList(source.Users);
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+            });
         }
 
-        private void UpdateItemList(ICollection<DirectItem> source)
+        private async Task UpdateItemList(ICollection<DirectItem> source)
         {
             if (source == null || source.Count == 0) return;
             var convertedSource = source.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
             DecorateItems(convertedSource);
-            lock (ObservableItems)
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (ObservableItems.Count == 0)
+                lock (ObservableItems)
                 {
+                    if (ObservableItems.Count == 0)
+                    {
+                        foreach (var item in convertedSource)
+                            ObservableItems.Add(item);
+                        return;
+                    }
+
                     foreach (var item in convertedSource)
-                        ObservableItems.Add(item);
-                    return;
-                }
-
-                foreach (var item in convertedSource)
-                {
-                    var existingItem = ObservableItems.LastOrDefault(x => x.Equals(item));
-                    var existed = existingItem != null;
-
-                    if (existed)
                     {
-                        if (item.Reactions != null)
-                        {
-                            existingItem.Reactions.Update(item.Reactions, Users);
-                        }
-                        continue;
-                    }
-                    for (var i = ObservableItems.Count-1; i >= 0; i--)
-                    {
-                        if (item.Timestamp > ObservableItems[i].Timestamp)
-                        {
-                            ObservableItems.Insert(i+1, item);
-                            break;
-                        }
+                        var existingItem = ObservableItems.LastOrDefault(x => x.Equals(item));
+                        var existed = existingItem != null;
 
-                        if (i == 0)
+                        if (existed)
                         {
-                            ObservableItems.Insert(0, item);
+                            if (item.Reactions != null)
+                            {
+                                existingItem.Reactions.Update(item.Reactions, Users);
+                            }
+                            continue;
+                        }
+                        for (var i = ObservableItems.Count-1; i >= 0; i--)
+                        {
+                            if (item.Timestamp > ObservableItems[i].Timestamp)
+                            {
+                                ObservableItems.Insert(i+1, item);
+                                break;
+                            }
+
+                            if (i == 0)
+                            {
+                                ObservableItems.Insert(0, item);
+                            }
                         }
                     }
                 }
-            }
+            });
         }
 
-        private void UpdateUserList(List<UserWithFriendship> users)
+        private async Task UpdateUserList(List<UserWithFriendship> users)
         {
             if (users == null || users.Count == 0) return;
-            lock (Users)
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                var copyUsers = Users.ToList(); // attempt to troubleshoot InvalidOperationException: Collection was modified
-                var toBeAdded = users.Where(p2 => copyUsers.All(p1 => !p1.Equals(p2)));
-                var toBeDeleted = copyUsers.Where(p1 => users.All(p2 => !p1.Equals(p2)));
-                foreach (var user in toBeAdded)
+                lock (Users)
                 {
-                    Users.Add(user);
+                    var copyUsers =
+                        Users.ToList(); // attempt to troubleshoot InvalidOperationException: Collection was modified
+                    var toBeAdded = users.Where(p2 => copyUsers.All(p1 => !p1.Equals(p2)));
+                    var toBeDeleted = copyUsers.Where(p1 => users.All(p2 => !p1.Equals(p2)));
+                    foreach (var user in toBeAdded)
+                    {
+                        Users.Add(user);
+                    }
+
+                    foreach (var user in toBeDeleted)
+                    {
+                        Users.Remove(user);
+                    }
                 }
-                foreach (var user in toBeDeleted)
-                {
-                    Users.Remove(user);
-                }
-            }
+            });
         }
 
         public async Task<IEnumerable<InstaDirectInboxItemWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
@@ -299,7 +321,7 @@ namespace Indirect.Wrapper
             pagination.StartFromMaxId(OldestCursor);
             var result = await _instaApi.GetThreadAsync(ThreadId, pagination);
             if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0) return new List<InstaDirectInboxItemWrapper>(0);
-            UpdateExcludeItemList(result.Value);
+            await UpdateExcludeItemList(result.Value);
             var wrappedItems = result.Value.Items.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
             DecorateItems(wrappedItems);
             return wrappedItems;
@@ -341,18 +363,6 @@ namespace Indirect.Wrapper
                    x - y < TimeSpan.FromHours(TimestampClosenessThreshold);
         }
 
-        private void FixItemList()
-        {
-            // Somehow item list got messed up and items are not unique anymore
-            var duplicates = ObservableItems.GroupBy(x => x.ItemId).Where(g => g.Count() > 1)
-                .Select(y => y);
-            foreach (var duplicateGroup in duplicates)
-            {
-                var duplicate = duplicateGroup.First();
-                ObservableItems.Remove(duplicate);
-            }
-        }
-
         public async Task MarkLatestItemSeen()
         {
             try
@@ -372,7 +382,7 @@ namespace Indirect.Wrapper
             }
         }
 
-        public void UpdateLastSeenAt(long userId, DateTimeOffset timestamp, string itemId)
+        public async Task UpdateLastSeenAt(long userId, DateTimeOffset timestamp, string itemId)
         {
             if (userId == default || timestamp == default || itemId == default) return;
             if (LastSeenAt.TryGetValue(userId, out var lastSeen))
@@ -388,8 +398,12 @@ namespace Indirect.Wrapper
                     Timestamp = timestamp
                 };
             }
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastSeenAt)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreadMessage)));
+
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastSeenAt)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreadMessage)));
+            });
         }
 
 

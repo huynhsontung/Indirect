@@ -166,62 +166,71 @@ namespace Indirect
                     var segments = itemData.Path.Trim('/').Split('/');
                     var threadId = segments[2];
                     if (string.IsNullOrEmpty(threadId)) continue;
-                    var thread = Inbox.Threads.FirstOrDefault(wrapper => wrapper.ThreadId == threadId);
-                    if (thread == null)
+                    var mainThread = Inbox.Threads.FirstOrDefault(wrapper => wrapper.ThreadId == threadId);
+                    if (mainThread == null)
                     {
                         if (!updateInbox) updateInbox = itemData.Op == "add";
                         continue;
                     }
 
-                    switch (itemData.Op)
+                    // Update thread in main view as well as in secondary views
+                    var threadsToUpdate = SecondaryThreadViews.Where(x => x.ThreadId == threadId).ToList();
+                    threadsToUpdate.Add(mainThread);
+
+                    foreach (var thread in threadsToUpdate)
                     {
-                        case "add":
+                        switch (itemData.Op)
                         {
-                            var item = itemData.Item;
-                            if (item.ItemType == DirectItemType.Placeholder)
+                            case "add":
                             {
-                                if (syncEvent.Realtime) await Task.Delay(1000);
-                                var result = await _instaApi.GetItemsInDirectThreadAsync(threadId, itemData.Item.ItemId);
-                                if (result.IsSucceeded && result.Value.Items.Count > 0) 
-                                    item = result.Value.Items[0];
-                            }
-                            await thread.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                                () => thread.AddItem(item));
-                            break;
-                        }
-                        case "replace":
-                        {
-                            if (itemData.Path.Contains("has_seen", StringComparison.Ordinal) && long.TryParse(segments[4], out var userId))
-                            {
-                                await thread.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                                    () => thread.UpdateLastSeenAt(userId, itemData.Item.Timestamp, itemData.Item.ItemId));
-                                continue;
-                            }
-
-                            var item = thread.ObservableItems.LastOrDefault(x => x.ItemId == itemData.Item.ItemId);
-                            if (item == null) continue;
-
-                            await thread.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
-                            {
-                                if (itemData.Item.Reactions == null)
+                                var item = itemData.Item;
+                                if (item.ItemType == DirectItemType.Placeholder)
                                 {
-                                    item.Reactions.Clear();
+                                    if (syncEvent.Realtime) await Task.Delay(1000);
+                                    var result =
+                                        await _instaApi.GetItemsInDirectThreadAsync(threadId, itemData.Item.ItemId);
+                                    if (result.IsSucceeded && result.Value.Items.Count > 0)
+                                        item = result.Value.Items[0];
+                                }
+
+                                await thread.AddItem(item);
+                                break;
+                            }
+                            case "replace":
+                            {
+                                if (itemData.Path.Contains("has_seen", StringComparison.Ordinal) &&
+                                    long.TryParse(segments[4], out var userId))
+                                {
+                                    await thread.UpdateLastSeenAt(userId, itemData.Item.Timestamp, itemData.Item.ItemId);
                                 }
                                 else
                                 {
-                                    item.Reactions?.Update(new InstaDirectReactionsWrapper(itemData.Item.Reactions),
-                                        thread.Users);
+                                    var item = thread.ObservableItems.LastOrDefault(x => x.ItemId == itemData.Item.ItemId);
+                                    if (item != null)
+                                    {
+                                        await thread.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                                        {
+                                            if (itemData.Item.Reactions == null)
+                                            {
+                                                item.Reactions.Clear();
+                                            }
+                                            else
+                                            {
+                                                item.Reactions?.Update(new InstaDirectReactionsWrapper(itemData.Item.Reactions),
+                                                    thread.Users);
+                                            }
+                                        });
+                                    }
                                 }
-                            });
-                            break;
+                                break;
+                            }
+                            case "remove":
+                                await thread.RemoveItem(itemData.Value);
+                                break;
+                            default:
+                                DebugLogger.LogException(new Exception($"Sync operation '{itemData.Op}' not expected"));
+                                break;
                         }
-                        case "remove":
-                            await thread.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                                () => thread.RemoveItem(itemData.Value));
-                            break;
-                        default:
-                            DebugLogger.LogException(new Exception($"Sync operation '{itemData.Op}' not expected"));
-                            break;
                     }
                 }
                 if (updateInbox)
@@ -328,10 +337,11 @@ namespace Indirect
                 updateAction?.Invoke(recipients);
         }
 
-        public static async Task OpenThreadInNewWindow(InstaDirectInboxThreadWrapper thread)
+        public async Task OpenThreadInNewWindow(InstaDirectInboxThreadWrapper thread)
         {
             var newView = CoreApplication.CreateNewView();
             var cloneThread = await thread.CloneThreadForSecondaryView(newView.Dispatcher);
+            SecondaryThreadViews.Add(cloneThread);
             await App.CreateAndShowNewView(typeof(ThreadPage), cloneThread, newView);
         }
 
@@ -375,25 +385,6 @@ namespace Indirect
             SelectedThread = thread;
         }
 
-        public async void MarkLatestItemSeen(InstaDirectInboxThreadWrapper thread)
-        {
-            try
-            {
-                if (thread == null || string.IsNullOrEmpty(thread.ThreadId) || thread.LastSeenAt == null) return;
-                if (thread.LastSeenAt.TryGetValue(thread.ViewerId, out var lastSeen))
-                {
-                    if (string.IsNullOrEmpty(thread.LastPermanentItem?.ItemId) || 
-                        lastSeen.ItemId == thread.LastPermanentItem.ItemId ||
-                        thread.LastPermanentItem.FromMe) return;
-                    await _instaApi.MarkItemSeenAsync(thread.ThreadId, thread.LastPermanentItem.ItemId).ConfigureAwait(false);
-                }
-            }
-            catch (Exception e)
-            {
-                DebugLogger.LogException(e);
-            }
-        }
-
         private async void GetUserPresence()
         {
             try
@@ -411,13 +402,10 @@ namespace Indirect
             }
         }
 
-        private async void OnUserPresenceChanged(object sender, UserPresenceEventArgs e)
+        private void OnUserPresenceChanged(object sender, UserPresenceEventArgs e)
         {
             UserPresenceDictionary[e.UserId] = e;
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserPresenceDictionary)));
-            });
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserPresenceDictionary)));
         }
 
         public static IAsyncAction HandleException(string message = null, Exception e = null)
@@ -429,7 +417,7 @@ namespace Indirect
                           "https://github.com/huynhsontung/Indirect";
             }
 
-            return CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.High, async () =>
+            return CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 try
                 {

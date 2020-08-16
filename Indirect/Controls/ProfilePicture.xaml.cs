@@ -1,6 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using InstagramAPI.Classes.User;
@@ -61,17 +63,22 @@ namespace Indirect.Controls
             ((App)Application.Current).ViewModel.PropertyChanged += OnUserPresenceChanged;
         }
 
-        private void OnUserPresenceChanged(object sender, PropertyChangedEventArgs e)
+        private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(e.PropertyName)) return;
-            if (Source == null) return;
-            if (Source.Any(user => ((App)Application.Current).ViewModel.UserPresenceDictionary.TryGetValue(user.Pk, out var value) && value.IsActive))
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                IsUserActive = true;
-                return;
-            }
+                if (Source == null) return;
+                if (Source.Any(user =>
+                    ((App) Application.Current).ViewModel.UserPresenceDictionary.TryGetValue(user.Pk, out var value) &&
+                    value.IsActive))
+                {
+                    IsUserActive = true;
+                    return;
+                }
 
-            IsUserActive = false;
+                IsUserActive = false;
+            });
         }
 
         private void ProfilePicture_OnSizeChanged(object sender, SizeChangedEventArgs e)

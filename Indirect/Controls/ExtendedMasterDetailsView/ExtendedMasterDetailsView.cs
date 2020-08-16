@@ -474,7 +474,6 @@ namespace Indirect.Controls
             string state;
             string noSelectionState;
             string hasSelectionState;
-            this.Log($"ActualWidth: {ActualWidth} versus IntermediateThreshold: {IntermediateModeThresholdWidth}");
             if (ActualWidth < CompactModeThresholdWidth)
             {
                 state = NarrowState;
