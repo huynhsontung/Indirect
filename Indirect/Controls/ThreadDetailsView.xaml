@@ -196,7 +196,7 @@
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF4A9;"/>
                 <Button.Flyout>
                     <Flyout x:Name="GifPickerFlyout">
-                        <controls1:AnimatedImagePicker x:Name="GifPicker"/>
+                        <controls1:AnimatedImagePicker x:Name="GifPicker" Thread="{x:Bind Thread, Mode=OneWay}"/>
                     </Flyout>
                 </Button.Flyout>
             </Button>

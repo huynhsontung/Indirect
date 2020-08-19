@@ -111,11 +111,11 @@ namespace Indirect.Controls
             Thread.DraftMessage = string.Empty;
             if(string.IsNullOrEmpty(message))
             {
-                _ = ViewModel.SendLike();
+                _ = Thread.SendLike();
             }
             else
             {
-                _ = ViewModel.SendMessage(message);
+                _ = Thread.SendMessage(message);
             }
         }
 
@@ -203,12 +203,12 @@ namespace Indirect.Controls
 
             if (FilePickerPreview.Source is StorageFile file)
             {
-                _ = ViewModel.SendFile(file, UploadAction);
+                _ = Thread.SendFile(file, UploadAction);
             }
 
             if (FilePickerPreview.Source is IRandomAccessStreamWithContentType stream)
             {
-                _ = ViewModel.SendStream(stream, UploadAction);
+                _ = Thread.SendStream(stream, UploadAction);
             }
             FilePickerFlyout.Hide();
         }
@@ -317,7 +317,7 @@ namespace Indirect.Controls
                     {
                         UploadProgress.Visibility = Visibility.Visible;
                         count++;
-                        await ViewModel.SendFile(file, MultiUploadAction);
+                        await Thread.SendFile(file, MultiUploadAction);
                     }
                 }
             }
@@ -328,7 +328,7 @@ namespace Indirect.Controls
                 var bitmap = await reference.OpenReadAsync();
                 UploadProgress.Visibility = Visibility.Visible;
                 count++;
-                await ViewModel.SendStream(bitmap, MultiUploadAction);
+                await Thread.SendStream(bitmap, MultiUploadAction);
             }
 
             if (e.DataView.Contains(StandardDataFormats.WebLink))

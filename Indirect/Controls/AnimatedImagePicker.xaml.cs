@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Indirect.Wrapper;
 using InstagramAPI;
 using InstagramAPI.Classes.Media;
 
@@ -11,9 +12,11 @@ using InstagramAPI.Classes.Media;
 
 namespace Indirect.Controls
 {
-    public sealed partial class AnimatedImagePicker : UserControl, IDisposable
+    internal sealed partial class AnimatedImagePicker : UserControl, IDisposable
     {
         public event EventHandler<GiphyMedia> ImageSelected; 
+
+        public InstaDirectInboxThreadWrapper Thread { get; set; }
 
         public ObservableCollection<GiphyMedia> ImageList { get; } = new ObservableCollection<GiphyMedia>();
 
@@ -127,9 +130,9 @@ namespace Indirect.Controls
 
         private async void PickerOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count == 0 || e.AddedItems[0] == null) return;
+            if (e.AddedItems.Count == 0 || e.AddedItems[0] == null || Thread == null) return;
             var image = (GiphyMedia)e.AddedItems[0];
-            await ((App)Application.Current).ViewModel.SendAnimatedImage(image.Id, image.IsSticker);
+            await Thread.SendAnimatedImage(image.Id, image.IsSticker);
             var gridView = (GridView) sender;
             gridView.SelectedItem = null;
             ImageSelected?.Invoke(this, image);

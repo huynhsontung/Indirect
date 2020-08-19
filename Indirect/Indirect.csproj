@@ -129,7 +129,6 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ApiContainer.Send.cs" />
     <Compile Include="Controls\AnimatedImagePicker.xaml.cs">
       <DependentUpon>AnimatedImagePicker.xaml</DependentUpon>
     </Compile>
@@ -194,6 +193,7 @@
     <Compile Include="Pages\ThreadPage.xaml.cs">
       <DependentUpon>ThreadPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Sender.cs" />
     <Compile Include="Utilities\Helpers.cs" />
     <Compile Include="Controls\Selectors\ItemTemplateSelector.cs" />
     <Compile Include="Controls\PhotoVideoControl.xaml.cs">

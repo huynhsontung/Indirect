@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using Windows.Foundation;
 using Windows.UI.Core;
 using Indirect.Utilities;
 using InstagramAPI;
@@ -118,7 +119,7 @@ namespace Indirect.Wrapper
                 Users.Add(instaUserShortFriendship);
             }
             if (Users.Count == 0) Users.Add(new BaseUser());
-            _ = UpdateItemList(source.Items);
+            UpdateItemList(DecorateItems(source.Items));
         }
 
         public async Task<InstaDirectInboxThreadWrapper> CloneThreadForSecondaryView(CoreDispatcher dispatcher)
@@ -132,7 +133,8 @@ namespace Indirect.Wrapper
 
         public async Task AddItems(List<DirectItem> items)
         {
-            await UpdateItemList(items);
+            if (items.Count == 0) return;
+            await UpdateItemListAsync(DecorateItems(items));
 
             var latestItem = ObservableItems.Last();    // Assuming order of item is maintained. Last item after update should be the latest.
             if (latestItem.Timestamp > LastPermanentItem.Timestamp)
@@ -186,7 +188,7 @@ namespace Indirect.Wrapper
         {
             await UpdateExcludeItemList(source);
             if (fromInbox) return;  // Items from GetInbox request will interfere with GetPagedItemsAsync
-            await UpdateItemList(source.Items);
+            await UpdateItemListAsync(DecorateItems(source.Items));
         }
 
         private async Task UpdateExcludeItemList(DirectThread source)
@@ -240,51 +242,55 @@ namespace Indirect.Wrapper
             });
         }
 
-        private async Task UpdateItemList(ICollection<DirectItem> source)
+        private IAsyncAction UpdateItemListAsync(ICollection<InstaDirectInboxItemWrapper> source)
+        {
+            return Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                UpdateItemList(source);
+            });
+        }
+
+        private void UpdateItemList(ICollection<InstaDirectInboxItemWrapper> source)
         {
             if (source == null || source.Count == 0) return;
-            var convertedSource = source.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
-            DecorateItems(convertedSource);
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+
+            lock (ObservableItems)
             {
-                lock (ObservableItems)
+                if (ObservableItems.Count == 0)
                 {
-                    if (ObservableItems.Count == 0)
-                    {
-                        foreach (var item in convertedSource)
-                            ObservableItems.Add(item);
-                        return;
-                    }
+                    foreach (var item in source)
+                        ObservableItems.Add(item);
+                    return;
+                }
 
-                    foreach (var item in convertedSource)
-                    {
-                        var existingItem = ObservableItems.LastOrDefault(x => x.Equals(item));
-                        var existed = existingItem != null;
+                foreach (var item in source)
+                {
+                    var existingItem = ObservableItems.LastOrDefault(x => x.Equals(item));
+                    var existed = existingItem != null;
 
-                        if (existed)
+                    if (existed)
+                    {
+                        if (item.Reactions != null)
                         {
-                            if (item.Reactions != null)
-                            {
-                                existingItem.Reactions.Update(item.Reactions, Users);
-                            }
-                            continue;
+                            existingItem.Reactions.Update(item.Reactions, Users);
                         }
-                        for (var i = ObservableItems.Count-1; i >= 0; i--)
+                        continue;
+                    }
+                    for (var i = ObservableItems.Count - 1; i >= 0; i--)
+                    {
+                        if (item.Timestamp > ObservableItems[i].Timestamp)
                         {
-                            if (item.Timestamp > ObservableItems[i].Timestamp)
-                            {
-                                ObservableItems.Insert(i+1, item);
-                                break;
-                            }
+                            ObservableItems.Insert(i + 1, item);
+                            break;
+                        }
 
-                            if (i == 0)
-                            {
-                                ObservableItems.Insert(0, item);
-                            }
+                        if (i == 0)
+                        {
+                            ObservableItems.Insert(0, item);
                         }
                     }
                 }
-            });
+            }
         }
 
         private async Task UpdateUserList(List<UserWithFriendship> users)
@@ -322,14 +328,14 @@ namespace Indirect.Wrapper
             var result = await _instaApi.GetThreadAsync(ThreadId, pagination);
             if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0) return new List<InstaDirectInboxItemWrapper>(0);
             await UpdateExcludeItemList(result.Value);
-            var wrappedItems = result.Value.Items.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
-            DecorateItems(wrappedItems);
+            var wrappedItems = DecorateItems(result.Value.Items);
             return wrappedItems;
         }
 
         // Decide whether item should show timestamp header, name header etc...
-        private void DecorateItems(IEnumerable<InstaDirectInboxItemWrapper> wrappedItems)
+        private List<InstaDirectInboxItemWrapper> DecorateItems(IEnumerable<DirectItem> items)
         {
+            var wrappedItems = items.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
             var lastItem = ObservableItems.FirstOrDefault();
             var itemList = wrappedItems.ToList();
             var refItem = itemList.Last();
@@ -354,6 +360,8 @@ namespace Indirect.Wrapper
                 itemList[i].ShowTimestampHeader = !IsCloseEnough(itemList[i].Timestamp, itemList[i - 1].Timestamp);
                 itemList[i].ShowNameHeader = itemList[i].UserId != itemList[i - 1].UserId && !itemList[i].FromMe && Users.Count > 1;
             }
+
+            return wrappedItems;
         }
 
         private const int TimestampClosenessThreshold = 3; // hours

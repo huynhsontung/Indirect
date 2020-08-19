@@ -151,7 +151,7 @@ namespace Indirect.Controls
             var confirmation = await confirmDialog.ShowAsync();
             if (confirmation == ContentDialogResult.Primary)
             {
-                await ((App)Application.Current).ViewModel.UnsendMessage(Item);
+                await Item.Unsend();
             }
         }
 

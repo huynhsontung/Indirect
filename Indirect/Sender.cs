@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
@@ -8,6 +9,7 @@ using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
 using Indirect.Utilities;
 using Indirect.Wrapper;
+using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
@@ -16,45 +18,12 @@ using InstagramAPI.Utils;
 
 namespace Indirect
 {
-    internal partial class ApiContainer
+    internal static class Sender
     {
-        public async Task SendAnimatedImage(string imageId, bool isSticker)
-        {
-            try
-            {
-                var selectedThread = SelectedThread;
-                if (string.IsNullOrEmpty(selectedThread?.ThreadId)) return;
-                var result = await _instaApi.SendAnimatedImageAsync(imageId, isSticker, selectedThread.ThreadId);
-                if (result.IsSucceeded && result.Value.Length > 0)
-                {
-                    selectedThread.Update(result.Value[0]);
-                }
-            }
-            catch (Exception)
-            {
-                await HandleException("Failed to send GIF");
-            }
-        }
+        private static Instagram Api => Instagram.Instance;
 
-        public async Task SendLike()
+        public static async Task SendMessage(this InstaDirectInboxThreadWrapper thread, string content)
         {
-            try
-            {
-                var selectedThread = SelectedThread;
-                if (string.IsNullOrEmpty(selectedThread.ThreadId)) return;
-                var result = await _instaApi.SendLikeAsync(selectedThread.ThreadId);
-                //if (result.IsSucceeded) UpdateInboxAndSelectedThread();
-            }
-            catch (Exception)
-            {
-                await HandleException("Failed to send like");
-            }
-        }
-
-        // Send message to the current selected recipient
-        public async Task SendMessage(string content)
-        {
-            var selectedThread = SelectedThread;
             content = content.Trim(' ', '\n', '\r');
             if (string.IsNullOrEmpty(content)) return;
             content = content.Replace('\r', '\n');
@@ -67,55 +36,85 @@ namespace Indirect
             Result<ItemAckPayloadResponse> ackResult;   // for links and hashtags
             try
             {
-                if (!string.IsNullOrEmpty(selectedThread.ThreadId))
+                if (!string.IsNullOrEmpty(thread.ThreadId))
                 {
                     if (links.Any())
                     {
-                        ackResult = await _instaApi.SendLinkAsync(content, links, selectedThread.ThreadId);
+                        ackResult = await Api.SendLinkAsync(content, links, thread.ThreadId);
                         return;
                     }
 
-                    result = await _instaApi.SendTextAsync(null, selectedThread.ThreadId, content);
+                    result = await Api.SendTextAsync(null, thread.ThreadId, content);
                 }
                 else
                 {
                     if (links.Any())
                     {
-                        ackResult = await _instaApi.SendLinkToRecipientsAsync(content, links,
-                            selectedThread.Users.Select(x => x.Pk).ToArray());
+                        ackResult = await Api.SendLinkToRecipientsAsync(content, links,
+                            thread.Users.Select(x => x.Pk).ToArray());
                         return;
                     }
 
-                    result = await _instaApi.SendTextAsync(selectedThread.Users.Select(x => x.Pk),
+                    result = await Api.SendTextAsync(thread.Users.Select(x => x.Pk),
                         null, content);
                 }
             }
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                await HandleException("Failed to send message");
+                //await HandleException("Failed to send message");
                 return;
             }
 
             if (result.IsSucceeded && result.Value.Length > 0)
             {
                 // SyncClient will take care of updating. Update here is just for precaution.
-                selectedThread.Update(result.Value[0]);
+                thread.Update(result.Value[0]);
                 // await Inbox.UpdateInbox();
             }
         }
 
-        public async Task UnsendMessage(InstaDirectInboxItemWrapper item)
+        public static async Task SendAnimatedImage(this InstaDirectInboxThreadWrapper thread, string imageId, bool isSticker)
         {
-            var result = await _instaApi.UnsendMessageAsync(item.Parent.ThreadId, item.ItemId);
-            if (result.IsSucceeded)
+            try
             {
-                // For redundancy. This should only run on UI thread.
-                item.Parent.RemoveItem(item.ItemId);
+                if (string.IsNullOrEmpty(thread?.ThreadId)) return;
+                var result = await Api.SendAnimatedImageAsync(imageId, isSticker, thread.ThreadId);
+                if (result.IsSucceeded && result.Value.Length > 0)
+                {
+                    thread.Update(result.Value[0]);
+                }
+            }
+            catch (Exception)
+            {
+                //await HandleException("Failed to send GIF");
             }
         }
 
-        public async Task SendFile(StorageFile file, Action<UploaderProgress> progress)
+        public static async Task SendLike(this InstaDirectInboxThreadWrapper thread)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(thread.ThreadId)) return;
+                var result = await Api.SendLikeAsync(thread.ThreadId);
+                //if (result.IsSucceeded) UpdateInboxAndSelectedThread();
+            }
+            catch (Exception)
+            {
+                //await HandleException("Failed to send like");
+            }
+        }
+
+        public static async Task Unsend(this InstaDirectInboxItemWrapper item)
+        {
+            var result = await Api.UnsendMessageAsync(item.Parent.ThreadId, item.ItemId);
+            if (result.IsSucceeded)
+            {
+                await item.Parent.RemoveItem(item.ItemId);
+            }
+        }
+
+        public static async Task SendFile(this InstaDirectInboxThreadWrapper thread, StorageFile file, Action<UploaderProgress> progress)
         {
             try
             {
@@ -142,7 +141,7 @@ namespace Indirect
                             buffer = await FileIO.ReadBufferAsync(file);
                     }
 
-                    await SendBuffer(buffer, imageWidth, imageHeight, progress);
+                    await SendBuffer(thread, buffer, imageWidth, imageHeight, progress);
                 }
 
 
@@ -167,14 +166,14 @@ namespace Indirect
                         Width = (int)thumbnail.OriginalWidth,
                         Height = (int)thumbnail.OriginalHeight
                     };
-                    await _instaApi.SendDirectVideoAsync(progress,
-                        new InstaVideoUpload(instaVideo, thumbnailImage), SelectedThread.ThreadId);
+                    await Api.SendDirectVideoAsync(progress,
+                        new InstaVideoUpload(instaVideo, thumbnailImage), thread.ThreadId);
                 }
             }
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                await HandleException("Failed to send message");
+                //await HandleException("Failed to send message");
             }
         }
 
@@ -182,8 +181,7 @@ namespace Indirect
         /// <summary>
         /// For screenshot in clipboard
         /// </summary>
-        /// <param name="stream"></param>
-        public async Task SendStream(IRandomAccessStream stream, Action<UploaderProgress> progress)
+        public static async Task SendStream(this InstaDirectInboxThreadWrapper thread, IRandomAccessStream stream, Action<UploaderProgress> progress)
         {
             try
             {
@@ -209,16 +207,16 @@ namespace Indirect
                     buffer = await Helpers.CompressImage(stream, imageWidth, imageHeight);  // Force jpeg
                 }
 
-                await SendBuffer(buffer, imageWidth, imageHeight, progress);
+                await SendBuffer(thread, buffer, imageWidth, imageHeight, progress);
             }
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                await HandleException("Failed to send message");
+                //await HandleException("Failed to send message");
             }
         }
 
-        private async Task SendBuffer(IBuffer buffer, int imageWidth, int imageHeight, Action<UploaderProgress> progress)
+        private static async Task SendBuffer(InstaDirectInboxThreadWrapper thread, IBuffer buffer, int imageWidth, int imageHeight, Action<UploaderProgress> progress)
         {
             var instaImage = new InstaImage
             {
@@ -226,9 +224,9 @@ namespace Indirect
                 Width = imageWidth,
                 Height = imageHeight
             };
-            if (string.IsNullOrEmpty(SelectedThread.ThreadId)) return;
+            if (string.IsNullOrEmpty(thread.ThreadId)) return;
             var uploadId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            await _instaApi.SendDirectPhotoAsync(instaImage, SelectedThread.ThreadId, uploadId, progress);
+            await Api.SendDirectPhotoAsync(instaImage, thread.ThreadId, uploadId, progress);
         }
     }
 }
