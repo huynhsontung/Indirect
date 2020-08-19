@@ -147,7 +147,7 @@ namespace Indirect.Controls
             var index = e.NewValue == null ? -1 : view.Items.IndexOf(e.NewValue);
 
             // check if selection actually changed
-            if (view.SelectedIndex != index)
+            if (view.SelectedIndex != index || (e.NewValue != null && index == -1))
             {
                 // sync SelectedIndex
                 view.SetValue(SelectedIndexProperty, index);
