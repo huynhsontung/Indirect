@@ -107,7 +107,7 @@
                                HorizontalAlignment="Center" 
                                Visibility="{x:Bind Thread.ObservableItems.Count, Converter={StaticResource VisibleWhenZeroConverter}, Mode=OneWay}"/>
 
-                    <Grid x:Name="PendingControlGrid" HorizontalAlignment="Stretch" Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                    <!--<Grid x:Name="PendingControlGrid" HorizontalAlignment="Stretch" Background="{ThemeResource SystemControlAcrylicElementBrush}"
                           Visibility="{x:Bind Thread.Pending, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
                         <Grid.Resources>
                             <ResourceDictionary>
@@ -139,7 +139,7 @@
                         <Button Grid.Row="1" Grid.Column="0" Content="Block" IsEnabled="False" ToolTipService.ToolTip="Not yet implemented" Style="{StaticResource PendingButtonStyle}"/>
                         <Button Grid.Row="1" Grid.Column="1" Content="Delete" IsEnabled="False" ToolTipService.ToolTip="Not yet implemented" Style="{StaticResource PendingButtonStyle}"/>
                         <Button Grid.Row="1" Grid.Column="2" Content="Accept" IsEnabled="False" Style="{StaticResource PendingButtonStyle}"/>
-                    </Grid>
+                    </Grid>-->
                 </StackPanel>
             </ListView.Footer>
 
