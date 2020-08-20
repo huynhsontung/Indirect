@@ -82,6 +82,7 @@ namespace Indirect.Wrapper
             ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
             _instaApi = api;
             PropertyChanged += SeenCheckProperty;
+            ObservableItems.CollectionChanged += DecorateOnItemDeleted;
             ObservableItems.CollectionChanged += SeenCheckCollection;
             ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
         }
@@ -330,6 +331,31 @@ namespace Indirect.Wrapper
             await UpdateExcludeItemList(result.Value);
             var wrappedItems = DecorateItems(result.Value.Items);
             return wrappedItems;
+        }
+
+        private async void DecorateOnItemDeleted(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Remove)
+                await DecorateExistingItems();
+        }
+
+        private async Task DecorateExistingItems()
+        {
+            for (int i = ObservableItems.Count - 1; i >= 1; i--)
+            {
+                var showTimestamp = !IsCloseEnough(ObservableItems[i].Timestamp, ObservableItems[i - 1].Timestamp);
+                var showName = ObservableItems[i].UserId != ObservableItems[i - 1].UserId &&
+                               !ObservableItems[i].FromMe && Users.Count > 1;
+                if (ObservableItems[i].ShowTimestampHeader != showTimestamp ||
+                    ObservableItems[i].ShowNameHeader != showName)
+                {
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        ObservableItems[i].ShowTimestampHeader = showTimestamp;
+                        ObservableItems[i].ShowNameHeader = showName;
+                    });
+                }
+            }
         }
 
         // Decide whether item should show timestamp header, name header etc...
