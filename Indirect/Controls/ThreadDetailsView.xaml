@@ -57,7 +57,6 @@
                 </Flyout>
             </FlyoutBase.AttachedFlyout>
             <AppBarButton x:Name="ViewProfileAppBarButton" Icon="Contact2" Label="View profile" Click="ShowUserInfoFlyout"/>
-            <AppBarButton x:Name="RefreshButton" Icon="Refresh" Label="Refresh" Click="RefreshThread_OnClick"/>
             <AppBarButton Click="OpenInNewWindow_OnClick" Width="48" ToolTipService.ToolTip="Open thread in a new window" LabelPosition="Collapsed"
                           Visibility="{x:Bind Thread.IsSecondaryView, Converter={StaticResource InvertBooleanVisibilityConverter}}">
                 <AppBarButton.Icon>

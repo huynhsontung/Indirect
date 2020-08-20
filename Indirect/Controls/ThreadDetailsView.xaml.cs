@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -14,9 +13,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Indirect.Converters;
 using Indirect.Wrapper;
-using InstagramAPI;
 using InstagramAPI.Classes;
-using InstagramAPI.Utils;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -49,7 +46,6 @@ namespace Indirect.Controls
 
             view.ViewProfileAppBarButton.Visibility = thread.Users?.Count == 1 ? Visibility.Visible : Visibility.Collapsed;
             view.MessageInputGrid.Visibility = thread.Pending ? Visibility.Collapsed : Visibility.Visible;
-            view.RefreshButton.Visibility = thread.Pending ? Visibility.Collapsed : Visibility.Visible;
             view._needUpdateCaret = true;
             view.OnUserPresenceChanged();
         }
@@ -97,11 +93,6 @@ namespace Indirect.Controls
             {
                 LastActiveText.Visibility = Visibility.Collapsed;
             }
-        }
-
-        private void RefreshThread_OnClick(object sender, RoutedEventArgs e)
-        {
-            ViewModel.UpdateInboxAndSelectedThread();
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
