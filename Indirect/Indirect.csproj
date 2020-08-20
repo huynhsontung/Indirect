@@ -135,6 +135,7 @@
     <Compile Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.cs" />
     <Compile Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.Events.cs" />
     <Compile Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.Properties.cs" />
+    <Compile Include="Controls\IImmersiveSupport.cs" />
     <Compile Include="Controls\ReelProgressIndicator.xaml.cs">
       <DependentUpon>ReelProgressIndicator.xaml</DependentUpon>
     </Compile>
@@ -307,10 +308,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ReelProgressIndicatorStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Controls\Styles\CustomTransportControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -328,10 +325,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\AutoVideoControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\MasterDetailsViewStyle.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

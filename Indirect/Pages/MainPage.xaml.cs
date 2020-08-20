@@ -23,7 +23,7 @@ namespace Indirect.Pages
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage : Page
+    public sealed partial class MainPage : Page, IImmersiveSupport
     {
         public static readonly DependencyProperty InboxProperty = DependencyProperty.Register(
             nameof(Inbox),
@@ -304,14 +304,14 @@ namespace Indirect.Pages
             CloseImmersiveView();
         }
 
-        internal void OpenImmersiveView(object item)
+        public void OpenImmersiveView(object item)
         {
             MediaPopup.IsOpen = true;
             ImmersiveControl.Item = item;
             ImmersiveControl.Focus(FocusState.Programmatic);
         }
 
-        internal void CloseImmersiveView()
+        public void CloseImmersiveView()
         {
             MediaPopup.IsOpen = false;
             ImmersiveControl.OnClose();

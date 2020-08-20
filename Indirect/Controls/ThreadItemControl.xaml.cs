@@ -61,7 +61,7 @@ namespace Indirect.Controls
             var uri = Item.FullImageUri;
             if (uri == null) return;
             var frame = Window.Current.Content as Frame;
-            var page = frame?.Content as MainPage;
+            var page = frame?.Content as IImmersiveSupport;
             page?.OpenImmersiveView(Item);
         }
 
@@ -70,7 +70,7 @@ namespace Indirect.Controls
             var uri = Item.VideoUri;
             if (uri == null) return;
             var frame = Window.Current.Content as Frame;
-            var page = frame?.Content as MainPage;
+            var page = frame?.Content as IImmersiveSupport;
             page?.OpenImmersiveView(Item);
         }
 
