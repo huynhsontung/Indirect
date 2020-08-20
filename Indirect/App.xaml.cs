@@ -158,7 +158,7 @@ namespace Indirect
             await ViewModel.TryAcquireSyncLock();
             ViewModel.PushClient.Start();
             await ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt);
-            ViewModel.UpdateInboxAndSelectedThread();
+            await ViewModel.UpdateInboxAndSelectedThread();
             ViewModel.ReelsFeed.StartReelsFeedUpdateLoop();
         }
 

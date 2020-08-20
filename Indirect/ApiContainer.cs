@@ -242,7 +242,7 @@ namespace Indirect
             {
                 DebugLogger.LogException(e);
                 if (DateTimeOffset.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
-                    UpdateInboxAndSelectedThread();
+                    await UpdateInboxAndSelectedThread();
             }
             Debug.WriteLine("Sync(s) received.");
         }
@@ -265,7 +265,7 @@ namespace Indirect
             }
         }
 
-        public async void UpdateInboxAndSelectedThread()
+        public async Task UpdateInboxAndSelectedThread()
         {
             _lastUpdated = DateTime.Now;
             await Inbox.UpdateInbox();
