@@ -31,7 +31,7 @@
 
             <Style TargetType="controls:ImageEx">
                 <Setter Property="IsCacheEnabled" Value="True"/>
-                <Setter Property="CachingStrategy" Value="Custom"/>
+                <Setter Property="CachingStrategy" Value="Internal"/>
             </Style>
             <Style TargetType="Button" BasedOn="{StaticResource ButtonRevealStyle}"/>
 
