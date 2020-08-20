@@ -348,10 +348,11 @@ namespace Indirect.Wrapper
                 }
                 else
                 {
-                    // New item added to the top
+                    // New item to be added to the top
+                    refItem = itemList.First();
                     var latestItem = ObservableItems.Last();
                     refItem.ShowTimestampHeader = !IsCloseEnough(latestItem.Timestamp, refItem.Timestamp);
-                    refItem.ShowNameHeader = latestItem.UserId != refItem.UserId && !latestItem.FromMe && Users.Count > 1;
+                    refItem.ShowNameHeader = latestItem.UserId != refItem.UserId && !refItem.FromMe && Users.Count > 1;
                 }
             }
 
