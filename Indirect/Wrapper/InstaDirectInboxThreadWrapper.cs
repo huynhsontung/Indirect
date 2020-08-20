@@ -75,7 +75,7 @@ namespace Indirect.Wrapper
 
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
         public new ObservableCollection<BaseUser> Users { get; } = new ObservableCollection<BaseUser>();
-        public ObservableCollection<string> UsersSeenLatestMessage { get; } = new ObservableCollection<string>(); // If Users.Count == 1 then this is always empty
+        public List<string> UsersSeenLatestMessage { get; } = new List<string>(); // If Users.Count == 1 then this is always empty
 
         private InstaDirectInboxThreadWrapper(Instagram api)
         {
@@ -494,58 +494,50 @@ namespace Indirect.Wrapper
 
         private async void SeenCheckCollection(object sender, NotifyCollectionChangedEventArgs e)
         {
+            UsersSeenLatestMessage.Clear();
+
+            // If there is no item then don't show seen indicator
+            if (ObservableItems.Count == 0 && ShowSeenIndicator)
+            {
+                ShowSeenIndicator = false;
+                return;
+            }
+
+            // If latest item is not from me then don't show seen indicator
+            var latestItem = ObservableItems.Last();
+            if (!latestItem.FromMe || LastSeenAt.Count == 0 && ShowSeenIndicator)
+            {
+                ShowSeenIndicator = false;
+                return;
+            }
+
+            // When Users.Count == 1 don't use the list
+            if (Users.Count == 1)
+            {
+                var value = LastSeenAt.Any(pair =>
+                    pair.Key != ViewerId && pair.Value.Timestamp >= latestItem.Timestamp);
+                if (value != ShowSeenIndicator) ShowSeenIndicator = value;
+                return;
+            }
+
+            var seenUsers = LastSeenAt.Where(x => x.Key != ViewerId && x.Value.Timestamp >= latestItem.Timestamp)
+                .Select(x => Users.SingleOrDefault(y => y.Pk == x.Key))
+                .Where(x => x != null)
+                .Select(x => x.Username);
+            UsersSeenLatestMessage.AddRange(seenUsers);
+
+            var showIndicator = UsersSeenLatestMessage.Count > 0;
+            if (UsersSeenLatestMessage.Count == Users.Count)
+            {
+                UsersSeenLatestMessage.Clear();
+                UsersSeenLatestMessage.Add("@everyone");
+            }
+            if (showIndicator != ShowSeenIndicator)
+                ShowSeenIndicator = showIndicator;
+
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (ObservableItems.Count == 0)
-                {
-                    if (ShowSeenIndicator)
-                    {
-                        UsersSeenLatestMessage.Clear();
-                        ShowSeenIndicator = false;
-                    }
-                    return;
-                }
-
-                var latestItem = ObservableItems.Last();
-                if (!latestItem.FromMe || LastSeenAt.Count == 0)
-                {
-                    if (ShowSeenIndicator)
-                    {
-                        UsersSeenLatestMessage.Clear();
-                        ShowSeenIndicator = false;
-                    }
-                    return;
-                }
-
-                // When Users.Count == 1 don't use the list
-                if (Users.Count == 1)
-                {
-                    var value = LastSeenAt.Any(pair =>
-                        pair.Key != ViewerId && pair.Value.Timestamp >= latestItem.Timestamp);
-                    if (value != ShowSeenIndicator) ShowSeenIndicator = value;
-                    return;
-                }
-
-                var seenUsers = LastSeenAt.Where(x => x.Key != ViewerId && x.Value.Timestamp >= latestItem.Timestamp)
-                    .Select(x => Users.SingleOrDefault(y => y.Pk == x.Key));
-                foreach (var user in seenUsers)
-                {
-                    if (user == null) continue;
-                    // Only add users to the seen list since user can't unsee a message
-                    if (!UsersSeenLatestMessage.Contains(user.Username))
-                    {
-                        UsersSeenLatestMessage.Add(user.Username);
-                    }
-                }
-
-                var showIndicator = UsersSeenLatestMessage.Count > 0;
-                if (UsersSeenLatestMessage.Count == Users.Count)
-                {
-                    UsersSeenLatestMessage.Clear();
-                    UsersSeenLatestMessage.Add("@everyone");
-                }
-                if (showIndicator != ShowSeenIndicator)
-                    ShowSeenIndicator = showIndicator;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UsersSeenLatestMessage)));
             });
         }
 
