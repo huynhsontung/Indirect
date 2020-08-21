@@ -14,6 +14,7 @@ using Windows.UI.Xaml.Input;
 using Indirect.Converters;
 using Indirect.Wrapper;
 using InstagramAPI.Classes;
+using InstagramAPI.Classes.User;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -247,19 +248,37 @@ namespace Indirect.Controls
             }
         }
 
-        private async void ShowUserInfoFlyout(object sender, RoutedEventArgs e)
+        private async void UserList_OnItemClick(object sender, ItemClickEventArgs e)
+        {
+            var user = (BaseUser) e.ClickedItem;
+            var pk = user.Pk;
+            await ShowSingleUserInfoFlyout(pk, (FrameworkElement)sender);
+        }
+
+        private async void ShowUsersInfoFlyout(object sender, RoutedEventArgs e)
         {
             if (Thread?.Users == null || Thread.Users.Count == 0) return;
-            if (Thread.Users.Count > 1 || string.IsNullOrEmpty(Thread.Users[0].Username)) return;
-            if (Thread.DetailedUserInfo == null)
+            if (Thread.Users.Count > 1)
             {
-                var userInfoResult = await InstagramAPI.Instagram.Instance.GetUserInfoAsync(Thread.Users[0].Pk);
-                if (!userInfoResult.IsSucceeded) return;
-                Thread.DetailedUserInfo = userInfoResult.Value;
+                UserListFlyout.ShowAt((FrameworkElement) sender);
+                return;
             }
 
-            UserInfoView.User = Thread.DetailedUserInfo;
-            UserInfoFlyout.ShowAt((FrameworkElement) sender);
+            var pk = Thread.Users[0].Pk;
+            await ShowSingleUserInfoFlyout(pk, (FrameworkElement) sender);
+        }
+
+        private async Task ShowSingleUserInfoFlyout(long pk, FrameworkElement element)
+        {
+            if (!Thread.DetailedUserInfoDictionary.ContainsKey(pk))
+            {
+                var userInfoResult = await InstagramAPI.Instagram.Instance.GetUserInfoAsync(pk);
+                if (!userInfoResult.IsSucceeded) return;
+                Thread.DetailedUserInfoDictionary[pk] = userInfoResult.Value;
+            }
+
+            UserInfoView.User = Thread.DetailedUserInfoDictionary[pk];
+            UserInfoFlyout.ShowAt(element);
         }
 
         private void MessageTextBox_OnTextChanged(object sender, TextChangedEventArgs e)

@@ -8,7 +8,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:wrapper="using:Indirect.Wrapper"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:controls1="using:Indirect.Controls"
+    xmlns:controls1="using:Indirect.Controls" 
+    xmlns:user="using:InstagramAPI.Classes.User"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
@@ -52,11 +53,25 @@
 
         <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Right" IsDynamicOverflowEnabled="False" OverflowButtonVisibility="Collapsed">
             <FlyoutBase.AttachedFlyout>
-                <Flyout x:Name="UserInfoFlyout" Placement="BottomEdgeAlignedLeft">
-                    <controls1:UserInfoView x:Name="UserInfoView"/>
+                <Flyout x:Name="UserListFlyout" Placement="BottomEdgeAlignedLeft">
+                    <ListView ItemsSource="{x:Bind Thread.Users, Mode=OneWay}" ItemClick="UserList_OnItemClick" IsItemClickEnabled="True" SelectionMode="None" MaxHeight="260">
+                        <FlyoutBase.AttachedFlyout>
+                            <Flyout x:Name="UserInfoFlyout">
+                                <controls1:UserInfoView x:Name="UserInfoView"/>
+                            </Flyout>
+                        </FlyoutBase.AttachedFlyout>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="user:BaseUser">
+                                <StackPanel Orientation="Horizontal">
+                                    <controls:ImageEx Source="{x:Bind ProfilePictureUrl}" Width="28" Height="28" CornerRadius="99" Margin="0,0,10,0" />
+                                    <TextBlock Text="{x:Bind Username}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
                 </Flyout>
             </FlyoutBase.AttachedFlyout>
-            <AppBarButton x:Name="ViewProfileAppBarButton" Icon="Contact2" Label="View profile" Click="ShowUserInfoFlyout"/>
+            <AppBarButton x:Name="ViewProfileAppBarButton" Icon="Contact2" Label="View profile" Click="ShowUsersInfoFlyout"/>
             <AppBarButton Click="OpenInNewWindow_OnClick" Width="48" ToolTipService.ToolTip="Open thread in a new window" LabelPosition="Collapsed"
                           Visibility="{x:Bind Thread.IsSecondaryView, Converter={StaticResource InvertBooleanVisibilityConverter}}">
                 <AppBarButton.Icon>
@@ -64,7 +79,7 @@
                 </AppBarButton.Icon>
             </AppBarButton>
             <CommandBar.Content>
-                <StackPanel x:Name="ThreadInfoHeader" Orientation="Horizontal" Background="Transparent" Tapped="ShowUserInfoFlyout" Margin="8,0,0,0">
+                <StackPanel x:Name="ThreadInfoHeader" Orientation="Horizontal" Background="Transparent" Tapped="ShowUsersInfoFlyout" Margin="8,0,0,0">
                     <controls1:ProfilePicture Source="{x:Bind Thread.Users, Mode=OneWay}" Height="32" Width="32" Margin="4,0,12,0" VerticalAlignment="Center"/>
                     <StackPanel Orientation="Vertical" VerticalAlignment="Center">
                         <TextBlock Text="{x:Bind Thread.Title, Mode=OneWay}" 

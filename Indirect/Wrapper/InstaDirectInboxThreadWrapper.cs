@@ -71,7 +71,7 @@ namespace Indirect.Wrapper
             }
         }
 
-        public UserInfo DetailedUserInfo;   // Only for single user thread
+        public Dictionary<long,UserInfo> DetailedUserInfoDictionary = new Dictionary<long, UserInfo>();
 
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
         public new ObservableCollection<BaseUser> Users { get; } = new ObservableCollection<BaseUser>();
