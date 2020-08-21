@@ -71,7 +71,7 @@ namespace Indirect.Wrapper
             }
         }
 
-        public Dictionary<long,UserInfo> DetailedUserInfoDictionary = new Dictionary<long, UserInfo>();
+        public Dictionary<long,UserInfo> DetailedUserInfoDictionary { get; } = new Dictionary<long, UserInfo>();
 
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
         public new ObservableCollection<BaseUser> Users { get; } = new ObservableCollection<BaseUser>();
