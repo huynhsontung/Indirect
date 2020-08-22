@@ -361,7 +361,7 @@ namespace Indirect.Wrapper
         // Decide whether item should show timestamp header, name header etc...
         private List<InstaDirectInboxItemWrapper> DecorateItems(ICollection<DirectItem> items)
         {
-            if (items.Count == 0) return new List<InstaDirectInboxItemWrapper>(0);
+            if (items == null || items.Count == 0) return new List<InstaDirectInboxItemWrapper>(0);
             var wrappedItems = items.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
             var lastItem = ObservableItems.FirstOrDefault();
             var itemList = wrappedItems.ToList();

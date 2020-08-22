@@ -341,6 +341,7 @@ namespace Indirect
         {
             var newView = CoreApplication.CreateNewView();
             var cloneThread = await thread.CloneThreadForSecondaryView(newView.Dispatcher);
+            if (cloneThread == null) return;
             SecondaryThreadViews.Add(cloneThread);
             await App.CreateAndShowNewView(typeof(ThreadPage), cloneThread, newView);
         }
