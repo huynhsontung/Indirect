@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Pages;
 using InstagramAPI;
+using InstagramAPI.Utils;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
@@ -145,7 +146,7 @@ namespace Indirect
             }
             catch (Exception exception)
             {
-                Debug.WriteLine(exception);
+                DebugLogger.LogException(exception, false);
             }
             finally
             {
