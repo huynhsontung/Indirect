@@ -359,8 +359,9 @@ namespace Indirect.Wrapper
         }
 
         // Decide whether item should show timestamp header, name header etc...
-        private List<InstaDirectInboxItemWrapper> DecorateItems(IEnumerable<DirectItem> items)
+        private List<InstaDirectInboxItemWrapper> DecorateItems(ICollection<DirectItem> items)
         {
+            if (items.Count == 0) return new List<InstaDirectInboxItemWrapper>(0);
             var wrappedItems = items.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
             var lastItem = ObservableItems.FirstOrDefault();
             var itemList = wrappedItems.ToList();
@@ -520,11 +521,14 @@ namespace Indirect.Wrapper
                 return;
             }
 
-            var seenUsers = LastSeenAt.Where(x => x.Key != ViewerId && x.Value.Timestamp >= latestItem.Timestamp)
-                .Select(x => Users.SingleOrDefault(y => y.Pk == x.Key))
-                .Where(x => x != null)
-                .Select(x => x.Username);
-            UsersSeenLatestMessage.AddRange(seenUsers);
+            if (LastSeenAt.Count > 0)
+            {
+                var seenUsers = LastSeenAt.Where(x => x.Key != ViewerId && x.Value.Timestamp >= latestItem.Timestamp)
+                    .Select(x => Users.SingleOrDefault(y => y.Pk == x.Key))
+                    .Where(x => x != null)
+                    .Select(x => x.Username);
+                UsersSeenLatestMessage.AddRange(seenUsers);
+            }
 
             var showIndicator = UsersSeenLatestMessage.Count > 0;
             if (UsersSeenLatestMessage.Count == Users.Count)

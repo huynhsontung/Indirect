@@ -276,7 +276,7 @@ namespace Indirect.Wrapper
                         return VisualMedia.Media.Videos[0].Url;
 
                     case DirectItemType.ReelShare:
-                        return ReelShareMedia.Media.VideoVersions[0].Url;
+                        return ReelShareMedia.Media?.VideoVersions[0].Url;
 
                     case DirectItemType.StoryShare:
                         return StoryShareMedia.Media?.VideoVersions[0].Url;

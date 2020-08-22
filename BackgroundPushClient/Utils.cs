@@ -70,8 +70,7 @@ namespace BackgroundPushClient
                 Tag = itemId,
                 ExpiresOnReboot = false
             };
-            if (ApiInformation.IsPropertyPresent(typeof(ToastNotification).FullName,
-                nameof(ToastNotification.RemoteId)))
+            if (ApiInformation.IsPropertyPresent("Windows.UI.Notifications.ToastNotification", "RemoteId"))
             {
                 toast.RemoteId = notificationContent.PushId;
             }
