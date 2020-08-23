@@ -276,11 +276,15 @@ namespace InstagramAPI
 
                 if (string.IsNullOrEmpty(json)) return Result<DirectThread>.Success(null, json);
 
-                var threadResponse = JsonConvert.DeserializeObject<DirectThread>(json);
+                var statusResponse = JObject.Parse(json);
+                if (statusResponse["status"].ToObject<string>() != "ok")
+                    return Result<DirectThread>.Fail(json);
+                var thread = statusResponse["thread"].ToObject<DirectThread>();
+                if (thread == null)
+                    return Result<DirectThread>.Fail(json);
+                thread.Items.Reverse();
 
-                threadResponse.Items?.Reverse();
-
-                return Result<DirectThread>.Success(threadResponse, json);
+                return Result<DirectThread>.Success(thread);
             }
             catch (Exception exception)
             {
