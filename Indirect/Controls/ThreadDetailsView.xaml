@@ -49,9 +49,10 @@
             </Flyout>
         </FlyoutBase.AttachedFlyout>
 
-        <Border Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1" Background="{ThemeResource SystemControlAcrylicElementBrush}"/>
+        <Border Grid.Row="0" Grid.RowSpan="2" Canvas.ZIndex="1" Background="{ThemeResource SystemControlAcrylicElementBrush}" Visibility="{x:Bind ThreadHeaderVisibility, Mode=OneWay}"/>
 
-        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Right" IsDynamicOverflowEnabled="False" OverflowButtonVisibility="Collapsed">
+        <CommandBar Grid.Row="1" Canvas.ZIndex="2" Background="Transparent" DefaultLabelPosition="Right" IsDynamicOverflowEnabled="False" OverflowButtonVisibility="Collapsed"
+                    Visibility="{x:Bind ThreadHeaderVisibility, Mode=OneWay}">
             <FlyoutBase.AttachedFlyout>
                 <Flyout x:Name="UserListFlyout" Placement="BottomEdgeAlignedLeft">
                     <ListView ItemsSource="{x:Bind Thread.Users, Mode=OneWay}" ItemClick="UserList_OnItemClick" IsItemClickEnabled="True" SelectionMode="None" MaxHeight="260">
@@ -73,7 +74,7 @@
             </FlyoutBase.AttachedFlyout>
             <AppBarButton x:Name="ViewProfileAppBarButton" Icon="Contact2" Label="View profile" Click="ShowUsersInfoFlyout"/>
             <AppBarButton Click="OpenInNewWindow_OnClick" Width="48" ToolTipService.ToolTip="Open thread in a new window" LabelPosition="Collapsed"
-                          Visibility="{x:Bind Thread.IsSecondaryView, Converter={StaticResource InvertBooleanVisibilityConverter}}">
+                          Visibility="{x:Bind NewWindowButtonVisibility, Mode=OneWay}">
                 <AppBarButton.Icon>
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8A7;" VerticalAlignment="Center"/>
                 </AppBarButton.Icon>

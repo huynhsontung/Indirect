@@ -39,6 +39,11 @@ namespace Indirect.Pages
             base.OnNavigatedTo(e);
             _thread = (InstaDirectInboxThreadWrapper) e?.Parameter ??
                       throw new ArgumentException("Did not receive chat thread to create page");
+            if (_thread.IsContactPanel)
+            {
+                TitleBarElement.Visibility = Visibility.Collapsed;
+                MainView.ThreadHeaderVisibility = Visibility.Collapsed;
+            }
             ApplicationView.GetForCurrentView().Consolidated += ViewConsolidated;
             ApplicationView.GetForCurrentView().Title = _thread.Title + " - Thread";
             Bindings.Update();

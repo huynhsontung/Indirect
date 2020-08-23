@@ -4,7 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Indirect"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
-    xmlns:core="using:FluiFramework.UWP.Core">
+    xmlns:core="using:FluiFramework.UWP.Core" 
+    xmlns:controls1="using:Indirect.Controls">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

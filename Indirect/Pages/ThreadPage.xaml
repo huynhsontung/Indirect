@@ -49,6 +49,6 @@
                            Style="{ThemeResource FluentCaptionTextStyle}" />
             </StackPanel>
         </Grid>
-        <controls:ThreadDetailsView Grid.Row="0" Grid.RowSpan="2" Thread="{x:Bind _thread}"/>
+        <controls:ThreadDetailsView x:Name="MainView" Grid.Row="0" Grid.RowSpan="2" Thread="{x:Bind _thread}" NewWindowButtonVisibility="Collapsed"/>
     </Grid>
 </Page>

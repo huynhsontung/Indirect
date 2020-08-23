@@ -22,12 +22,17 @@ namespace Indirect.Wrapper
     /// Wrapper of <see cref="DirectThread"/> with Observable lists
     class InstaDirectInboxThreadWrapper : DirectThread, INotifyPropertyChanged, IIncrementalSource<InstaDirectInboxItemWrapper>, IDisposable
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         private readonly Instagram _instaApi;
         private CancellationTokenSource _typingCancellationTokenSource;
-        public CoreDispatcher Dispatcher { get; private set; } = CoreApplication.MainView.CoreWindow.Dispatcher;
-        public bool IsSecondaryView { get; private set; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        private CoreDispatcher _dispatcher;
+        public CoreDispatcher Dispatcher
+        {
+            get => _dispatcher ?? (_dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher);
+            private set => _dispatcher = value;
+        }
 
         private bool _isSomeoneTyping;
         public bool IsSomeoneTyping
@@ -72,34 +77,24 @@ namespace Indirect.Wrapper
         }
 
         public Dictionary<long,UserInfo> DetailedUserInfoDictionary { get; } = new Dictionary<long, UserInfo>();
-
+        public bool IsContactPanel { get; set; }
         public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
         public new ObservableCollection<BaseUser> Users { get; } = new ObservableCollection<BaseUser>();
         public List<string> UsersSeenLatestMessage { get; } = new List<string>(); // If Users.Count == 1 then this is always empty
 
-        private InstaDirectInboxThreadWrapper(Instagram api)
-        {
-            ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
-            _instaApi = api;
-            PropertyChanged += SeenCheckProperty;
-            ObservableItems.CollectionChanged += DecorateOnItemDeleted;
-            ObservableItems.CollectionChanged += SeenCheckCollection;
-            ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
-        }
-
         /// <summary>
         /// Only use this constructor to make empty placeholder thread.
         /// </summary>
-        /// <param name="user"></param>
         /// <param name="api"></param>
-        public InstaDirectInboxThreadWrapper(BaseUser user, Instagram api) : this(api)
+        /// <param name="user"></param>
+        public InstaDirectInboxThreadWrapper(Instagram api, BaseUser user) : this(api)
         {
             Users.Add(user);
             Title = user.Username;
             if (Users.Count == 0) Users.Add(new BaseUser());
         }
 
-        public InstaDirectInboxThreadWrapper(RankedRecipientThread rankedThread, Instagram api) : this(api)
+        public InstaDirectInboxThreadWrapper(Instagram api, RankedRecipientThread rankedThread) : this(api)
         {
             PropertyCopier<RankedRecipientThread, InstaDirectInboxThreadWrapper>.Copy(rankedThread, this);
             Title = rankedThread.ThreadTitle;
@@ -111,24 +106,35 @@ namespace Indirect.Wrapper
             if (Users.Count == 0) Users.Add(new BaseUser());
         }
 
-        public InstaDirectInboxThreadWrapper(DirectThread source, Instagram api) : this(api)
+        public InstaDirectInboxThreadWrapper(Instagram api, DirectThread source = null, CoreDispatcher dispatcher = null)
         {
-            PropertyCopier<DirectThread, InstaDirectInboxThreadWrapper>.Copy(source, this);
-
-            foreach (var instaUserShortFriendship in source.Users)
+            _instaApi = api;
+            ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
+            Dispatcher = dispatcher;
+            if (source != null)
             {
-                Users.Add(instaUserShortFriendship);
+                PropertyCopier<DirectThread, InstaDirectInboxThreadWrapper>.Copy(source, this);
+                foreach (var instaUserShortFriendship in source.Users)
+                {
+                    Users.Add(instaUserShortFriendship);
+                }
+                if (Users.Count == 0) Users.Add(new BaseUser());
+
+                UpdateItemList(DecorateItems(source.Items));
             }
-            if (Users.Count == 0) Users.Add(new BaseUser());
-            UpdateItemList(DecorateItems(source.Items));
+
+            SeenCheckCollection(this, null);
+            PropertyChanged += SeenCheckProperty;
+            ObservableItems.CollectionChanged += DecorateOnItemDeleted;
+            ObservableItems.CollectionChanged += SeenCheckCollection;
+            ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
         }
 
         public async Task<InstaDirectInboxThreadWrapper> CloneThreadForSecondaryView(CoreDispatcher dispatcher)
         {
             var result = await _instaApi.GetThreadAsync(ThreadId, PaginationParameters.MaxPagesToLoad(1));
             if (!result.IsSucceeded) return null;
-            var clone = new InstaDirectInboxThreadWrapper(result.Value, _instaApi)
-                {Dispatcher = dispatcher, IsSecondaryView = true};
+            var clone = new InstaDirectInboxThreadWrapper(_instaApi, result.Value, dispatcher);
             return clone;
         }
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -81,39 +81,81 @@ namespace Indirect
         private async void OnLaunchedOrActivated(IActivatedEventArgs e)
         {
             await ViewModel.TryAcquireSyncLock();
-            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(380,300));
-            Frame rootFrame = Window.Current.Content as Frame;
-            var titleBar = ApplicationView.GetForCurrentView().TitleBar;
-            titleBar.ButtonBackgroundColor = Windows.UI.Colors.Transparent;
-            titleBar.ButtonInactiveBackgroundColor = Windows.UI.Colors.Transparent;
-
-            var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
-            coreTitleBar.ExtendViewIntoTitleBar = true;
-
-            // Do not repeat app initialization when the Window already has content,
-            // just ensure that the window is active
-            if (rootFrame == null)
+            
+            if (e.Kind != ActivationKind.ContactPanel)
             {
-                // Create a Frame to act as the navigation context and navigate to the first page
-                rootFrame = new Frame();
+                ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(380, 300));
+                Frame rootFrame = Window.Current.Content as Frame;
+                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
+                titleBar.ButtonBackgroundColor = Windows.UI.Colors.Transparent;
+                titleBar.ButtonInactiveBackgroundColor = Windows.UI.Colors.Transparent;
 
-                rootFrame.NavigationFailed += OnNavigationFailed;
+                var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
+                coreTitleBar.ExtendViewIntoTitleBar = true;
 
-                if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+                // Do not repeat app initialization when the Window already has content,
+                // just ensure that the window is active
+                if (rootFrame == null)
                 {
-                    // Handle different ExecutionStates
+                    // Create a Frame to act as the navigation context and navigate to the first page
+                    rootFrame = new Frame();
+
+                    rootFrame.NavigationFailed += OnNavigationFailed;
+
+                    if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+                    {
+                        // Handle different ExecutionStates
+                    }
+
+                    // Place the frame in the current Window
+                    Window.Current.Content = rootFrame;
                 }
 
-                // Place the frame in the current Window
-                Window.Current.Content = rootFrame;
+                if (rootFrame.Content == null)
+                {
+                    rootFrame.Navigate(Instagram.IsUserAuthenticatedPersistent ? typeof(MainPage) : typeof(LoginPage));
+                }
             }
-
-            if (rootFrame.Content == null)
+            else
             {
-                rootFrame.Navigate(Instagram.IsUserAuthenticatedPersistent ? typeof(MainPage) : typeof(LoginPage));
+                var cpEventArgs = (ContactPanelActivatedEventArgs) e;
+                await HandleActivatedFromContactPanel(cpEventArgs);
             }
             // Ensure the current window is active
             Window.Current.Activate();
+        }
+
+        private async Task HandleActivatedFromContactPanel(ContactPanelActivatedEventArgs e)
+        {
+            var rootFrame = new Frame();
+
+            Window.Current.Content = rootFrame;
+
+            if (!Instagram.IsUserAuthenticatedPersistent)
+            {
+                rootFrame.Navigate(typeof(NotAvailablePage), "Not logged in");
+            }
+            else
+            {
+                var contact = await ContactsIntegration.GetFullContact(e.Contact.Id);
+                var pk = contact.Phones.SingleOrDefault(x => x.Number.ToLower().Contains("@indirect"))?.Number
+                    .Split("@").FirstOrDefault();
+                if (string.IsNullOrEmpty(pk))
+                {
+                    rootFrame.Navigate(typeof(NotAvailablePage), "Contact ID not available");
+                    return;
+                }
+
+                var thread = await ViewModel.FetchThread(new[] {long.Parse(pk)}, rootFrame.Dispatcher);
+                if (thread == null)
+                {
+                    rootFrame.Navigate(typeof(NotAvailablePage), "Cannot fetch chat thread");
+                    return;
+                }
+
+                thread.IsContactPanel = true;
+                rootFrame.Navigate(typeof(ThreadPage), thread);
+            }
         }
 
         /// <summary>

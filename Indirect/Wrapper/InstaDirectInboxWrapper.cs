@@ -81,7 +81,7 @@ namespace Indirect.Wrapper
 
                     if (!existed)
                     {
-                        var wrappedThread = new InstaDirectInboxThreadWrapper(thread, _instaApi);
+                        var wrappedThread = new InstaDirectInboxThreadWrapper(_instaApi, thread);
                         wrappedThread.PropertyChanged += OnThreadChanged;
                         Threads.Insert(0, wrappedThread);
                     }
@@ -118,7 +118,7 @@ namespace Indirect.Wrapper
             var wrappedThreadList = new List<InstaDirectInboxThreadWrapper>();
             foreach (var directThread in container.Inbox.Threads)
             {
-                var wrappedThread = new InstaDirectInboxThreadWrapper(directThread, _instaApi);
+                var wrappedThread = new InstaDirectInboxThreadWrapper(_instaApi, directThread);
                 wrappedThread.PropertyChanged += OnThreadChanged;
                 wrappedThreadList.Add(wrappedThread);
             }

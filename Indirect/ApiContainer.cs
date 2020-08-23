@@ -99,6 +99,10 @@ namespace Indirect
             PushClient.Start();
             await ReelsFeed.UpdateReelsFeed();
             ReelsFeed.StartReelsFeedUpdateLoop();
+
+            // Post launch
+            await Task.Delay(10000).ConfigureAwait(false);
+            await ContactsIntegration.SaveUsersAsContact(_instaApi.CentralUserRegistry.Values).ConfigureAwait(false);
         }
 
         public void SetSelectedThreadNull()
@@ -311,8 +315,8 @@ namespace Indirect
             var result = await _instaApi.GetRankedRecipientsByUsernameAsync(query);
             if (!result.IsSucceeded) return;
             var recipients = result.Value;
-            var threadsFromUser = recipients.Users.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi)).ToList();
-            var threadsFromRankedThread = recipients.Threads.Select(x => new InstaDirectInboxThreadWrapper(x, _instaApi)).ToList();
+            var threadsFromUser = recipients.Users.Select(x => new InstaDirectInboxThreadWrapper(_instaApi, x)).ToList();
+            var threadsFromRankedThread = recipients.Threads.Select(x => new InstaDirectInboxThreadWrapper(_instaApi, x)).ToList();
             var list = new List<InstaDirectInboxThreadWrapper>(threadsFromRankedThread.Count + threadsFromUser.Count);
             list.AddRange(threadsFromRankedThread);
             list.AddRange(threadsFromUser);
@@ -346,13 +350,21 @@ namespace Indirect
             await App.CreateAndShowNewView(typeof(ThreadPage), cloneThread, newView);
         }
 
-        public async Task CreateThread(IEnumerable<long> userIds)
+        public async Task CreateAndOpenThread(IEnumerable<long> userIds)
         {
             var result = await _instaApi.CreateGroupThreadAsync(userIds);
             if (!result.IsSucceeded) return;
             var thread = result.Value;
             var existingThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == thread.ThreadId);
-            SelectedThread = existingThread ?? new InstaDirectInboxThreadWrapper(thread, _instaApi);
+            SelectedThread = existingThread ?? new InstaDirectInboxThreadWrapper(_instaApi, thread);
+        }
+
+        public async Task<InstaDirectInboxThreadWrapper> FetchThread(IEnumerable<long> userIds, CoreDispatcher dispatcher)
+        {
+            var result = await _instaApi.GetThreadByParticipantsAsync(userIds);
+            return !result.IsSucceeded
+                ? null
+                : new InstaDirectInboxThreadWrapper(_instaApi, result.Value, dispatcher);
         }
 
         public async void MakeProperInboxThread(InstaDirectInboxThreadWrapper placeholderThread)
@@ -364,7 +376,7 @@ namespace Indirect
                 var result = await _instaApi.GetThreadByParticipantsAsync(userIds);
                 if (!result.IsSucceeded) return;
                 thread = result.Value != null && result.Value.Users.Count > 0 ? 
-                    new InstaDirectInboxThreadWrapper(result.Value, _instaApi) : new InstaDirectInboxThreadWrapper(placeholderThread.Users?[0], _instaApi);
+                    new InstaDirectInboxThreadWrapper(_instaApi, result.Value) : new InstaDirectInboxThreadWrapper(_instaApi, placeholderThread.Users?[0]);
             }
             else
             {

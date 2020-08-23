@@ -28,11 +28,36 @@ namespace Indirect.Controls
             typeof(ThreadDetailsView),
             new PropertyMetadata(null, OnThreadChanged));
 
+        public static readonly DependencyProperty NewWindowButtonVisibilityProperty = DependencyProperty.Register(
+            nameof(NewWindowButtonVisibility),
+            typeof(Visibility),
+            typeof(ThreadDetailsView),
+            new PropertyMetadata(Visibility.Visible));
+
+        public static readonly DependencyProperty ThreadHeaderVisibilityProperty = DependencyProperty.Register(
+            nameof(ThreadHeaderVisibility),
+            typeof(Visibility),
+            typeof(ThreadDetailsView),
+            new PropertyMetadata(Visibility.Visible));
+
         public InstaDirectInboxThreadWrapper Thread
         {
             get => (InstaDirectInboxThreadWrapper) GetValue(ThreadProperty);
             set => SetValue(ThreadProperty, value);
         }
+
+        public Visibility NewWindowButtonVisibility
+        {
+            get => (Visibility) GetValue(NewWindowButtonVisibilityProperty);
+            set => SetValue(NewWindowButtonVisibilityProperty, value);
+        }
+
+        public Visibility ThreadHeaderVisibility
+        {
+            get => (Visibility)GetValue(ThreadHeaderVisibilityProperty);
+            set => SetValue(ThreadHeaderVisibilityProperty, value);
+        }
+
 
         private bool _needUpdateCaret;   // For moving the caret to the end of text on thread change. This is a bad idea. ¯\_(ツ)_/¯
 

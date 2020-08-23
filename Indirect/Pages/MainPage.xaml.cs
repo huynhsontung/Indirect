@@ -254,7 +254,7 @@ namespace Indirect.Pages
             NewThreadFlyout.Hide();
             if (NewMessageCandidates.Count == 0 || NewMessageCandidates.Count > 32) return;
             var userIds = NewMessageCandidates.Select(x => x.Pk);
-            await ViewModel.CreateThread(userIds);
+            await ViewModel.CreateAndOpenThread(userIds);
             NewMessageCandidates.Clear();
         }
 
@@ -334,6 +334,11 @@ namespace Indirect.Pages
         private async void StoriesSectionTitle_OnTapped(object sender, TappedRoutedEventArgs e)
         {
             await ViewModel.ReelsFeed.UpdateReelsFeed(ReelsTrayFetchReason.PullToRefresh);
+        }
+
+        private async void TestButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            await ContactsIntegration.DeleteAllAppContacts();
         }
     }
 }

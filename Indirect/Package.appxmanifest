@@ -4,6 +4,7 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap4="http://schemas.microsoft.com/appx/manifest/uap/windows10/4"
   IgnorableNamespaces="uap mp">
 
   <Identity
@@ -52,11 +53,13 @@
             <Task Type="systemEvent"/>
           </BackgroundTasks>
         </Extension>
+        <uap4:Extension Category="windows.contactPanel" />
       </Extensions>
     </Application>
   </Applications>
 
   <Capabilities>
     <Capability Name="internetClient" />
+    <uap:Capability Name="contacts"/>
   </Capabilities>
 </Package>
