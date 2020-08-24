@@ -210,13 +210,13 @@ namespace Indirect
             Instagram.Instance.SaveToAppSettings();
         }
 
-        public static async Task<bool> CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)
+        public static async Task CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)
         {
             var newView = view ?? CoreApplication.CreateNewView();
-            int newViewId = 0;
-            await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(380, 300));
+                var newAppView = ApplicationView.GetForCurrentView();
+                newAppView.SetPreferredMinSize(new Size(380, 300));
                 var titleBar = ApplicationView.GetForCurrentView().TitleBar;
                 titleBar.ButtonBackgroundColor = Windows.UI.Colors.Transparent;
                 titleBar.ButtonInactiveBackgroundColor = Windows.UI.Colors.Transparent;
@@ -228,9 +228,10 @@ namespace Indirect
                 // You have to activate the window in order to show it later.
                 Window.Current.Activate();
 
-                newViewId = ApplicationView.GetForCurrentView().Id;
+                var newViewId = ApplicationView.GetForCurrentView().Id;
+                await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
+                newAppView.TryResizeView(new Size(380, 640));
             });
-            return await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
         }
     }
 }
