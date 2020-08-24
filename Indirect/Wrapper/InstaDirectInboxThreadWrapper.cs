@@ -504,7 +504,7 @@ namespace Indirect.Wrapper
             UsersSeenLatestMessage.Clear();
 
             // If there is no item then don't show seen indicator
-            if (ObservableItems.Count == 0 && ShowSeenIndicator)
+            if (ObservableItems.Count == 0 || LastSeenAt.Count == 0)
             {
                 ShowSeenIndicator = false;
                 return;
@@ -527,14 +527,11 @@ namespace Indirect.Wrapper
                 return;
             }
 
-            if (LastSeenAt.Count > 0)
-            {
-                var seenUsers = LastSeenAt.Where(x => x.Key != ViewerId && x.Value.Timestamp >= latestItem.Timestamp)
-                    .Select(x => Users.SingleOrDefault(y => y.Pk == x.Key))
-                    .Where(x => x != null)
-                    .Select(x => x.Username);
-                UsersSeenLatestMessage.AddRange(seenUsers);
-            }
+            var seenUsers = LastSeenAt.Where(x => x.Key != ViewerId && x.Value.Timestamp >= latestItem.Timestamp)
+                .Select(x => Users.SingleOrDefault(y => y.Pk == x.Key))
+                .Where(x => x != null)
+                .Select(x => x.Username);
+            UsersSeenLatestMessage.AddRange(seenUsers);
 
             var showIndicator = UsersSeenLatestMessage.Count > 0;
             if (UsersSeenLatestMessage.Count == Users.Count)
