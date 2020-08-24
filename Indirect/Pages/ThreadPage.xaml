@@ -14,19 +14,7 @@
             <RowDefinition Height="32"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Popup x:Name="MediaPopup" IsOpen="False" Width="400" Height="200" Grid.Row="1" Canvas.ZIndex="5">
-            <Grid Background="{ThemeResource SystemControlAcrylicElementBrush}" 
-                  Width="{x:Bind MediaPopup.Width, Mode=OneWay}" 
-                  Height="{x:Bind MediaPopup.Height, Mode=OneWay}">
-                <Button Style="{x:Null}" Click="CloseMediaPopup_OnClick" VerticalAlignment="Top" HorizontalAlignment="Left" Canvas.ZIndex="1">
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="Escape"/>
-                    </Button.KeyboardAccelerators>
-                    <SymbolIcon Symbol="Cancel"/>
-                </Button>
-                <controls:ImmersiveControl x:Name="ImmersiveControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-            </Grid>
-        </Popup>
+        <controls:ImmersiveControl x:Name="ImmersiveControl" Grid.Row="1" Canvas.ZIndex="5"/>
 
         <Grid x:Name="TitleBarElement" 
               Grid.Row="0"

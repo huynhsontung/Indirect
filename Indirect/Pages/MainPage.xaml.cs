@@ -23,7 +23,7 @@ namespace Indirect.Pages
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage : Page, IImmersiveSupport
+    public sealed partial class MainPage : Page
     {
         public static readonly DependencyProperty InboxProperty = DependencyProperty.Register(
             nameof(Inbox),
@@ -50,16 +50,7 @@ namespace Indirect.Pages
             Window.Current.SetTitleBar(TitleBarElement);
             MainLayout.ViewStateChanged += OnViewStateChange;
             Window.Current.Activated += OnWindowFocusChange;
-            Window.Current.SizeChanged += OnWindowSizeChanged;
             Inbox = ViewModel.Inbox;
-            MediaPopup.Width = Window.Current.Bounds.Width;
-            MediaPopup.Height = Window.Current.Bounds.Height - 32;
-        }
-
-        private void OnWindowSizeChanged(object sender, WindowSizeChangedEventArgs e)
-        {
-            MediaPopup.Width = e.Size.Width;
-            MediaPopup.Height = e.Size.Height - 32;
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -297,24 +288,6 @@ namespace Indirect.Pages
         private void TogglePendingInbox_OnClick(object sender, RoutedEventArgs e)
         {
             Inbox = Inbox == ViewModel.Inbox ? ViewModel.PendingInbox : ViewModel.Inbox;
-        }
-
-        private void CloseMediaPopup_OnClick(object sender, RoutedEventArgs e)
-        {
-            CloseImmersiveView();
-        }
-
-        public void OpenImmersiveView(object item)
-        {
-            MediaPopup.IsOpen = true;
-            ImmersiveControl.Item = item;
-            ImmersiveControl.Focus(FocusState.Programmatic);
-        }
-
-        public void CloseImmersiveView()
-        {
-            MediaPopup.IsOpen = false;
-            ImmersiveControl.OnClose();
         }
 
         private async void ReelsFeed_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -15,7 +15,9 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <DataTemplate x:Key="ImageView" x:DataType="wrapper:InstaDirectInboxItemWrapper">
-                <ScrollViewer x:Name="ScrollViewer"
+                <ScrollViewer x:Name="ScrollViewer" 
+                              Width="{Binding ElementName=MediaPopup, Path=Width}"
+                              Height="{Binding ElementName=MediaPopup, Path=Height}"
                               HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto"
                               VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Auto"
                               ZoomMode="Enabled" MinZoomFactor="1"
@@ -32,7 +34,9 @@
             </DataTemplate>
 
             <DataTemplate x:Key="VideoView" x:DataType="wrapper:InstaDirectInboxItemWrapper">
-                <controls1:AutoVideoControl x:Name="MediaPlayer" Source="{x:Bind VideoUri}">
+                <controls1:AutoVideoControl x:Name="MediaPlayer" Source="{x:Bind VideoUri}" 
+                                            Width="{Binding ElementName=MediaPopup, Path=Width}"
+                                            Height="{Binding ElementName=MediaPopup, Path=Height}" >
                     <controls1:AutoVideoControl.TransportControls>
                         <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False"
                                                 IsZoomButtonVisible="False"/>
@@ -45,5 +49,25 @@
             </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
-    <ContentControl x:Name="MainControl" Content="{x:Bind Item, Mode=OneWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SizeChanged="MainControl_OnSizeChanged"/>
+
+    <Popup x:Name="MediaPopup" IsOpen="False" Width="400" Height="200">
+        <Grid Background="{ThemeResource SystemControlAcrylicElementBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Style="{x:Null}" Click="CloseMediaPopup_OnClick" VerticalAlignment="Top" HorizontalAlignment="Left" Canvas.ZIndex="1">
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="Escape"/>
+                </Button.KeyboardAccelerators>
+                <SymbolIcon Symbol="Cancel"/>
+            </Button>
+
+            <ContentControl x:Name="MainControl" Content="{x:Bind Item, Mode=OneWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        </Grid>
+    </Popup>
+    
 </UserControl>

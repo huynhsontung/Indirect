@@ -7,10 +7,10 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
-using Indirect.Pages;
 using Indirect.Wrapper;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
+using Microsoft.Toolkit.Uwp.UI.Extensions;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -61,8 +61,9 @@ namespace Indirect.Controls
             var uri = Item.FullImageUri;
             if (uri == null) return;
             var frame = Window.Current.Content as Frame;
-            var page = frame?.Content as IImmersiveSupport;
-            page?.OpenImmersiveView(Item);
+            var page = frame?.Content as Page;
+            var immersiveControl = page?.FindChild<ImmersiveControl>();
+            immersiveControl?.Open(Item);
         }
 
         private void VideoPopupButton_OnTapped(object sender, TappedRoutedEventArgs e)
@@ -70,8 +71,9 @@ namespace Indirect.Controls
             var uri = Item.VideoUri;
             if (uri == null) return;
             var frame = Window.Current.Content as Frame;
-            var page = frame?.Content as IImmersiveSupport;
-            page?.OpenImmersiveView(Item);
+            var page = frame?.Content as Page;
+            var immersiveControl = page?.FindChild<ImmersiveControl>();
+            immersiveControl?.Open(Item);
         }
 
         private void OpenMediaButton_OnClick(object sender, RoutedEventArgs e)

@@ -1,6 +1,6 @@
-﻿using Windows.UI.Xaml;
+﻿using Windows.UI.Core;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Indirect.Wrapper;
 using InstagramAPI.Classes.Direct;
@@ -23,7 +23,7 @@ namespace Indirect.Controls
         public object Item
         {
             get => GetValue(ItemProperty);
-            set => SetValue(ItemProperty, value);
+            private set => SetValue(ItemProperty, value);
         }
 
         private static void OnItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -74,6 +74,16 @@ namespace Indirect.Controls
         public ImmersiveControl()
         {
             this.InitializeComponent();
+
+            Window.Current.SizeChanged += OnWindowSizeChanged;
+            MediaPopup.Width = Window.Current.Bounds.Width;
+            MediaPopup.Height = Window.Current.Bounds.Height - 32;
+        }
+
+        private void OnWindowSizeChanged(object sender, WindowSizeChangedEventArgs e)
+        {
+            MediaPopup.Width = e.Size.Width;
+            MediaPopup.Height = e.Size.Height - 32;
         }
 
         private void PrepareImageView()
@@ -81,8 +91,6 @@ namespace Indirect.Controls
             MainControl.ContentTemplate = (DataTemplate)Resources["ImageView"];
             var scrollviewer = this.FindDescendant<ScrollViewer>();
             if (scrollviewer == null) return;
-            scrollviewer.Width = ActualWidth;
-            scrollviewer.Height = ActualHeight;
             ScrollViewer_OnSizeChanged(scrollviewer, null);
         }
 
@@ -114,23 +122,6 @@ namespace Indirect.Controls
             }
         }
 
-        public void OnClose()
-        {
-            var videoView = MainControl.ContentTemplateRoot as AutoVideoControl;
-            videoView?.MediaPlayer.Pause();
-
-            var reelView = MainControl.ContentTemplateRoot as ReelsControl;
-            reelView?.OnClose();
-        }
-
-        private void MainControl_OnSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            var scrollviewer = this.FindDescendant<ScrollViewer>();
-            if (scrollviewer == null) return;
-            scrollviewer.Width = e.NewSize.Width;
-            scrollviewer.Height = e.NewSize.Height;
-        }
-
         private void ScrollViewer_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             var scrollviewer = (ScrollViewer) sender;
@@ -144,6 +135,26 @@ namespace Indirect.Controls
         {
             var scrollviewer = (ScrollViewer) sender;
             scrollviewer.ChangeView(null, null, 1, true);
+        }
+
+        private void CloseMediaPopup_OnClick(object sender, RoutedEventArgs e) => Close();
+
+        public void Open(object item)
+        {
+            MediaPopup.IsOpen = true;
+            Item = item;
+            MainControl.Focus(FocusState.Programmatic);
+        }
+
+        public void Close()
+        {
+            MediaPopup.IsOpen = false;
+
+            var videoView = MainControl.ContentTemplateRoot as AutoVideoControl;
+            videoView?.MediaPlayer.Pause();
+
+            var reelView = MainControl.ContentTemplateRoot as ReelsControl;
+            reelView?.OnClose();
         }
     }
 }

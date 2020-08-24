@@ -136,7 +136,6 @@
     <Compile Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.cs" />
     <Compile Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.Events.cs" />
     <Compile Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.Properties.cs" />
-    <Compile Include="Controls\IImmersiveSupport.cs" />
     <Compile Include="Controls\ReelProgressIndicator.xaml.cs">
       <DependentUpon>ReelProgressIndicator.xaml</DependentUpon>
     </Compile>
