@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -15,6 +16,7 @@ using Indirect.Converters;
 using Indirect.Wrapper;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.User;
+using InstagramAPI.Utils;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -81,12 +83,22 @@ namespace Indirect.Controls
         public ThreadDetailsView()
         {
             this.InitializeComponent();
-            ViewModel.PropertyChanged += async (sender, args) =>
-            {
-                if (args.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, OnUserPresenceChanged);
-            };
+            ViewModel.PropertyChanged += OnUserPresenceChanged;
             GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
+        }
+
+        private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
+            try
+            {
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, OnUserPresenceChanged);
+            }
+            catch (InvalidComObjectException exception)
+            {
+                // This happens when ContactPanel is closed but this view still listens to event from viewmodel
+                DebugLogger.LogException(exception, false);
+            }
         }
 
         private void OnUserPresenceChanged()

@@ -2,10 +2,12 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using InstagramAPI.Classes.User;
+using InstagramAPI.Utils;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -66,19 +68,27 @@ namespace Indirect.Controls
         private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(e.PropertyName)) return;
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            try
             {
-                if (Source == null) return;
-                if (Source.Any(user =>
-                    ((App) Application.Current).ViewModel.UserPresenceDictionary.TryGetValue(user.Pk, out var value) &&
-                    value.IsActive))
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    IsUserActive = true;
-                    return;
-                }
+                    if (Source == null) return;
+                    if (Source.Any(user =>
+                        ((App) Application.Current).ViewModel.UserPresenceDictionary.TryGetValue(user.Pk, out var value) &&
+                        value.IsActive))
+                    {
+                        IsUserActive = true;
+                        return;
+                    }
 
-                IsUserActive = false;
-            });
+                    IsUserActive = false;
+                });
+            }
+            catch (InvalidComObjectException exception)
+            {
+                // This happens when ContactPanel is closed but this view still listens to event from viewmodel
+                DebugLogger.LogException(exception, false);
+            }
         }
 
         private void ProfilePicture_OnSizeChanged(object sender, SizeChangedEventArgs e)
