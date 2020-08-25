@@ -29,7 +29,7 @@ namespace Indirect
     {
         private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
 
-        internal ApiContainer ViewModel { get; } = ApiContainer.Instance;
+        internal MainViewModel ViewModel { get; } = MainViewModel.Instance;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code

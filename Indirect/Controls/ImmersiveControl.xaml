@@ -5,16 +5,17 @@
     xmlns:local="using:Indirect"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:wrapper="using:Indirect.Wrapper"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:controls1="using:Indirect.Controls"
+    xmlns:controls1="using:Indirect.Controls" 
+    xmlns:wrappers="using:Indirect.Entities.Wrappers" 
+    xmlns:entities="using:Indirect.Entities"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
 
     <UserControl.Resources>
         <ResourceDictionary>
-            <DataTemplate x:Key="ImageView" x:DataType="wrapper:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="ImageView" x:DataType="wrappers:DirectItemWrapper">
                 <ScrollViewer x:Name="ScrollViewer" 
                               Width="{Binding ElementName=MediaPopup, Path=Width}"
                               Height="{Binding ElementName=MediaPopup, Path=Height}"
@@ -33,7 +34,7 @@
                 </ScrollViewer>
             </DataTemplate>
 
-            <DataTemplate x:Key="VideoView" x:DataType="wrapper:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="VideoView" x:DataType="wrappers:DirectItemWrapper">
                 <controls1:AutoVideoControl x:Name="MediaPlayer" Source="{x:Bind VideoUri}" 
                                             Width="{Binding ElementName=MediaPopup, Path=Width}"
                                             Height="{Binding ElementName=MediaPopup, Path=Height}" >
@@ -44,7 +45,7 @@
                 </controls1:AutoVideoControl>
             </DataTemplate>
 
-            <DataTemplate x:Key="ReelView" x:DataType="wrapper:FlatReelsContainer">
+            <DataTemplate x:Key="ReelView" x:DataType="entities:FlatReelsContainer">
                 <controls1:ReelsControl Source="{x:Bind}"/>
             </DataTemplate>
         </ResourceDictionary>

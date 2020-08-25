@@ -5,14 +5,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:flui="using:FluiFramework.UWP.Core"
     xmlns:local="using:Indirect" 
     xmlns:converters="using:Indirect.Converters"
-    xmlns:wrapper="using:Indirect.Wrapper"
     xmlns:users="using:InstagramAPI.Classes.User" 
     xmlns:controls1="using:Indirect.Controls"
-    xmlns:classes="using:InstagramAPI.Classes" 
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:wrappers="using:Indirect.Entities.Wrappers"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -118,7 +115,7 @@
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="wrapper:ReelWrapper">
+                            <DataTemplate x:DataType="wrappers:ReelWrapper">
                                 <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,8">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="54"/>
@@ -171,7 +168,7 @@
             </controls1:ExtendedMasterDetailsView.NoSelectionContent>
 
             <controls1:ExtendedMasterDetailsView.ItemTemplate>
-                <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
+                <DataTemplate x:DataType="wrappers:DirectThreadWrapper">
                     <StackPanel Orientation="Horizontal">
                         <controls1:ProfilePicture Source="{x:Bind Users}" Height="48" Width="48" Margin="4,8,16,8"/>
                         <StackPanel VerticalAlignment="Center">
@@ -186,7 +183,7 @@
             </controls1:ExtendedMasterDetailsView.ItemTemplate>
 
             <controls1:ExtendedMasterDetailsView.DetailsTemplate>
-                <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
+                <DataTemplate x:DataType="wrappers:DirectThreadWrapper">
                     <controls1:ThreadDetailsView Thread="{x:Bind}"/>
                 </DataTemplate>
             </controls1:ExtendedMasterDetailsView.DetailsTemplate>
@@ -333,7 +330,7 @@
                                     UpdateTextOnSelect="False"
                                     QueryIcon="Find" Margin="0,4,0,8">
                         <AutoSuggestBox.ItemTemplate>
-                            <DataTemplate x:DataType="wrapper:InstaDirectInboxThreadWrapper">
+                            <DataTemplate x:DataType="wrappers:DirectThreadWrapper">
                                 <StackPanel Orientation="Horizontal" Background="Transparent" Margin="0,4,0,4">
                                     <controls1:ProfilePicture Source="{x:Bind Users}" Height="28" Width="28" VerticalAlignment="Center"/>
                                     <TextBlock Text="{x:Bind Title}" MaxLines="1" Margin="12,0,0,0" VerticalAlignment="Center"/>

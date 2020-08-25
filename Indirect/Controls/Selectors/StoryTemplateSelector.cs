@@ -1,6 +1,6 @@
 ﻿using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Indirect.Wrapper;
+using Indirect.Entities.Wrappers;
 using InstagramAPI.Classes.Media;
 
 namespace Indirect.Controls.Selectors

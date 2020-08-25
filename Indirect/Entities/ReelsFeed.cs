@@ -1,18 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
+using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Utils;
 
-namespace Indirect.Wrapper
+namespace Indirect.Entities
 {
     class ReelsFeed : IDisposable
     {

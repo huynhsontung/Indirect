@@ -4,7 +4,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using Indirect.Wrapper;
+using Indirect.Entities.Wrappers;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -15,7 +15,7 @@ namespace Indirect.Pages
     /// </summary>
     public sealed partial class ThreadPage : Page
     {
-        private InstaDirectInboxThreadWrapper _thread;
+        private DirectThreadWrapper _thread;
 
         public ThreadPage()
         {
@@ -27,7 +27,7 @@ namespace Indirect.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            _thread = (InstaDirectInboxThreadWrapper) e?.Parameter ??
+            _thread = (DirectThreadWrapper) e?.Parameter ??
                       throw new ArgumentException("Did not receive chat thread to create page");
             if (_thread.IsContactPanel)
             {

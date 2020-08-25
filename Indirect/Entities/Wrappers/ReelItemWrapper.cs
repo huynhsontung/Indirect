@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
+﻿using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Indirect.Utilities;
 using InstagramAPI;
-using InstagramAPI.Classes;
 using InstagramAPI.Classes.Media;
 
-namespace Indirect.Wrapper
+namespace Indirect.Entities.Wrappers
 {
     public class ReelItemWrapper : ReelMedia, INotifyPropertyChanged
     {

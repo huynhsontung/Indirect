@@ -4,7 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Indirect.Wrapper;
+using Indirect.Entities.Wrappers;
+using Indirect.Services;
 using InstagramAPI;
 using InstagramAPI.Classes.Media;
 
@@ -16,7 +17,7 @@ namespace Indirect.Controls
     {
         public event EventHandler<GiphyMedia> ImageSelected; 
 
-        public InstaDirectInboxThreadWrapper Thread { get; set; }
+        public DirectThreadWrapper Thread { get; set; }
 
         public ObservableCollection<GiphyMedia> ImageList { get; } = new ObservableCollection<GiphyMedia>();
 

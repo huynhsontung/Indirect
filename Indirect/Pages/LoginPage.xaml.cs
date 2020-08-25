@@ -19,7 +19,7 @@ namespace Indirect.Pages
     /// </summary>
     public sealed partial class LoginPage : Page
     {
-        private ApiContainer ViewModel => ((App)Application.Current).ViewModel;
+        private MainViewModel ViewModel => ((App)Application.Current).ViewModel;
         private bool _loading;
         public LoginPage()
         {

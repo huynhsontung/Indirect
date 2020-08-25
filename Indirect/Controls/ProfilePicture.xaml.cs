@@ -72,7 +72,7 @@ namespace Indirect.Controls
 
         private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(e.PropertyName)) return;
+            if (e.PropertyName != nameof(MainViewModel.UserPresenceDictionary) && !string.IsNullOrEmpty(e.PropertyName)) return;
             try
             {
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>

@@ -2,7 +2,8 @@
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using Indirect.Wrapper;
+using Indirect.Entities;
+using Indirect.Entities.Wrappers;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using Microsoft.Toolkit.Uwp.UI.Controls;
@@ -35,7 +36,7 @@ namespace Indirect.Controls
                 view.PrepareReelView();
             }
 
-            var item = e.NewValue as InstaDirectInboxItemWrapper;
+            var item = e.NewValue as DirectItemWrapper;
             if (item == null) return;
             switch (item.ItemType)
             {
@@ -109,7 +110,7 @@ namespace Indirect.Controls
             var scrollviewer = (ScrollViewer)sender;
             var imageView = scrollviewer.Content as ImageEx;
             if (imageView == null) return;
-            if (Item is InstaDirectInboxItemWrapper item && Item != null)
+            if (Item is DirectItemWrapper item && Item != null)
             {
                 if (item.FullImageHeight > scrollviewer.ViewportHeight)
                 {

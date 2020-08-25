@@ -13,7 +13,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Indirect.Converters;
-using Indirect.Wrapper;
+using Indirect.Entities.Wrappers;
+using Indirect.Services;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
@@ -26,7 +27,7 @@ namespace Indirect.Controls
     {
         public static readonly DependencyProperty ThreadProperty = DependencyProperty.Register(
             nameof(Thread),
-            typeof(InstaDirectInboxThreadWrapper),
+            typeof(DirectThreadWrapper),
             typeof(ThreadDetailsView),
             new PropertyMetadata(null, OnThreadChanged));
 
@@ -42,9 +43,9 @@ namespace Indirect.Controls
             typeof(ThreadDetailsView),
             new PropertyMetadata(Visibility.Visible));
 
-        public InstaDirectInboxThreadWrapper Thread
+        public DirectThreadWrapper Thread
         {
-            get => (InstaDirectInboxThreadWrapper) GetValue(ThreadProperty);
+            get => (DirectThreadWrapper) GetValue(ThreadProperty);
             set => SetValue(ThreadProperty, value);
         }
 
@@ -66,8 +67,8 @@ namespace Indirect.Controls
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ThreadDetailsView)d;
-            var thread = e.NewValue as InstaDirectInboxThreadWrapper;
-            if (e.OldValue is InstaDirectInboxThreadWrapper oldThread) oldThread.PropertyChanged -= view.OnThreadPropertyChanged;
+            var thread = e.NewValue as DirectThreadWrapper;
+            if (e.OldValue is DirectThreadWrapper oldThread) oldThread.PropertyChanged -= view.OnThreadPropertyChanged;
             if (thread == null) return;
             thread.PropertyChanged -= view.OnThreadPropertyChanged;   // Redundant. Just making sure it already unregistered.
             thread.PropertyChanged += view.OnThreadPropertyChanged;
@@ -78,7 +79,7 @@ namespace Indirect.Controls
             view.OnUserPresenceChanged();
         }
 
-        private static ApiContainer ViewModel => ((App)Application.Current).ViewModel;
+        private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
 
         public ThreadDetailsView()
         {
@@ -95,7 +96,7 @@ namespace Indirect.Controls
 
         private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs args)
         {
-            if (args.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
+            if (args.PropertyName != nameof(MainViewModel.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
             try
             {
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, OnUserPresenceChanged);

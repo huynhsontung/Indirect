@@ -4,13 +4,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:wrapper="using:Indirect.Wrapper"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:converters="using:Indirect.Converters"
     xmlns:controls1="using:Indirect.Controls" 
     xmlns:selectors="using:Indirect.Controls.Selectors" 
-    xmlns:media="using:Microsoft.UI.Xaml.Media"
+    xmlns:media="using:Microsoft.UI.Xaml.Media" 
+    xmlns:wrappers="using:Indirect.Entities.Wrappers"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
@@ -28,7 +28,7 @@
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
             
 
-            <DataTemplate x:Key="ReplyControlTemplate" x:DataType="wrapper:ReelItemWrapper">
+            <DataTemplate x:Key="ReplyControlTemplate" x:DataType="wrappers:ReelItemWrapper">
                 <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
                             Visibility="{x:Bind Parent.CanReply, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
                     <TextBox Text="{x:Bind DraftMessage, Mode=TwoWay}" Width="300"
@@ -47,7 +47,7 @@
                 </StackPanel>
             </DataTemplate>
 
-            <DataTemplate x:Key="VideoTemplate" x:DataType="wrapper:ReelItemWrapper">
+            <DataTemplate x:Key="VideoTemplate" x:DataType="wrappers:ReelItemWrapper">
                 <Grid Margin="0,0,0,6">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -61,7 +61,7 @@
                 </Grid>
             </DataTemplate>
 
-            <DataTemplate x:Key="ImageTemplate" x:DataType="wrapper:ReelItemWrapper">
+            <DataTemplate x:Key="ImageTemplate" x:DataType="wrappers:ReelItemWrapper">
                 <Grid Margin="0,0,0,6">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -103,14 +103,14 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <controls:ImageEx Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
-                                  Source="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.Parent).User.ProfilePictureUrl, Mode=OneWay}" 
+                                  Source="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.Parent).User.ProfilePictureUrl, Mode=OneWay}" 
                                   Height="34" Width="34" Margin="0,0,12,0" CornerRadius="99" VerticalAlignment="Center"/>
                 <TextBlock Grid.Row="0" Grid.Column="1" 
-                           Text="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.Parent).User.Username, Mode=OneWay}"
+                           Text="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.Parent).User.Username, Mode=OneWay}"
                            Style="{ThemeResource FluentTitleTextStyle}" MaxLines="1" 
                            VerticalAlignment="Center"/>
                 <TextBlock Grid.Row="1" Grid.Column="1" Style="{ThemeResource FluentCaptionTextStyle}"
-                           Text="{x:Bind StoryView.SelectedItem.(wrapper:ReelItemWrapper.TakenAt), Converter={StaticResource RelativeTimeConverter}, Mode=OneWay}"/>
+                           Text="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.TakenAt), Converter={StaticResource RelativeTimeConverter}, Mode=OneWay}"/>
             </Grid>
             <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top"
                         Margin="4,6,4,4" Padding="4" Background="{ThemeResource CustomAcrylicBrush}" CornerRadius="2">

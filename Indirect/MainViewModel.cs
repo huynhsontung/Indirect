@@ -12,8 +12,10 @@ using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Indirect.Entities;
+using Indirect.Entities.Wrappers;
 using Indirect.Pages;
-using Indirect.Wrapper;
+using Indirect.Services;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
@@ -26,15 +28,15 @@ using Microsoft.Toolkit.Uwp.UI;
 
 namespace Indirect
 {
-    internal partial class ApiContainer : INotifyPropertyChanged, IDisposable
+    internal partial class MainViewModel : INotifyPropertyChanged, IDisposable
     {
-        private static ApiContainer _instance;
-        public static ApiContainer Instance
+        private static MainViewModel _instance;
+        public static MainViewModel Instance
         {
             get
             {
                 if (_instance != null) return _instance;
-                _instance = new ApiContainer();
+                _instance = new MainViewModel();
                 return _instance;
             }
         }
@@ -43,7 +45,7 @@ namespace Indirect
         private readonly Instagram _instaApi = Instagram.Instance;
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
         private CancellationTokenSource _searchCancellationToken;
-        private InstaDirectInboxThreadWrapper _selectedThread;
+        private DirectThreadWrapper _selectedThread;
         private FileStream _lockFile;
         private string _threadToBeOpened;
 
@@ -53,11 +55,11 @@ namespace Indirect
         public PushClient PushClient => _instaApi.PushClient;
         public SyncClient SyncClient => _instaApi.SyncClient;
         public Dictionary<long, UserPresenceValue> UserPresenceDictionary { get; } = new Dictionary<long, UserPresenceValue>();
-        public InstaDirectInboxWrapper PendingInbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance, true);
-        public InstaDirectInboxWrapper Inbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance);
-        public List<InstaDirectInboxThreadWrapper> SecondaryThreadViews { get; } = new List<InstaDirectInboxThreadWrapper>();
+        public InboxWrapper PendingInbox { get; } = new InboxWrapper(Instagram.Instance, true);
+        public InboxWrapper Inbox { get; } = new InboxWrapper(Instagram.Instance);
+        public List<DirectThreadWrapper> SecondaryThreadViews { get; } = new List<DirectThreadWrapper>();
         public CurrentUser LoggedInUser { get; private set; }
-        public InstaDirectInboxThreadWrapper SelectedThread
+        public DirectThreadWrapper SelectedThread
         {
             get => _selectedThread;
             set
@@ -71,7 +73,7 @@ namespace Indirect
         public bool IsUserAuthenticated => _instaApi.IsUserAuthenticated;
         public ReelsFeed ReelsFeed { get; } = new ReelsFeed();
 
-        private ApiContainer()
+        private MainViewModel()
         {
             _instaApi.SyncClient.MessageReceived += OnMessageSyncReceived;
             _instaApi.SyncClient.ActivityIndicatorChanged += OnActivityIndicatorChanged;
@@ -110,7 +112,7 @@ namespace Indirect
 
             // Post launch
             await Task.Delay(10000).ConfigureAwait(false);
-            await ContactsIntegration.SaveUsersAsContact(_instaApi.CentralUserRegistry.Values).ConfigureAwait(false);
+            await ContactsService.SaveUsersAsContact(_instaApi.CentralUserRegistry.Values).ConfigureAwait(false);
         }
 
         public void SetSelectedThreadNull()
@@ -240,7 +242,7 @@ namespace Indirect
                                             }
                                             else
                                             {
-                                                item.Reactions?.Update(new InstaDirectReactionsWrapper(itemData.Item.Reactions),
+                                                item.Reactions?.Update(new ReactionsWrapper(itemData.Item.Reactions),
                                                     thread.Users);
                                             }
                                         });
@@ -327,7 +329,7 @@ namespace Indirect
             return true;
         }
 
-        public async void Search(string query, Action<List<InstaDirectInboxThreadWrapper>> updateAction)
+        public async void Search(string query, Action<List<DirectThreadWrapper>> updateAction)
         {
             if (query.Length > 50) return;
             if (!await SearchReady()) return;
@@ -335,9 +337,9 @@ namespace Indirect
             var result = await _instaApi.GetRankedRecipientsByUsernameAsync(query);
             if (!result.IsSucceeded) return;
             var recipients = result.Value;
-            var threadsFromUser = recipients.Users.Select(x => new InstaDirectInboxThreadWrapper(_instaApi, x)).ToList();
-            var threadsFromRankedThread = recipients.Threads.Select(x => new InstaDirectInboxThreadWrapper(_instaApi, x)).ToList();
-            var list = new List<InstaDirectInboxThreadWrapper>(threadsFromRankedThread.Count + threadsFromUser.Count);
+            var threadsFromUser = recipients.Users.Select(x => new DirectThreadWrapper(_instaApi, x)).ToList();
+            var threadsFromRankedThread = recipients.Threads.Select(x => new DirectThreadWrapper(_instaApi, x)).ToList();
+            var list = new List<DirectThreadWrapper>(threadsFromRankedThread.Count + threadsFromUser.Count);
             list.AddRange(threadsFromRankedThread);
             list.AddRange(threadsFromUser);
             var decoratedList = list.Select(x =>
@@ -361,7 +363,7 @@ namespace Indirect
                 updateAction?.Invoke(recipients);
         }
 
-        public async Task OpenThreadInNewWindow(InstaDirectInboxThreadWrapper thread)
+        public async Task OpenThreadInNewWindow(DirectThreadWrapper thread)
         {
             var newView = CoreApplication.CreateNewView();
             var cloneThread = await thread.CloneThreadForSecondaryView(newView.Dispatcher);
@@ -376,27 +378,27 @@ namespace Indirect
             if (!result.IsSucceeded) return;
             var thread = result.Value;
             var existingThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == thread.ThreadId);
-            SelectedThread = existingThread ?? new InstaDirectInboxThreadWrapper(_instaApi, thread);
+            SelectedThread = existingThread ?? new DirectThreadWrapper(_instaApi, thread);
         }
 
-        public async Task<InstaDirectInboxThreadWrapper> FetchThread(IEnumerable<long> userIds, CoreDispatcher dispatcher)
+        public async Task<DirectThreadWrapper> FetchThread(IEnumerable<long> userIds, CoreDispatcher dispatcher)
         {
             var result = await _instaApi.GetThreadByParticipantsAsync(userIds);
             return !result.IsSucceeded
                 ? null
-                : new InstaDirectInboxThreadWrapper(_instaApi, result.Value, dispatcher);
+                : new DirectThreadWrapper(_instaApi, result.Value, dispatcher);
         }
 
-        public async void MakeProperInboxThread(InstaDirectInboxThreadWrapper placeholderThread)
+        public async void MakeProperInboxThread(DirectThreadWrapper placeholderThread)
         {
-            InstaDirectInboxThreadWrapper thread;
+            DirectThreadWrapper thread;
             if (string.IsNullOrEmpty(placeholderThread.ThreadId))
             {
                 var userIds = placeholderThread.Users.Select(x => x.Pk);
                 var result = await _instaApi.GetThreadByParticipantsAsync(userIds);
                 if (!result.IsSucceeded) return;
                 thread = result.Value != null && result.Value.Users.Count > 0 ? 
-                    new InstaDirectInboxThreadWrapper(_instaApi, result.Value) : new InstaDirectInboxThreadWrapper(_instaApi, placeholderThread.Users?[0]);
+                    new DirectThreadWrapper(_instaApi, result.Value) : new DirectThreadWrapper(_instaApi, placeholderThread.Users?[0]);
             }
             else
             {

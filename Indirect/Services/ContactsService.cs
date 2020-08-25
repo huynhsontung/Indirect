@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Contacts;
 using Windows.Foundation.Metadata;
@@ -9,9 +8,9 @@ using Windows.Storage.Streams;
 using InstagramAPI;
 using InstagramAPI.Classes.User;
 
-namespace Indirect
+namespace Indirect.Services
 {
-    internal static class ContactsIntegration
+    internal static class ContactsService
     {
         private const string APP_ID = "18496Starpine.Indirect_rm8wvch11q4my!App";
 

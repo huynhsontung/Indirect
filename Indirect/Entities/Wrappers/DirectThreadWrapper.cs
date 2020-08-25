@@ -17,10 +17,10 @@ using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
 using Microsoft.Toolkit.Collections;
 
-namespace Indirect.Wrapper
+namespace Indirect.Entities.Wrappers
 {
     /// Wrapper of <see cref="DirectThread"/> with Observable lists
-    class InstaDirectInboxThreadWrapper : DirectThread, INotifyPropertyChanged, IIncrementalSource<InstaDirectInboxItemWrapper>, IDisposable
+    class DirectThreadWrapper : DirectThread, INotifyPropertyChanged, IIncrementalSource<DirectItemWrapper>, IDisposable
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -78,7 +78,7 @@ namespace Indirect.Wrapper
 
         public Dictionary<long,UserInfo> DetailedUserInfoDictionary { get; } = new Dictionary<long, UserInfo>();
         public bool IsContactPanel { get; set; }
-        public ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper> ObservableItems { get; set; }
+        public ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper> ObservableItems { get; set; }
         public new ObservableCollection<BaseUser> Users { get; } = new ObservableCollection<BaseUser>();
         public List<string> UsersSeenLatestMessage { get; } = new List<string>(); // If Users.Count == 1 then this is always empty
 
@@ -87,16 +87,16 @@ namespace Indirect.Wrapper
         /// </summary>
         /// <param name="api"></param>
         /// <param name="user"></param>
-        public InstaDirectInboxThreadWrapper(Instagram api, BaseUser user) : this(api)
+        public DirectThreadWrapper(Instagram api, BaseUser user) : this(api)
         {
             Users.Add(user);
             Title = user.Username;
             if (Users.Count == 0) Users.Add(new BaseUser());
         }
 
-        public InstaDirectInboxThreadWrapper(Instagram api, RankedRecipientThread rankedThread) : this(api)
+        public DirectThreadWrapper(Instagram api, RankedRecipientThread rankedThread) : this(api)
         {
-            PropertyCopier<RankedRecipientThread, InstaDirectInboxThreadWrapper>.Copy(rankedThread, this);
+            PropertyCopier<RankedRecipientThread, DirectThreadWrapper>.Copy(rankedThread, this);
             Title = rankedThread.ThreadTitle;
             ThreadType = DirectThreadType.Private;
             foreach (var user in rankedThread.Users)
@@ -106,14 +106,14 @@ namespace Indirect.Wrapper
             if (Users.Count == 0) Users.Add(new BaseUser());
         }
 
-        public InstaDirectInboxThreadWrapper(Instagram api, DirectThread source = null, CoreDispatcher dispatcher = null)
+        public DirectThreadWrapper(Instagram api, DirectThread source = null, CoreDispatcher dispatcher = null)
         {
             _instaApi = api;
-            ObservableItems = new ReversedIncrementalLoadingCollection<InstaDirectInboxThreadWrapper, InstaDirectInboxItemWrapper>(this);
+            ObservableItems = new ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper>(this);
             Dispatcher = dispatcher;
             if (source != null)
             {
-                PropertyCopier<DirectThread, InstaDirectInboxThreadWrapper>.Copy(source, this);
+                PropertyCopier<DirectThread, DirectThreadWrapper>.Copy(source, this);
                 foreach (var instaUserShortFriendship in source.Users)
                 {
                     Users.Add(instaUserShortFriendship);
@@ -130,11 +130,11 @@ namespace Indirect.Wrapper
             ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
         }
 
-        public async Task<InstaDirectInboxThreadWrapper> CloneThreadForSecondaryView(CoreDispatcher dispatcher)
+        public async Task<DirectThreadWrapper> CloneThreadForSecondaryView(CoreDispatcher dispatcher)
         {
             var result = await _instaApi.GetThreadAsync(ThreadId, PaginationParameters.MaxPagesToLoad(1));
             if (!result.IsSucceeded) return null;
-            var clone = new InstaDirectInboxThreadWrapper(_instaApi, result.Value, dispatcher);
+            var clone = new DirectThreadWrapper(_instaApi, result.Value, dispatcher);
             return clone;
         }
 
@@ -249,7 +249,7 @@ namespace Indirect.Wrapper
             });
         }
 
-        private IAsyncAction UpdateItemListAsync(ICollection<InstaDirectInboxItemWrapper> source)
+        private IAsyncAction UpdateItemListAsync(ICollection<DirectItemWrapper> source)
         {
             return Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
@@ -257,7 +257,7 @@ namespace Indirect.Wrapper
             });
         }
 
-        private void UpdateItemList(ICollection<InstaDirectInboxItemWrapper> source)
+        private void UpdateItemList(ICollection<DirectItemWrapper> source)
         {
             if (source == null || source.Count == 0) return;
 
@@ -324,16 +324,16 @@ namespace Indirect.Wrapper
             });
         }
 
-        public async Task<IEnumerable<InstaDirectInboxItemWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
+        public async Task<IEnumerable<DirectItemWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
         {
             // Without ThreadId we cant fetch thread items.
-            if (string.IsNullOrEmpty(ThreadId) || !(HasOlder ?? true)) return new List<InstaDirectInboxItemWrapper>(0);
+            if (string.IsNullOrEmpty(ThreadId) || !(HasOlder ?? true)) return new List<DirectItemWrapper>(0);
             var pagesToLoad = pageSize / 20;
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(OldestCursor);
             var result = await _instaApi.GetThreadAsync(ThreadId, pagination);
-            if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0) return new List<InstaDirectInboxItemWrapper>(0);
+            if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0) return new List<DirectItemWrapper>(0);
             await UpdateExcludeItemList(result.Value);
             var wrappedItems = DecorateItems(result.Value.Items);
             return wrappedItems;
@@ -365,10 +365,10 @@ namespace Indirect.Wrapper
         }
 
         // Decide whether item should show timestamp header, name header etc...
-        private List<InstaDirectInboxItemWrapper> DecorateItems(ICollection<DirectItem> items)
+        private List<DirectItemWrapper> DecorateItems(ICollection<DirectItem> items)
         {
-            if (items == null || items.Count == 0) return new List<InstaDirectInboxItemWrapper>(0);
-            var wrappedItems = items.Select(x => new InstaDirectInboxItemWrapper(x, this, _instaApi)).ToList();
+            if (items == null || items.Count == 0) return new List<DirectItemWrapper>(0);
+            var wrappedItems = items.Select(x => new DirectItemWrapper(x, this, _instaApi)).ToList();
             var lastItem = ObservableItems.FirstOrDefault();
             var itemList = wrappedItems.ToList();
             var refItem = itemList.Last();
@@ -487,7 +487,7 @@ namespace Indirect.Wrapper
         private void HideTypingIndicatorOnItemReceived(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems == null || e.NewItems.Count == 0) return;    // Item removed, not received
-            if (e.NewItems.Count == 1 && !((InstaDirectInboxItemWrapper)e.NewItems[0]).FromMe)
+            if (e.NewItems.Count == 1 && !((DirectItemWrapper)e.NewItems[0]).FromMe)
             {
                 PingTypingIndicator(0);
             }

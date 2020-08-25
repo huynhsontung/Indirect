@@ -7,10 +7,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:converters="using:Indirect.Converters"
-    xmlns:wrappers="using:Indirect.Wrapper" 
     xmlns:controls1="using:Indirect.Controls" 
     xmlns:media="using:InstagramAPI.Classes.Media" 
-    xmlns:selectors="using:Indirect.Controls.Selectors"
+    xmlns:selectors="using:Indirect.Controls.Selectors" 
+    xmlns:wrappers="using:Indirect.Entities.Wrappers"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400"
@@ -94,7 +94,7 @@
                 <Setter Property="IsEnabled" Value="False"/>
             </Style>
 
-            <DataTemplate x:Key="UnexpectedTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="UnexpectedTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Border Background="Transparent" 
                         ToolTipService.ToolTip="This item type is something I has not encountered during development and is totally unaccounted for.
                         It would be nice if you can provide me some context regarding this item so I can support this item in the future."
@@ -110,7 +110,7 @@
                 </Border>
             </DataTemplate>
 
-            <DataTemplate x:Key="NotSupportedTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="NotSupportedTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Border x:Name="NotAvailableMessage" 
                         Background="Transparent" 
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
@@ -125,7 +125,7 @@
                 </Border>
             </DataTemplate>
 
-            <DataTemplate x:Key="HiddenMediaTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="HiddenMediaTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Button x:Name="OpenMediaButton"
                         ToolTipService.ToolTip="Open media in immersive view"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
@@ -133,7 +133,7 @@
                         CornerRadius="2" Click="OpenMediaButton_OnClick"/>
             </DataTemplate>
 
-            <DataTemplate x:Key="LikeTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="LikeTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <TextBlock x:Name="MessageContentNoBorder" 
                            Style="{ThemeResource FluentBodyTextStyle}"
                            Text="{x:Bind Like}"
@@ -143,7 +143,7 @@
                            TextWrapping="Wrap"/>
             </DataTemplate>
 
-            <DataTemplate x:Key="TextTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="TextTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Border x:Name="MessageContentWithBorder"
                         Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
@@ -157,7 +157,7 @@
                 </Border>
             </DataTemplate>
 
-            <DataTemplate x:Key="HyperlinkTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="HyperlinkTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Border x:Name="HyperlinkContent" 
                         MaxWidth="250"
                         Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}" 
@@ -169,7 +169,7 @@
                 </Border>
             </DataTemplate>
 
-            <DataTemplate x:Key="HyperlinkWithPreviewTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="HyperlinkWithPreviewTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <StackPanel Orientation="Vertical" MaxWidth="250" CornerRadius="2"
                             Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}">
                     <TextBlock TextWrapping="Wrap" Style="{ThemeResource FluentBodyTextStyle}" Margin="6,6,6,8">
@@ -186,7 +186,7 @@
                 </StackPanel>
             </DataTemplate>
 
-            <DataTemplate x:Key="ImageTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="ImageTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <controls:ImageEx x:Name="ImageFrame"
                                   MaxWidth="250" MaxHeight="350"
                                   IsCacheEnabled="True"
@@ -196,7 +196,7 @@
                                   Tapped="ImageFrame_Tapped"/>
             </DataTemplate>
 
-            <DataTemplate x:Key="VideoTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="VideoTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Grid x:Name="VideoView"
                       HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}">
                     <Grid.ColumnDefinitions>
@@ -229,7 +229,7 @@
                 </Grid>
             </DataTemplate>
 
-            <DataTemplate x:Name="MediaShareTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Name="MediaShareTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Grid x:Name="MediaShareView"
                       CornerRadius="2"
                       Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
@@ -268,7 +268,7 @@
                 </Grid>
             </DataTemplate>
 
-            <DataTemplate x:Key="ReelShareTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="ReelShareTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <StackPanel Orientation="Vertical" 
                             HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
                     <TextBlock Text="{x:Bind Description}"
@@ -296,7 +296,7 @@
                 </StackPanel>
             </DataTemplate>
                 
-            <DataTemplate x:Key="StoryShareTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="StoryShareTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <StackPanel Orientation="Vertical" 
                             HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
                     <TextBlock Style="{ThemeResource FluentCaptionTextStyle}"
@@ -328,7 +328,7 @@
                 </StackPanel>
             </DataTemplate>
 
-            <DataTemplate x:Key="AudioTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="AudioTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Border CornerRadius="2"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
                     <controls1:AutoVideoControl Width="250" Source="{x:Bind VideoUri}" IsAudioPlayer="True" 
@@ -342,7 +342,7 @@
                 </Border>
             </DataTemplate>
 
-            <DataTemplate x:Key="VideoCallTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="VideoCallTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Border x:Name="NotAvailableMessage" 
                         Background="Transparent" 
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
@@ -357,7 +357,7 @@
                 </Border>
             </DataTemplate>
 
-            <DataTemplate x:Key="ProfileTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="ProfileTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Grid Padding="0,8,0,0"
                       CornerRadius="2" Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
                       HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
@@ -396,7 +396,7 @@
                 </Grid>
             </DataTemplate>
 
-            <DataTemplate x:Key="PlaceholderTemplate" x:DataType="wrappers:InstaDirectInboxItemWrapper">
+            <DataTemplate x:Key="PlaceholderTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Border Background="Transparent" 
                         MaxWidth="190"
                         CornerRadius="2" Padding="8,6,8,6"

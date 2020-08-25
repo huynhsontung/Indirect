@@ -13,9 +13,9 @@ using InstagramAPI.Classes.Direct;
 using Microsoft.Toolkit.Collections;
 using Microsoft.Toolkit.Uwp;
 
-namespace Indirect.Wrapper
+namespace Indirect.Entities.Wrappers
 {
-    class InstaDirectInboxWrapper: Inbox, IIncrementalSource<InstaDirectInboxThreadWrapper>, INotifyPropertyChanged
+    class InboxWrapper: Inbox, IIncrementalSource<DirectThreadWrapper>, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public event Action<int, DateTimeOffset> FirstUpdated;    // callback to start SyncClient
@@ -26,16 +26,16 @@ namespace Indirect.Wrapper
         public DateTimeOffset SnapshotAt { get; set; }
         public bool PendingInbox { get; }
 
-        public new IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper> Threads { get; }
+        public new IncrementalLoadingCollection<InboxWrapper, DirectThreadWrapper> Threads { get; }
 
         private readonly Instagram _instaApi;
         private bool _firstTime = true;
-        public InstaDirectInboxWrapper(Instagram api, bool pending = false)
+        public InboxWrapper(Instagram api, bool pending = false)
         {
             _instaApi = api ?? throw new NullReferenceException();
             PendingInbox = pending;
             Threads =
-                new IncrementalLoadingCollection<InstaDirectInboxWrapper, InstaDirectInboxThreadWrapper>(this);
+                new IncrementalLoadingCollection<InboxWrapper, DirectThreadWrapper>(this);
         }
 
         private void UpdateExcludeThreads(InboxContainer source)
@@ -81,7 +81,7 @@ namespace Indirect.Wrapper
 
                     if (!existed)
                     {
-                        var wrappedThread = new InstaDirectInboxThreadWrapper(_instaApi, thread);
+                        var wrappedThread = new DirectThreadWrapper(_instaApi, thread);
                         wrappedThread.PropertyChanged += OnThreadChanged;
                         Threads.Insert(0, wrappedThread);
                     }
@@ -91,9 +91,9 @@ namespace Indirect.Wrapper
             });
         }
 
-        public async Task<IEnumerable<InstaDirectInboxThreadWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
+        public async Task<IEnumerable<DirectThreadWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
         {
-            if (!_firstTime && !HasOlder) return Array.Empty<InstaDirectInboxThreadWrapper>();
+            if (!_firstTime && !HasOlder) return Array.Empty<DirectThreadWrapper>();
             var pagesToLoad = pageSize / 20;
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
@@ -111,14 +111,14 @@ namespace Indirect.Wrapper
             }
             else
             {
-                return new List<InstaDirectInboxThreadWrapper>(0);
+                return new List<DirectThreadWrapper>(0);
             }
             UpdateExcludeThreads(container);
 
-            var wrappedThreadList = new List<InstaDirectInboxThreadWrapper>();
+            var wrappedThreadList = new List<DirectThreadWrapper>();
             foreach (var directThread in container.Inbox.Threads)
             {
-                var wrappedThread = new InstaDirectInboxThreadWrapper(_instaApi, directThread);
+                var wrappedThread = new DirectThreadWrapper(_instaApi, directThread);
                 wrappedThread.PropertyChanged += OnThreadChanged;
                 wrappedThreadList.Add(wrappedThread);
             }
@@ -171,7 +171,7 @@ namespace Indirect.Wrapper
 
         private void OnThreadChanged(object sender, PropertyChangedEventArgs args)
         {
-            if (args.PropertyName == nameof(InstaDirectInboxThreadWrapper.LastActivity) || string.IsNullOrEmpty(args.PropertyName))
+            if (args.PropertyName == nameof(DirectThreadWrapper.LastActivity) || string.IsNullOrEmpty(args.PropertyName))
             {
                 SortInboxThread();
             }

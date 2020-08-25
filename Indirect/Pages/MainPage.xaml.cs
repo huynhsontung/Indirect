@@ -9,7 +9,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Controls;
-using Indirect.Wrapper;
+using Indirect.Entities.Wrappers;
+using Indirect.Services;
 using InstagramAPI;
 using InstagramAPI.Classes.User;
 using Microsoft.Toolkit.Uwp.UI.Controls;
@@ -27,17 +28,17 @@ namespace Indirect.Pages
     {
         public static readonly DependencyProperty InboxProperty = DependencyProperty.Register(
             nameof(Inbox),
-            typeof(InstaDirectInboxWrapper),
+            typeof(InboxWrapper),
             typeof(MainPage),
             new PropertyMetadata(null));
 
-        internal InstaDirectInboxWrapper Inbox
+        internal InboxWrapper Inbox
         {
-            get => (InstaDirectInboxWrapper) GetValue(InboxProperty);
+            get => (InboxWrapper) GetValue(InboxProperty);
             set => SetValue(InboxProperty, value);
         }
 
-        private ApiContainer ViewModel => ((App) Application.Current).ViewModel;
+        private MainViewModel ViewModel => ((App) Application.Current).ViewModel;
         private ObservableCollection<BaseUser> NewMessageCandidates { get; } = new ObservableCollection<BaseUser>();
 
         private readonly Windows.Storage.ApplicationDataContainer _localSettings =
@@ -107,7 +108,7 @@ namespace Indirect.Pages
             {
                 return;
             }
-            var inboxThread = (InstaDirectInboxThreadWrapper) e.AddedItems[0];
+            var inboxThread = (DirectThreadWrapper) e.AddedItems[0];
             if (!string.IsNullOrEmpty(inboxThread.ThreadId)) 
                 ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
             
@@ -130,7 +131,7 @@ namespace Indirect.Pages
 
         private void SearchBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
         {
-            var selectedItem = (InstaDirectInboxThreadWrapper) args.SelectedItem;
+            var selectedItem = (DirectThreadWrapper) args.SelectedItem;
             sender.Text = selectedItem.Title;
         }
 
@@ -138,7 +139,7 @@ namespace Indirect.Pages
         {
             if (args.ChosenSuggestion != null)
             {
-                ViewModel.MakeProperInboxThread((InstaDirectInboxThreadWrapper) args.ChosenSuggestion);
+                ViewModel.MakeProperInboxThread((DirectThreadWrapper) args.ChosenSuggestion);
             }
             else if (!string.IsNullOrEmpty(sender.Text))
             {
@@ -311,7 +312,7 @@ namespace Indirect.Pages
 
         private async void TestButton_OnClick(object sender, RoutedEventArgs e)
         {
-            await ContactsIntegration.DeleteAllAppContacts();
+            await ContactsService.DeleteAllAppContacts();
         }
     }
 }

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Indirect.Entities;
 using Indirect.Utilities;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236

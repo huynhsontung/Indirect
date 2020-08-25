@@ -5,9 +5,9 @@ using System.Linq;
 using InstagramAPI.Classes.Direct.ItemContent;
 using InstagramAPI.Classes.User;
 
-namespace Indirect.Wrapper
+namespace Indirect.Entities.Wrappers
 {
-    class InstaDirectReactionsWrapper : ReactionsContainer, INotifyPropertyChanged
+    class ReactionsWrapper : ReactionsContainer, INotifyPropertyChanged
     {
         private uint _likesCount;
         private bool _meLiked;
@@ -35,14 +35,14 @@ namespace Indirect.Wrapper
             }
         }
 
-        public InstaDirectReactionsWrapper()
+        public ReactionsWrapper()
         {
             Likes = new List<LikeReaction>(0);
             MeLiked = false;
             LikesCount = 0;
         }
 
-        public InstaDirectReactionsWrapper(ReactionsContainer source)
+        public ReactionsWrapper(ReactionsContainer source)
         {
             Likes = source.Likes;
             MeLiked = source.MeLiked;
@@ -56,7 +56,7 @@ namespace Indirect.Wrapper
             Senders.Clear();
         }
 
-        public void Update(InstaDirectReactionsWrapper source, ICollection<BaseUser> usersList)
+        public void Update(ReactionsWrapper source, ICollection<BaseUser> usersList)
         {
             LikesCount = source.LikesCount;
             MeLiked = source.MeLiked;

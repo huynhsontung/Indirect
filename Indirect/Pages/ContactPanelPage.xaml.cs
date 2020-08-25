@@ -16,7 +16,8 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using Indirect.Wrapper;
+using Indirect.Entities.Wrappers;
+using Indirect.Services;
 using InstagramAPI;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
@@ -25,11 +26,11 @@ namespace Indirect.Pages
 {
     public sealed partial class ContactPanelPage : Page
     {
-        private InstaDirectInboxThreadWrapper _thread;
+        private DirectThreadWrapper _thread;
 
         private ContactPanel _contactPanel;
 
-        private static ApiContainer ViewModel => ((App)Application.Current).ViewModel;
+        private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
 
         public ContactPanelPage()
         {
@@ -43,7 +44,7 @@ namespace Indirect.Pages
             if (args == null) throw new ArgumentException("Did not receive ContactPanelActivatedEventArgs");
             _contactPanel = args.ContactPanel;
             _contactPanel.Closing += ContactPanelOnClosing;
-            var contact = await ContactsIntegration.GetFullContact(args.Contact.Id);
+            var contact = await ContactsService.GetFullContact(args.Contact.Id);
             await GetThread(contact);
             Bindings.Update();
         }

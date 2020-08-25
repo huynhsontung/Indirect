@@ -9,9 +9,9 @@ using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.User;
 
-namespace Indirect.Wrapper
+namespace Indirect.Entities.Wrappers
 {
-    class InstaDirectInboxItemWrapper : DirectItem, INotifyPropertyChanged
+    class DirectItemWrapper : DirectItem, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -19,8 +19,8 @@ namespace Indirect.Wrapper
 
         private readonly DirectItem _sourceItem;
 
-        public InstaDirectInboxThreadWrapper Parent { get; }
-        public new InstaDirectReactionsWrapper Reactions { get; }
+        public DirectThreadWrapper Parent { get; }
+        public new ReactionsWrapper Reactions { get; }
         public BaseUser Sender { get; }
 
         private bool _showTimestampHeader;
@@ -293,13 +293,13 @@ namespace Indirect.Wrapper
         public bool IsNavigateUriValid => NavigateUri?.IsAbsoluteUri ?? false;
         
 
-        public InstaDirectInboxItemWrapper(DirectItem source, InstaDirectInboxThreadWrapper parent, Instagram api)
+        public DirectItemWrapper(DirectItem source, DirectThreadWrapper parent, Instagram api)
         {
             _instaApi = api;
             _sourceItem = source;
             Parent = parent;
-            PropertyCopier<DirectItem, InstaDirectInboxItemWrapper>.Copy(source, this);
-            Reactions = source.Reactions != null ? new InstaDirectReactionsWrapper(source.Reactions) : new InstaDirectReactionsWrapper();
+            PropertyCopier<DirectItem, DirectItemWrapper>.Copy(source, this);
+            Reactions = source.Reactions != null ? new ReactionsWrapper(source.Reactions) : new ReactionsWrapper();
 
             // Lookup BaseUser from user id
             var userExist = api.CentralUserRegistry.TryGetValue(UserId, out var sender);

@@ -129,7 +129,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ContactsIntegration.cs" />
+    <Compile Include="Services\ContactsService.cs" />
     <Compile Include="Controls\AnimatedImagePicker.xaml.cs">
       <DependentUpon>AnimatedImagePicker.xaml</DependentUpon>
     </Compile>
@@ -169,7 +169,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ApiContainer.cs" />
+    <Compile Include="MainViewModel.cs" />
     <Compile Include="Controls\AutoVideoControl.xaml.cs">
       <DependentUpon>AutoVideoControl.xaml</DependentUpon>
     </Compile>
@@ -200,7 +200,7 @@
     <Compile Include="Pages\ThreadPage.xaml.cs">
       <DependentUpon>ThreadPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Sender.cs" />
+    <Compile Include="Services\ChatService.cs" />
     <Compile Include="Utilities\Helpers.cs" />
     <Compile Include="Controls\Selectors\ItemTemplateSelector.cs" />
     <Compile Include="Controls\PhotoVideoControl.xaml.cs">
@@ -219,18 +219,18 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utilities\ProgressItem.cs" />
+    <Compile Include="Entities\ProgressItem.cs" />
     <Compile Include="Utilities\PropertyCopier.cs" />
     <Compile Include="Utilities\ReversedIncrementalLoadingCollection.cs" />
     <Compile Include="Controls\Selectors\StoryTemplateSelector.cs" />
-    <Compile Include="Wrapper\InstaDirectInboxItemWrapper.cs" />
-    <Compile Include="Wrapper\InstaDirectInboxThreadWrapper.cs" />
-    <Compile Include="Wrapper\InstaDirectInboxWrapper.cs" />
-    <Compile Include="Wrapper\InstaDirectReactionsWrapper.cs" />
-    <Compile Include="Wrapper\ReelsFeed.cs" />
-    <Compile Include="Wrapper\FlatReelsContainer.cs" />
-    <Compile Include="Wrapper\ReelItemWrapper.cs" />
-    <Compile Include="Wrapper\ReelWrapper.cs" />
+    <Compile Include="Entities\Wrappers\DirectItemWrapper.cs" />
+    <Compile Include="Entities\Wrappers\DirectThreadWrapper.cs" />
+    <Compile Include="Entities\Wrappers\InboxWrapper.cs" />
+    <Compile Include="Entities\Wrappers\ReactionsWrapper.cs" />
+    <Compile Include="Entities\ReelsFeed.cs" />
+    <Compile Include="Entities\FlatReelsContainer.cs" />
+    <Compile Include="Entities\Wrappers\ReelItemWrapper.cs" />
+    <Compile Include="Entities\Wrappers\ReelWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

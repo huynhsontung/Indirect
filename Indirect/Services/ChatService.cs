@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
+using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
-using Indirect.Wrapper;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
@@ -16,13 +14,13 @@ using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Utils;
 
-namespace Indirect
+namespace Indirect.Services
 {
-    internal static class Sender
+    internal static class ChatService
     {
         private static Instagram Api => Instagram.Instance;
 
-        public static async Task SendMessage(this InstaDirectInboxThreadWrapper thread, string content)
+        public static async Task SendMessage(this DirectThreadWrapper thread, string content)
         {
             content = content.Trim(' ', '\n', '\r');
             if (string.IsNullOrEmpty(content)) return;
@@ -74,7 +72,7 @@ namespace Indirect
             }
         }
 
-        public static async Task SendAnimatedImage(this InstaDirectInboxThreadWrapper thread, string imageId, bool isSticker)
+        public static async Task SendAnimatedImage(this DirectThreadWrapper thread, string imageId, bool isSticker)
         {
             try
             {
@@ -91,7 +89,7 @@ namespace Indirect
             }
         }
 
-        public static async Task SendLike(this InstaDirectInboxThreadWrapper thread)
+        public static async Task SendLike(this DirectThreadWrapper thread)
         {
             try
             {
@@ -105,7 +103,7 @@ namespace Indirect
             }
         }
 
-        public static async Task Unsend(this InstaDirectInboxItemWrapper item)
+        public static async Task Unsend(this DirectItemWrapper item)
         {
             var result = await Api.UnsendMessageAsync(item.Parent.ThreadId, item.ItemId);
             if (result.IsSucceeded)
@@ -114,7 +112,7 @@ namespace Indirect
             }
         }
 
-        public static async Task SendFile(this InstaDirectInboxThreadWrapper thread, StorageFile file, Action<UploaderProgress> progress)
+        public static async Task SendFile(this DirectThreadWrapper thread, StorageFile file, Action<UploaderProgress> progress)
         {
             try
             {
@@ -181,7 +179,7 @@ namespace Indirect
         /// <summary>
         /// For screenshot in clipboard
         /// </summary>
-        public static async Task SendStream(this InstaDirectInboxThreadWrapper thread, IRandomAccessStream stream, Action<UploaderProgress> progress)
+        public static async Task SendStream(this DirectThreadWrapper thread, IRandomAccessStream stream, Action<UploaderProgress> progress)
         {
             try
             {
@@ -216,7 +214,7 @@ namespace Indirect
             }
         }
 
-        private static async Task SendBuffer(InstaDirectInboxThreadWrapper thread, IBuffer buffer, int imageWidth, int imageHeight, Action<UploaderProgress> progress)
+        private static async Task SendBuffer(DirectThreadWrapper thread, IBuffer buffer, int imageWidth, int imageHeight, Action<UploaderProgress> progress)
         {
             var instaImage = new InstaImage
             {

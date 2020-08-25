@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes;
 
-namespace Indirect.Wrapper
+namespace Indirect.Entities
 {
     public class FlatReelsContainer
     {

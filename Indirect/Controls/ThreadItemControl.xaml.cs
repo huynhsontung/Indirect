@@ -7,7 +7,8 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
-using Indirect.Wrapper;
+using Indirect.Entities.Wrappers;
+using Indirect.Services;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
@@ -20,20 +21,20 @@ namespace Indirect.Controls
     {
         public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
             nameof(Item),
-            typeof(InstaDirectInboxItemWrapper),
+            typeof(DirectItemWrapper),
             typeof(ThreadItemControl),
             new PropertyMetadata(null, OnItemSourceChanged));
 
-        public InstaDirectInboxItemWrapper Item
+        public DirectItemWrapper Item
         {
-            get => (InstaDirectInboxItemWrapper) GetValue(ItemProperty);
+            get => (DirectItemWrapper) GetValue(ItemProperty);
             set => SetValue(ItemProperty, value);
         }
 
         private static void OnItemSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ThreadItemControl) d;
-            var item = (InstaDirectInboxItemWrapper) e.NewValue;
+            var item = (DirectItemWrapper) e.NewValue;
             view.ProcessItem();
             view.LikeItemMenuOption.IsEnabled = !item.Parent.Pending;
             if (item.ItemType == DirectItemType.ActionLog)

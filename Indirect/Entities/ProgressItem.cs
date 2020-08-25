@@ -1,8 +1,7 @@
 ﻿using System.ComponentModel;
-using Windows.UI.Xaml.Media;
 using Indirect.Controls;
 
-namespace Indirect.Utilities
+namespace Indirect.Entities
 {
     /// <summary>
     /// Progress item for <see cref="ReelProgressIndicator"/>
