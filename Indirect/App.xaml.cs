@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
@@ -81,22 +82,24 @@ namespace Indirect
         private async void OnLaunchedOrActivated(IActivatedEventArgs e)
         {
             await ViewModel.TryAcquireSyncLock();
-            
-            if (e.Kind != ActivationKind.ContactPanel)
-            {
-                ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(380, 300));
-                Frame rootFrame = Window.Current.Content as Frame;
-                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
-                titleBar.ButtonBackgroundColor = Windows.UI.Colors.Transparent;
-                titleBar.ButtonInactiveBackgroundColor = Windows.UI.Colors.Transparent;
 
-                var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
-                coreTitleBar.ExtendViewIntoTitleBar = true;
+            if (e is ContactPanelActivatedEventArgs cpEventArgs)
+            {
+                // Contact Panel flow
+                var rootFrame = new Frame();
+                Window.Current.Content = rootFrame;
+                rootFrame.Navigate(typeof(ContactPanelPage), cpEventArgs);
+            }
+            else
+            {
+                Frame rootFrame = Window.Current.Content as Frame;
 
                 // Do not repeat app initialization when the Window already has content,
                 // just ensure that the window is active
                 if (rootFrame == null)
                 {
+                    SetupMainView();
+
                     // Create a Frame to act as the navigation context and navigate to the first page
                     rootFrame = new Frame();
 
@@ -115,47 +118,17 @@ namespace Indirect
                 {
                     rootFrame.Navigate(Instagram.IsUserAuthenticatedPersistent ? typeof(MainPage) : typeof(LoginPage));
                 }
+
+                if (e is ToastNotificationActivatedEventArgs toastActivationArgs)
+                {
+                    var launchArgs = HttpUtility.ParseQueryString(toastActivationArgs.Argument);
+                    var threadId = launchArgs["threadId"];
+                    ViewModel.OpenThreadWhenReady(threadId);
+                }
             }
-            else
-            {
-                var cpEventArgs = (ContactPanelActivatedEventArgs) e;
-                await HandleActivatedFromContactPanel(cpEventArgs);
-            }
+
             // Ensure the current window is active
             Window.Current.Activate();
-        }
-
-        private async Task HandleActivatedFromContactPanel(ContactPanelActivatedEventArgs e)
-        {
-            var rootFrame = new Frame();
-
-            Window.Current.Content = rootFrame;
-
-            if (!Instagram.IsUserAuthenticatedPersistent)
-            {
-                rootFrame.Navigate(typeof(NotAvailablePage), "Not logged in");
-            }
-            else
-            {
-                var contact = await ContactsIntegration.GetFullContact(e.Contact.Id);
-                var pk = contact.Phones.SingleOrDefault(x => x.Number.ToLower().Contains("@indirect"))?.Number
-                    .Split("@").FirstOrDefault();
-                if (string.IsNullOrEmpty(pk))
-                {
-                    rootFrame.Navigate(typeof(NotAvailablePage), "Contact ID not available");
-                    return;
-                }
-
-                var thread = await ViewModel.FetchThread(new[] {long.Parse(pk)}, rootFrame.Dispatcher);
-                if (thread == null)
-                {
-                    rootFrame.Navigate(typeof(NotAvailablePage), "Cannot fetch chat thread");
-                    return;
-                }
-
-                thread.IsContactPanel = true;
-                rootFrame.Navigate(typeof(ThreadPage), thread);
-            }
         }
 
         /// <summary>
@@ -208,6 +181,17 @@ namespace Indirect
         private void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)
         {
             Instagram.Instance.SaveToAppSettings();
+        }
+
+        private static void SetupMainView()
+        {
+            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(380, 300));
+            var titleBar = ApplicationView.GetForCurrentView().TitleBar;
+            titleBar.ButtonBackgroundColor = Windows.UI.Colors.Transparent;
+            titleBar.ButtonInactiveBackgroundColor = Windows.UI.Colors.Transparent;
+
+            var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
+            coreTitleBar.ExtendViewIntoTitleBar = true;
         }
 
         public static async Task CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)

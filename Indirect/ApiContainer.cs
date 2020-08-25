@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -10,7 +9,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -47,13 +45,13 @@ namespace Indirect
         private CancellationTokenSource _searchCancellationToken;
         private InstaDirectInboxThreadWrapper _selectedThread;
         private FileStream _lockFile;
+        private string _threadToBeOpened;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public bool BackgroundSyncLocked => _lockFile != null;
         public PushClient PushClient => _instaApi.PushClient;
         public SyncClient SyncClient => _instaApi.SyncClient;
-
         public Dictionary<long, UserPresenceValue> UserPresenceDictionary { get; } = new Dictionary<long, UserPresenceValue>();
         public InstaDirectInboxWrapper PendingInbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance, true);
         public InstaDirectInboxWrapper Inbox { get; } = new InstaDirectInboxWrapper(Instagram.Instance);
@@ -83,7 +81,17 @@ namespace Indirect
                 DebugLogger.LogException(exception);
                 await HandleException();
             };
-            Inbox.FirstUpdated += async (seqId, snapshotAt) => await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
+            Inbox.FirstUpdated += async (seqId, snapshotAt) =>
+            {
+                if (!string.IsNullOrEmpty(_threadToBeOpened) && Inbox.Threads.Count > 0)
+                {
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        SelectedThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == _threadToBeOpened);
+                    });
+                }
+                await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
+            };
             PushClient.MessageReceived += (sender, args) =>
             {
                 Debug.Write("Background notification: ");
@@ -108,6 +116,18 @@ namespace Indirect
         public void SetSelectedThreadNull()
         {
             SelectedThread = null;
+        }
+
+        public void OpenThreadWhenReady(string threadId)
+        {
+            if (Inbox.Threads.Count > 0)
+            {
+                SelectedThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == threadId);
+            }
+            else
+            {
+                _threadToBeOpened = threadId;
+            }
         }
 
         public Task<Result<LoginResult>> Login(string username, string password) => _instaApi.LoginAsync(username, password);
