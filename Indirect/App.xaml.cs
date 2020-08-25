@@ -81,8 +81,6 @@ namespace Indirect
 
         private async void OnLaunchedOrActivated(IActivatedEventArgs e)
         {
-            await ViewModel.TryAcquireSyncLock();
-
             if (e is ContactPanelActivatedEventArgs cpEventArgs)
             {
                 // Contact Panel flow
@@ -92,13 +90,15 @@ namespace Indirect
             }
             else
             {
+                // Normal launch or activated flow
                 Frame rootFrame = Window.Current.Content as Frame;
 
                 // Do not repeat app initialization when the Window already has content,
                 // just ensure that the window is active
                 if (rootFrame == null)
                 {
-                    SetupMainView();
+                    await ViewModel.TryAcquireSyncLock();
+                    ConfigureMainView();
 
                     // Create a Frame to act as the navigation context and navigate to the first page
                     rootFrame = new Frame();
@@ -183,7 +183,7 @@ namespace Indirect
             Instagram.Instance.SaveToAppSettings();
         }
 
-        private static void SetupMainView()
+        private static void ConfigureMainView()
         {
             ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(380, 300));
             var titleBar = ApplicationView.GetForCurrentView().TitleBar;
