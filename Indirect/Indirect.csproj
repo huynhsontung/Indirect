@@ -129,6 +129,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="MainViewModel.Handlers.cs" />
     <Compile Include="Services\ContactsService.cs" />
     <Compile Include="Controls\AnimatedImagePicker.xaml.cs">
       <DependentUpon>AnimatedImagePicker.xaml</DependentUpon>
