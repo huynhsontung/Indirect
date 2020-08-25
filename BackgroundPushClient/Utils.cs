@@ -75,7 +75,8 @@ namespace BackgroundPushClient
                 toast.RemoteId = notificationContent.PushId;
             }
 
-            QueueRapidToast(toast);
+            // And send the notification	
+            ToastNotificationManager.CreateToastNotifier().Show(toast);
         }
 
         /// <summary>
