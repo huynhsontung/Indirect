@@ -188,6 +188,9 @@
     <Compile Include="Converters\FromMeBoolToAlignmentConverter.cs" />
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
     <Compile Include="Converters\SendButtonGlyphConverter.cs" />
+    <Compile Include="Pages\ContactPanelPage.xaml.cs">
+      <DependentUpon>ContactPanelPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\NotAvailablePage.xaml.cs">
       <DependentUpon>NotAvailablePage.xaml</DependentUpon>
     </Compile>
@@ -356,6 +359,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\UserInfoView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\ContactPanelPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

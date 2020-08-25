@@ -1,0 +1,33 @@
+﻿<Page
+    x:Class="Indirect.Pages.ContactPanelPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Indirect.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Indirect.Controls"
+    xmlns:converters="using:Indirect.Converters"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <ResourceDictionary>
+            <converters:NullVisibilityConverter x:Key="NullVisibilityConverter"/>
+        </ResourceDictionary>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <controls:ImmersiveControl Grid.Row="0" Canvas.ZIndex="5"/>
+        <controls:ThreadDetailsView x:Name="MainView" Grid.Row="0" Thread="{x:Bind _thread}" NewWindowButtonVisibility="Collapsed" ThreadHeaderVisibility="Collapsed"
+                                    Visibility="{x:Bind _thread, Converter={StaticResource NullVisibilityConverter}}"/>
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                    Visibility="{x:Bind ErrorTextBlock.Text, Converter={StaticResource NullVisibilityConverter}}">
+            <TextBlock HorizontalAlignment="Center" 
+                       Text="Function is not available. Please open the full app to resolve this issue then try again." TextWrapping="Wrap" Margin="20,0,20,10"/>
+            <TextBlock x:Name="ErrorTextBlock" HorizontalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</Page>

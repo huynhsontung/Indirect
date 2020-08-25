@@ -65,6 +65,11 @@ namespace Indirect.Controls
             ((App)Application.Current).ViewModel.PropertyChanged += OnUserPresenceChanged;
         }
 
+        public void UnsubscribeHandlers()
+        {
+            ((App) Application.Current).ViewModel.PropertyChanged -= OnUserPresenceChanged;
+        }
+
         private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(e.PropertyName)) return;

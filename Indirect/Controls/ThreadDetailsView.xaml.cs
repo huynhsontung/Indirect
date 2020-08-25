@@ -87,6 +87,12 @@ namespace Indirect.Controls
             GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
         }
 
+        public void UnsubscribeHandlers()
+        {
+            ViewModel.PropertyChanged -= OnUserPresenceChanged;
+            ProfilePictureView.UnsubscribeHandlers();
+        }
+
         private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName != nameof(ApiContainer.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
@@ -270,9 +276,6 @@ namespace Indirect.Controls
                 !string.IsNullOrEmpty(args.PropertyName)) return;
             if (!Thread.IsSomeoneTyping && !Thread.ShowSeenIndicator) return;
             var chatItemsStackPanel = (ItemsStackPanel) ItemsHolder.ItemsPanelRoot;
-            Debug.WriteLine($"LastVisibleIndex: {chatItemsStackPanel?.LastVisibleIndex}");
-            Debug.WriteLine($"FirstVisibleIndex: {chatItemsStackPanel?.FirstVisibleIndex}");
-            Debug.WriteLine($"Last index in ObservableItems: {Thread.ObservableItems.Count - 1}");
             if (chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 1 ||
                 chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 2)
             {
