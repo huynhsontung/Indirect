@@ -192,9 +192,6 @@
     <Compile Include="Pages\ContactPanelPage.xaml.cs">
       <DependentUpon>ContactPanelPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\NotAvailablePage.xaml.cs">
-      <DependentUpon>NotAvailablePage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Pages\ReelPage.xaml.cs">
       <DependentUpon>ReelPage.xaml</DependentUpon>
     </Compile>
@@ -374,10 +371,6 @@
     <Page Include="Pages\MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Pages\NotAvailablePage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\ReelPage.xaml">
       <SubType>Designer</SubType>
