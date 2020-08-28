@@ -75,7 +75,7 @@ namespace Indirect.Pages
             };
             var confirmation = await confirmDialog.ShowAsync();
             if (confirmation != ContentDialogResult.Primary) return;
-            ViewModel.Logout();
+            await ViewModel.Logout();
             Frame.Navigate(typeof(LoginPage));
         }
         

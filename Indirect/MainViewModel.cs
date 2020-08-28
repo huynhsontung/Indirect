@@ -120,10 +120,11 @@ namespace Indirect
         public Task<Result<LoginResult>> LoginWithFacebook(string fbAccessToken) =>
             InstaApi.LoginWithFacebookAsync(fbAccessToken);
 
-        public void Logout()
+        public async Task Logout()
         {
             InstaApi.Logout();
-            _ = ImageCache.Instance.ClearAsync();
+            //await ImageCache.Instance.ClearAsync();
+            await ContactsService.DeleteAllAppContacts();
             ThreadInfoPersistentDictionary.RemoveFromAppSettings();
             // _settings.Values.Clear();
         }

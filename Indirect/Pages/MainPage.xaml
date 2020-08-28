@@ -201,14 +201,14 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Button x:Name="MasterMenuButton" Grid.Row="1" Grid.Column="0" Padding="6" ToolTipService.ToolTip="Menu"
+                    <Button x:Name="MasterMenuButton" Grid.Row="1" Grid.Column="0" Padding="6" ToolTipService.ToolTip="Main menu"
                             Margin="0,0,6,0" VerticalAlignment="Center" Background="Transparent">
                         <controls:ImageEx Source="{x:Bind ViewModel.LoggedInUser.ProfilePictureUrl, Mode=OneWay}" 
                                           Style="{ThemeResource ProfilePicturePlaceholderStyle}"
                                           CornerRadius="99" Height="32" Width="32" />
                         <Button.Flyout>
                             <MenuFlyout Placement="Bottom">
-                                <MenuFlyoutItem Text="Test" Click="TestButton_OnClick" />
+                                <!--<MenuFlyoutItem Text="Test" Click="TestButton_OnClick" />-->
                                 <MenuFlyoutItem Text="Profile" Click="Profile_Click" />
                                 <!--<ToggleMenuFlyoutItem Text="Pending inbox" IsChecked="False" Click="TogglePendingInbox_OnClick"
                                                       IsEnabled="{x:Bind _viewModel.Inbox.PendingRequestsCount, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"/>-->
