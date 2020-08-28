@@ -45,21 +45,24 @@ namespace Indirect.Pages
             _contactPanel = args.ContactPanel;
             _contactPanel.Closing += ContactPanelOnClosing;
             var contact = await ContactsService.GetFullContact(args.Contact.Id);
-            await GetThread(contact);
+            _thread = await GetThread(contact);
+            if (_thread != null)
+                ViewModel.SecondaryThreadViews.Add(_thread);
             Bindings.Update();
         }
 
         private void ContactPanelOnClosing(ContactPanel sender, ContactPanelClosingEventArgs args)
         {
+            ViewModel.SecondaryThreadViews.Remove(_thread);
             MainView.UnsubscribeHandlers();
         }
 
-        private async Task GetThread(Contact contact)
+        private async Task<DirectThreadWrapper> GetThread(Contact contact)
         {
             if (!Instagram.IsUserAuthenticatedPersistent)
             {
                 ShowErrorMessage("Not logged in");
-                return;
+                return null;
             }
             var pk = contact.Phones
                 .SingleOrDefault(x => x.Number.Contains("@indirect", StringComparison.OrdinalIgnoreCase))?.Number
@@ -67,7 +70,7 @@ namespace Indirect.Pages
             if (string.IsNullOrEmpty(pk))
             {
                 ShowErrorMessage("Contact ID not available");
-                return;
+                return null;
             }
 
             var thread = await ViewModel.FetchThread(new[] { long.Parse(pk, NumberStyles.Integer) }, Dispatcher);
@@ -76,7 +79,7 @@ namespace Indirect.Pages
                 ShowErrorMessage("Cannot fetch chat thread");
             }
 
-            _thread = thread;
+            return thread;
         }
 
         private void ShowErrorMessage(string message)

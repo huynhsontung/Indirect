@@ -8,7 +8,7 @@
     xmlns:controls="using:Indirect.Controls"
     xmlns:converters="using:Indirect.Converters"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource MainBackground}">
     <Page.Resources>
         <ResourceDictionary>
             <converters:NullVisibilityConverter x:Key="NullVisibilityConverter"/>
