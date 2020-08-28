@@ -9,6 +9,8 @@ namespace Indirect.Entities.Wrappers
 {
     class ReactionsWrapper : ReactionsContainer, INotifyPropertyChanged
     {
+        private readonly MainViewModel _viewModel;
+        private readonly ICollection<BaseUser> _users;
         private uint _likesCount;
         private bool _meLiked;
 
@@ -16,7 +18,7 @@ namespace Indirect.Entities.Wrappers
 
         public ObservableCollection<BaseUser> Senders = new ObservableCollection<BaseUser>();
 
-        public new bool MeLiked
+        public bool MeLiked
         {
             get => _meLiked;
             set
@@ -35,36 +37,39 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
-        public ReactionsWrapper()
+        public ReactionsWrapper(MainViewModel viewModel)
         {
+            _viewModel = viewModel;
             Likes = new List<LikeReaction>(0);
             MeLiked = false;
             LikesCount = 0;
         }
 
-        public ReactionsWrapper(ReactionsContainer source)
+        public ReactionsWrapper(MainViewModel viewModel, ReactionsContainer source, ICollection<BaseUser> usersList)
         {
-            Likes = source.Likes;
-            MeLiked = source.MeLiked;
-            LikesCount = source.LikesCount;
+            _viewModel = viewModel;
+            _users = usersList;
+            Update(source);
         }
 
         public void Clear()
         {
+            Likes.Clear();
             LikesCount = 0;
             MeLiked = false;
             Senders.Clear();
         }
 
-        public void Update(ReactionsWrapper source, ICollection<BaseUser> usersList)
+        public void Update(ReactionsContainer source)
         {
+            Likes = source.Likes ?? new List<LikeReaction>();
             LikesCount = source.LikesCount;
-            MeLiked = source.MeLiked;
+            MeLiked = Likes.Any(x => x.SenderId == _viewModel.LoggedInUser.Pk);
             Senders.Clear();
 
-            foreach (var like in source.Likes)
+            foreach (var like in Likes)
             {
-                var user = usersList.SingleOrDefault(x => x.Pk == like.SenderId);
+                var user = _users?.FirstOrDefault(x => x.Pk == like.SenderId);
                 if (user != null)
                 {
                     Senders.Add(user);

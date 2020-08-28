@@ -111,12 +111,11 @@ namespace Indirect
                                             {
                                                 if (itemData.Item.Reactions == null)
                                                 {
-                                                    item.Reactions.Clear();
+                                                    item.ObservableReactions.Clear();
                                                 }
                                                 else
                                                 {
-                                                    item.Reactions?.Update(new ReactionsWrapper(itemData.Item.Reactions),
-                                                        thread.Users);
+                                                    item.ObservableReactions.Update(itemData.Item.Reactions);
                                                 }
                                             });
                                         }

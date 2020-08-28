@@ -10,7 +10,6 @@ namespace InstagramAPI.Classes.Direct.ItemContent
     {
         [JsonProperty("likes")] public List<LikeReaction> Likes { get; set; }
         [JsonProperty("likes_count")] public uint LikesCount { get; set; }
-        public bool MeLiked => Likes?.Any(reaction => reaction.SenderId == Instagram.Instance.Session.LoggedInUser.Pk) ?? false;
     }
 
     public class LikeReaction

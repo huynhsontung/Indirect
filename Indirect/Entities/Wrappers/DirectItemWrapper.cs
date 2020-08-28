@@ -20,7 +20,7 @@ namespace Indirect.Entities.Wrappers
         private readonly DirectItem _sourceItem;
 
         public DirectThreadWrapper Parent { get; }
-        public new ReactionsWrapper Reactions { get; }
+        public ReactionsWrapper ObservableReactions { get; }
         public BaseUser Sender { get; }
 
         private bool _showTimestampHeader;
@@ -293,23 +293,20 @@ namespace Indirect.Entities.Wrappers
         public bool IsNavigateUriValid => NavigateUri?.IsAbsoluteUri ?? false;
         
 
-        public DirectItemWrapper(DirectItem source, DirectThreadWrapper parent, MainViewModel viewModel)
+        public DirectItemWrapper(MainViewModel viewModel, DirectItem source, DirectThreadWrapper parent)
         {
             _viewModel = viewModel;
             _sourceItem = source;
             Parent = parent;
             PropertyCopier<DirectItem, DirectItemWrapper>.Copy(source, this);
-            Reactions = source.Reactions != null ? new ReactionsWrapper(source.Reactions) : new ReactionsWrapper();
+            ObservableReactions = source.Reactions != null ? new ReactionsWrapper(viewModel, source.Reactions, parent.Users) : new ReactionsWrapper(viewModel);
 
             // Lookup BaseUser from user id
-            var userExist = viewModel.CentralUserRegistry.TryGetValue(UserId, out var sender);
-            Sender = userExist
-                ? sender
-                : new BaseUser
-                {
-                    Username = "UNKNOWN_USER",
-                    FullName = "UNKNOWN_USER"
-                };
+            Sender = parent.Users.FirstOrDefault(u => u.Pk == UserId) ?? new BaseUser
+            {
+                Username = "UNKNOWN_USER",
+                FullName = "UNKNOWN_USER"
+            };
         }
 
         private static InstaImage GetPreviewImage(ICollection<InstaImage> imageCandidates)

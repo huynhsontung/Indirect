@@ -109,7 +109,7 @@ namespace Indirect.Controls
         private async void LikeUnlikeItem()
         {
             if (_timeout || Item.Parent.Pending) return;
-            if (Item.Reactions?.MeLiked ?? false)
+            if (Item.ObservableReactions.MeLiked)
             {
                 Item.UnlikeItem();
             }

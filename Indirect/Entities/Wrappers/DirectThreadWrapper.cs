@@ -277,10 +277,7 @@ namespace Indirect.Entities.Wrappers
 
                     if (existed)
                     {
-                        if (item.Reactions != null)
-                        {
-                            existingItem.Reactions.Update(item.Reactions, Users);
-                        }
+                        existingItem.ObservableReactions.Update(item.ObservableReactions);
                         continue;
                     }
                     for (var i = ObservableItems.Count - 1; i >= 0; i--)
@@ -368,7 +365,7 @@ namespace Indirect.Entities.Wrappers
         private List<DirectItemWrapper> DecorateItems(ICollection<DirectItem> items)
         {
             if (items == null || items.Count == 0) return new List<DirectItemWrapper>(0);
-            var wrappedItems = items.Select(x => new DirectItemWrapper(x, this, _viewModel)).ToList();
+            var wrappedItems = items.Select(x => new DirectItemWrapper(_viewModel, x, this)).ToList();
             var lastItem = ObservableItems.FirstOrDefault();
             var itemList = wrappedItems.ToList();
             var refItem = itemList.Last();
