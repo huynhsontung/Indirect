@@ -34,7 +34,11 @@ namespace BackgroundPushClient
             if (threadInfo != null)
             {
                 threadTitle = threadInfo["title"]?.ToObject<string>();
-                threadUser = threadInfo["users"]?.ToObject<long[]>()?.FirstOrDefault();
+                var users = threadInfo["users"]?.ToObject<long[]>();
+                if (users?.Length == 1)
+                {
+                    threadUser = users[0];
+                }
             }
             if (string.IsNullOrEmpty(threadTitle))
                 threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(' '));
