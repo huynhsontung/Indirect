@@ -10,7 +10,8 @@
     xmlns:controls1="using:Indirect.Controls" 
     xmlns:media="using:InstagramAPI.Classes.Media" 
     xmlns:selectors="using:Indirect.Controls.Selectors" 
-    xmlns:wrappers="using:Indirect.Entities.Wrappers"
+    xmlns:wrappers="using:Indirect.Entities.Wrappers" 
+    xmlns:user="using:InstagramAPI.Classes.User"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400"
@@ -471,7 +472,22 @@
         <Border Margin="6,-2,6,0" Background="{ThemeResource FromThemItemBackground}" CornerRadius="6" Padding="6,2,6,2"
                 BorderBrush="{ThemeResource MainBackground}" BorderThickness="2"
                 HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
-                Visibility="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}">
+                Visibility="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}"
+                Tapped="ReactionsBorder_Tapped">
+            <FlyoutBase.AttachedFlyout>
+                <Flyout Placement="Bottom">
+                    <ListView ItemsSource="{x:Bind Item.ObservableReactions.Senders, Mode=OneWay}" SelectionMode="None" MaxHeight="260">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="user:BaseUser">
+                                <StackPanel Orientation="Horizontal">
+                                    <controls:ImageEx Source="{x:Bind ProfilePictureUrl}" Width="28" Height="28" CornerRadius="99" Margin="0,0,10,0" />
+                                    <TextBlock Text="{x:Bind Username}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Flyout>
+            </FlyoutBase.AttachedFlyout>
             <StackPanel x:Name="Reactions" Orientation="Horizontal">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
                         Style="{x:Bind Item.ObservableReactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>

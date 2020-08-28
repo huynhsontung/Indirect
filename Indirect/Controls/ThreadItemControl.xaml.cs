@@ -5,6 +5,7 @@ using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Indirect.Entities.Wrappers;
@@ -162,6 +163,12 @@ namespace Indirect.Controls
         {
             var uri = new Uri($"https://www.instagram.com/{Item.StoryShareMedia.OwnerUsername}/");
             await Launcher.LaunchUriAsync(uri);
+        }
+
+        private void ReactionsBorder_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (Item.ObservableReactions.Senders.Count == 0) return;
+            FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
         }
     }
 }

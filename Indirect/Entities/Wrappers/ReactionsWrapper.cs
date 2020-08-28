@@ -74,6 +74,13 @@ namespace Indirect.Entities.Wrappers
                 {
                     Senders.Add(user);
                 }
+                else
+                {
+                    if (like.SenderId == _viewModel.LoggedInUser.Pk)
+                    {
+                        Senders.Add(_viewModel.LoggedInUser);
+                    }
+                }
             }
         }
     }
