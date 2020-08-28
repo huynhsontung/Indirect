@@ -18,7 +18,7 @@ namespace InstagramAPI.Classes.Direct
 
         [JsonProperty("inbox")] public Inbox Inbox { get; set; } = new Inbox();
 
-        [JsonProperty("pending_requests_users")] public List<BaseUser> PendingUsers { get; set; } = new List<BaseUser>(0);
+        [JsonProperty("pending_requests_users")] public List<BaseUser> PendingUsers { get; set; }
 
         [JsonProperty("snapshot_at_ms")] 
         [JsonConverter(typeof(MilliTimestampConverter))]

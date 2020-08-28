@@ -81,6 +81,27 @@ namespace InstagramAPI
             }
         }
 
+        public async Task<Result<InboxContainer>> GetInboxInfoAsync()
+        {
+            try
+            {
+                var directInboxUri = UriCreator.GetDirectInboxInfoUri();
+                    var response = await _httpClient.GetAsync(directInboxUri);
+                var json = await response.Content.ReadAsStringAsync();
+                DebugLogger.LogResponse(response);
+
+                if (response.StatusCode != HttpStatusCode.Ok)
+                    return Result<InboxContainer>.Fail(json, response.ReasonPhrase);
+                var inbox = JsonConvert.DeserializeObject<InboxContainer>(json);
+                return Result<InboxContainer>.Success(inbox);
+            }
+            catch (Exception exception)
+            {
+                DebugLogger.LogException(exception);
+                return Result<InboxContainer>.Except(exception);
+            }
+        }
+
         public async Task<Result<BaseStatusResponse>> ApprovePendingThreadAsync(IEnumerable<string> threadIds)
         {
             ValidateLoggedIn();
