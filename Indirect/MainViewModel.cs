@@ -42,7 +42,6 @@ namespace Indirect
         }
 
 
-        private readonly Instagram _instaApi = Instagram.Instance;
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
         private CancellationTokenSource _searchCancellationToken;
         private DirectThreadWrapper _selectedThread;
@@ -51,14 +50,17 @@ namespace Indirect
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public Instagram InstaApi { get; } = Instagram.Instance;
         public bool BackgroundSyncLocked => _lockFile != null;
-        public PushClient PushClient => _instaApi.PushClient;
-        public SyncClient SyncClient => _instaApi.SyncClient;
+        public PushClient PushClient => InstaApi.PushClient;
+        public SyncClient SyncClient => InstaApi.SyncClient;
         public Dictionary<long, UserPresenceValue> UserPresenceDictionary { get; } = new Dictionary<long, UserPresenceValue>();
-        public InboxWrapper PendingInbox { get; } = new InboxWrapper(Instagram.Instance, true);
-        public InboxWrapper Inbox { get; } = new InboxWrapper(Instagram.Instance);
+        public InboxWrapper PendingInbox { get; }
+        public InboxWrapper Inbox { get; }
         public List<DirectThreadWrapper> SecondaryThreadViews { get; } = new List<DirectThreadWrapper>();
         public CurrentUser LoggedInUser { get; private set; }
+        public PersistentDictionary<string> ThreadInfoPersistentDictionary { get; } = new PersistentDictionary<string>("ThreadInfoPersistentDictionary");
+        public Dictionary<long, BaseUser> CentralUserRegistry { get; } = new Dictionary<long, BaseUser>();
         public DirectThreadWrapper SelectedThread
         {
             get => _selectedThread;
@@ -69,18 +71,21 @@ namespace Indirect
             }
         }
 
-        public AndroidDevice Device => _instaApi?.Device;
-        public bool IsUserAuthenticated => _instaApi.IsUserAuthenticated;
+        public AndroidDevice Device => InstaApi?.Device;
+        public bool IsUserAuthenticated => InstaApi.IsUserAuthenticated;
         public ReelsFeed ReelsFeed { get; } = new ReelsFeed();
 
         private MainViewModel()
         {
+            Inbox = new InboxWrapper(this);
+            //PendingInbox = new InboxWrapper(this, true);
+            ThreadInfoPersistentDictionary.LoadFromAppSettings();
             SubscribeHandlers();
         }
 
         public async Task OnLoggedIn()
         {
-            if (!_instaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
+            if (!InstaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
             await UpdateLoggedInUser();
             GetUserPresence();
             PushClient.Start();
@@ -89,7 +94,7 @@ namespace Indirect
 
             // Post launch
             await Task.Delay(10000).ConfigureAwait(false);
-            await ContactsService.SaveUsersAsContact(_instaApi.CentralUserRegistry.Values).ConfigureAwait(false);
+            await ContactsService.SaveUsersAsContact(CentralUserRegistry.Values).ConfigureAwait(false);
         }
 
         public void SetSelectedThreadNull()
@@ -109,22 +114,24 @@ namespace Indirect
             }
         }
 
-        public Task<Result<LoginResult>> Login(string username, string password) => _instaApi.LoginAsync(username, password);
+        public Task<Result<LoginResult>> Login(string username, string password) => InstaApi.LoginAsync(username, password);
 
         public Task<Result<LoginResult>> LoginWithFacebook(string fbAccessToken) =>
-            _instaApi.LoginWithFacebookAsync(fbAccessToken);
+            InstaApi.LoginWithFacebookAsync(fbAccessToken);
 
         public void Logout()
         {
-            _instaApi.Logout();
+            InstaApi.Logout();
             _ = ImageCache.Instance.ClearAsync();
+            ThreadInfoPersistentDictionary.RemoveFromAppSettings();
             // _settings.Values.Clear();
         }
 
         private async Task UpdateLoggedInUser()
         {
-            var loggedInUser = await _instaApi.GetCurrentUserAsync();
+            var loggedInUser = await InstaApi.GetCurrentUserAsync();
             LoggedInUser = loggedInUser.Value;
+            CentralUserRegistry[LoggedInUser.Pk] = LoggedInUser;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
         }
 
@@ -134,7 +141,7 @@ namespace Indirect
                 return;
             try
             {
-                var result = await _instaApi.GetThreadAsync(SelectedThread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
+                var result = await InstaApi.GetThreadAsync(SelectedThread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
                 if (result.IsSucceeded)
                     await SelectedThread.Dispatcher.RunAsync(
                         CoreDispatcherPriority.Normal,
@@ -189,11 +196,11 @@ namespace Indirect
             if (query.Length > 50) return;
             if (!await SearchReady()) return;
 
-            var result = await _instaApi.GetRankedRecipientsByUsernameAsync(query);
+            var result = await InstaApi.GetRankedRecipientsByUsernameAsync(query);
             if (!result.IsSucceeded) return;
             var recipients = result.Value;
-            var threadsFromUser = recipients.Users.Select(x => new DirectThreadWrapper(_instaApi, x)).ToList();
-            var threadsFromRankedThread = recipients.Threads.Select(x => new DirectThreadWrapper(_instaApi, x)).ToList();
+            var threadsFromUser = recipients.Users.Select(x => new DirectThreadWrapper(this, x)).ToList();
+            var threadsFromRankedThread = recipients.Threads.Select(x => new DirectThreadWrapper(this, x)).ToList();
             var list = new List<DirectThreadWrapper>(threadsFromRankedThread.Count + threadsFromUser.Count);
             list.AddRange(threadsFromRankedThread);
             list.AddRange(threadsFromUser);
@@ -211,7 +218,7 @@ namespace Indirect
             if (query.Length > 50) return;
             if (!await SearchReady()) return;
 
-            var result = await _instaApi.GetRankedRecipientsByUsernameAsync(query, false);
+            var result = await InstaApi.GetRankedRecipientsByUsernameAsync(query, false);
             if (!result.IsSucceeded) return;
             var recipients = result.Value.Users;
             if (recipients?.Count > 0)
@@ -229,19 +236,19 @@ namespace Indirect
 
         public async Task CreateAndOpenThread(IEnumerable<long> userIds)
         {
-            var result = await _instaApi.CreateGroupThreadAsync(userIds);
+            var result = await InstaApi.CreateGroupThreadAsync(userIds);
             if (!result.IsSucceeded) return;
             var thread = result.Value;
             var existingThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == thread.ThreadId);
-            SelectedThread = existingThread ?? new DirectThreadWrapper(_instaApi, thread);
+            SelectedThread = existingThread ?? new DirectThreadWrapper(this, thread);
         }
 
         public async Task<DirectThreadWrapper> FetchThread(IEnumerable<long> userIds, CoreDispatcher dispatcher)
         {
-            var result = await _instaApi.GetThreadByParticipantsAsync(userIds);
+            var result = await InstaApi.GetThreadByParticipantsAsync(userIds);
             return !result.IsSucceeded
                 ? null
-                : new DirectThreadWrapper(_instaApi, result.Value, dispatcher);
+                : new DirectThreadWrapper(this, result.Value, dispatcher);
         }
 
         public async void MakeProperInboxThread(DirectThreadWrapper placeholderThread)
@@ -250,10 +257,10 @@ namespace Indirect
             if (string.IsNullOrEmpty(placeholderThread.ThreadId))
             {
                 var userIds = placeholderThread.Users.Select(x => x.Pk);
-                var result = await _instaApi.GetThreadByParticipantsAsync(userIds);
+                var result = await InstaApi.GetThreadByParticipantsAsync(userIds);
                 if (!result.IsSucceeded) return;
                 thread = result.Value != null && result.Value.Users.Count > 0 ? 
-                    new DirectThreadWrapper(_instaApi, result.Value) : new DirectThreadWrapper(_instaApi, placeholderThread.Users?[0]);
+                    new DirectThreadWrapper(this, result.Value) : new DirectThreadWrapper(this, placeholderThread.Users?[0]);
             }
             else
             {
@@ -279,7 +286,7 @@ namespace Indirect
         {
             try
             {
-                var presenceResult = await _instaApi.GetPresence();
+                var presenceResult = await InstaApi.GetPresence();
                 if (!presenceResult.IsSucceeded) return;
                 foreach (var userPresenceValue in presenceResult.Value.UserPresence)
                 {
@@ -339,6 +346,12 @@ namespace Indirect
         {
             _searchCancellationToken?.Dispose();
             ReleaseSyncLock();
+        }
+
+        public void SaveToAppSettings()
+        {
+            InstaApi.SaveToAppSettings();
+            ThreadInfoPersistentDictionary.SaveToAppSettings();
         }
 
         internal async Task<bool> TryAcquireSyncLock()

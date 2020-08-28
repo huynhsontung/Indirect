@@ -15,7 +15,7 @@ namespace Indirect.Entities.Wrappers
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private readonly Instagram _instaApi;
+        private readonly MainViewModel _viewModel;
 
         private readonly DirectItem _sourceItem;
 
@@ -293,16 +293,16 @@ namespace Indirect.Entities.Wrappers
         public bool IsNavigateUriValid => NavigateUri?.IsAbsoluteUri ?? false;
         
 
-        public DirectItemWrapper(DirectItem source, DirectThreadWrapper parent, Instagram api)
+        public DirectItemWrapper(DirectItem source, DirectThreadWrapper parent, MainViewModel viewModel)
         {
-            _instaApi = api;
+            _viewModel = viewModel;
             _sourceItem = source;
             Parent = parent;
             PropertyCopier<DirectItem, DirectItemWrapper>.Copy(source, this);
             Reactions = source.Reactions != null ? new ReactionsWrapper(source.Reactions) : new ReactionsWrapper();
 
             // Lookup BaseUser from user id
-            var userExist = api.CentralUserRegistry.TryGetValue(UserId, out var sender);
+            var userExist = viewModel.CentralUserRegistry.TryGetValue(UserId, out var sender);
             Sender = userExist
                 ? sender
                 : new BaseUser
@@ -336,13 +336,13 @@ namespace Indirect.Entities.Wrappers
         public async void LikeItem()
         {
             if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId)) return;
-            await _instaApi.LikeItemAsync(Parent.ThreadId, ItemId).ConfigureAwait(false);
+            await _viewModel.InstaApi.LikeItemAsync(Parent.ThreadId, ItemId).ConfigureAwait(false);
         }
 
         public async void UnlikeItem()
         {
             if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId)) return;
-            await _instaApi.UnlikeItemAsync(Parent.ThreadId, ItemId).ConfigureAwait(false);
+            await _viewModel.InstaApi.UnlikeItemAsync(Parent.ThreadId, ItemId).ConfigureAwait(false);
         }
     }
 }

@@ -45,11 +45,6 @@ namespace InstagramAPI
         public AndroidDevice Device { get; } = AndroidDevice.GetRandomAndroidDevice();
         public PushClient PushClient { get; }
         public SyncClient SyncClient { get; }
-        public Dictionary<long, BaseUser> CentralUserRegistry { get; } = new Dictionary<long, BaseUser>();
-
-        // For push notification to look up thread title from thread id. Instagram doesn't pass thread title for push notifications.
-        public const string THREAD_TITLE_PERSISTENT_DICTIONARY_KEY = "ThreadTitlePersistentDictionary";
-        public PersistentDictionary<string> ThreadTitlePersistentDictionary { get; } = new PersistentDictionary<string>(THREAD_TITLE_PERSISTENT_DICTIONARY_KEY);
 
         private readonly HttpClient _httpClient = new HttpClient();
         private readonly ApiRequestMessage _apiRequestMessage;
@@ -70,7 +65,6 @@ namespace InstagramAPI
             SyncClient = new SyncClient(this);
 
             if (!IsUserAuthenticated) return;
-            ThreadTitlePersistentDictionary.LoadFromAppSettings();
             Session.LoadFromAppSettings();
             Device = AndroidDevice.CreateFromAppSettings() ?? Device;
             SetDefaultRequestHeaders();
@@ -399,7 +393,6 @@ namespace InstagramAPI
                 var user = statusResponse["user"].ToObject<CurrentUser>();
                 if (user.Pk < 1)
                     Result<CurrentUser>.Fail(json, "Pk is incorrect");
-                CentralUserRegistry[user.Pk] = user;
                 return Result<CurrentUser>.Success(user, json);
             }
             catch (Exception exception)
@@ -442,13 +435,11 @@ namespace InstagramAPI
             {
                 Session.SaveToAppSettings();
                 PushClient.ConnectionData.SaveToAppSettings();
-                ThreadTitlePersistentDictionary.SaveToAppSettings();
             }
             else
             {
                 Session.RemoveFromAppSettings();
                 PushClient.ConnectionData.RemoveFromAppSettings();
-                ThreadTitlePersistentDictionary.RemoveFromAppSettings();
             }
         }
     }

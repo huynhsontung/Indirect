@@ -16,10 +16,10 @@ namespace Indirect
     {
         void SubscribeHandlers()
         {
-            _instaApi.SyncClient.MessageReceived += OnMessageSyncReceived;
-            _instaApi.SyncClient.ActivityIndicatorChanged += OnActivityIndicatorChanged;
-            _instaApi.SyncClient.UserPresenceChanged += OnUserPresenceChanged;
-            _instaApi.SyncClient.FailedToStart += OnSyncClientFailedToStart;
+            InstaApi.SyncClient.MessageReceived += OnMessageSyncReceived;
+            InstaApi.SyncClient.ActivityIndicatorChanged += OnActivityIndicatorChanged;
+            InstaApi.SyncClient.UserPresenceChanged += OnUserPresenceChanged;
+            InstaApi.SyncClient.FailedToStart += OnSyncClientFailedToStart;
             Inbox.FirstUpdated += OnInboxFirstUpdated;
             PushClient.MessageReceived += (sender, args) =>
             {
@@ -36,7 +36,7 @@ namespace Indirect
                     SelectedThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == _threadToBeOpened);
                 });
             }
-            await _instaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
+            await InstaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
         }
 
         private async void OnSyncClientFailedToStart(object sender, Exception exception)
@@ -87,7 +87,7 @@ namespace Indirect
                                     {
                                         if (syncEvent.Realtime) await Task.Delay(1000);
                                         var result =
-                                            await _instaApi.GetItemsInDirectThreadAsync(threadId, itemData.Item.ItemId);
+                                            await InstaApi.GetItemsInDirectThreadAsync(threadId, itemData.Item.ItemId);
                                         if (result.IsSucceeded && result.Value.Items.Count > 0)
                                             item = result.Value.Items[0];
                                     }

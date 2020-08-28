@@ -48,11 +48,6 @@ namespace InstagramAPI
                 }
                 foreach (var directThread in inbox.Inbox.Threads)
                 {
-                    AddToUserRegistry(directThread.Users);
-                    lock (ThreadTitlePersistentDictionary)
-                    {
-                        ThreadTitlePersistentDictionary[directThread.ThreadId] = directThread.Title;
-                    }
                     directThread.Items.Reverse();
                 }
                 return Result<InboxContainer>.Success(inbox);
@@ -225,7 +220,7 @@ namespace InstagramAPI
                     return Result<DirectThread>.Fail(json, response.ReasonPhrase);
 
                 var statusResponse = JObject.Parse(json);
-                if (statusResponse["status"].ToObject<string>() != "ok")
+                if (statusResponse["status"]?.ToObject<string>() != "ok")
                     return Result<DirectThread>.Fail(json);
                 var thread = statusResponse["thread"].ToObject<DirectThread>();
 
@@ -277,9 +272,9 @@ namespace InstagramAPI
                 if (string.IsNullOrEmpty(json)) return Result<DirectThread>.Success(null, json);
 
                 var statusResponse = JObject.Parse(json);
-                if (statusResponse["status"].ToObject<string>() != "ok")
+                if (statusResponse["status"]?.ToObject<string>() != "ok")
                     return Result<DirectThread>.Fail(json);
-                var thread = statusResponse["thread"].ToObject<DirectThread>();
+                var thread = statusResponse["thread"]?.ToObject<DirectThread>();
                 if (thread == null)
                     return Result<DirectThread>.Fail(json);
                 thread.Items.Reverse();

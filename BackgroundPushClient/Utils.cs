@@ -3,13 +3,14 @@ using System.Web;
 using Windows.Foundation.Metadata;
 using Windows.Storage;
 using Windows.UI.Notifications;
-using InstagramAPI;
 using InstagramAPI.Push;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BackgroundPushClient
 {
@@ -27,7 +28,14 @@ namespace BackgroundPushClient
             var queryParams = HttpUtility.ParseQueryString(igAction.Substring(querySeparatorIndex));
             var threadId = queryParams["id"];
             var itemId = queryParams["x"];
-            var threadTitle = GetThreadTitleFromAppSettings(threadId);
+            var threadInfo = GetThreadInfoFromAppSettings(threadId);
+            var threadTitle = string.Empty;
+            long? threadUser = null;
+            if (threadInfo != null)
+            {
+                threadTitle = threadInfo["title"]?.ToObject<string>();
+                threadUser = threadInfo["users"]?.ToObject<long[]>()?.FirstOrDefault();
+            }
             if (string.IsNullOrEmpty(threadTitle))
                 threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(' '));
             var toastContent = new ToastContent
@@ -60,7 +68,13 @@ namespace BackgroundPushClient
                             }
                     }
                 },
-                Launch = $"action=openThread&threadId={threadId}"
+                Launch = $"action=openThread&threadId={threadId}",
+                HintPeople = threadUser != null
+                    ? new ToastPeople
+                    {
+                        RemoteId = $"{threadUser}@Indirect"
+                    }
+                    : null
             };
 
             // Create the toast notification
@@ -109,11 +123,12 @@ namespace BackgroundPushClient
             }
         }
 
-        private static string GetThreadTitleFromAppSettings(string threadId)
+        private static JObject GetThreadInfoFromAppSettings(string threadId)
         {
             if (string.IsNullOrEmpty(threadId)) return null;
-            var composite = (Windows.Storage.ApplicationDataCompositeValue)LocalSettings.Values[Instagram.THREAD_TITLE_PERSISTENT_DICTIONARY_KEY];
-            return (string) composite?[threadId];
+            var composite = (Windows.Storage.ApplicationDataCompositeValue)LocalSettings.Values["ThreadInfoPersistentDictionary"];
+            var json = (string) composite?[threadId];
+            return string.IsNullOrEmpty(json) ? null : JsonConvert.DeserializeObject<JObject>(json);
         }
 
         public static async Task<bool> TryAcquireSyncLock()

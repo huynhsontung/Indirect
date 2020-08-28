@@ -7,11 +7,12 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using Microsoft.Toolkit.Collections;
 using Microsoft.Toolkit.Uwp;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Indirect.Entities.Wrappers
 {
@@ -28,11 +29,11 @@ namespace Indirect.Entities.Wrappers
 
         public new IncrementalLoadingCollection<InboxWrapper, DirectThreadWrapper> Threads { get; }
 
-        private readonly Instagram _instaApi;
+        private readonly MainViewModel _viewModel;
         private bool _firstTime = true;
-        public InboxWrapper(Instagram api, bool pending = false)
+        public InboxWrapper(MainViewModel viewModel, bool pending = false)
         {
-            _instaApi = api ?? throw new NullReferenceException();
+            _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             PendingInbox = pending;
             Threads =
                 new IncrementalLoadingCollection<InboxWrapper, DirectThreadWrapper>(this);
@@ -60,7 +61,7 @@ namespace Indirect.Entities.Wrappers
 
         public async Task UpdateInbox()
         {
-            var result = await _instaApi.GetInboxAsync(PaginationParameters.MaxPagesToLoad(1));
+            var result = await _viewModel.InstaApi.GetInboxAsync(PaginationParameters.MaxPagesToLoad(1));
             InboxContainer container;
             if (result.Status == ResultStatus.Succeeded)
                 container = result.Value;
@@ -81,7 +82,7 @@ namespace Indirect.Entities.Wrappers
 
                     if (!existed)
                     {
-                        var wrappedThread = new DirectThreadWrapper(_instaApi, thread);
+                        var wrappedThread = new DirectThreadWrapper(_viewModel, thread);
                         wrappedThread.PropertyChanged += OnThreadChanged;
                         Threads.Insert(0, wrappedThread);
                     }
@@ -98,29 +99,34 @@ namespace Indirect.Entities.Wrappers
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(OldestCursor);
-            var result = await _instaApi.GetInboxAsync(pagination, PendingInbox);
-            InboxContainer container;
-            if (result.Status == ResultStatus.Succeeded)
-            {
-                container = result.Value;
-                if (_firstTime)
-                {
-                    _firstTime = false;
-                    FirstUpdated?.Invoke(container.SeqId, container.SnapshotAt);
-                }
-            }
-            else
+            var result = await _viewModel.InstaApi.GetInboxAsync(pagination, PendingInbox);
+            if (!result.IsSucceeded)
             {
                 return new List<DirectThreadWrapper>(0);
+            }
+            var container = result.Value;
+            if (_firstTime)
+            {
+                _firstTime = false;
+                FirstUpdated?.Invoke(container.SeqId, container.SnapshotAt);
             }
             UpdateExcludeThreads(container);
 
             var wrappedThreadList = new List<DirectThreadWrapper>();
             foreach (var directThread in container.Inbox.Threads)
             {
-                var wrappedThread = new DirectThreadWrapper(_instaApi, directThread);
+                var wrappedThread = new DirectThreadWrapper(_viewModel, directThread);
                 wrappedThread.PropertyChanged += OnThreadChanged;
                 wrappedThreadList.Add(wrappedThread);
+                _viewModel.ThreadInfoPersistentDictionary[directThread.ThreadId] = new JObject
+                {
+                    {"title", directThread.Title},
+                    {"users", new JArray(directThread.Users.Select(x => x.Pk).ToArray())}
+                }.ToString(Formatting.None);
+                foreach (var user in directThread.Users)
+                {
+                    _viewModel.CentralUserRegistry[user.Pk] = user;
+                }
             }
 
             return wrappedThreadList;

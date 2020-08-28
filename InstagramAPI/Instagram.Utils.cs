@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using Windows.Networking.Connectivity;
 using Windows.Web.Http.Filters;
-using InstagramAPI.Classes.User;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -61,14 +59,6 @@ namespace InstagramAPI
                 {"num_reupload", 0},
                 {"num_step_manual_retry", 0}
             }.ToString(Formatting.None);
-        }
-
-        private void AddToUserRegistry(IEnumerable<BaseUser> users)
-        {
-            foreach (var user in users)
-            {
-                CentralUserRegistry[user.Pk] = user;
-            }
         }
 
         private void ClearCookies()

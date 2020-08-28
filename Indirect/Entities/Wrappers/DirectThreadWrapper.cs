@@ -24,7 +24,7 @@ namespace Indirect.Entities.Wrappers
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private readonly Instagram _instaApi;
+        private readonly MainViewModel _viewModel;
         private CancellationTokenSource _typingCancellationTokenSource;
 
         private CoreDispatcher _dispatcher;
@@ -85,16 +85,16 @@ namespace Indirect.Entities.Wrappers
         /// <summary>
         /// Only use this constructor to make empty placeholder thread.
         /// </summary>
-        /// <param name="api"></param>
+        /// <param name="viewModel"></param>
         /// <param name="user"></param>
-        public DirectThreadWrapper(Instagram api, BaseUser user) : this(api)
+        public DirectThreadWrapper(MainViewModel viewModel, BaseUser user) : this(viewModel)
         {
             Users.Add(user);
             Title = user.Username;
             if (Users.Count == 0) Users.Add(new BaseUser());
         }
 
-        public DirectThreadWrapper(Instagram api, RankedRecipientThread rankedThread) : this(api)
+        public DirectThreadWrapper(MainViewModel viewModel, RankedRecipientThread rankedThread) : this(viewModel)
         {
             PropertyCopier<RankedRecipientThread, DirectThreadWrapper>.Copy(rankedThread, this);
             Title = rankedThread.ThreadTitle;
@@ -106,9 +106,9 @@ namespace Indirect.Entities.Wrappers
             if (Users.Count == 0) Users.Add(new BaseUser());
         }
 
-        public DirectThreadWrapper(Instagram api, DirectThread source = null, CoreDispatcher dispatcher = null)
+        public DirectThreadWrapper(MainViewModel viewModel, DirectThread source = null, CoreDispatcher dispatcher = null)
         {
-            _instaApi = api;
+            _viewModel = viewModel;
             ObservableItems = new ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper>(this);
             Dispatcher = dispatcher;
             if (source != null)
@@ -132,9 +132,9 @@ namespace Indirect.Entities.Wrappers
 
         public async Task<DirectThreadWrapper> CloneThreadForSecondaryView(CoreDispatcher dispatcher)
         {
-            var result = await _instaApi.GetThreadAsync(ThreadId, PaginationParameters.MaxPagesToLoad(1));
+            var result = await _viewModel.InstaApi.GetThreadAsync(ThreadId, PaginationParameters.MaxPagesToLoad(1));
             if (!result.IsSucceeded) return null;
-            var clone = new DirectThreadWrapper(_instaApi, result.Value, dispatcher);
+            var clone = new DirectThreadWrapper(_viewModel, result.Value, dispatcher);
             return clone;
         }
 
@@ -332,7 +332,7 @@ namespace Indirect.Entities.Wrappers
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(OldestCursor);
-            var result = await _instaApi.GetThreadAsync(ThreadId, pagination);
+            var result = await _viewModel.InstaApi.GetThreadAsync(ThreadId, pagination);
             if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0) return new List<DirectItemWrapper>(0);
             await UpdateExcludeItemList(result.Value);
             var wrappedItems = DecorateItems(result.Value.Items);
@@ -368,7 +368,7 @@ namespace Indirect.Entities.Wrappers
         private List<DirectItemWrapper> DecorateItems(ICollection<DirectItem> items)
         {
             if (items == null || items.Count == 0) return new List<DirectItemWrapper>(0);
-            var wrappedItems = items.Select(x => new DirectItemWrapper(x, this, _instaApi)).ToList();
+            var wrappedItems = items.Select(x => new DirectItemWrapper(x, this, _viewModel)).ToList();
             var lastItem = ObservableItems.FirstOrDefault();
             var itemList = wrappedItems.ToList();
             var refItem = itemList.Last();
@@ -415,7 +415,7 @@ namespace Indirect.Entities.Wrappers
                     if (string.IsNullOrEmpty(LastPermanentItem?.ItemId) ||
                         lastSeen.ItemId == LastPermanentItem.ItemId ||
                         LastPermanentItem.FromMe) return;
-                    await _instaApi.MarkItemSeenAsync(ThreadId, LastPermanentItem.ItemId).ConfigureAwait(false);
+                    await _viewModel.InstaApi.MarkItemSeenAsync(ThreadId, LastPermanentItem.ItemId).ConfigureAwait(false);
                 }
             }
             catch (Exception e)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using Windows.ApplicationModel;
@@ -180,7 +179,7 @@ namespace Indirect
 
         private void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)
         {
-            Instagram.Instance.SaveToAppSettings();
+            ViewModel.SaveToAppSettings();
         }
 
         private static void ConfigureMainView()
