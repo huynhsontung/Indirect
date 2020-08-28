@@ -66,7 +66,7 @@ namespace Indirect
                     var threadId = segments[2];
                     if (string.IsNullOrEmpty(threadId)) continue;
                     var mainThread = Inbox.Threads.FirstOrDefault(wrapper => wrapper.ThreadId == threadId);
-                    if (mainThread == null)
+                    if (mainThread == null && StartedFromMainView)
                     {
                         if (!updateInbox) updateInbox = itemData.Op == "add";
                         continue;
@@ -74,7 +74,7 @@ namespace Indirect
 
                     // Update thread in main view as well as in secondary views
                     var threadsToUpdate = SecondaryThreadViews.Where(x => x.ThreadId == threadId).ToList();
-                    threadsToUpdate.Add(mainThread);
+                    if (mainThread != null) threadsToUpdate.Add(mainThread);
 
                     foreach (var thread in threadsToUpdate)
                     {

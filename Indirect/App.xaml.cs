@@ -90,6 +90,7 @@ namespace Indirect
             else
             {
                 // Normal launch or activated flow
+                ViewModel.StartedFromMainView = true;
                 Frame rootFrame = Window.Current.Content as Frame;
 
                 // Do not repeat app initialization when the Window already has content,
@@ -170,11 +171,18 @@ namespace Indirect
 
         private async void OnResuming(object sender, object e)
         {
-            await ViewModel.TryAcquireSyncLock();
-            ViewModel.PushClient.Start();
-            await ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt, true);
-            await ViewModel.UpdateInboxAndSelectedThread();
-            ViewModel.ReelsFeed.StartReelsFeedUpdateLoop();
+            if (ViewModel.StartedFromMainView)
+            {
+                await ViewModel.TryAcquireSyncLock();
+                ViewModel.PushClient.Start();
+                await ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt, true);
+                await ViewModel.UpdateInboxAndSelectedThread();
+                ViewModel.ReelsFeed.StartReelsFeedUpdateLoop();
+            }
+            else
+            {
+                await ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt, true);
+            }
         }
 
         private void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)

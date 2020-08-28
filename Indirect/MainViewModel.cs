@@ -52,6 +52,7 @@ namespace Indirect
 
         public Instagram InstaApi { get; } = Instagram.Instance;
         public bool BackgroundSyncLocked => _lockFile != null;
+        public bool StartedFromMainView { get; set; }
         public PushClient PushClient => InstaApi.PushClient;
         public SyncClient SyncClient => InstaApi.SyncClient;
         public Dictionary<long, UserPresenceValue> UserPresenceDictionary { get; } = new Dictionary<long, UserPresenceValue>();

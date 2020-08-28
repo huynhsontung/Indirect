@@ -30,11 +30,12 @@ namespace Indirect.Pages
 
         private ContactPanel _contactPanel;
 
-        private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
+        private MainViewModel ViewModel { get; }
 
         public ContactPanelPage()
         {
             this.InitializeComponent();
+            ViewModel = ((App)Application.Current).ViewModel;
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -50,10 +51,10 @@ namespace Indirect.Pages
             if (_thread != null)
                 ViewModel.SecondaryThreadViews.Add(_thread);
             Bindings.Update();
-            //await OptionallyStartSyncClient().ConfigureAwait(false);
+            await OptionallyStartSyncClient().ConfigureAwait(false);
         }
 
-        private static async Task OptionallyStartSyncClient()
+        private async Task OptionallyStartSyncClient()
         {
             var seqId = ViewModel.Inbox.SeqId;
             var snapshotAt = ViewModel.Inbox.SnapshotAt;
@@ -62,6 +63,8 @@ namespace Indirect.Pages
                 var result = await ViewModel.InstaApi.GetInboxInfoAsync();
                 if (result.IsSucceeded)
                 {
+                    ViewModel.Inbox.SeqId = result.Value.SeqId;
+                    ViewModel.Inbox.SnapshotAt = result.Value.SnapshotAt;
                     await ViewModel.SyncClient.Start(result.Value.SeqId, result.Value.SnapshotAt);
                 }
             }
