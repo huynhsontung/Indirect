@@ -20,7 +20,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <controls:ImmersiveControl Grid.Row="0" Canvas.ZIndex="5"/>
+        <controls:ImmersiveControl Grid.Row="0" Canvas.ZIndex="5" VerticalAlignment="Top"/>
         <controls:ThreadDetailsView x:Name="MainView" Grid.Row="0" Thread="{x:Bind _thread}" NewWindowButtonVisibility="Collapsed" ThreadHeaderVisibility="Collapsed"
                                     Visibility="{x:Bind _thread, Converter={StaticResource NullVisibilityConverter}}"/>
         <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" 
