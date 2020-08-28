@@ -40,6 +40,7 @@ namespace Indirect.Pages
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            if (_thread != null) return;
             var args = e?.Parameter as ContactPanelActivatedEventArgs;
             if (args == null) throw new ArgumentException("Did not receive ContactPanelActivatedEventArgs");
             _contactPanel = args.ContactPanel;
@@ -49,6 +50,25 @@ namespace Indirect.Pages
             if (_thread != null)
                 ViewModel.SecondaryThreadViews.Add(_thread);
             Bindings.Update();
+            //await OptionallyStartSyncClient().ConfigureAwait(false);
+        }
+
+        private static async Task OptionallyStartSyncClient()
+        {
+            var seqId = ViewModel.Inbox.SeqId;
+            var snapshotAt = ViewModel.Inbox.SnapshotAt;
+            if (seqId == default || snapshotAt == default)
+            {
+                var result = await ViewModel.InstaApi.GetInboxInfoAsync();
+                if (result.IsSucceeded)
+                {
+                    await ViewModel.SyncClient.Start(result.Value.SeqId, result.Value.SnapshotAt);
+                }
+            }
+            else
+            {
+                await ViewModel.SyncClient.Start(seqId, snapshotAt);
+            }
         }
 
         private void ContactPanelOnClosing(ContactPanel sender, ContactPanelClosingEventArgs args)

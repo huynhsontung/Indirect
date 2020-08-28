@@ -36,7 +36,7 @@ namespace Indirect
                     SelectedThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == _threadToBeOpened);
                 });
             }
-            await InstaApi.SyncClient.Start(seqId, snapshotAt).ConfigureAwait(false);
+            await InstaApi.SyncClient.Start(seqId, snapshotAt, true).ConfigureAwait(false);
         }
 
         private async void OnSyncClientFailedToStart(object sender, Exception exception)

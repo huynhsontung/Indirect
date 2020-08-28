@@ -55,10 +55,15 @@ namespace InstagramAPI.Sync
             }
         }
 
-        public async Task Start(long seqId, DateTimeOffset snapshotAt)
+        public async Task Start(long seqId, DateTimeOffset snapshotAt, bool force = false)
         {
             try
             {
+                if (!(_pinging?.IsCancellationRequested ?? true) && !force)
+                {
+                    this.Log("Sync client is already running");
+                    return;
+                }
                 this.Log("Sync client starting");
                 if (seqId == 0)
                     throw new ArgumentException("Invalid seqId. Have you fetched inbox for the first time?",
@@ -153,7 +158,7 @@ namespace InstagramAPI.Sync
                 // Ignore if fail
             }
             this.Log("Internet connection available. Reconnecting.");
-            await Start(_seqId, _snapshotAt);
+            await Start(_seqId, _snapshotAt, true);
         }
 
         private async void OnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
@@ -337,9 +342,14 @@ namespace InstagramAPI.Sync
                     await ws.OutputStream.WriteAsync(pingBuffer);
                     await ws.OutputStream.FlushAsync();
                 }
-                catch (Exception)
+                catch (TaskCanceledException)
                 {
                     this.Log("Stopped pinging sync server");
+                    return;
+                }
+                catch (Exception e)
+                {
+                    DebugLogger.LogException(e, false);
                     return;
                 }
             }
