@@ -31,6 +31,8 @@ namespace InstagramAPI.Sync
         private DateTimeOffset _snapshotAt;
         private MessageWebSocket _socket;
 
+        public bool IsRunning => !(_pinging?.IsCancellationRequested ?? true);
+
         public SyncClient(Instagram api)
         {
             _instaApi = api;
@@ -40,7 +42,7 @@ namespace InstagramAPI.Sync
         // Shutdown the client by stop pinging the server
         public async void Shutdown()
         {
-            if (_pinging?.IsCancellationRequested ?? true) return;
+            if (!IsRunning) return;
             _pinging.Cancel();
             var disconnectPacket = DisconnectPacket.Instance;
             var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
@@ -59,7 +61,7 @@ namespace InstagramAPI.Sync
         {
             try
             {
-                if (!(_pinging?.IsCancellationRequested ?? true) && !force)
+                if (IsRunning && !force)
                 {
                     this.Log("Sync client is already running");
                     return;
@@ -163,7 +165,7 @@ namespace InstagramAPI.Sync
 
         private async void OnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
-            if (_pinging?.IsCancellationRequested ?? false) return;
+            if (!IsRunning) return;
             try
             {
                 var dataReader = args.GetDataReader();

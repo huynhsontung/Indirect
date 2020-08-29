@@ -56,6 +56,7 @@ namespace Indirect.Pages
 
         private async Task OptionallyStartSyncClient()
         {
+            if (ViewModel.SyncClient.IsRunning) return;
             var seqId = ViewModel.Inbox.SeqId;
             var snapshotAt = ViewModel.Inbox.SnapshotAt;
             if (seqId == default || snapshotAt == default)
