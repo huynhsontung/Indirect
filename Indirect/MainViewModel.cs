@@ -247,6 +247,8 @@ namespace Indirect
 
         public async Task<DirectThreadWrapper> FetchThread(IEnumerable<long> userIds, CoreDispatcher dispatcher)
         {
+            if (LoggedInUser == null)
+                await UpdateLoggedInUser();
             var result = await InstaApi.GetThreadByParticipantsAsync(userIds);
             return !result.IsSucceeded
                 ? null

@@ -302,9 +302,14 @@ namespace Indirect.Entities.Wrappers
             ObservableReactions = source.Reactions != null ? new ReactionsWrapper(viewModel, source.Reactions, parent.Users) : new ReactionsWrapper(viewModel);
 
             // Lookup BaseUser from user id
-            if (UserId == parent.Viewer.Pk)
+            if (UserId == parent.ViewerId)
             {
-                Sender = parent.Viewer;
+                Sender = parent.Viewer ?? new BaseUser
+                {
+                    Username = "UNKNOWN_VIEWER",
+                    FullName = "UNKNOWN_VIEWER",
+                    Pk = parent.ViewerId
+                };
             }
             else
             {

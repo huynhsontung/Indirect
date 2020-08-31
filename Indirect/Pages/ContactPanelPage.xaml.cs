@@ -74,27 +74,40 @@ namespace Indirect.Pages
 
         private async Task<DirectThreadWrapper> GetThread(Contact contact)
         {
-            if (!Instagram.IsUserAuthenticatedPersistent)
+            try
             {
-                ShowErrorMessage("Not logged in");
+                if (contact == null)
+                {
+                    ShowErrorMessage("Error getting contact");
+                    return null;
+                }
+                if (!Instagram.IsUserAuthenticatedPersistent)
+                {
+                    ShowErrorMessage("Not logged in");
+                    return null;
+                }
+                var pk = contact.Phones
+                    .SingleOrDefault(x => x.Number.Contains("@indirect", StringComparison.OrdinalIgnoreCase))?.Number
+                    .Split("@").FirstOrDefault();
+                if (string.IsNullOrEmpty(pk))
+                {
+                    ShowErrorMessage("Contact ID not available");
+                    return null;
+                }
+
+                var thread = await ViewModel.FetchThread(new[] { long.Parse(pk, NumberStyles.Integer) }, Dispatcher);
+                if (thread == null)
+                {
+                    ShowErrorMessage("Cannot fetch chat thread");
+                }
+
+                return thread;
+            }
+            catch (Exception e)
+            {
+                ShowErrorMessage(e.ToString());
                 return null;
             }
-            var pk = contact.Phones
-                .SingleOrDefault(x => x.Number.Contains("@indirect", StringComparison.OrdinalIgnoreCase))?.Number
-                .Split("@").FirstOrDefault();
-            if (string.IsNullOrEmpty(pk))
-            {
-                ShowErrorMessage("Contact ID not available");
-                return null;
-            }
-
-            var thread = await ViewModel.FetchThread(new[] { long.Parse(pk, NumberStyles.Integer) }, Dispatcher);
-            if (thread == null)
-            {
-                ShowErrorMessage("Cannot fetch chat thread");
-            }
-
-            return thread;
         }
 
         private void ShowErrorMessage(string message)
