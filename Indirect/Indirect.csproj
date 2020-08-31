@@ -157,8 +157,6 @@
     <Compile Include="Converters\HumanizedLargeNumberConverter.cs" />
     <Compile Include="Converters\ReelShareImageMarginConverter.cs" />
     <Compile Include="Converters\RelativeTimeConverter.cs" />
-    <Compile Include="Converters\SeenTextConverter.cs" />
-    <Compile Include="Converters\StringListToTextConverter.cs" />
     <Compile Include="Converters\ValueTupleConverters.cs" />
     <Compile Include="Converters\EqualityVisibilityConverter.cs" />
     <Compile Include="Controls\ImmersiveControl.xaml.cs">

@@ -273,9 +273,8 @@ namespace Indirect.Controls
         private async void OnThreadPropertyChanged(object sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName != nameof(Thread.IsSomeoneTyping) &&
-                args.PropertyName != nameof(Thread.ShowSeenIndicator) &&
                 !string.IsNullOrEmpty(args.PropertyName)) return;
-            if (!Thread.IsSomeoneTyping && !Thread.ShowSeenIndicator) return;
+            if (!Thread.IsSomeoneTyping) return;
             var chatItemsStackPanel = (ItemsStackPanel) ItemsHolder.ItemsPanelRoot;
             if (chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 1 ||
                 chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 2)
@@ -392,14 +391,6 @@ namespace Indirect.Controls
             {
                 var text = await e.DataView.GetTextAsync();
                 MessageTextBox.Text = text;
-            }
-        }
-
-        private void SeenIndicator_OnTapped(object sender, TappedRoutedEventArgs e)
-        {
-            if (Thread.UsersSeenLatestMessage.Count > 3)
-            {
-                FlyoutBase.ShowAttachedFlyout(SeenIndicator);
             }
         }
 

@@ -18,9 +18,6 @@
             <converters:SendButtonGlyphConverter x:Key="SendButtonGlyphConverter"/>
             <converters:EqualityVisibilityConverter x:Key="VisibleWhenZeroConverter"/>
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
-            <converters:BooleanVisibilityConverter x:Key="InvertBooleanVisibilityConverter" Invert="True"/>
-            <converters:StringListToTextConverter x:Key="StringListToTextConverter"/>
-            <converters:SeenTextConverter x:Key="SeenTextConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -103,20 +100,10 @@
             </ListView.Header>
             <ListView.Footer>
                 <StackPanel HorizontalAlignment="Stretch">
-                    <TextBlock x:Name="SeenIndicator" Margin="18,2,18,8" Text="{x:Bind Thread.UsersSeenLatestMessage, Converter={StaticResource SeenTextConverter},Mode=OneWay}"
-                               Tapped="SeenIndicator_OnTapped"
-                               Style="{ThemeResource FluentCaptionTextStyle}" TextWrapping="Wrap"
-                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                               HorizontalAlignment="Right" Visibility="{x:Bind Thread.ShowSeenIndicator, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
-                        <FlyoutBase.AttachedFlyout>
-                            <Flyout>
-                                <TextBlock Text="{x:Bind Thread.UsersSeenLatestMessage, Converter={StaticResource StringListToTextConverter}, Mode=OneWay}"/>
-                            </Flyout>
-                        </FlyoutBase.AttachedFlyout>
-                    </TextBlock>
                     <TextBlock x:Name="TypingIndicator" Margin="14,6,14,10" Text="Typing..."
                                Style="{ThemeResource FluentCaptionTextStyle}"
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                               VerticalAlignment="Bottom"
                                HorizontalAlignment="Left" Visibility="{x:Bind Thread.IsSomeoneTyping, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}"/>
                     <TextBlock Margin="0,0,0,16" Text="Send your first message to start chatting" 
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"

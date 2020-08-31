@@ -10,7 +10,6 @@ using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.UI.Core;
 using Indirect.Utilities;
-using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.User;
@@ -48,20 +47,6 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
-        private bool _showSeenIndicator;
-        public bool ShowSeenIndicator
-        {
-            get => _showSeenIndicator;
-            private set
-            {
-                _showSeenIndicator = value;
-                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowSeenIndicator)));
-                });
-            }
-        }
-
         private string _draftMessage;
         public string DraftMessage
         {
@@ -81,7 +66,6 @@ namespace Indirect.Entities.Wrappers
         public ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper> ObservableItems { get; set; }
         public BaseUser Viewer => _viewModel.LoggedInUser;
         public new ObservableCollection<BaseUser> Users { get; } = new ObservableCollection<BaseUser>();
-        public List<string> UsersSeenLatestMessage { get; } = new List<string>(); // If Users.Count == 1 then this is always empty
 
         /// <summary>
         /// Only use this constructor to make empty placeholder thread.
@@ -124,10 +108,7 @@ namespace Indirect.Entities.Wrappers
                 UpdateItemList(DecorateItems(source.Items));
             }
 
-            SeenCheckCollection(this, null);
-            PropertyChanged += SeenCheckProperty;
             ObservableItems.CollectionChanged += DecorateOnItemDeleted;
-            ObservableItems.CollectionChanged += SeenCheckCollection;
             ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
         }
 
@@ -489,61 +470,6 @@ namespace Indirect.Entities.Wrappers
             {
                 PingTypingIndicator(0);
             }
-        }
-
-        private void SeenCheckProperty(object sender, PropertyChangedEventArgs args)
-        {
-            if (args.PropertyName != nameof(LastSeenAt) && !string.IsNullOrEmpty(args.PropertyName)) return;
-            SeenCheckCollection(sender, null);
-        }
-
-        private async void SeenCheckCollection(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            UsersSeenLatestMessage.Clear();
-
-            // If there is no item then don't show seen indicator
-            if (ObservableItems.Count == 0 || LastSeenAt.Count == 0)
-            {
-                ShowSeenIndicator = false;
-                return;
-            }
-
-            // If latest item is not from me then don't show seen indicator
-            var latestItem = ObservableItems.Last();
-            if (!latestItem.FromMe || LastSeenAt.Count == 0 && ShowSeenIndicator)
-            {
-                ShowSeenIndicator = false;
-                return;
-            }
-
-            // When Users.Count == 1 don't use the list
-            if (Users.Count == 1)
-            {
-                var value = LastSeenAt.Any(pair =>
-                    pair.Key != ViewerId && pair.Value.Timestamp >= latestItem.Timestamp);
-                if (value != ShowSeenIndicator) ShowSeenIndicator = value;
-                return;
-            }
-
-            var seenUsers = LastSeenAt.Where(x => x.Key != ViewerId && x.Value.Timestamp >= latestItem.Timestamp)
-                .Select(x => Users.SingleOrDefault(y => y.Pk == x.Key))
-                .Where(x => x != null)
-                .Select(x => x.Username);
-            UsersSeenLatestMessage.AddRange(seenUsers);
-
-            var showIndicator = UsersSeenLatestMessage.Count > 0;
-            if (UsersSeenLatestMessage.Count == Users.Count)
-            {
-                UsersSeenLatestMessage.Clear();
-                UsersSeenLatestMessage.Add("@everyone");
-            }
-            if (showIndicator != ShowSeenIndicator)
-                ShowSeenIndicator = showIndicator;
-
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UsersSeenLatestMessage)));
-            });
         }
 
         public void Dispose()
