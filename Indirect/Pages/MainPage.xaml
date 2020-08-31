@@ -32,7 +32,7 @@
             
             <converters:EqualityConverter x:Key="DisableWhenEqualZero" ReferenceValue="0" Invert="True"/>
             <converters:EqualityConverter x:Key="DisableWhenEqual32" ReferenceValue="32" Invert="True"/>
-            <converters:VisibleWhenZeroConverter x:Key="VisibleWhenNotZeroConverter" Invert="True"/>
+            <converters:EqualityVisibilityConverter x:Key="VisibleWhenNotZeroConverter" Invert="True"/>
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
             <converters:BooleanVisibilityConverter x:Key="InvertBooleanVisibilityConverter" Invert="True"/>
         </ResourceDictionary>

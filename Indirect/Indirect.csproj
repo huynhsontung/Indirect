@@ -160,7 +160,7 @@
     <Compile Include="Converters\SeenTextConverter.cs" />
     <Compile Include="Converters\StringListToTextConverter.cs" />
     <Compile Include="Converters\ValueTupleConverters.cs" />
-    <Compile Include="Converters\VisibleWhenZeroConverter.cs" />
+    <Compile Include="Converters\EqualityVisibilityConverter.cs" />
     <Compile Include="Controls\ImmersiveControl.xaml.cs">
       <DependentUpon>ImmersiveControl.xaml</DependentUpon>
     </Compile>

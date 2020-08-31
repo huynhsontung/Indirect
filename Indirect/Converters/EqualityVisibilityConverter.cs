@@ -4,15 +4,18 @@ using Windows.UI.Xaml.Data;
 
 namespace Indirect.Converters
 {
-    class VisibleWhenZeroConverter : IValueConverter
+    class EqualityVisibilityConverter : IValueConverter
     {
         public bool Invert { get; set; } = false;
 
+        public double ReferenceValue { get; set; } = 0;
+
         public object Convert(object value, Type targetType, object parameter, string language)
         {
+            var number = System.Convert.ToDouble(value);
             if (!Invert)
-                return (int) value == 0 ? Visibility.Visible : Visibility.Collapsed;
-            return (int)value == 0 ? Visibility.Collapsed : Visibility.Visible;
+                return number == ReferenceValue ? Visibility.Visible : Visibility.Collapsed;
+            return number == ReferenceValue ? Visibility.Collapsed : Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

@@ -16,7 +16,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <converters:SendButtonGlyphConverter x:Key="SendButtonGlyphConverter"/>
-            <converters:VisibleWhenZeroConverter x:Key="VisibleWhenZeroConverter"/>
+            <converters:EqualityVisibilityConverter x:Key="VisibleWhenZeroConverter"/>
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
             <converters:BooleanVisibilityConverter x:Key="InvertBooleanVisibilityConverter" Invert="True"/>
             <converters:StringListToTextConverter x:Key="StringListToTextConverter"/>
