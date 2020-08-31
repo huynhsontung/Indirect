@@ -14,8 +14,7 @@
     xmlns:user="using:InstagramAPI.Classes.User"
     mc:Ignorable="d"
     d:DesignHeight="300"
-    d:DesignWidth="400"
-    HorizontalAlignment="Stretch">
+    d:DesignWidth="400">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -403,8 +402,8 @@
                         CornerRadius="2" Padding="8,6,8,6"
                         BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" >
                     <StackPanel Orientation="Vertical">
-                        <TextBlock Text="{x:Bind Placeholder.Title, Mode=OneWay}" Style="{ThemeResource FluentBaseTextStyle}" Margin="0,0,0,2"/>
-                        <TextBlock Text="{x:Bind Placeholder.Message, Mode=OneWay}" 
+                        <TextBlock Text="{x:Bind Placeholder.Title}" Style="{ThemeResource FluentBaseTextStyle}" Margin="0,0,0,2"/>
+                        <TextBlock Text="{x:Bind Placeholder.Message}" 
                                    Style="{ThemeResource FluentCaptionTextStyle}"
                                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" TextWrapping="Wrap"/>
                     </StackPanel>
@@ -415,86 +414,94 @@
 
 
     <StackPanel x:Name="ItemContainer" Orientation="Vertical"
-                HorizontalAlignment="Stretch"
                 Margin="0,2,0,2">
 
-        <TextBlock HorizontalAlignment="Center" 
-                   Text="{x:Bind Item.Timestamp, Converter={StaticResource HumanizedDateTimeConverter}, Mode=OneWay}" 
+        <TextBlock HorizontalAlignment="Center" x:Name="TimestampText"
+                   Text="{x:Bind Item.Timestamp, Converter={StaticResource HumanizedDateTimeConverter}}" 
                    Visibility="{x:Bind Item.ShowTimestampHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" 
                    Style="{ThemeResource FluentCaptionTextStyle}"
                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                    Margin="8,14,8,8"/>
 
-        <TextBlock HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}" 
-                   Text="{x:Bind Item.Sender.Username, Mode=OneWay}" 
-                   Visibility="{x:Bind Item.ShowNameHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" 
-                   Style="{ThemeResource FluentCaptionTextStyle}"
-                   Foreground="{StaticResource SystemControlForegroundBaseLowBrush}"
-                   Margin="0,0,0,2"/>
+        <StackPanel Orientation="Vertical" HorizontalAlignment="{x:Bind Item.FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
+            <TextBlock x:Name="SenderNameText" HorizontalAlignment="{x:Bind Item.FromMe, Converter={StaticResource FromMeAlignmentConverter}}" 
+                       Text="{x:Bind Item.Sender.Username}" 
+                       Visibility="{x:Bind Item.ShowNameHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" 
+                       Style="{ThemeResource FluentCaptionTextStyle}"
+                       Foreground="{StaticResource SystemControlForegroundBaseLowBrush}"
+                       Margin="0,0,0,2"/>
 
-        <ContentControl x:Name="MainContentControl" Content="{x:Bind Item, Mode=OneWay}" 
-                        HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
-                        SizeChanged="ConfigTooltip_OnSizeChanged" DoubleTapped="Item_DoubleTapped">
-            <ContentControl.ContextFlyout>
-                <MenuFlyout>
-                    <MenuFlyoutItem x:Name="LikeItemMenuOption" Style="{x:Bind Item.ObservableReactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
-                                    Click="LikeUnlike_Click"/>
-                    <MenuFlyoutItem x:Name="MenuCopyOption" Visibility="Collapsed" Text="Copy" Click="MenuCopyOption_Click">
-                        <MenuFlyoutItem.Icon>
-                            <SymbolIcon Symbol="Copy"/>
-                        </MenuFlyoutItem.Icon>
-                    </MenuFlyoutItem>
-                    <MenuFlyoutSeparator Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}"/>
-                    <MenuFlyoutItem Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" 
-                                    Icon="Delete" Text="Unsend" Click="UnsendMessage"/>
-                </MenuFlyout>
-            </ContentControl.ContextFlyout>
-            <ContentControl.ContentTemplateSelector>
-                <selectors:ItemTemplateSelector TextTemplate="{StaticResource TextTemplate}"
-                                            LikeTemplate="{StaticResource LikeTemplate}"
-                                            HyperlinkTemplate="{StaticResource HyperlinkTemplate}"
-                                            HyperlinkWithPreviewTemplate="{StaticResource HyperlinkWithPreviewTemplate}"
-                                            NotSupportedTemplate="{StaticResource NotSupportedTemplate}"
-                                            HiddenMediaTemplate="{StaticResource HiddenMediaTemplate}"
-                                            ImageTemplate="{StaticResource ImageTemplate}"
-                                            VideoTemplate="{StaticResource VideoTemplate}"
-                                            AudioTemplate="{StaticResource AudioTemplate}"
-                                            MediaShareTemplate="{StaticResource MediaShareTemplate}"
-                                            ReelShareTemplate="{StaticResource ReelShareTemplate}"
-                                            StoryShareTemplate="{StaticResource StoryShareTemplate}"
-                                            VideoCallTemplate="{StaticResource VideoCallTemplate}"
-                                            ProfileTemplate="{StaticResource ProfileTemplate}"
-                                            UnexpectedTemplate="{StaticResource UnexpectedTemplate}"
-                                            PlaceholderTemplate="{StaticResource PlaceholderTemplate}"/>
-            </ContentControl.ContentTemplateSelector>
-        </ContentControl>
+            <ContentControl x:Name="MainContentControl" Content="{x:Bind Item}" 
+                            HorizontalAlignment="{x:Bind Item.FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                            SizeChanged="ConfigTooltip_OnSizeChanged" DoubleTapped="Item_DoubleTapped">
+                <ContentControl.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem x:Name="LikeItemMenuOption" Style="{x:Bind Item.ObservableReactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
+                                        Click="LikeUnlike_Click"/>
+                        <MenuFlyoutItem x:Name="MenuCopyOption" Visibility="Collapsed" Text="Copy" Click="MenuCopyOption_Click">
+                            <MenuFlyoutItem.Icon>
+                                <SymbolIcon Symbol="Copy"/>
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}"/>
+                        <MenuFlyoutItem Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" 
+                                        Icon="Delete" Text="Unsend" Click="UnsendMessage"/>
+                    </MenuFlyout>
+                </ContentControl.ContextFlyout>
+                <ContentControl.ContentTemplateSelector>
+                    <selectors:ItemTemplateSelector TextTemplate="{StaticResource TextTemplate}"
+                                                LikeTemplate="{StaticResource LikeTemplate}"
+                                                HyperlinkTemplate="{StaticResource HyperlinkTemplate}"
+                                                HyperlinkWithPreviewTemplate="{StaticResource HyperlinkWithPreviewTemplate}"
+                                                NotSupportedTemplate="{StaticResource NotSupportedTemplate}"
+                                                HiddenMediaTemplate="{StaticResource HiddenMediaTemplate}"
+                                                ImageTemplate="{StaticResource ImageTemplate}"
+                                                VideoTemplate="{StaticResource VideoTemplate}"
+                                                AudioTemplate="{StaticResource AudioTemplate}"
+                                                MediaShareTemplate="{StaticResource MediaShareTemplate}"
+                                                ReelShareTemplate="{StaticResource ReelShareTemplate}"
+                                                StoryShareTemplate="{StaticResource StoryShareTemplate}"
+                                                VideoCallTemplate="{StaticResource VideoCallTemplate}"
+                                                ProfileTemplate="{StaticResource ProfileTemplate}"
+                                                UnexpectedTemplate="{StaticResource UnexpectedTemplate}"
+                                                PlaceholderTemplate="{StaticResource PlaceholderTemplate}"/>
+                </ContentControl.ContentTemplateSelector>
+            </ContentControl>
 
-        <Border Margin="6,-2,6,0" Background="{ThemeResource FromThemItemBackground}" CornerRadius="6" Padding="6,2,6,2"
-                BorderBrush="{ThemeResource MainBackground}" BorderThickness="2"
-                HorizontalAlignment="{x:Bind Item.FromMe, Mode=OneWay, Converter={StaticResource FromMeAlignmentConverter}}"
-                Visibility="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}"
-                Tapped="ReactionsBorder_Tapped">
-            <FlyoutBase.AttachedFlyout>
-                <Flyout Placement="Bottom">
-                    <ListView ItemsSource="{x:Bind Item.ObservableReactions.Senders, Mode=OneWay}" SelectionMode="None" MaxHeight="260">
-                        <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="user:BaseUser">
-                                <StackPanel Orientation="Horizontal">
-                                    <controls:ImageEx Source="{x:Bind ProfilePictureUrl}" Width="28" Height="28" CornerRadius="99" Margin="0,0,10,0" />
-                                    <TextBlock Text="{x:Bind Username}" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </Flyout>
-            </FlyoutBase.AttachedFlyout>
-            <StackPanel x:Name="Reactions" Orientation="Horizontal">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
-                        Style="{x:Bind Item.ObservableReactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
-                <TextBlock Text="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"
-                           Visibility="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
-                           Style="{ThemeResource FluentCaptionTextStyle}"/>
-            </StackPanel>
-        </Border>
+            <Border Margin="6,-2,6,0" Background="{ThemeResource FromThemItemBackground}" CornerRadius="6" Padding="6,2,6,2"
+                    BorderBrush="{ThemeResource MainBackground}" BorderThickness="2"
+                    HorizontalAlignment="{x:Bind Item.FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                    Visibility="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}"
+                    Tapped="ReactionsBorder_Tapped">
+                <FlyoutBase.AttachedFlyout>
+                    <Flyout Placement="Bottom">
+                        <ListView ItemsSource="{x:Bind Item.ObservableReactions.Senders, Mode=OneWay}" SelectionMode="None" MaxHeight="260">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="user:BaseUser">
+                                    <StackPanel Orientation="Horizontal">
+                                        <controls:ImageEx Source="{x:Bind ProfilePictureUrl}" Width="28" Height="28" CornerRadius="99" Margin="0,0,10,0" />
+                                        <TextBlock Text="{x:Bind Username}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Flyout>
+                </FlyoutBase.AttachedFlyout>
+                <StackPanel x:Name="Reactions" Orientation="Horizontal">
+                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
+                            Style="{x:Bind Item.ObservableReactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
+                    <TextBlock Text="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"
+                               Visibility="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
+                               Style="{ThemeResource FluentCaptionTextStyle}"/>
+                </StackPanel>
+            </Border>
+            <TextBlock x:Name="SeenIndicator" Margin="4,2,4,4"
+                       Text="{x:Bind SeenTextConverter(Item.Parent.LastSeenAt), Mode=OneWay}"
+                       Style="{ThemeResource FluentCaptionTextStyle}" TextWrapping="Wrap"
+                       Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                       HorizontalAlignment="Right" Visibility="{x:Bind SeenIndicator.Text, Converter={StaticResource NullVisibilityConverter}, Mode=OneWay}">
+            </TextBlock>
+        </StackPanel>
+
     </StackPanel>
 </UserControl>

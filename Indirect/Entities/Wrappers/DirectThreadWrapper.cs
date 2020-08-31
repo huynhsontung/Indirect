@@ -79,6 +79,7 @@ namespace Indirect.Entities.Wrappers
         public Dictionary<long,UserInfo> DetailedUserInfoDictionary { get; } = new Dictionary<long, UserInfo>();
         public bool IsContactPanel { get; set; }
         public ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper> ObservableItems { get; set; }
+        public BaseUser Viewer => _viewModel.LoggedInUser;
         public new ObservableCollection<BaseUser> Users { get; } = new ObservableCollection<BaseUser>();
         public List<string> UsersSeenLatestMessage { get; } = new List<string>(); // If Users.Count == 1 then this is always empty
 

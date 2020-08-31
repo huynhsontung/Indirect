@@ -302,11 +302,18 @@ namespace Indirect.Entities.Wrappers
             ObservableReactions = source.Reactions != null ? new ReactionsWrapper(viewModel, source.Reactions, parent.Users) : new ReactionsWrapper(viewModel);
 
             // Lookup BaseUser from user id
-            Sender = parent.Users.FirstOrDefault(u => u.Pk == UserId) ?? new BaseUser
+            if (UserId == parent.Viewer.Pk)
             {
-                Username = "UNKNOWN_USER",
-                FullName = "UNKNOWN_USER"
-            };
+                Sender = parent.Viewer;
+            }
+            else
+            {
+                Sender = parent.Users.FirstOrDefault(u => u.Pk == UserId) ?? new BaseUser
+                {
+                    Username = "UNKNOWN_USER",
+                    FullName = "UNKNOWN_USER"
+                };
+            }
         }
 
         private static InstaImage GetPreviewImage(ICollection<InstaImage> imageCandidates)
