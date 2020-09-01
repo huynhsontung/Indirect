@@ -59,7 +59,7 @@ namespace Indirect
         public InboxWrapper PendingInbox { get; }
         public InboxWrapper Inbox { get; }
         public List<DirectThreadWrapper> SecondaryThreadViews { get; } = new List<DirectThreadWrapper>();
-        public CurrentUser LoggedInUser { get; private set; }
+        public BaseUser LoggedInUser { get; private set; }
         public PersistentDictionary<string> ThreadInfoPersistentDictionary { get; } = new PersistentDictionary<string>("ThreadInfoPersistentDictionary");
         public Dictionary<long, BaseUser> CentralUserRegistry { get; } = new Dictionary<long, BaseUser>();
         public DirectThreadWrapper SelectedThread
@@ -81,13 +81,14 @@ namespace Indirect
             Inbox = new InboxWrapper(this);
             //PendingInbox = new InboxWrapper(this, true);
             ThreadInfoPersistentDictionary.LoadFromAppSettings();
+            LoggedInUser = InstaApi.Session.LoggedInUser;
             SubscribeHandlers();
         }
 
         public async Task OnLoggedIn()
         {
             if (!InstaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
-            await UpdateLoggedInUser();
+            //await UpdateLoggedInUser();
             GetUserPresence();
             PushClient.Start();
             await ReelsFeed.UpdateReelsFeed();
@@ -247,8 +248,6 @@ namespace Indirect
 
         public async Task<DirectThreadWrapper> FetchThread(IEnumerable<long> userIds, CoreDispatcher dispatcher)
         {
-            if (LoggedInUser == null)
-                await UpdateLoggedInUser();
             var result = await InstaApi.GetThreadByParticipantsAsync(userIds);
             return !result.IsSucceeded
                 ? null
