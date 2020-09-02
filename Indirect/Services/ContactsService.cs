@@ -52,17 +52,41 @@ namespace Indirect.Services
             return annotationList;
         }
 
+        public static async Task<bool> TryFetchContactStores()
+        {
+            try
+            {
+                var contactStore = await ContactManager.RequestStoreAsync(ContactStoreAccessType.AppContactsReadWrite);
+                var annotationStore = await ContactManager.RequestAnnotationStoreAsync(ContactAnnotationStoreAccessType.AppAnnotationsReadWrite);
+                if (contactStore == null || annotationStore == null) return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public static async Task<Contact> GetFullContact(string contactId)
         {
-            ContactStore store = await ContactManager.RequestStoreAsync(ContactStoreAccessType.AppContactsReadWrite);
+            var store = await ContactManager.RequestStoreAsync(ContactStoreAccessType.AppContactsReadWrite);
             if (null == store) return null;
-            var contact = await store.GetContactAsync(contactId);
-            return contact;
+            try
+            {
+                var contact = await store.GetContactAsync(contactId);
+                return contact;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public static async Task DeleteAllAppContacts()
         {
             var store = await ContactManager.RequestStoreAsync(ContactStoreAccessType.AppContactsReadWrite);
+            if (store == null) return;
             IReadOnlyList<ContactList> contactLists = await store.FindContactListsAsync();
             if (0 == contactLists.Count) return;
             var contactList = contactLists[0];

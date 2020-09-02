@@ -93,6 +93,7 @@ namespace Indirect
             PushClient.Start();
             await ReelsFeed.UpdateReelsFeed();
             ReelsFeed.StartReelsFeedUpdateLoop();
+            await ContactsService.TryFetchContactStores();  // for store certification
 
             // Post launch
             await Task.Delay(10000).ConfigureAwait(false);
