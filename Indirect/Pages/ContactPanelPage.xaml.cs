@@ -39,10 +39,12 @@ namespace Indirect.Pages
             _contactPanel.Closing += ContactPanelOnClosing;
             var contact = await ContactsService.GetFullContact(args.Contact.Id);
             _thread = await GetThread(contact);
-            if (_thread != null)
-                ViewModel.SecondaryThreadViews.Add(_thread);
             Bindings.Update();
-            await OptionallyStartSyncClient().ConfigureAwait(false);
+            if (_thread != null)
+            {
+                ViewModel.SecondaryThreadViews.Add(_thread);
+                await OptionallyStartSyncClient().ConfigureAwait(false);
+            }
         }
 
         private async Task OptionallyStartSyncClient()
@@ -78,12 +80,12 @@ namespace Indirect.Pages
             {
                 if (contact == null)
                 {
-                    ShowErrorMessage("Error getting contact");
+                    ShowErrorMessage("Error getting contact. Please make sure Indirect has access to Contacts.");
                     return null;
                 }
                 if (!Instagram.IsUserAuthenticatedPersistent)
                 {
-                    ShowErrorMessage("Not logged in");
+                    ShowErrorMessage("Not logged in.");
                     return null;
                 }
                 var pk = contact.Phones
@@ -91,14 +93,14 @@ namespace Indirect.Pages
                     .Split("@").FirstOrDefault();
                 if (string.IsNullOrEmpty(pk))
                 {
-                    ShowErrorMessage("Contact ID not available");
+                    ShowErrorMessage("Contact ID not available.");
                     return null;
                 }
 
                 var thread = await ViewModel.FetchThread(new[] { long.Parse(pk, NumberStyles.Integer) }, Dispatcher);
                 if (thread == null)
                 {
-                    ShowErrorMessage("Cannot fetch chat thread");
+                    ShowErrorMessage("Cannot fetch chat thread.");
                 }
 
                 return thread;

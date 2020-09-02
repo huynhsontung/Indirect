@@ -27,7 +27,7 @@
                     Visibility="{x:Bind ErrorTextBlock.Text, Converter={StaticResource NullVisibilityConverter}}">
             <TextBlock HorizontalAlignment="Center" TextAlignment="Center"
                        Text="Function is not available. Please open the full app to resolve this issue then try again." TextWrapping="Wrap" Margin="20,0,20,10"/>
-            <TextBlock x:Name="ErrorTextBlock" HorizontalAlignment="Center" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
+            <TextBlock x:Name="ErrorTextBlock" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
         </StackPanel>
     </Grid>
 </Page>
