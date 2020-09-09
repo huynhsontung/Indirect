@@ -5,7 +5,9 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Navigation;
 using Indirect.Controls;
+using Indirect.Services;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Utils;
@@ -30,6 +32,15 @@ namespace Indirect.Pages
             LoginWebview.Height = Window.Current.Bounds.Height * 0.8;
             WebviewPopup.VerticalOffset = -(LoginWebview.Height / 2);
             LoginWebview.NavigationStarting += LoginWebviewOnNavigationStarting;
+        }
+
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            if (e?.NavigationMode != NavigationMode.Back)
+            {
+                await ContactsService.TryFetchContactStores();  // for store certification
+            }
         }
 
         private void DisableButtons()

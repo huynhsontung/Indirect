@@ -171,6 +171,7 @@ namespace Indirect
 
         private async void OnResuming(object sender, object e)
         {
+            if (!ViewModel.IsUserAuthenticated) return;
             if (ViewModel.StartedFromMainView)
             {
                 await ViewModel.TryAcquireSyncLock();
