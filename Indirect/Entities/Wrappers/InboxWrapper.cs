@@ -132,6 +132,20 @@ namespace Indirect.Entities.Wrappers
             return wrappedThreadList;
         }
 
+        public async Task ClearInbox()
+        {
+            _firstTime = true;
+            OldestCursor = null;
+            if (!Threads.HasMoreItems)
+            {
+                await Threads.RefreshAsync();
+            }
+            else
+            {
+                Threads.Clear();
+            }
+        }
+
         private void SortInboxThread()
         {
             var sorted = Threads.OrderByDescending(x => x.LastActivity).ToList();
@@ -180,18 +194,6 @@ namespace Indirect.Entities.Wrappers
             if (args.PropertyName == nameof(DirectThreadWrapper.LastActivity) || string.IsNullOrEmpty(args.PropertyName))
             {
                 SortInboxThread();
-            }
-        }
-
-        public void FixThreadList()
-        {
-            // Somehow thread list got messed up and threads are not unique anymore
-            var duplicates = Threads.GroupBy(x => x.ThreadId).Where(g => g.Count() > 1);
-            foreach (var duplicateGroup in duplicates)
-            {
-                var duplicate = duplicateGroup.First();
-                if (string.IsNullOrEmpty(duplicate.ThreadId)) continue;
-                Threads.Remove(duplicate);
             }
         }
     }

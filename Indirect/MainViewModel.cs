@@ -59,7 +59,7 @@ namespace Indirect
         public InboxWrapper PendingInbox { get; }
         public InboxWrapper Inbox { get; }
         public List<DirectThreadWrapper> SecondaryThreadViews { get; } = new List<DirectThreadWrapper>();
-        public BaseUser LoggedInUser { get; private set; }
+        public BaseUser LoggedInUser => InstaApi.Session.LoggedInUser;
         public PersistentDictionary<string> ThreadInfoPersistentDictionary { get; } = new PersistentDictionary<string>("ThreadInfoPersistentDictionary");
         public Dictionary<long, BaseUser> CentralUserRegistry { get; } = new Dictionary<long, BaseUser>();
         public DirectThreadWrapper SelectedThread
@@ -81,7 +81,6 @@ namespace Indirect
             Inbox = new InboxWrapper(this);
             //PendingInbox = new InboxWrapper(this, true);
             ThreadInfoPersistentDictionary.LoadFromAppSettings();
-            LoggedInUser = InstaApi.Session.LoggedInUser;
             SubscribeHandlers();
         }
 
@@ -89,6 +88,7 @@ namespace Indirect
         {
             if (!InstaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
             //await UpdateLoggedInUser();
+            await Inbox.ClearInbox();
             GetUserPresence();
             PushClient.Start();
             await ReelsFeed.UpdateReelsFeed();
@@ -124,18 +124,10 @@ namespace Indirect
         public async Task Logout()
         {
             InstaApi.Logout();
-            //await ImageCache.Instance.ClearAsync();
             await ContactsService.DeleteAllAppContacts();
             ThreadInfoPersistentDictionary.RemoveFromAppSettings();
+            // TODO: Close all secondary views
             // _settings.Values.Clear();
-        }
-
-        private async Task UpdateLoggedInUser()
-        {
-            var loggedInUser = await InstaApi.GetCurrentUserAsync();
-            LoggedInUser = loggedInUser.Value;
-            CentralUserRegistry[LoggedInUser.Pk] = LoggedInUser;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
         }
 
         public async Task UpdateSelectedThread()

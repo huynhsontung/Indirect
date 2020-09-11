@@ -34,15 +34,6 @@ namespace Indirect.Pages
             LoginWebview.NavigationStarting += LoginWebviewOnNavigationStarting;
         }
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
-        {
-            base.OnNavigatedTo(e);
-            if (e?.NavigationMode != NavigationMode.Back)
-            {
-                await ContactsService.TryFetchContactStores();  // for store certification
-            }
-        }
-
         private void DisableButtons()
         {
             _loading = true;
