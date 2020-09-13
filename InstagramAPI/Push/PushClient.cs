@@ -5,12 +5,13 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Windows.ApplicationModel.Background;
 using Windows.Networking;
-using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage.Streams;
+using Windows.UI.Notifications;
 using Windows.Web.Http;
 using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
@@ -30,6 +31,7 @@ namespace InstagramAPI.Push
         private const string HOST_NAME = "mqtt-mini.facebook.com";
         private const string BACKGROUND_SOCKET_ACTIVITY_NAME = "BackgroundPushClient.SocketActivity";
         private const string SOCKET_ACTIVITY_ENTRY_POINT = "BackgroundPushClient.SocketActivity";
+        private const string BACKGROUND_REPLY_NAME = "ReplyAction";
         public const string SOCKET_ID = "mqtt_fbns";
 
         private IBackgroundTaskRegistration _socketActivityTask;
@@ -74,11 +76,17 @@ namespace InstagramAPI.Push
                     return true;
                 }
             }
-            var taskBuilder = new BackgroundTaskBuilder
-            {
-                Name = name,
-                TaskEntryPoint = entryPoint
-            };
+
+            var taskBuilder = !string.IsNullOrEmpty(entryPoint)
+                ? new BackgroundTaskBuilder
+                {
+                    Name = name,
+                    TaskEntryPoint = entryPoint
+                }
+                : new BackgroundTaskBuilder
+                {
+                    Name = name
+                };
             taskBuilder.SetTrigger(trigger);
             try
             {
@@ -110,7 +118,29 @@ namespace InstagramAPI.Push
             }
             var activityTaskRegistered = TryRegisterBackgroundTaskOnce(BACKGROUND_SOCKET_ACTIVITY_NAME, SOCKET_ACTIVITY_ENTRY_POINT,
                 new SocketActivityTrigger(), out _socketActivityTask);
+
+            TryRegisterBackgroundTaskOnce(BACKGROUND_REPLY_NAME, null, new ToastNotificationActionTrigger(), out _);
             return activityTaskRegistered;
+        }
+
+        public async Task HandleToastAction(IBackgroundTaskInstance taskInstance)
+        {
+            if (taskInstance == null || !_instaApi.IsUserAuthenticated) return;
+            switch (taskInstance.Task.Name)
+            {
+                case BACKGROUND_REPLY_NAME:
+                    if (taskInstance.TriggerDetails is ToastNotificationActionTriggerDetail details)
+                    {
+                        var arguments = HttpUtility.ParseQueryString(details.Argument);
+                        var threadId = arguments["threadId"];
+                        var action = arguments["action"];
+                        var text = details.UserInput["text"] as string;
+                        if (string.IsNullOrEmpty(threadId) || string.IsNullOrEmpty(text)) return;
+
+                        await _instaApi.SendTextAsync(null, threadId, text);
+                    }
+                    break;
+            }
         }
 
         /// <summary>

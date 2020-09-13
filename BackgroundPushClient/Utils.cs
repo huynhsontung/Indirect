@@ -72,7 +72,26 @@ namespace BackgroundPushClient
                             }
                     }
                 },
-                Launch = $"action=openThread&threadId={threadId}",
+                Actions = new ToastActionsCustom
+                {
+                    Inputs =
+                    {
+                        new ToastTextBox("text")
+                        {
+                            PlaceholderContent = "Type a reply"
+                        }
+                    },
+                    Buttons =
+                    {
+                        new ToastButton("Reply", $"action=reply&threadId={threadId}")
+                        {
+                            ActivationType = ToastActivationType.Background,
+                            TextBoxId = "text",
+                            ImageUri = "Assets/SendIcon.png"
+                        }
+                    }
+                },
+                Launch = $"action=open&threadId={threadId}",
                 HintPeople = threadUser != null
                     ? new ToastPeople
                     {

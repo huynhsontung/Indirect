@@ -248,6 +248,7 @@
     <Content Include="Assets\NoSelectionGraphic.png" />
     <Content Include="Assets\ProfilePicturePlaceholder-Dark.jpg" />
     <Content Include="Assets\ProfilePicturePlaceholder.jpg" />
+    <Content Include="Assets\SendIcon.png" />
     <Content Include="Assets\SmallTile.scale-100.png" />
     <Content Include="Assets\SmallTile.scale-125.png" />
     <Content Include="Assets\SmallTile.scale-150.png" />
