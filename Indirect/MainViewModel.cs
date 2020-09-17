@@ -87,16 +87,15 @@ namespace Indirect
         public async Task OnLoggedIn()
         {
             if (!InstaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
-            //await UpdateLoggedInUser();
             await Inbox.ClearInbox();
             GetUserPresence();
             PushClient.Start();
             await ReelsFeed.UpdateReelsFeed();
             ReelsFeed.StartReelsFeedUpdateLoop();
 
-            // Post launch
-            await Task.Delay(10000).ConfigureAwait(false);
-            await ContactsService.SaveUsersAsContact(CentralUserRegistry.Values).ConfigureAwait(false);
+            // Disabled due to store certification failed
+            //await Task.Delay(10000).ConfigureAwait(false);
+            //await ContactsService.SaveUsersAsContact(CentralUserRegistry.Values).ConfigureAwait(false);
         }
 
         public void SetSelectedThreadNull()
@@ -124,7 +123,7 @@ namespace Indirect
         public async Task Logout()
         {
             InstaApi.Logout();
-            await ContactsService.DeleteAllAppContacts();
+            //await ContactsService.DeleteAllAppContacts();
             ThreadInfoPersistentDictionary.RemoveFromAppSettings();
             // TODO: Close all secondary views
             // _settings.Values.Clear();

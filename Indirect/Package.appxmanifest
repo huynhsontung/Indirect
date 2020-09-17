@@ -65,6 +65,5 @@
 
   <Capabilities>
     <Capability Name="internetClient" />
-    <uap:Capability Name="contacts"/>
   </Capabilities>
 </Package>

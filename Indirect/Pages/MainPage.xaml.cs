@@ -312,7 +312,7 @@ namespace Indirect.Pages
 
         private async void TestButton_OnClick(object sender, RoutedEventArgs e)
         {
-            await ContactsService.DeleteAllAppContacts();
+            //await ContactsService.DeleteAllAppContacts();
         }
     }
 }
