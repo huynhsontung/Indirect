@@ -54,6 +54,11 @@
           </BackgroundTasks>
         </Extension>
         <uap4:Extension Category="windows.contactPanel" />
+        <Extension Category="windows.backgroundTasks" EntryPoint="BackgroundPushClient.ReplyAction">
+          <BackgroundTasks>
+            <Task Type="systemEvent"/>
+          </BackgroundTasks>
+        </Extension>
       </Extensions>
     </Application>
   </Applications>

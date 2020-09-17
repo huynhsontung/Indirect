@@ -131,14 +131,6 @@ namespace Indirect
             Window.Current.Activate();
         }
 
-        protected override async void OnBackgroundActivated(BackgroundActivatedEventArgs args)
-        {
-            base.OnBackgroundActivated(args);
-            var deferral = args.TaskInstance.GetDeferral();
-            await ViewModel.PushClient.HandleToastAction(args.TaskInstance);
-            deferral.Complete();
-        }
-
         /// <summary>
         /// Invoked when Navigation to a certain page fails
         /// </summary>
