@@ -116,7 +116,7 @@
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="wrappers:ReelWrapper">
-                                <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,8">
+                                <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,8" AutomationProperties.LabeledBy="{Binding ElementName=StoryUsername}">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="54"/>
                                         <RowDefinition Height="Auto"/>
@@ -135,7 +135,7 @@
                                             </LinearGradientBrush>
                                         </Border.BorderBrush>
                                     </Border>
-                                    <TextBlock Grid.Row="1" Text="{x:Bind User.Username}" 
+                                    <TextBlock x:Name="StoryUsername" Grid.Row="1" Text="{x:Bind User.Username}" 
                                                Style="{ThemeResource FluentCaptionTextStyle}" MaxWidth="54" HorizontalAlignment="Center"/>
                                 </Grid>
                             </DataTemplate>
@@ -201,10 +201,10 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Button x:Name="MasterMenuButton" Grid.Row="1" Grid.Column="0" Padding="6" ToolTipService.ToolTip="Main menu"
+                    <Button x:Name="MasterMenuButton" Grid.Row="1" Grid.Column="0" Padding="6" ToolTipService.ToolTip="Main menu" AutomationProperties.Name="Main menu"
                             Margin="0,0,6,0" VerticalAlignment="Center" Background="Transparent">
                         <controls:ImageEx Source="{x:Bind ViewModel.LoggedInUser.ProfilePictureUrl, Mode=OneWay}" 
-                                          Style="{ThemeResource ProfilePicturePlaceholderStyle}"
+                                          Style="{ThemeResource ProfilePicturePlaceholderStyle}" ImageExFailed="MasterMenuButton_OnImageExFailed"
                                           CornerRadius="99" Height="32" Width="32" />
                         <Button.Flyout>
                             <MenuFlyout Placement="Bottom">

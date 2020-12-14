@@ -75,7 +75,7 @@ namespace Indirect.Pages
             };
             var confirmation = await confirmDialog.ShowAsync();
             if (confirmation != ContentDialogResult.Primary) return;
-            await ViewModel.Logout();
+            ViewModel.Logout();
             Frame.Navigate(typeof(LoginPage));
         }
         
@@ -113,7 +113,7 @@ namespace Indirect.Pages
                 ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
             
             var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
-            details?.Focus(FocusState.Programmatic);    // Focus to chat box after selecting a thread
+            //details?.Focus(FocusState.Programmatic);    // Focus to chat box after selecting a thread
             await inboxThread.MarkLatestItemSeen();
         }
 
@@ -313,6 +313,11 @@ namespace Indirect.Pages
         private async void TestButton_OnClick(object sender, RoutedEventArgs e)
         {
             //await ContactsService.DeleteAllAppContacts();
+        }
+
+        private async void MasterMenuButton_OnImageExFailed(object sender, ImageExFailedEventArgs e)
+        {
+            await ViewModel.UpdateLoggedInUser();
         }
     }
 }

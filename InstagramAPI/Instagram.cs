@@ -368,6 +368,14 @@ namespace InstagramAPI
             PushClient.ConnectionData.Clear();
         }
 
+        public async Task<bool> UpdateLoggedInUser()
+        {
+            var result = await GetCurrentUserAsync();
+            if (!result.IsSucceeded) return false;
+            Session.LoggedInUser = result.Value;
+            return true;
+        }
+
         public async Task<Result<CurrentUser>> GetCurrentUserAsync()
         {
             ValidateLoggedIn();

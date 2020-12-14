@@ -24,6 +24,7 @@ using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
 using InstagramAPI.Sync;
 using InstagramAPI.Utils;
+using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.UI;
 
 namespace Indirect
@@ -120,13 +121,23 @@ namespace Indirect
         public Task<Result<LoginResult>> LoginWithFacebook(string fbAccessToken) =>
             InstaApi.LoginWithFacebookAsync(fbAccessToken);
 
-        public async Task Logout()
+        public void Logout()
         {
             InstaApi.Logout();
             //await ContactsService.DeleteAllAppContacts();
             ThreadInfoPersistentDictionary.RemoveFromAppSettings();
             // TODO: Close all secondary views
             // _settings.Values.Clear();
+        }
+
+        public async Task UpdateLoggedInUser()
+        {
+            var succeeded = await InstaApi.UpdateLoggedInUser();
+            if (!succeeded) return;
+            await DispatcherHelper.ExecuteOnUIThreadAsync(() =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
+            });
         }
 
         public async Task UpdateSelectedThread()
