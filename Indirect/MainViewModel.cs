@@ -16,6 +16,7 @@ using Indirect.Entities;
 using Indirect.Entities.Wrappers;
 using Indirect.Pages;
 using Indirect.Services;
+using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
@@ -44,7 +45,6 @@ namespace Indirect
 
 
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
-        private CancellationTokenSource _searchCancellationToken;
         private DirectThreadWrapper _selectedThread;
         private FileStream _lockFile;
         private string _threadToBeOpened;
@@ -178,23 +178,7 @@ namespace Indirect
             }
         }
 
-        private async Task<bool> SearchReady()
-        {
-            _searchCancellationToken?.Cancel();
-            _searchCancellationToken?.Dispose();
-            _searchCancellationToken = new CancellationTokenSource();
-            var cancellationToken = _searchCancellationToken.Token;
-            try
-            {
-                await Task.Delay(500, cancellationToken); // Delay so we don't search something mid typing
-            }
-            catch (TaskCanceledException)
-            {
-                return false;
-            }
-            if (cancellationToken.IsCancellationRequested) return false;
-            return true;
-        }
+        private static Task<bool> SearchReady() => Debouncer.Delay("ThreadSearch", 500);
 
         public async void Search(string query, Action<List<DirectThreadWrapper>> updateAction)
         {
@@ -349,7 +333,6 @@ namespace Indirect
 
         public void Dispose()
         {
-            _searchCancellationToken?.Dispose();
             ReleaseSyncLock();
         }
 

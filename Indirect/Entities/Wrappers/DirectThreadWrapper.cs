@@ -19,12 +19,11 @@ using Microsoft.Toolkit.Collections;
 namespace Indirect.Entities.Wrappers
 {
     /// Wrapper of <see cref="DirectThread"/> with Observable lists
-    class DirectThreadWrapper : DirectThread, INotifyPropertyChanged, IIncrementalSource<DirectItemWrapper>, IDisposable
+    class DirectThreadWrapper : DirectThread, INotifyPropertyChanged, IIncrementalSource<DirectItemWrapper>
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly MainViewModel _viewModel;
-        private CancellationTokenSource _typingCancellationTokenSource;
 
         private CoreDispatcher _dispatcher;
         public CoreDispatcher Dispatcher
@@ -434,27 +433,16 @@ namespace Indirect.Entities.Wrappers
             if (!IsSomeoneTyping && ttl == 0) return;
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                _typingCancellationTokenSource?.Cancel();
-                _typingCancellationTokenSource = new CancellationTokenSource();
-                var cancellationToken = _typingCancellationTokenSource.Token;
                 if (ttl > 0)
                 {
                     if (!IsSomeoneTyping) IsSomeoneTyping = true;
-                    try
+                    if (await Debouncer.Delay("PingTypingIndicator", ttl).ConfigureAwait(true))
                     {
-                        await Task.Delay(ttl, cancellationToken);
+                        IsSomeoneTyping = false;
                     }
-                    catch (TaskCanceledException)
-                    {
-                        return;
-                    }
-
-                    IsSomeoneTyping = false;
                 }
                 else
                 {
-                    _typingCancellationTokenSource?.Cancel();
-                    _typingCancellationTokenSource = null;
                     IsSomeoneTyping = false;
                 }
             });
@@ -467,11 +455,6 @@ namespace Indirect.Entities.Wrappers
             {
                 PingTypingIndicator(0);
             }
-        }
-
-        public void Dispose()
-        {
-            _typingCancellationTokenSource?.Dispose();
         }
     }
 }

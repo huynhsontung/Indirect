@@ -6,6 +6,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Indirect.Entities.Wrappers;
 using Indirect.Services;
+using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes.Media;
 
@@ -13,7 +14,7 @@ using InstagramAPI.Classes.Media;
 
 namespace Indirect.Controls
 {
-    internal sealed partial class AnimatedImagePicker : UserControl, IDisposable
+    internal sealed partial class AnimatedImagePicker : UserControl
     {
         public event EventHandler<GiphyMedia> ImageSelected; 
 
@@ -24,7 +25,6 @@ namespace Indirect.Controls
         private GiphyMedia[] _stickers;
         private GiphyMedia[] _gifs;
         private string _selectedType;
-        private CancellationTokenSource _searchDebounce = new CancellationTokenSource();
 
         public AnimatedImagePicker()
         {
@@ -45,7 +45,7 @@ namespace Indirect.Controls
                     PrepareImagesForDisplay(_gifs);
                     return;
                 default:
-                    await SearchAnimatedImage();
+                    await SearchAnimatedImage().ConfigureAwait(false);
                     break;
             }
         }
@@ -53,9 +53,9 @@ namespace Indirect.Controls
         private async void SearchBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
             if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
-            if (await SearchReady())
+            if (await Debouncer.Delay("AnimatedImageSearch", 500).ConfigureAwait(true))
             {
-                await SearchAnimatedImage();
+                await SearchAnimatedImage().ConfigureAwait(false);
             }
         }
 
@@ -101,27 +101,9 @@ namespace Indirect.Controls
             }
         }
 
-        private async Task<bool> SearchReady()
-        {
-            _searchDebounce?.Cancel();
-            _searchDebounce?.Dispose();
-            _searchDebounce = new CancellationTokenSource();
-            var cancellationToken = _searchDebounce.Token;
-            try
-            {
-                await Task.Delay(500, cancellationToken); // Delay so we don't search something mid typing
-            }
-            catch (TaskCanceledException)
-            {
-                return false;
-            }
-            if (cancellationToken.IsCancellationRequested) return false;
-            return true;
-        }
-
         private async void SearchBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
-            await SearchAnimatedImage();
+            await SearchAnimatedImage().ConfigureAwait(false);
         }
 
         private void TypeSelectBox_OnLoaded(object sender, RoutedEventArgs e)
@@ -143,11 +125,6 @@ namespace Indirect.Controls
         {
             var winHeight = Window.Current.Bounds.Height;
             ((FrameworkElement) sender).Height = winHeight * 3 / 5;
-        }
-
-        public void Dispose()
-        {
-            _searchDebounce?.Dispose();
         }
     }
 }

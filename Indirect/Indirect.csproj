@@ -197,6 +197,7 @@
       <DependentUpon>ThreadPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Services\ChatService.cs" />
+    <Compile Include="Utilities\Debouncer.cs" />
     <Compile Include="Utilities\Helpers.cs" />
     <Compile Include="Controls\Selectors\ItemTemplateSelector.cs" />
     <Compile Include="Controls\PhotoVideoControl.xaml.cs">

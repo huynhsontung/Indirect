@@ -10,7 +10,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Controls;
 using Indirect.Entities.Wrappers;
-using Indirect.Services;
+using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes.User;
 using Microsoft.Toolkit.Uwp.UI.Controls;
@@ -102,7 +102,7 @@ namespace Indirect.Pages
             BackButtonPlaceholder.Visibility = BackButton.Visibility;
         }
 
-        private async void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count == 0 || e.AddedItems[0] == null)
             {
@@ -111,10 +111,14 @@ namespace Indirect.Pages
             var inboxThread = (DirectThreadWrapper) e.AddedItems[0];
             if (!string.IsNullOrEmpty(inboxThread.ThreadId)) 
                 ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
-            
-            var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
-            //details?.Focus(FocusState.Programmatic);    // Focus to chat box after selecting a thread
-            await inboxThread.MarkLatestItemSeen();
+
+            Debouncer.DelayExecute("OnThreadChanged", 500, async cancelled =>
+            {
+                if (cancelled) return;
+                var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
+                details?.Focus(FocusState.Programmatic); // Focus to chat box after selecting a thread
+                await inboxThread.MarkLatestItemSeen().ConfigureAwait(false);
+            });
         }
 
         private void SearchBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
