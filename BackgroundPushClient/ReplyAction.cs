@@ -4,6 +4,9 @@ using Windows.ApplicationModel.Background;
 using Windows.UI.Notifications;
 using InstagramAPI;
 using InstagramAPI.Utils;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 
 namespace BackgroundPushClient
 {
