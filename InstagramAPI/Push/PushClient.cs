@@ -211,37 +211,22 @@ namespace InstagramAPI.Push
             }
 
             if (Running) throw new Exception("Push client is already running");
-            var connectPacket = new FbnsConnectPacket
+
+            var connectPacket = new FbnsConnectPacket();
+            try
             {
-                Payload = await PayloadProcessor.BuildPayload(ConnectionData)
-            };
+                connectPacket.Payload = await PayloadProcessor.BuildPayload(ConnectionData);
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+                return;
+            }
 
             Socket = new StreamSocket();
             Socket.Control.KeepAlive = true;
             Socket.Control.NoDelay = true;
-            if (await RequestBackgroundAccess())
-            {
-                try
-                {
-                    Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
-                }
-                catch (Exception connectedStandby)
-                {
-                    this.Log(connectedStandby);
-                    this.Log("Connected standby not available");
-                    try
-                    {
-                        Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
-                    }
-                    catch (Exception e)
-                    {
-                        DebugLogger.LogException(e);
-                        this.Log("Failed to transfer socket completely!");
-                        return;
-                    }
-                }
-            }
-            else
+            if (!await TryEnableTransferOwnershipOnSocket())
             {
                 // if cannot get background access then there is no point of running push client
                 return;
@@ -265,6 +250,32 @@ namespace InstagramAPI.Push
                 return;
             }
             StartPollingLoop();
+        }
+
+        private async Task<bool> TryEnableTransferOwnershipOnSocket()
+        {
+            if (!await RequestBackgroundAccess().ConfigureAwait(false)) return false;
+            try
+            {
+                Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
+            }
+            catch (Exception connectedStandby)
+            {
+                this.Log(connectedStandby);
+                this.Log("Connected standby not available");
+                try
+                {
+                    Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
+                }
+                catch (Exception e)
+                {
+                    DebugLogger.LogException(e);
+                    this.Log("Failed to transfer socket completely!");
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public void Shutdown()
