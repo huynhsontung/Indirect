@@ -38,7 +38,7 @@
         </ResourceDictionary>
     </Page.Resources>
 
-    <Grid>
+    <Grid TabFocusNavigation="Once" XYFocusKeyboardNavigation="Enabled">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition/>
@@ -59,7 +59,7 @@
 
             <StackPanel Grid.Column="1" Orientation="Horizontal">
                 <Button x:Name="BackButtonPlaceholder" Style="{StaticResource NavigationBackButtonNormalStyle}"
-                        Height="32" Width="40" Opacity="0"
+                        Height="32" Width="40" Opacity="0" IsEnabled="False"
                         Visibility="Collapsed">
                 </Button>
                 <TextBlock x:Name="AppTitleTextBlock"
@@ -70,7 +70,7 @@
             </StackPanel>
         </Grid>
 
-        <Button x:Name="BackButton" Grid.Row="0" Canvas.ZIndex="3"
+        <Button x:Name="BackButton" Grid.Row="0" Canvas.ZIndex="3" AutomationProperties.Name="Back"
                 Style="{StaticResource NavigationBackButtonNormalStyle}"
                 Height="32" Width="40"
                 Click="DetailsBackButton_OnClick" Visibility="Collapsed">
@@ -90,7 +90,8 @@
                                     CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}"
                                     IntermediateModeThresholdWidth="{StaticResource FullWindowWidth}">
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
-                <Grid x:Name="ReelsTray" Visibility="{x:Bind ViewModel.ReelsFeed.Reels.Count, Converter={StaticResource VisibleWhenNotZeroConverter}, Mode=OneWay}" Margin="0,0,0,8">
+                <Grid x:Name="ReelsTray" Visibility="{x:Bind ViewModel.ReelsFeed.Reels.Count, Converter={StaticResource VisibleWhenNotZeroConverter}, Mode=OneWay}" 
+                      Margin="0,0,0,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -231,7 +232,8 @@
                             Background="Transparent"
                             Padding="6"
                             VerticalAlignment="Center"
-                            ToolTipService.ToolTip="New message">
+                            ToolTipService.ToolTip="New message"
+                            AutomationProperties.Name="New message">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF716;" Width="32" Height="32"/>
                         <Button.Flyout>
                             <Flyout x:Name="NewThreadFlyout" Placement="RightEdgeAlignedTop">
@@ -246,7 +248,8 @@
                                     <Button Grid.Row="0" HorizontalAlignment="Right" Content="Chat"
                                             Style="{StaticResource AccentButtonStyle}"
                                             IsEnabled="{x:Bind NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"
-                                            Click="ChatButton_OnClick"/>
+                                            Click="ChatButton_OnClick"
+                                            AutomationProperties.Name="Create chat thread from selected recipients"/>
                                     <AutoSuggestBox x:Name="NewMessageSuggestBox" Grid.Row="1" Margin="0,8,0,0"
                                                     TextChanged="NewMessageSuggestBox_OnTextChanged"
                                                     SuggestionChosen="NewMessageSuggestBox_OnSuggestionChosen"
@@ -255,7 +258,8 @@
                                                     UpdateTextOnSelect="False"
                                                     QueryIcon="Find"
                                                     ProcessKeyboardAccelerators="NewMessageSuggestBox_OnProcessKeyboardAccelerators"
-                                                    IsEnabled="{x:Bind NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqual32}, Mode=OneWay}">
+                                                    IsEnabled="{x:Bind NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqual32}, Mode=OneWay}"
+                                                    AutomationProperties.Name="Recipient search box">
                                         <AutoSuggestBox.ItemTemplate>
                                             <DataTemplate x:DataType="users:BaseUser">
                                                 <StackPanel Orientation="Horizontal">
@@ -314,7 +318,9 @@
                                                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
                                     </StackPanel>
                                     <Button Grid.Row="3" HorizontalAlignment="Right" Style="{x:Null}"
-                                            Background="Transparent" Click="NewMessageClearAll_OnClick" ToolTipService.ToolTip="Clear selection">
+                                            Background="Transparent" Click="NewMessageClearAll_OnClick" 
+                                            ToolTipService.ToolTip="Clear selection"
+                                            AutomationProperties.Name="Clear selection">
                                         <SymbolIcon Symbol="ClearSelection"/>
                                     </Button>
                                 </Grid>
@@ -328,7 +334,8 @@
                                     QuerySubmitted="SearchBox_OnQuerySubmitted"
                                     PlaceholderText="Search"
                                     UpdateTextOnSelect="False"
-                                    QueryIcon="Find" Margin="0,4,0,8">
+                                    QueryIcon="Find" Margin="0,4,0,8"
+                                    AutomationProperties.Name="Search box">
                         <AutoSuggestBox.ItemTemplate>
                             <DataTemplate x:DataType="wrappers:DirectThreadWrapper">
                                 <StackPanel Orientation="Horizontal" Background="Transparent" Margin="0,4,0,4">

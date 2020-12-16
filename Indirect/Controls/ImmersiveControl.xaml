@@ -60,7 +60,8 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Button Style="{x:Null}" Click="CloseMediaPopup_OnClick" VerticalAlignment="Top" HorizontalAlignment="Left" Canvas.ZIndex="1">
+            <Button Style="{x:Null}" Click="CloseMediaPopup_OnClick" VerticalAlignment="Top" HorizontalAlignment="Left" Canvas.ZIndex="1" 
+                    AutomationProperties.Name="Close immersive view">
                 <Button.KeyboardAccelerators>
                     <KeyboardAccelerator Key="Escape"/>
                 </Button.KeyboardAccelerators>

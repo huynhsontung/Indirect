@@ -27,7 +27,7 @@
 
             <StackPanel Grid.Column="1" Orientation="Horizontal">
                 <Button x:Name="BackButtonPlaceholder" Style="{StaticResource NavigationBackButtonNormalStyle}"
-                        Height="32" Width="40" Opacity="0">
+                        Height="32" Width="40" Opacity="0" IsEnabled="False">
                 </Button>
                 <TextBlock x:Name="AppTitleTextBlock"
                            Text="Indirect" 
@@ -36,7 +36,7 @@
                            Margin="13,0,0,0"/>
             </StackPanel>
         </Grid>
-        <Button x:Name="BackButton" Grid.Row="0" Canvas.ZIndex="3"
+        <Button x:Name="BackButton" Grid.Row="0" Canvas.ZIndex="3" AutomationProperties.Name="Back"
                 Style="{StaticResource NavigationBackButtonNormalStyle}"
                 Height="32" Width="40"
                 Click="BackButton_OnClick">
@@ -45,6 +45,7 @@
                 <KeyboardAccelerator Key="Escape" Modifiers="None" Invoked="OnGoBackInvoked"/>
             </Button.KeyboardAccelerators>
         </Button>
-        <controls:ReelsControl x:Name="ReelsControl" Grid.Row="1" Source="{x:Bind Reels, Mode=OneWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <controls:ReelsControl x:Name="ReelsControl" Grid.Row="1" Source="{x:Bind Reels, Mode=OneWay}" 
+                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch" XYFocusKeyboardNavigation="Enabled"/>
     </Grid>
 </Page>

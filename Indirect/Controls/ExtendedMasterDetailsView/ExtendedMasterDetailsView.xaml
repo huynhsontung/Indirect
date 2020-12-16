@@ -41,7 +41,7 @@
                                                   x:DeferLoadStrategy="Lazy"
                                                   Content="{TemplateBinding MasterHeader}"
                                                   ContentTemplate="{TemplateBinding MasterHeaderTemplate}"
-                                                  Visibility="Collapsed" />
+                                                  Visibility="Collapsed" XYFocusKeyboardNavigation="Enabled"/>
                                 <ListView x:Name="MasterList"
                                           Grid.Row="1"
                                           IsTabStop="False"
@@ -52,7 +52,8 @@
                                           ItemsSource="{TemplateBinding ItemsSource}"
                                           SelectedItem="{Binding SelectedItem, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
                                           Header="{TemplateBinding MasterListHeader}"
-                                          HeaderTemplate="{TemplateBinding MasterListHeaderTemplate}"/>
+                                          HeaderTemplate="{TemplateBinding MasterListHeaderTemplate}"
+                                          XYFocusKeyboardNavigation="Enabled"/>
                                 <Grid x:Name="MasterCommandBarPanel" Grid.Row="2"></Grid>
                             </Grid>
                             <community:GridSplitter x:Name="RootPanelSplitter" Canvas.ZIndex="1" Grid.Column="1" HorizontalAlignment="Left"
@@ -62,7 +63,7 @@
                                 </community:GridSplitter.RenderTransform>
                             </community:GridSplitter>
                             <Grid x:Name="DetailsPanel" Windows10version1903:Shadow="{StaticResource MainShadow}"
-                                  Grid.Column="1">
+                                  Grid.Column="1" XYFocusKeyboardNavigation="Enabled">
                                 <ContentPresenter x:Name="NoSelectionPresenter"
                                                   Content="{TemplateBinding NoSelectionContent}"
                                                   ContentTemplate="{TemplateBinding NoSelectionContentTemplate}" />
@@ -108,7 +109,7 @@
                                                       To="HasSelection">
                                         <Storyboard>
                                             <DrillInThemeAnimation EntranceTargetName="SelectionDetailsPanel"
-                                                                   ExitTargetName="NoSelectionPresenter" />
+                                                                   ExitTargetName="NoSelectionPresenter" Duration="0:0:0.5" />
                                         </Storyboard>
                                     </VisualTransition>
                                     <VisualTransition From="NoSelectionNarrow"
@@ -140,7 +141,7 @@
                                                       To="NoSelectionWide">
                                         <Storyboard>
                                             <DrillOutThemeAnimation EntranceTargetName="NoSelectionPresenter"
-                                                                    ExitTargetName="SelectionDetailsPanel" />
+                                                                    ExitTargetName="SelectionDetailsPanel" Duration="0:0:0.5" />
                                         </Storyboard>
                                     </VisualTransition>
                                     <VisualTransition From="HasSelection"

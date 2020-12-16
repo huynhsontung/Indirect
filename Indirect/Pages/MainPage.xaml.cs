@@ -112,7 +112,7 @@ namespace Indirect.Pages
             if (!string.IsNullOrEmpty(inboxThread.ThreadId)) 
                 ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
 
-            Debouncer.DelayExecute("OnThreadChanged", 500, async cancelled =>
+            Debouncer.DelayExecute("OnThreadChanged", e.RemovedItems[0] == null ? 600 : 100, async cancelled =>
             {
                 if (cancelled) return;
                 var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");

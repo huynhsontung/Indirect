@@ -41,7 +41,8 @@
                             <KeyboardAccelerator Key="Enter" Modifiers="None" Invoked="MessageTextBox_OnEnterPressed"/>
                         </TextBox.KeyboardAccelerators>
                     </TextBox>
-                    <Button ToolTipService.ToolTip="Send" Margin="0,0,4,0" Click="SendButton_Click" VerticalAlignment="Bottom" Width="60">
+                    <Button ToolTipService.ToolTip="Send" AutomationProperties.Name="Send"
+                            Margin="0,0,4,0" Click="SendButton_Click" VerticalAlignment="Bottom" Width="60">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE724;"/>
                     </Button>
                 </StackPanel>
@@ -88,7 +89,8 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Grid x:Name="UserInfoGrid" Margin="4,6,4,4" Padding="10,4,10,6" CornerRadius="2" Background="{ThemeResource CustomAcrylicBrush}" Tapped="UserInfo_OnTapped">
+            <Grid x:Name="UserInfoGrid" Margin="4,6,4,4" Padding="10,4,10,6" 
+                  CornerRadius="2" Background="{ThemeResource CustomAcrylicBrush}" Tapped="UserInfo_OnTapped">
                 <FlyoutBase.AttachedFlyout>
                     <Flyout Placement="BottomEdgeAlignedLeft">
                         <controls1:UserInfoView x:Name="UserInfoView"/>
@@ -104,8 +106,9 @@
                 </Grid.RowDefinitions>
                 <controls:ImageEx Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
                                   Source="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.Parent).User.ProfilePictureUrl, Mode=OneWay}" 
-                                  Height="34" Width="34" Margin="0,0,12,0" CornerRadius="99" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="0" Grid.Column="1" 
+                                  Height="34" Width="34" Margin="0,0,12,0" CornerRadius="99" VerticalAlignment="Center"
+                                  AutomationProperties.LabeledBy="{Binding ElementName=StoryOwnerName}"/>
+                <TextBlock x:Name="StoryOwnerName" Grid.Row="0" Grid.Column="1" 
                            Text="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.Parent).User.Username, Mode=OneWay}"
                            Style="{ThemeResource FluentTitleTextStyle}" MaxLines="1" 
                            VerticalAlignment="Center"/>
@@ -125,7 +128,7 @@
             </StackPanel>
         </Grid>
         <FlipView x:Name="StoryView" Grid.Row="1" Grid.RowSpan="2" ItemsSource="{x:Bind Source.Items, Mode=OneWay}" Background="{ThemeResource SystemControlAcrylicWindowBrush}"
-                  Loaded="StoryView_OnLoaded" SelectionChanged="StoryView_OnSelectionChanged">
+                  Loaded="StoryView_OnLoaded" SelectionChanged="StoryView_OnSelectionChanged" AutomationProperties.Name="Story view">
             <FlipView.ItemTemplateSelector>
                 <selectors:StoryTemplateSelector ImageTemplate="{StaticResource ImageTemplate}"
                                                VideoTemplate="{StaticResource VideoTemplate}"/>
