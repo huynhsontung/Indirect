@@ -265,12 +265,19 @@ namespace InstagramAPI.Push
                 this.Log("Connected standby not available");
                 try
                 {
-                    Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
+                    Socket.EnableTransferOwnership(_socketActivityTask.TaskId,
+                        SocketActivityConnectedStandbyAction.DoNotWake);
+                }
+                catch (InvalidOperationException e)
+                {
+                    // System.InvalidOperationException: A method was called at an unexpected time. (Exception from HRESULT: 0x8000000E)
+                    // Apparently this is very common. Restart the machine will resolve this.
+                    DebugLogger.LogException(e, false);
+                    return false;
                 }
                 catch (Exception e)
                 {
                     DebugLogger.LogException(e);
-                    this.Log("Failed to transfer socket completely!");
                     return false;
                 }
             }
