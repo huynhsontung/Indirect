@@ -84,7 +84,7 @@ namespace Indirect.Controls
         private void OnWindowSizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
             MediaPopup.Width = e.Size.Width;
-            MediaPopup.Height = e.Size.Height - 32;
+            MediaPopup.Height = e.Size.Height > 32 ? e.Size.Height - 32 : e.Size.Height;
         }
 
         private void PrepareImageView()
