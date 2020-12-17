@@ -40,6 +40,7 @@ namespace BackgroundPushClient
                     threadUser = users[0];
                 }
             }
+            if (threadId == null || itemId == null || notificationContent.Message == null) return;
             if (string.IsNullOrEmpty(threadTitle))
                 threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(' '));
             var toastContent = new ToastContent
@@ -107,7 +108,8 @@ namespace BackgroundPushClient
                 Tag = itemId,
                 ExpiresOnReboot = false
             };
-            if (ApiInformation.IsPropertyPresent("Windows.UI.Notifications.ToastNotification", "RemoteId"))
+            if (ApiInformation.IsPropertyPresent("Windows.UI.Notifications.ToastNotification", "RemoteId") &&
+                !string.IsNullOrEmpty(notificationContent.PushId))
             {
                 toast.RemoteId = notificationContent.PushId;
             }
