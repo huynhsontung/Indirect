@@ -254,7 +254,7 @@ namespace InstagramAPI.Push
 
         private async Task<bool> TryEnableTransferOwnershipOnSocket()
         {
-            if (!await RequestBackgroundAccess().ConfigureAwait(false)) return false;
+            if (!await RequestBackgroundAccess()) return false;
             try
             {
                 Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
