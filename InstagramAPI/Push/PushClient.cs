@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
+using Windows.Foundation.Metadata;
 using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
@@ -118,7 +119,11 @@ namespace InstagramAPI.Push
             var activityTaskRegistered = TryRegisterBackgroundTaskOnce(BACKGROUND_SOCKET_ACTIVITY_NAME, SOCKET_ACTIVITY_ENTRY_POINT,
                 new SocketActivityTrigger(), out _socketActivityTask);
 
-            TryRegisterBackgroundTaskOnce(BACKGROUND_REPLY_NAME, BACKGROUND_REPLY_ENTRY_POINT, new ToastNotificationActionTrigger(), out _);
+            if (ApiInformation.IsTypePresent("Windows.ApplicationModel.Background.ToastNotificationActionTrigger"))
+            {
+                TryRegisterBackgroundTaskOnce(BACKGROUND_REPLY_NAME, BACKGROUND_REPLY_ENTRY_POINT,
+                    new Windows.ApplicationModel.Background.ToastNotificationActionTrigger(), out _);
+            }
             return activityTaskRegistered;
         }
 
