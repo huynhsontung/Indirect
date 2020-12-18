@@ -7,7 +7,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Controls;
-using Indirect.Services;
+using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Utils;
@@ -23,6 +23,8 @@ namespace Indirect.Pages
     {
         private MainViewModel ViewModel => ((App)Application.Current).ViewModel;
         private bool _loading;
+        private int _challengeRepeatCount;
+
         public LoginPage()
         {
             this.InitializeComponent();
@@ -32,6 +34,12 @@ namespace Indirect.Pages
             LoginWebview.Height = Window.Current.Bounds.Height * 0.8;
             WebviewPopup.VerticalOffset = -(LoginWebview.Height / 2);
             LoginWebview.NavigationStarting += LoginWebviewOnNavigationStarting;
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            _challengeRepeatCount = 0;
         }
 
         private void DisableButtons()
@@ -50,10 +58,13 @@ namespace Indirect.Pages
 
         private async void LoginWebviewOnNavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
         {
+            this.Log($"Navigating to: {args.Uri}");
             // Clearing challenge
             if (args.Uri.PathAndQuery == "/" || string.IsNullOrEmpty(args.Uri.PathAndQuery))
             {
-                WebviewPopup.IsOpen = false;
+                if (await Debouncer.Delay("ClearingChallenge", 200) && await TryClearingChallenge(sender))
+                    await LoginDispatch();
+                return;
             }
 
             // Facebook OAuth Login
@@ -118,12 +129,17 @@ namespace Indirect.Pages
 
         private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            if (Instagram.Instance.TwoFactorInfo != null)
+            if (ViewModel.InstaApi.TwoFactorInfo != null)
             {
                 await TwoFactorAuthAsync();
                 return;
             }
 
+            await LoginDispatch();
+        }
+
+        private async Task LoginDispatch()
+        {
             if (_loading) return;
             DisableButtons();
             try
@@ -141,9 +157,9 @@ namespace Indirect.Pages
                     switch (result.Value)
                     {
                         case LoginResult.ChallengeRequired:
-                            if (Instagram.Instance.ChallengeInfo != null && !WebviewPopup.IsOpen)
+                            if (ViewModel.InstaApi.ChallengeInfo != null && !WebviewPopup.IsOpen)
                             {
-                                LoginWebview.Navigate(Instagram.Instance.ChallengeInfo.Url);
+                                LoginWebview.Navigate(ViewModel.InstaApi.ChallengeInfo.Url);
                                 WebviewPopup.IsOpen = true;
                             }
 
@@ -167,6 +183,45 @@ namespace Indirect.Pages
             }
         }
 
+        private async Task<bool> TryClearingChallenge(WebView challengeWebView)
+        {
+            const int retryCount = 4;
+            _challengeRepeatCount++;
+            if (_challengeRepeatCount < retryCount)
+            {
+                WebviewPopup.IsOpen = false;
+                challengeWebView.Stop();
+                return true;
+            }
+
+            if (_challengeRepeatCount == retryCount)
+            {
+                WebviewPopup.IsOpen = false;
+                challengeWebView.Stop();
+                challengeWebView.Navigate(new Uri("https://www.instagram.com/"));
+                var manualLoginDialog = new ContentDialog
+                {
+                    Title = "Stuck at this screen?",
+                    Content = "Instagram might misbehave and refuse to send you the security code.\n" +
+                              "Please log in manually using their web interface, do all the verification required, then try logging in again with Indirect.",
+                    CloseButtonText = "Ok",
+                    DefaultButton = ContentDialogButton.Close
+                };
+                try
+                {
+                    await manualLoginDialog.ShowAsync();
+                }
+                catch (Exception)
+                {
+                    // pass
+                }
+
+                WebviewPopup.IsOpen = true;
+            }
+
+            return false;
+        }
+
         private async Task TwoFactorAuthAsync()
         {
             var tfaDialog = new TwoFactorAuthDialog();
@@ -177,9 +232,10 @@ namespace Indirect.Pages
 
         private async Task TryNavigateToMainPage()
         {
-            var instance = Instagram.Instance;
-            if ((string.IsNullOrEmpty(instance.Session.Username) || string.IsNullOrEmpty(instance.Session.Password)) &&
-                string.IsNullOrEmpty(instance.Session.FacebookAccessToken) || !instance.IsUserAuthenticated)
+            if ((string.IsNullOrEmpty(ViewModel.InstaApi.Session.Username) ||
+                 string.IsNullOrEmpty(ViewModel.InstaApi.Session.Password)) &&
+                string.IsNullOrEmpty(ViewModel.InstaApi.Session.FacebookAccessToken) ||
+                !ViewModel.InstaApi.IsUserAuthenticated)
             {
                 await ShowLoginErrorDialog("Something went wrong. Please try again later.");
                 DebugLogger.LogException(new Exception("Try to navigate to MainPage but user validation failed"));
@@ -229,7 +285,7 @@ namespace Indirect.Pages
 
         private async void FbLoginButton_OnClick(object sender, RoutedEventArgs e)
         {
-            if (Instagram.Instance.TwoFactorInfo != null)
+            if (ViewModel.InstaApi.TwoFactorInfo != null)
             {
                 await TwoFactorAuthAsync();
                 return;
