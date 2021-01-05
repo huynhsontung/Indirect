@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace InstagramAPI.Classes
+namespace InstagramAPI.Classes.Challenge
 {
     public class ChallengeLoginInfo
     {
@@ -22,6 +22,8 @@ namespace InstagramAPI.Classes
 
         [JsonProperty("native_flow")]
         public bool NativeFlow { get; set; }
-
+        
+        [JsonProperty("challenge_context")]
+        public string ChallengeContext { get; set; }
     }
 }

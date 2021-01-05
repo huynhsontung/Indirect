@@ -124,7 +124,8 @@
     <Compile Include="Classes\Android\AndroidVersion.cs" />
     <Compile Include="Classes\ApiRequestMessage.cs" />
     <Compile Include="Classes\ApiVersion.cs" />
-    <Compile Include="Classes\ChallengeLoginInfo.cs" />
+    <Compile Include="Classes\Challenge\ChallengeLoginInfo.cs" />
+    <Compile Include="Classes\Challenge\ChallengeSelectMethodStep.cs" />
     <Compile Include="Classes\Direct\DirectItem.cs" />
     <Compile Include="Classes\Direct\DirectItemType.cs" />
     <Compile Include="Classes\Direct\DirectThreadItemsOnly.cs" />
@@ -170,6 +171,7 @@
     <Compile Include="Classes\Mqtt\Packets\SubscriptionRequest.cs" />
     <Compile Include="Classes\Mqtt\Packets\UnsubAckPacket.cs" />
     <Compile Include="Classes\Mqtt\Packets\UnsubscribePacket.cs" />
+    <Compile Include="Classes\Responses\ChallengeStepResponse.cs" />
     <Compile Include="Classes\Responses\UserInfoResponse.cs" />
     <Compile Include="Classes\Reel.cs" />
     <Compile Include="Classes\Responses\FacebookResponse.cs" />
@@ -209,6 +211,7 @@
     <Compile Include="Classes\User\UserInfo.cs" />
     <Compile Include="Classes\User\UserWithFriendship.cs" />
     <Compile Include="Enums.cs" />
+    <Compile Include="Instagram.Challenge.cs" />
     <Compile Include="Instagram.cs" />
     <Compile Include="Instagram.Direct.cs" />
     <Compile Include="Instagram.Http.cs" />

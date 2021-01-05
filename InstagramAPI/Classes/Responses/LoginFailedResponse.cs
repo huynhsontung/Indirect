@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using InstagramAPI.Classes.Challenge;
+using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Responses
 {
