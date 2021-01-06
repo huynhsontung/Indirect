@@ -29,17 +29,15 @@ namespace Indirect.Controls.Selectors
 
         protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
         {
-            var element = container as FrameworkElement;
-            if (element != null && item != null && item is DirectItemWrapper inboxItem)
+            if (container is FrameworkElement && item is DirectItemWrapper inboxItem)
             {
-
                 switch (inboxItem.ItemType)
                 {
                     case DirectItemType.Like:
                         return LikeTemplate;
 
                     case DirectItemType.Hashtag:
-                    case DirectItemType.Text when !string.IsNullOrEmpty(inboxItem.NavigateUri?.ToString()):
+                    case DirectItemType.Text when inboxItem.NavigateUri != null:
                         return HyperlinkTemplate;
 
                     case DirectItemType.Text:

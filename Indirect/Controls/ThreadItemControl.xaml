@@ -415,6 +415,25 @@
                     </StackPanel>
                 </Border>
             </DataTemplate>
+
+            <selectors:ItemTemplateSelector x:Key="ItemTemplateSelector" 
+                                            TextTemplate="{StaticResource TextTemplate}"
+                                            ActionLogTemplate="{StaticResource ActionLogTemplate}"
+                                            LikeTemplate="{StaticResource LikeTemplate}"
+                                            HyperlinkTemplate="{StaticResource HyperlinkTemplate}"
+                                            HyperlinkWithPreviewTemplate="{StaticResource HyperlinkWithPreviewTemplate}"
+                                            NotSupportedTemplate="{StaticResource NotSupportedTemplate}"
+                                            HiddenMediaTemplate="{StaticResource HiddenMediaTemplate}"
+                                            ImageTemplate="{StaticResource ImageTemplate}"
+                                            VideoTemplate="{StaticResource VideoTemplate}"
+                                            AudioTemplate="{StaticResource AudioTemplate}"
+                                            MediaShareTemplate="{StaticResource MediaShareTemplate}"
+                                            ReelShareTemplate="{StaticResource ReelShareTemplate}"
+                                            StoryShareTemplate="{StaticResource StoryShareTemplate}"
+                                            VideoCallTemplate="{StaticResource VideoCallTemplate}"
+                                            ProfileTemplate="{StaticResource ProfileTemplate}"
+                                            UnexpectedTemplate="{StaticResource UnexpectedTemplate}"
+                                            PlaceholderTemplate="{StaticResource PlaceholderTemplate}"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -437,9 +456,25 @@
                        Foreground="{StaticResource SystemControlForegroundBaseLowBrush}"
                        Margin="0,0,0,2"/>
 
+            <StackPanel Orientation="Vertical" 
+                        Visibility="{x:Bind Item.RepliedItem, Converter={StaticResource NullVisibilityConverter}}"
+                        Margin="6,0,6,-4" >
+                <TextBlock Text="Replied to" Margin="2,0,2,2"
+                           HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
+                           Style="{ThemeResource FluentCaptionTextStyle}"
+                           Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
+
+                <ContentControl x:Name="RepliedContentControl" Content="{x:Bind Item.RepliedItem}" MaxHeight="160"
+                                HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
+                                ContentTemplateSelector="{StaticResource ItemTemplateSelector}" Opacity="0.5" >
+                </ContentControl>
+            </StackPanel>
+            
+
             <ContentControl x:Name="MainContentControl" Content="{x:Bind Item}" 
                             HorizontalAlignment="{x:Bind Item.HorizontalAlignment}"
-                            SizeChanged="ConfigTooltip_OnSizeChanged" DoubleTapped="Item_DoubleTapped">
+                            ContentTemplateSelector="{StaticResource ItemTemplateSelector}"
+                            SizeChanged="ConfigTooltip_OnSizeChanged" DoubleTapped="Item_DoubleTapped" >
                 <ContentControl.ContextFlyout>
                     <MenuFlyout>
                         <MenuFlyoutItem x:Name="LikeItemMenuOption" Style="{x:Bind Item.ObservableReactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
@@ -454,25 +489,6 @@
                                         Icon="Delete" Text="Unsend" Click="UnsendMessage"/>
                     </MenuFlyout>
                 </ContentControl.ContextFlyout>
-                <ContentControl.ContentTemplateSelector>
-                    <selectors:ItemTemplateSelector TextTemplate="{StaticResource TextTemplate}"
-                                                    ActionLogTemplate="{StaticResource ActionLogTemplate}"
-                                                    LikeTemplate="{StaticResource LikeTemplate}"
-                                                    HyperlinkTemplate="{StaticResource HyperlinkTemplate}"
-                                                    HyperlinkWithPreviewTemplate="{StaticResource HyperlinkWithPreviewTemplate}"
-                                                    NotSupportedTemplate="{StaticResource NotSupportedTemplate}"
-                                                    HiddenMediaTemplate="{StaticResource HiddenMediaTemplate}"
-                                                    ImageTemplate="{StaticResource ImageTemplate}"
-                                                    VideoTemplate="{StaticResource VideoTemplate}"
-                                                    AudioTemplate="{StaticResource AudioTemplate}"
-                                                    MediaShareTemplate="{StaticResource MediaShareTemplate}"
-                                                    ReelShareTemplate="{StaticResource ReelShareTemplate}"
-                                                    StoryShareTemplate="{StaticResource StoryShareTemplate}"
-                                                    VideoCallTemplate="{StaticResource VideoCallTemplate}"
-                                                    ProfileTemplate="{StaticResource ProfileTemplate}"
-                                                    UnexpectedTemplate="{StaticResource UnexpectedTemplate}"
-                                                    PlaceholderTemplate="{StaticResource PlaceholderTemplate}"/>
-                </ContentControl.ContentTemplateSelector>
             </ContentControl>
 
             <Border Margin="6,-2,6,0" Background="{ThemeResource FromThemItemBackground}" CornerRadius="6" Padding="6,2,6,2"

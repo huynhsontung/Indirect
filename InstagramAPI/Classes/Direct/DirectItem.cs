@@ -37,6 +37,10 @@ namespace InstagramAPI.Classes.Direct
         
         [JsonProperty("is_shh_mode")] public bool IsShhMode { get; set; }
 
+        [JsonProperty("replied_to_message", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(DirectItemConverter))] 
+        public DirectItem RepliedToMessage { get; set; }
+
         // Below are content belong to specific item type. The reason not to split up these into
         // separate classes is that this class need to be wrapped in another class in the front-end
         // for UI persistent data. Separate these will introduce tricky inheritance problems.

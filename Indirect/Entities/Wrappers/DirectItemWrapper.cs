@@ -23,6 +23,7 @@ namespace Indirect.Entities.Wrappers
         public DirectThreadWrapper Parent { get; }
         public ReactionsWrapper ObservableReactions { get; }
         public BaseUser Sender { get; }
+        public DirectItemWrapper RepliedItem { get; }
 
         private bool _showTimestampHeader;
         public bool ShowTimestampHeader
@@ -314,6 +315,11 @@ namespace Indirect.Entities.Wrappers
             Parent = parent;
             PropertyCopier<DirectItem, DirectItemWrapper>.Copy(source, this);
             ObservableReactions = source.Reactions != null ? new ReactionsWrapper(viewModel, source.Reactions, parent.Users) : new ReactionsWrapper(viewModel);
+
+            if (source.RepliedToMessage != null)
+            {
+                RepliedItem = new DirectItemWrapper(_viewModel, source.RepliedToMessage, Parent);
+            }
 
             // Lookup BaseUser from user id
             if (UserId == parent.ViewerId)
