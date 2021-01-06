@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using Windows.UI.Xaml;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes.Direct;
@@ -42,6 +43,19 @@ namespace Indirect.Entities.Wrappers
             {
                 _showNameHeader = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowNameHeader)));
+            }
+        }
+
+        public HorizontalAlignment HorizontalAlignment
+        {
+            get
+            {
+                if (ItemType == DirectItemType.ActionLog)
+                {
+                    return HorizontalAlignment.Center;
+                }
+
+                return FromMe ? HorizontalAlignment.Right : HorizontalAlignment.Left;
             }
         }
 
@@ -344,7 +358,7 @@ namespace Indirect.Entities.Wrappers
 
         public async void LikeItem()
         {
-            if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId)) return;
+            if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId) || ItemType == DirectItemType.ActionLog) return;
             await _viewModel.InstaApi.LikeItemAsync(Parent.ThreadId, ItemId).ConfigureAwait(false);
         }
 

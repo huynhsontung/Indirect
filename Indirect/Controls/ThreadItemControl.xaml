@@ -157,6 +157,12 @@
                 </Border>
             </DataTemplate>
 
+            <DataTemplate x:Key="ActionLogTemplate" x:DataType="wrappers:DirectItemWrapper">
+                <TextBlock Text="{x:Bind ActionLog.Description}" Margin="6" TextAlignment="Center" TextWrapping="Wrap"
+                           Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                           HorizontalAlignment="Center" />
+            </DataTemplate>
+
             <DataTemplate x:Key="HyperlinkTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <Border x:Name="HyperlinkContent" 
                         MaxWidth="250"
@@ -423,8 +429,8 @@
                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                    Margin="8,14,8,8"/>
 
-        <StackPanel Orientation="Vertical" HorizontalAlignment="{x:Bind Item.FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
-            <TextBlock x:Name="SenderNameText" HorizontalAlignment="{x:Bind Item.FromMe, Converter={StaticResource FromMeAlignmentConverter}}" 
+        <StackPanel Orientation="Vertical" HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}">
+            <TextBlock x:Name="SenderNameText" HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}" 
                        Text="{x:Bind Item.Sender.Username}" 
                        Visibility="{x:Bind Item.ShowNameHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" 
                        Style="{ThemeResource FluentCaptionTextStyle}"
@@ -432,7 +438,7 @@
                        Margin="0,0,0,2"/>
 
             <ContentControl x:Name="MainContentControl" Content="{x:Bind Item}" 
-                            HorizontalAlignment="{x:Bind Item.FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                            HorizontalAlignment="{x:Bind Item.HorizontalAlignment}"
                             SizeChanged="ConfigTooltip_OnSizeChanged" DoubleTapped="Item_DoubleTapped">
                 <ContentControl.ContextFlyout>
                     <MenuFlyout>
@@ -450,27 +456,28 @@
                 </ContentControl.ContextFlyout>
                 <ContentControl.ContentTemplateSelector>
                     <selectors:ItemTemplateSelector TextTemplate="{StaticResource TextTemplate}"
-                                                LikeTemplate="{StaticResource LikeTemplate}"
-                                                HyperlinkTemplate="{StaticResource HyperlinkTemplate}"
-                                                HyperlinkWithPreviewTemplate="{StaticResource HyperlinkWithPreviewTemplate}"
-                                                NotSupportedTemplate="{StaticResource NotSupportedTemplate}"
-                                                HiddenMediaTemplate="{StaticResource HiddenMediaTemplate}"
-                                                ImageTemplate="{StaticResource ImageTemplate}"
-                                                VideoTemplate="{StaticResource VideoTemplate}"
-                                                AudioTemplate="{StaticResource AudioTemplate}"
-                                                MediaShareTemplate="{StaticResource MediaShareTemplate}"
-                                                ReelShareTemplate="{StaticResource ReelShareTemplate}"
-                                                StoryShareTemplate="{StaticResource StoryShareTemplate}"
-                                                VideoCallTemplate="{StaticResource VideoCallTemplate}"
-                                                ProfileTemplate="{StaticResource ProfileTemplate}"
-                                                UnexpectedTemplate="{StaticResource UnexpectedTemplate}"
-                                                PlaceholderTemplate="{StaticResource PlaceholderTemplate}"/>
+                                                    ActionLogTemplate="{StaticResource ActionLogTemplate}"
+                                                    LikeTemplate="{StaticResource LikeTemplate}"
+                                                    HyperlinkTemplate="{StaticResource HyperlinkTemplate}"
+                                                    HyperlinkWithPreviewTemplate="{StaticResource HyperlinkWithPreviewTemplate}"
+                                                    NotSupportedTemplate="{StaticResource NotSupportedTemplate}"
+                                                    HiddenMediaTemplate="{StaticResource HiddenMediaTemplate}"
+                                                    ImageTemplate="{StaticResource ImageTemplate}"
+                                                    VideoTemplate="{StaticResource VideoTemplate}"
+                                                    AudioTemplate="{StaticResource AudioTemplate}"
+                                                    MediaShareTemplate="{StaticResource MediaShareTemplate}"
+                                                    ReelShareTemplate="{StaticResource ReelShareTemplate}"
+                                                    StoryShareTemplate="{StaticResource StoryShareTemplate}"
+                                                    VideoCallTemplate="{StaticResource VideoCallTemplate}"
+                                                    ProfileTemplate="{StaticResource ProfileTemplate}"
+                                                    UnexpectedTemplate="{StaticResource UnexpectedTemplate}"
+                                                    PlaceholderTemplate="{StaticResource PlaceholderTemplate}"/>
                 </ContentControl.ContentTemplateSelector>
             </ContentControl>
 
             <Border Margin="6,-2,6,0" Background="{ThemeResource FromThemItemBackground}" CornerRadius="6" Padding="6,2,6,2"
                     BorderBrush="{ThemeResource MainBackground}" BorderThickness="2"
-                    HorizontalAlignment="{x:Bind Item.FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                    HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
                     Visibility="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}"
                     Tapped="ReactionsBorder_Tapped">
                 <FlyoutBase.AttachedFlyout>

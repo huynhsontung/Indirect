@@ -10,6 +10,7 @@ namespace Indirect.Controls.Selectors
     class ItemTemplateSelector : DataTemplateSelector
     {
         public DataTemplate TextTemplate { get; set; }
+        public DataTemplate ActionLogTemplate { get; set; }
         public DataTemplate LikeTemplate { get; set; }
         public DataTemplate ImageTemplate { get; set; }
         public DataTemplate VideoTemplate { get; set; }
@@ -25,8 +26,6 @@ namespace Indirect.Controls.Selectors
         public DataTemplate NotSupportedTemplate { get; set; }
         public DataTemplate UnexpectedTemplate { get; set; }
         public DataTemplate PlaceholderTemplate { get; set; }
-
-        private static readonly DataTemplate EmptyTemplate = new DataTemplate();
 
         protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
         {
@@ -50,7 +49,7 @@ namespace Indirect.Controls.Selectors
                         return HyperlinkWithPreviewTemplate;
 
                     case DirectItemType.ActionLog:
-                        return EmptyTemplate;
+                        return ActionLogTemplate;
 
                     case DirectItemType.MediaShare:
                         return MediaShareTemplate;

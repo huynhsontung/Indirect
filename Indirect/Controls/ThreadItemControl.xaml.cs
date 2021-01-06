@@ -41,9 +41,14 @@ namespace Indirect.Controls
             view.ProcessItem();
             view.LikeItemMenuOption.IsEnabled = !item.Parent.Pending;
             if (item.ItemType == DirectItemType.ActionLog)
-                view.ItemContainer.Visibility = Visibility.Collapsed;
+            {
+                view.ItemContainer.Visibility = item.HideInThread ? Visibility.Collapsed : Visibility.Visible;
+                view.MainContentControl.ContextFlyout = null;
+            }
             if (item.ItemType == DirectItemType.Text)
+            {
                 view.MenuCopyOption.Visibility = Visibility.Visible;
+            }
             view.Bindings.Update();
         }
 
