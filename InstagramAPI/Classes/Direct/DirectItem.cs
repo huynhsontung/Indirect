@@ -32,6 +32,10 @@ namespace InstagramAPI.Classes.Direct
         [JsonProperty("reactions")] public ReactionsContainer Reactions { get; set; }
 
         [JsonProperty("client_context")] public string ClientContext { get; set; }
+        
+        [JsonProperty("show_forward_attribution")] public bool ShowForwardAttribution { get; set; }
+        
+        [JsonProperty("is_shh_mode")] public bool IsShhMode { get; set; }
 
         // Below are content belong to specific item type. The reason not to split up these into
         // separate classes is that this class need to be wrapped in another class in the front-end
@@ -40,6 +44,10 @@ namespace InstagramAPI.Classes.Direct
         #region ActionLog
 
         [JsonProperty("action_log")] public DirectActionLog ActionLog { get; set; }
+        
+        [JsonProperty("hide_in_thread")]
+        [JsonConverter(typeof(BoolConverter))]
+        public bool HideInThread { get; set; }
 
         #endregion
 

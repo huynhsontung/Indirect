@@ -7,16 +7,20 @@ using InstagramAPI.Classes.User;
 
 namespace Indirect.Entities.Wrappers
 {
-    class ReactionsWrapper : ReactionsContainer, INotifyPropertyChanged
+    class ReactionsWrapper : INotifyPropertyChanged
     {
         private readonly MainViewModel _viewModel;
         private readonly ICollection<BaseUser> _users;
+        private readonly ObservableCollection<EmojiReaction> _emojiReactions;
         private uint _likesCount;
         private bool _meLiked;
+        private ReactionsContainer _reactionsContainer;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ObservableCollection<BaseUser> Senders = new ObservableCollection<BaseUser>();
+
+        public ReadOnlyObservableCollection<EmojiReaction> EmojiReactions { get; }
 
         public bool MeLiked
         {
@@ -27,7 +31,8 @@ namespace Indirect.Entities.Wrappers
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MeLiked)));
             }
         }
-        public new uint LikesCount
+        
+        public uint LikesCount
         {
             get => _likesCount;
             set
@@ -40,21 +45,21 @@ namespace Indirect.Entities.Wrappers
         public ReactionsWrapper(MainViewModel viewModel)
         {
             _viewModel = viewModel;
-            Likes = new List<LikeReaction>(0);
+            _emojiReactions = new ObservableCollection<EmojiReaction>();
+            EmojiReactions = new ReadOnlyObservableCollection<EmojiReaction>(_emojiReactions);
             MeLiked = false;
             LikesCount = 0;
         }
 
-        public ReactionsWrapper(MainViewModel viewModel, ReactionsContainer source, ICollection<BaseUser> usersList)
+        public ReactionsWrapper(MainViewModel viewModel, ReactionsContainer source, ICollection<BaseUser> usersList) :
+            this(viewModel)
         {
-            _viewModel = viewModel;
             _users = usersList;
             Update(source);
         }
 
         public void Clear()
         {
-            Likes.Clear();
             LikesCount = 0;
             MeLiked = false;
             Senders.Clear();
@@ -62,12 +67,18 @@ namespace Indirect.Entities.Wrappers
 
         public void Update(ReactionsContainer source)
         {
-            Likes = source.Likes ?? new List<LikeReaction>();
+            if (source == null) return;
+            _reactionsContainer = source;
+
+            #region To Be Deprecated
+            
+            //TODO: TO BE DEPRECATED
+            var likes = source.Likes ?? new LikeReaction[0];
             LikesCount = source.LikesCount;
-            MeLiked = Likes.Any(x => x.SenderId == _viewModel.LoggedInUser.Pk);
+            MeLiked = likes.Any(x => x.SenderId == _viewModel.LoggedInUser.Pk);
             Senders.Clear();
 
-            foreach (var like in Likes)
+            foreach (var like in likes)
             {
                 var user = _users?.FirstOrDefault(x => x.Pk == like.SenderId);
                 if (user != null)
@@ -82,7 +93,43 @@ namespace Indirect.Entities.Wrappers
                     }
                 }
             }
+
+            #endregion
+
+            if (source.Emojis == null || source.Emojis.Length == 0) return;
+
+            var consistent = true;
+            if (source.Emojis.Length == _emojiReactions.Count)
+            {
+                for (int i = 0; i < _emojiReactions.Count; i++)
+                {
+                    var local = _emojiReactions[i];
+                    var reference = source.Emojis[i];
+                    if (local.SenderId != reference.SenderId || local.Timestamp != reference.Timestamp)
+                    {
+                        consistent = false;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                consistent = false;
+            }
+
+            if (consistent)
+            {
+                return;
+            }
+            
+            _emojiReactions.Clear();
+            foreach (var emojiReaction in source.Emojis)
+            {
+                _emojiReactions.Add(emojiReaction);
+            }
         }
+
+        public void Update(ReactionsWrapper source) => Update(source._reactionsContainer);
     }
 
 }
