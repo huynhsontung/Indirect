@@ -45,6 +45,7 @@ namespace InstagramAPI.Classes
             /// </summary>
             Version86 = 8,
             Version136 = 9,
+            Version169 = 10
         }
 
         internal static readonly Dictionary<ApiVersionNumber, ApiVersion> ApiVersions =
@@ -138,6 +139,15 @@ namespace InstagramAPI.Classes
                         AppVersion = "136.0.0.34.124",
                         Capabilities = "3brTvw==",
                         SignatureKey = "46024e8f31e295869a0e861eaed42cb1dd8454b55232d85f6c6764365079374b"
+                    }
+                },
+                {
+                    ApiVersionNumber.Version169,
+                    new ApiVersion
+                    {
+                        AppVersionCode = "264009054",
+                        AppVersion = "169.3.0.30.135",
+                        Capabilities = "3brTvx8="
                     }
                 }
             };

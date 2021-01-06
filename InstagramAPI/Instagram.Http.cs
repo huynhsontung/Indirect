@@ -58,8 +58,6 @@ namespace InstagramAPI
         public static HttpRequestMessage GetSignedRequest(Uri uri,
             JObject data)
         {
-            var hash = CryptoHelper.CalculateHash(ApiVersion.CurrentApiVersion.SignatureKey,
-                data.ToString(Formatting.None));
             var payload = data.ToString(Formatting.None);
             return GetSignedRequest(uri, payload);
         }
@@ -74,7 +72,7 @@ namespace InstagramAPI
             var request = new HttpRequestMessage(HttpMethod.Post, uri);
             request.Content = new HttpFormUrlEncodedContent(fields);
             request.Properties.Add("signed_body", signature);
-            request.Properties.Add("ig_sig_key_version", "4");
+            //request.Properties.Add("ig_sig_key_version", "4");
             return request;
         }
 
