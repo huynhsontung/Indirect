@@ -23,7 +23,8 @@ namespace InstagramAPI.Classes.JsonConverters
                 return false;
             }
 
-            if (reader.ValueType == typeof(long) || reader.ValueType == typeof(double) && (double) value == 0)
+            if ((reader.ValueType == typeof(long) || reader.ValueType == typeof(double)) &&
+                Convert.ToDouble(value) == 0)
             {
                 return false;
             }
