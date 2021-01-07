@@ -176,6 +176,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="64"/>
             </Grid.ColumnDefinitions>
 
@@ -209,10 +210,11 @@
 
             <TextBox x:Name="MessageTextBox" Text="{x:Bind Thread.DraftMessage, Mode=TwoWay}" TextChanged="MessageTextBox_OnTextChanged"
                      Grid.Column="2" Grid.Row="1" Grid.RowSpan="2"
+                     Margin="4,0"
                      VerticalAlignment="Stretch"
                      TextWrapping="Wrap"
                      PlaceholderText="Type a message"
-                     Margin="4,0,4,0" MaxLength="2200" 
+                     MaxLength="2200" 
                      AcceptsReturn="True" 
                      KeyboardAcceleratorPlacementMode="Hidden"
                      TabIndex="0">
@@ -221,9 +223,17 @@
                 </TextBox.KeyboardAccelerators>
             </TextBox>
 
+            <Button Grid.Column="3" Grid.Row="2" ToolTipService.ToolTip="Insert an Emoji" AutomationProperties.Name="Insert an Emoji" 
+                    Margin="0,0,2,0" Click="InsertEmojiButton_OnClick">
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Control" Key="E" />
+                </Button.KeyboardAccelerators>
+                <SymbolIcon Symbol="Emoji2" />
+            </Button>
+
             <Button x:Name="SendButton" ToolTipService.ToolTip="Send" AutomationProperties.Name="Send"
                     HorizontalAlignment="Stretch"
-                    Grid.Column="3" Grid.Row="2"
+                    Grid.Column="4" Grid.Row="2"
                     Margin="0,0,8,0" Click="SendButton_Click">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" 
                           Glyph="{x:Bind MessageTextBox.Text, Mode=OneWay, Converter={StaticResource SendButtonGlyphConverter}}"/>

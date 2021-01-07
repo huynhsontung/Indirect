@@ -8,6 +8,7 @@ using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.ViewManagement.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -398,6 +399,12 @@ namespace Indirect.Controls
         {
             var viewmodel = ((App) Application.Current).ViewModel;
             await viewmodel.OpenThreadInNewWindow(Thread);
+        }
+
+        private void InsertEmojiButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            MessageTextBox.Focus(FocusState.Programmatic);
+            CoreInputView.GetForCurrentView().TryShow(CoreInputViewKind.Emoji);
         }
     }
 }
