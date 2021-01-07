@@ -317,6 +317,7 @@
                                       HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                                       CornerRadius="2" Tapped="ReelShareImage_Tapped"/>
                     <TextBlock Text="{x:Bind StoryShareMedia.Message}" Margin="0,-2,0,0"
+                               HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Style="{ThemeResource FluentCaptionTextStyle}"
                                Visibility="{x:Bind StoryShareMedia.Message, Converter={StaticResource NullVisibilityConverter}}"/>
                     <Border x:Name="MessageContentWithBorder"
