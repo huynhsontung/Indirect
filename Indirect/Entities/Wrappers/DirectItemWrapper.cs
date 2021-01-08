@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using Windows.UI.Xaml;
 using Indirect.Utilities;
-using InstagramAPI;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.User;
@@ -17,15 +16,15 @@ namespace Indirect.Entities.Wrappers
         public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly MainViewModel _viewModel;
-
         private readonly DirectItem _sourceItem;
+        private bool _showTimestampHeader;
+        private bool _showNameHeader;
 
         public DirectThreadWrapper Parent { get; }
         public ReactionsWrapper ObservableReactions { get; }
         public BaseUser Sender { get; }
         public DirectItemWrapper RepliedItem { get; }
 
-        private bool _showTimestampHeader;
         public bool ShowTimestampHeader
         {
             get => _showTimestampHeader;
@@ -36,7 +35,6 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
-        private bool _showNameHeader;
         public bool ShowNameHeader
         {
             get => _showNameHeader;
@@ -47,263 +45,23 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
-        public HorizontalAlignment HorizontalAlignment
-        {
-            get
-            {
-                if (ItemType == DirectItemType.ActionLog)
-                {
-                    return HorizontalAlignment.Center;
-                }
+        public HorizontalAlignment HorizontalAlignment => GetHorizontalAlignment();
 
-                return FromMe ? HorizontalAlignment.Right : HorizontalAlignment.Left;
-            }
-        }
+        public Uri NavigateUri => GetNavigateUri();
 
-        public Uri NavigateUri
-        {
-            get {
-                switch (ItemType)
-                {
-                    case DirectItemType.Text when !string.IsNullOrEmpty(Text) && Text[0] == '#' && !Text.Contains(' '):
-                        return new Uri("https://www.instagram.com/explore/tags/" + Text.Substring(1));
+        public int FullImageHeight => GetFullImage()?.Height ?? 0;
 
-                    case DirectItemType.Link:
-                        return Uri.TryCreate(Link.LinkContext.LinkUrl, UriKind.Absolute, out var uri) ? uri : null;
+        public int FullImageWidth => GetFullImage()?.Width ?? 0;
 
-                    case DirectItemType.MediaShare:
-                        return new Uri("https://www.instagram.com/p/" + MediaShare.Code);
+        public Uri PreviewImageUri => GetPreviewImageUri();
 
-                    case DirectItemType.Hashtag:
-                        return new Uri("https://www.instagram.com/explore/tags/" + HashtagMedia.Name.ToLower(CultureInfo.CurrentCulture));
+        public Uri FullImageUri => GetFullImageUri();
 
-                    case DirectItemType.Profile:
-                        return Profile.ProfileUrl;
-                    
-                    default:
-                        return null;
-                }
-            }
-        }
+        public int VideoWidth => GetVideo()?.OriginalWidth ?? 0;
 
-        public int FullImageHeight
-        {
-            get
-            {
-                switch (ItemType)
-                {
-                    case DirectItemType.Media:
-                        return GetFullImage(Media.Images)?.Height ?? 0;
+        public int VideoHeight => GetVideo()?.OriginalHeight ?? 0;
 
-                    case DirectItemType.RavenMedia when RavenMedia != null:
-                        return GetFullImage(RavenMedia.Images)?.Height ?? 0;
-
-                    case DirectItemType.RavenMedia when VisualMedia != null:
-                        return GetFullImage(VisualMedia.Media.Images)?.Height ?? 0;
-
-                    case DirectItemType.ReelShare:
-                        return GetFullImage(ReelShareMedia.Media.Images)?.Height ?? 0;
-
-                    case DirectItemType.StoryShare:
-                        return GetFullImage(StoryShareMedia.Media?.Images)?.Height ?? 0;
-
-                    case DirectItemType.AnimatedMedia:
-                        return AnimatedMedia.Image.Height;
-
-                    default:
-                        return 0;
-                }
-            }
-        }
-
-        public int FullImageWidth
-        {
-            get
-            {
-                switch (ItemType)
-                {
-                    case DirectItemType.Media:
-                        return GetFullImage(Media.Images)?.Width ?? 0;
-
-                    case DirectItemType.RavenMedia when RavenMedia != null:
-                        return GetFullImage(RavenMedia.Images)?.Width ?? 0;
-
-                    case DirectItemType.RavenMedia when VisualMedia != null:
-                        return GetFullImage(VisualMedia.Media.Images)?.Width ?? 0;
-
-                    case DirectItemType.ReelShare:
-                        return GetFullImage(ReelShareMedia.Media.Images)?.Width ?? 0;
-
-                    case DirectItemType.StoryShare:
-                        return GetFullImage(StoryShareMedia.Media?.Images)?.Width ?? 0;
-
-                    case DirectItemType.AnimatedMedia:
-                        return AnimatedMedia.Image.Width;
-
-                    default:
-                        return 0;
-                }
-            }
-        }
-
-        public Uri PreviewImageUri
-        {
-            get
-            {
-                switch (ItemType)
-                {
-                    case DirectItemType.Media:
-                        return GetPreviewImage(Media.Images)?.Url;
-
-                    case DirectItemType.MediaShare when MediaShare.CarouselMedia?.Length > 0:
-                        return GetPreviewImage(MediaShare.CarouselMedia[0].Images)?.Url;
-
-                    case DirectItemType.MediaShare:
-                        return GetPreviewImage(MediaShare.Images)?.Url;
-
-                    case DirectItemType.RavenMedia when RavenMedia != null:
-                        return GetPreviewImage(RavenMedia.Images)?.Url;
-
-                    case DirectItemType.RavenMedia when VisualMedia != null:
-                        return GetPreviewImage(VisualMedia.Media.Images)?.Url;
-
-                    case DirectItemType.ReelShare:
-                        return GetPreviewImage(ReelShareMedia.Media.Images)?.Url;
-
-                    case DirectItemType.StoryShare:
-                        return GetPreviewImage(StoryShareMedia.Media?.Images)?.Url;
-
-                    case DirectItemType.AnimatedMedia:
-                        return AnimatedMedia.Image.Url;
-
-                    default:
-                        return null;
-                }
-            }
-        }
-
-        public Uri FullImageUri
-        {
-            get
-            {
-                switch (ItemType)
-                {
-                    case DirectItemType.Media:
-                        return GetFullImageUri(Media.Images);
-
-                    case DirectItemType.MediaShare when MediaShare.CarouselMedia?.Length > 0:
-                        return GetFullImageUri(MediaShare.CarouselMedia[0].Images);
-
-                    case DirectItemType.MediaShare:
-                        return GetFullImageUri(MediaShare.Images);
-
-                    case DirectItemType.RavenMedia when RavenMedia != null:
-                        return GetFullImageUri(RavenMedia.Images);
-
-                    case DirectItemType.RavenMedia when VisualMedia != null:
-                        return GetFullImageUri(VisualMedia.Media.Images);
-
-                    case DirectItemType.ReelShare:
-                        return GetFullImageUri(ReelShareMedia.Media.Images);
-
-                    case DirectItemType.StoryShare:
-                        return GetFullImageUri(StoryShareMedia.Media?.Images);
-
-                    case DirectItemType.AnimatedMedia:
-                        return PreviewImageUri;
-
-                    default:
-                        return null;
-                }
-            }
-        }
-
-        public int VideoWidth
-        {
-            get
-            {
-                switch (ItemType)
-                {
-                    case DirectItemType.RavenMedia when RavenMedia != null:
-                        return RavenMedia.OriginalWidth ?? 0;
-
-                    case DirectItemType.RavenMedia when VisualMedia != null:
-                        return VisualMedia.Media.OriginalWidth ?? 0;
-
-                    case DirectItemType.Media when Media != null:
-                        return Media.OriginalWidth ?? 0;
-
-                    case DirectItemType.ReelShare when ReelShareMedia != null:
-                        return ReelShareMedia.Media.OriginalWidth ?? 0;
-
-                    case DirectItemType.StoryShare when StoryShareMedia != null:
-                        return StoryShareMedia.Media?.OriginalWidth ?? 0;
-
-                    default:
-                        return 0;
-                }
-            }
-        }
-
-        public int VideoHeight
-        {
-            get
-            {
-                switch (ItemType)
-                {
-                    case DirectItemType.RavenMedia when RavenMedia != null:
-                        return RavenMedia.OriginalHeight ?? 0;
-
-                    case DirectItemType.RavenMedia when VisualMedia != null:
-                        return VisualMedia.Media.OriginalHeight ?? 0;
-
-                    case DirectItemType.Media when Media != null:
-                        return Media.OriginalHeight ?? 0;
-
-                    case DirectItemType.ReelShare when ReelShareMedia != null:
-                        return ReelShareMedia.Media.OriginalHeight ?? 0;
-
-                    case DirectItemType.StoryShare when StoryShareMedia != null:
-                        return StoryShareMedia.Media?.OriginalHeight ?? 0;
-
-                    default:
-                        return 0;
-                }
-            }
-        }
-
-        public Uri VideoUri
-        {
-            get
-            {
-                switch (ItemType)
-                {
-                    case DirectItemType.Media when Media.Videos.Length > 0:
-                        return Media.Videos[0].Url;
-
-                    case DirectItemType.MediaShare when MediaShare.Videos.Length > 0:
-                        return MediaShare.Videos[0].Url;
-
-                    case DirectItemType.RavenMedia when RavenMedia != null && RavenMedia.Videos.Length > 0:
-                        return RavenMedia.Videos[0].Url;
-        
-                    case DirectItemType.RavenMedia when VisualMedia != null && VisualMedia.Media.Videos.Length > 0:
-                        return VisualMedia.Media.Videos[0].Url;
-
-                    case DirectItemType.ReelShare:
-                        return ReelShareMedia.Media?.VideoVersions[0].Url;
-
-                    case DirectItemType.StoryShare:
-                        return StoryShareMedia.Media?.VideoVersions[0].Url;
-
-                    case DirectItemType.VoiceMedia:
-                        return VoiceMedia.Media.Audio.AudioSrc;
-        
-                    default:
-                        return null;
-                }
-            }
-        }
+        public Uri VideoUri => GetVideoUri();
 
         public bool IsNavigateUriValid => NavigateUri?.IsAbsoluteUri ?? false;
         
@@ -360,6 +118,187 @@ namespace Indirect.Entities.Wrappers
         private static Uri GetFullImageUri(ICollection<InstaImage> imageCandidates)
         {
             return GetFullImage(imageCandidates)?.Url;
+        }
+
+        private Uri GetNavigateUri()
+        {
+            switch (ItemType)
+            {
+                case DirectItemType.Text when !string.IsNullOrEmpty(Text) && Text[0] == '#' && !Text.Contains(' '):
+                    return new Uri("https://www.instagram.com/explore/tags/" + Text.Substring(1));
+
+                case DirectItemType.Link:
+                    return Uri.TryCreate(Link.LinkContext.LinkUrl, UriKind.Absolute, out var uri) ? uri : null;
+
+                case DirectItemType.MediaShare:
+                    return new Uri("https://www.instagram.com/p/" + MediaShare.Code);
+
+                case DirectItemType.Hashtag:
+                    return new Uri("https://www.instagram.com/explore/tags/" + HashtagMedia.Name.ToLower(CultureInfo.CurrentCulture));
+
+                case DirectItemType.Profile:
+                    return Profile.ProfileUrl;
+
+                default:
+                    return null;
+            }
+        }
+        
+        private InstaImage GetFullImage()
+        {
+            switch (ItemType)
+            {
+                case DirectItemType.Media:
+                    return GetFullImage(Media.Images);
+
+                case DirectItemType.RavenMedia when RavenMedia != null:
+                    return GetFullImage(RavenMedia.Images);
+
+                case DirectItemType.RavenMedia when VisualMedia != null:
+                    return GetFullImage(VisualMedia.Media.Images);
+
+                case DirectItemType.ReelShare:
+                    return GetFullImage(ReelShareMedia.Media.Images);
+
+                case DirectItemType.StoryShare:
+                    return GetFullImage(StoryShareMedia.Media?.Images);
+
+                case DirectItemType.AnimatedMedia:
+                    return AnimatedMedia.Image;
+
+                default:
+                    return null;
+            }
+        }
+
+        private Uri GetFullImageUri()
+        {
+            switch (ItemType)
+            {
+                case DirectItemType.Media:
+                    return GetFullImageUri(Media.Images);
+
+                case DirectItemType.MediaShare when MediaShare.CarouselMedia?.Length > 0:
+                    return GetFullImageUri(MediaShare.CarouselMedia[0].Images);
+
+                case DirectItemType.MediaShare:
+                    return GetFullImageUri(MediaShare.Images);
+
+                case DirectItemType.RavenMedia when RavenMedia != null:
+                    return GetFullImageUri(RavenMedia.Images);
+
+                case DirectItemType.RavenMedia when VisualMedia != null:
+                    return GetFullImageUri(VisualMedia.Media.Images);
+
+                case DirectItemType.ReelShare:
+                    return GetFullImageUri(ReelShareMedia.Media.Images);
+
+                case DirectItemType.StoryShare:
+                    return GetFullImageUri(StoryShareMedia.Media?.Images);
+
+                case DirectItemType.AnimatedMedia:
+                    return PreviewImageUri;
+
+                default:
+                    return null;
+            }
+        }
+
+        private Uri GetPreviewImageUri()
+        {
+            switch (ItemType)
+            {
+                case DirectItemType.Media:
+                    return GetPreviewImage(Media.Images)?.Url;
+
+                case DirectItemType.MediaShare when MediaShare.CarouselMedia?.Length > 0:
+                    return GetPreviewImage(MediaShare.CarouselMedia[0].Images)?.Url;
+
+                case DirectItemType.MediaShare:
+                    return GetPreviewImage(MediaShare.Images)?.Url;
+
+                case DirectItemType.RavenMedia when RavenMedia != null:
+                    return GetPreviewImage(RavenMedia.Images)?.Url;
+
+                case DirectItemType.RavenMedia when VisualMedia != null:
+                    return GetPreviewImage(VisualMedia.Media.Images)?.Url;
+
+                case DirectItemType.ReelShare:
+                    return GetPreviewImage(ReelShareMedia.Media.Images)?.Url;
+
+                case DirectItemType.StoryShare:
+                    return GetPreviewImage(StoryShareMedia.Media?.Images)?.Url;
+
+                case DirectItemType.AnimatedMedia:
+                    return AnimatedMedia.Image.Url;
+
+                default:
+                    return null;
+            }
+        }
+
+        private InstaMedia GetVideo()
+        {
+            switch (ItemType)
+            {
+                case DirectItemType.RavenMedia when RavenMedia != null:
+                    return RavenMedia;
+
+                case DirectItemType.RavenMedia when VisualMedia != null:
+                    return VisualMedia.Media;
+
+                case DirectItemType.Media when Media != null:
+                    return Media;
+
+                case DirectItemType.ReelShare when ReelShareMedia != null:
+                    return ReelShareMedia.Media;
+
+                case DirectItemType.StoryShare when StoryShareMedia != null:
+                    return StoryShareMedia.Media;
+
+                default:
+                    return null;
+            }
+        }
+
+        private Uri GetVideoUri()
+        {
+            switch (ItemType)
+            {
+                case DirectItemType.Media when Media.Videos.Length > 0:
+                    return Media.Videos[0].Url;
+
+                case DirectItemType.MediaShare when MediaShare.Videos.Length > 0:
+                    return MediaShare.Videos[0].Url;
+
+                case DirectItemType.RavenMedia when RavenMedia != null && RavenMedia.Videos.Length > 0:
+                    return RavenMedia.Videos[0].Url;
+
+                case DirectItemType.RavenMedia when VisualMedia != null && VisualMedia.Media.Videos.Length > 0:
+                    return VisualMedia.Media.Videos[0].Url;
+
+                case DirectItemType.ReelShare:
+                    return ReelShareMedia.Media?.VideoVersions[0].Url;
+
+                case DirectItemType.StoryShare:
+                    return StoryShareMedia.Media?.VideoVersions[0].Url;
+
+                case DirectItemType.VoiceMedia:
+                    return VoiceMedia.Media.Audio.AudioSrc;
+
+                default:
+                    return null;
+            }
+        }
+
+        private HorizontalAlignment GetHorizontalAlignment()
+        {
+            if (ItemType == DirectItemType.ActionLog)
+            {
+                return HorizontalAlignment.Center;
+            }
+
+            return FromMe ? HorizontalAlignment.Right : HorizontalAlignment.Left;
         }
 
         public async void LikeItem()
