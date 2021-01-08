@@ -480,6 +480,11 @@
                     <MenuFlyout>
                         <MenuFlyoutItem x:Name="LikeItemMenuOption" Style="{x:Bind Item.ObservableReactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
                                         Click="LikeUnlike_Click"/>
+                        <MenuFlyoutItem Text="Reply" Visibility="{x:Bind Item.IsReplyable, Converter={StaticResource BooleanVisibilityConverter}}" Click="ReplyToItem_OnClick" >
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE97A;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
                         <MenuFlyoutItem x:Name="MenuCopyOption" Visibility="Collapsed" Text="Copy" Click="MenuCopyOption_Click">
                             <MenuFlyoutItem.Icon>
                                 <SymbolIcon Symbol="Copy"/>

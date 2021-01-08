@@ -406,5 +406,10 @@ namespace Indirect.Controls
             MessageTextBox.Focus(FocusState.Programmatic);
             CoreInputView.GetForCurrentView().TryShow(CoreInputViewKind.Emoji);
         }
+
+        private void ClearReplyButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            Thread.ReplyingItem = null;
+        }
     }
 }

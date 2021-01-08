@@ -45,6 +45,8 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
+        public bool IsReplyable => GetItemReplyable();
+
         public HorizontalAlignment HorizontalAlignment => GetHorizontalAlignment();
 
         public Uri NavigateUri => GetNavigateUri();
@@ -299,6 +301,36 @@ namespace Indirect.Entities.Wrappers
             }
 
             return FromMe ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+        }
+
+        private bool GetItemReplyable()
+        {
+            switch (ItemType)
+            {
+                case DirectItemType.Text:
+                case DirectItemType.MediaShare:
+                case DirectItemType.Like:
+                case DirectItemType.Link:
+                case DirectItemType.Media:
+                    return true;
+                
+                case DirectItemType.Unknown:
+                case DirectItemType.ReelShare:
+                case DirectItemType.Placeholder:
+                case DirectItemType.RavenMedia:
+                case DirectItemType.StoryShare:
+                case DirectItemType.ActionLog:
+                case DirectItemType.Profile:
+                case DirectItemType.Location:
+                case DirectItemType.FelixShare:
+                case DirectItemType.VoiceMedia:
+                case DirectItemType.AnimatedMedia:
+                case DirectItemType.Hashtag:
+                case DirectItemType.LiveViewerInvite:
+                case DirectItemType.VideoCallEvent:
+                default:
+                    return false;
+            }
         }
 
         public async void LikeItem()

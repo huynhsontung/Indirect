@@ -24,15 +24,17 @@ namespace Indirect.Entities.Wrappers
         public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly MainViewModel _viewModel;
-
         private CoreDispatcher _dispatcher;
+        private bool _isSomeoneTyping;
+        private string _draftMessage;
+        private DirectItemWrapper _replyingItem;
+
         public CoreDispatcher Dispatcher
         {
             get => _dispatcher ?? (_dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher);
             private set => _dispatcher = value;
         }
 
-        private bool _isSomeoneTyping;
         public bool IsSomeoneTyping
         {
             get => _isSomeoneTyping;
@@ -46,7 +48,6 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
-        private string _draftMessage;
         public string DraftMessage
         {
             get => _draftMessage;
@@ -56,6 +57,19 @@ namespace Indirect.Entities.Wrappers
                 _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DraftMessage)));
+                });
+            }
+        }
+
+        public DirectItemWrapper ReplyingItem
+        {
+            get => _replyingItem;
+            set
+            {
+                _replyingItem = value;
+                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ReplyingItem)));
                 });
             }
         }

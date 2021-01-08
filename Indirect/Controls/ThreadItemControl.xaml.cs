@@ -200,5 +200,10 @@ namespace Indirect.Controls
             if (Item.ObservableReactions.Senders.Count == 0) return;
             FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
         }
+
+        private void ReplyToItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            Item.Parent.ReplyingItem = Item;
+        }
     }
 }
