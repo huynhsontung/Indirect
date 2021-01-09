@@ -197,6 +197,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <Grid.RowDefinitions>
@@ -210,7 +211,12 @@
 
                 <TextBlock Grid.Column="0" Grid.Row="1" Text="{x:Bind Thread.ReplyingItem.Description, Mode=OneWay}" />
 
-                <Button Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Style="{x:Null}" Background="Transparent" CornerRadius="2"
+                <controls:ImageEx Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" VerticalAlignment="Center"
+                                  Width="32" Height="32" Margin="6,2" Stretch="UniformToFill" 
+                                  Source="{x:Bind Thread.ReplyingItem.PreviewImageUri, Mode=OneWay}" />
+
+                <Button Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Style="{x:Null}" Background="Transparent" CornerRadius="2"
+                        VerticalAlignment="Center"
                         Click="ClearReplyButton_OnClick">
                     <SymbolIcon Symbol="Cancel" />
                 </Button>
