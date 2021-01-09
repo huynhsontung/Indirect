@@ -22,6 +22,8 @@ namespace Indirect.Controls
 {
     internal sealed partial class ThreadItemControl : UserControl
     {
+        private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
+
         public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
             nameof(Item),
             typeof(DirectItemWrapper),
@@ -185,7 +187,7 @@ namespace Indirect.Controls
             var confirmation = await confirmDialog.ShowAsync();
             if (confirmation == ContentDialogResult.Primary)
             {
-                await Item.Unsend();
+                await ViewModel.ChatService.Unsend(Item);
             }
         }
 

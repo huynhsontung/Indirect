@@ -76,11 +76,13 @@ namespace Indirect
         public AndroidDevice Device => InstaApi?.Device;
         public bool IsUserAuthenticated => InstaApi.IsUserAuthenticated;
         public ReelsFeed ReelsFeed { get; } = new ReelsFeed();
+        public ChatService ChatService { get; }
 
         private MainViewModel()
         {
             Inbox = new InboxWrapper(this);
             //PendingInbox = new InboxWrapper(this, true);
+            ChatService = new ChatService(InstaApi);
             ThreadInfoPersistentDictionary.LoadFromAppSettings();
             SubscribeHandlers();
         }

@@ -16,11 +16,16 @@ using InstagramAPI.Utils;
 
 namespace Indirect.Services
 {
-    internal static class ChatService
+    internal class ChatService
     {
-        private static Instagram Api => Instagram.Instance;
+        private readonly Instagram _api;
+        
+        public ChatService(Instagram api)
+        {
+            _api = api;
+        }
 
-        public static async Task SendMessage(this DirectThreadWrapper thread, string content)
+        public async Task SendMessage(DirectThreadWrapper thread, string content)
         {
             content = content.Trim(' ', '\n', '\r');
             if (string.IsNullOrEmpty(content)) return;
@@ -38,22 +43,22 @@ namespace Indirect.Services
                 {
                     if (links.Any())
                     {
-                        ackResult = await Api.SendLinkAsync(content, links, thread.ThreadId);
+                        ackResult = await _api.SendLinkAsync(content, links, thread.ThreadId);
                         return;
                     }
 
-                    result = await Api.SendTextAsync(null, thread.ThreadId, content);
+                    result = await _api.SendTextAsync(null, thread.ThreadId, content);
                 }
                 else
                 {
                     if (links.Any())
                     {
-                        ackResult = await Api.SendLinkToRecipientsAsync(content, links,
+                        ackResult = await _api.SendLinkToRecipientsAsync(content, links,
                             thread.Users.Select(x => x.Pk).ToArray());
                         return;
                     }
 
-                    result = await Api.SendTextAsync(thread.Users.Select(x => x.Pk),
+                    result = await _api.SendTextAsync(thread.Users.Select(x => x.Pk),
                         null, content);
                 }
             }
@@ -72,12 +77,12 @@ namespace Indirect.Services
             }
         }
 
-        public static async Task SendAnimatedImage(this DirectThreadWrapper thread, string imageId, bool isSticker)
+        public async Task SendAnimatedImage(DirectThreadWrapper thread, string imageId, bool isSticker)
         {
             try
             {
                 if (string.IsNullOrEmpty(thread?.ThreadId)) return;
-                var result = await Api.SendAnimatedImageAsync(imageId, isSticker, thread.ThreadId);
+                var result = await _api.SendAnimatedImageAsync(imageId, isSticker, thread.ThreadId);
                 if (result.IsSucceeded && result.Value.Length > 0)
                 {
                     thread.Update(result.Value[0]);
@@ -89,12 +94,12 @@ namespace Indirect.Services
             }
         }
 
-        public static async Task SendLike(this DirectThreadWrapper thread)
+        public async Task SendLike(DirectThreadWrapper thread)
         {
             try
             {
                 if (string.IsNullOrEmpty(thread.ThreadId)) return;
-                var result = await Api.SendLikeAsync(thread.ThreadId);
+                var result = await _api.SendLikeAsync(thread.ThreadId);
                 //if (result.IsSucceeded) UpdateInboxAndSelectedThread();
             }
             catch (Exception)
@@ -103,16 +108,16 @@ namespace Indirect.Services
             }
         }
 
-        public static async Task Unsend(this DirectItemWrapper item)
+        public async Task Unsend(DirectItemWrapper item)
         {
-            var result = await Api.UnsendMessageAsync(item.Parent.ThreadId, item.ItemId);
+            var result = await _api.UnsendMessageAsync(item.Parent.ThreadId, item.ItemId);
             if (result.IsSucceeded)
             {
                 await item.Parent.RemoveItem(item.ItemId);
             }
         }
 
-        public static async Task SendFile(this DirectThreadWrapper thread, StorageFile file, Action<UploaderProgress> progress)
+        public async Task SendFile(DirectThreadWrapper thread, StorageFile file, Action<UploaderProgress> progress)
         {
             try
             {
@@ -164,7 +169,7 @@ namespace Indirect.Services
                         Width = (int)thumbnail.OriginalWidth,
                         Height = (int)thumbnail.OriginalHeight
                     };
-                    await Api.SendDirectVideoAsync(progress,
+                    await _api.SendDirectVideoAsync(progress,
                         new InstaVideoUpload(instaVideo, thumbnailImage), thread.ThreadId);
                 }
             }
@@ -179,7 +184,7 @@ namespace Indirect.Services
         /// <summary>
         /// For screenshot in clipboard
         /// </summary>
-        public static async Task SendStream(this DirectThreadWrapper thread, IRandomAccessStream stream, Action<UploaderProgress> progress)
+        public async Task SendStream(DirectThreadWrapper thread, IRandomAccessStream stream, Action<UploaderProgress> progress)
         {
             try
             {
@@ -214,7 +219,7 @@ namespace Indirect.Services
             }
         }
 
-        private static async Task SendBuffer(DirectThreadWrapper thread, IBuffer buffer, int imageWidth, int imageHeight, Action<UploaderProgress> progress)
+        private async Task SendBuffer(DirectThreadWrapper thread, IBuffer buffer, int imageWidth, int imageHeight, Action<UploaderProgress> progress)
         {
             var instaImage = new InstaImage
             {
@@ -224,7 +229,7 @@ namespace Indirect.Services
             };
             if (string.IsNullOrEmpty(thread.ThreadId)) return;
             var uploadId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            await Api.SendDirectPhotoAsync(instaImage, thread.ThreadId, uploadId, progress);
+            await _api.SendDirectPhotoAsync(instaImage, thread.ThreadId, uploadId, progress);
         }
     }
 }

@@ -21,10 +21,13 @@ namespace Indirect.Controls
         public DirectThreadWrapper Thread { get; set; }
 
         public ObservableCollection<GiphyMedia> ImageList { get; } = new ObservableCollection<GiphyMedia>();
+        
+        private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
 
         private GiphyMedia[] _stickers;
         private GiphyMedia[] _gifs;
         private string _selectedType;
+        
 
         public AnimatedImagePicker()
         {
@@ -115,7 +118,7 @@ namespace Indirect.Controls
         {
             if (e.AddedItems.Count == 0 || e.AddedItems[0] == null || Thread == null) return;
             var image = (GiphyMedia)e.AddedItems[0];
-            await Thread.SendAnimatedImage(image.Id, image.IsSticker);
+            await ViewModel.ChatService.SendAnimatedImage(Thread, image.Id, image.IsSticker);
             var gridView = (GridView) sender;
             gridView.SelectedItem = null;
             ImageSelected?.Invoke(this, image);

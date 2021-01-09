@@ -148,11 +148,11 @@ namespace Indirect.Controls
             Thread.DraftMessage = string.Empty;
             if(string.IsNullOrEmpty(message))
             {
-                _ = Thread.SendLike();
+                _ = ViewModel.ChatService.SendLike(Thread);
             }
             else
             {
-                _ = Thread.SendMessage(message);
+                _ = ViewModel.ChatService.SendMessage(Thread, message);
             }
         }
 
@@ -240,12 +240,12 @@ namespace Indirect.Controls
 
             if (FilePickerPreview.Source is StorageFile file)
             {
-                _ = Thread.SendFile(file, UploadAction);
+                _ = ViewModel.ChatService.SendFile(Thread, file, UploadAction);
             }
 
             if (FilePickerPreview.Source is IRandomAccessStreamWithContentType stream)
             {
-                _ = Thread.SendStream(stream, UploadAction);
+                _ = ViewModel.ChatService.SendStream(Thread, stream, UploadAction);
             }
             FilePickerFlyout.Hide();
         }
@@ -368,7 +368,7 @@ namespace Indirect.Controls
                     {
                         UploadProgress.Visibility = Visibility.Visible;
                         count++;
-                        await Thread.SendFile(file, MultiUploadAction);
+                        await ViewModel.ChatService.SendFile(Thread, file, MultiUploadAction);
                     }
                 }
             }
@@ -379,7 +379,7 @@ namespace Indirect.Controls
                 var bitmap = await reference.OpenReadAsync();
                 UploadProgress.Visibility = Visibility.Visible;
                 count++;
-                await Thread.SendStream(bitmap, MultiUploadAction);
+                await ViewModel.ChatService.SendStream(Thread, bitmap, MultiUploadAction);
             }
 
             if (e.DataView.Contains(StandardDataFormats.WebLink))
