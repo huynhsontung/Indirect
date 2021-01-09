@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
 using Windows.UI.Xaml;
@@ -16,10 +17,10 @@ namespace Indirect.Entities.Wrappers
         public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly MainViewModel _viewModel;
-        private readonly DirectItem _sourceItem;
         private bool _showTimestampHeader;
         private bool _showNameHeader;
 
+        public DirectItem Item { get; }
         public DirectThreadWrapper Parent { get; }
         public ReactionsWrapper ObservableReactions { get; }
         public BaseUser Sender { get; }
@@ -70,8 +71,12 @@ namespace Indirect.Entities.Wrappers
 
         public DirectItemWrapper(MainViewModel viewModel, DirectItem source, DirectThreadWrapper parent)
         {
+            Contract.Requires(viewModel != null);
+            Contract.Requires(source != null);
+            Contract.Requires(parent != null);
+            
             _viewModel = viewModel;
-            _sourceItem = source;
+            Item = source;
             Parent = parent;
             PropertyCopier<DirectItem, DirectItemWrapper>.Copy(source, this);
             ObservableReactions = source.Reactions != null ? new ReactionsWrapper(viewModel, source.Reactions, parent.Users) : new ReactionsWrapper(viewModel);

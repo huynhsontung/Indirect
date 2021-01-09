@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
+using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
@@ -422,6 +424,31 @@ namespace InstagramAPI
                 DebugLogger.LogException(exception);
                 return Result<DirectThread[]>.Except(exception);
             }
+        }
+        
+        public Task ReplyToItemAsync(DirectItem item, string threadId, string text)
+        {
+            Contract.Requires(!string.IsNullOrEmpty(item?.ItemId));
+            Contract.Requires(!string.IsNullOrEmpty(threadId));
+            Contract.Requires(!string.IsNullOrEmpty(text));
+            var json = new JObject
+            {
+                {"client_context", DateTime.UtcNow.Ticks.ToString()},
+                {"device_id", Device.Uuid.ToString().ToUpper()},
+                {"action", "send_item"},
+                {"item_type", "text"},
+                {"mutation_token", DateTime.UtcNow.Ticks.ToString()},
+                {"replied_to_item_id", item.ItemId},
+                {"text", text},
+                {"thread_id", threadId}
+            };
+            
+            if (!string.IsNullOrEmpty(item.ClientContext))
+            {
+                json["replied_to_client_context"] = item.ClientContext;
+            }
+
+            return SyncClient.SendMessage(json, QualityOfService.AtLeastOnce);
         }
 
         /// <summary>

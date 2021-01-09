@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -74,6 +75,24 @@ namespace Indirect.Services
                 // SyncClient will take care of updating. Update here is just for precaution.
                 thread.Update(result.Value[0]);
                 // await Inbox.UpdateInbox();
+            }
+        }
+
+        public async Task ReplyToItem(DirectItemWrapper item, string message)
+        {
+            Contract.Requires(item != null);
+            Contract.Requires(!string.IsNullOrEmpty(message));
+            try
+            {
+                if (string.IsNullOrEmpty(item.Parent.ThreadId))
+                {
+                    return;
+                } 
+                await _api.ReplyToItemAsync(item.Item, item.Parent.ThreadId, message);
+            }
+            catch (Exception)
+            {
+                // pass
             }
         }
 

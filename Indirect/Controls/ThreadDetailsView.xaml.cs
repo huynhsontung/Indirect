@@ -141,18 +141,24 @@ namespace Indirect.Controls
             }
         }
 
-        private void SendButton_Click(object sender, RoutedEventArgs e)
+        private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
             if (Thread == null) return;
             var message = MessageTextBox.Text;
             Thread.DraftMessage = string.Empty;
             if(string.IsNullOrEmpty(message))
             {
-                _ = ViewModel.ChatService.SendLike(Thread);
+                await ViewModel.ChatService.SendLike(Thread);
             }
+            else if (Thread.ReplyingItem != null)
+            {
+                var replyingItem = Thread.ReplyingItem;
+                Thread.ReplyingItem = null;
+                await ViewModel.ChatService.ReplyToItem(replyingItem, message);
+            } 
             else
             {
-                _ = ViewModel.ChatService.SendMessage(Thread, message);
+                await ViewModel.ChatService.SendMessage(Thread, message);
             }
         }
 

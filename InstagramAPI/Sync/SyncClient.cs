@@ -142,6 +142,20 @@ namespace InstagramAPI.Sync
             }
         }
 
+        public async Task SendMessage(JObject json, QualityOfService qos)
+        {
+            if (!IsRunning) return;
+            var jsonBytes = GetJsonBytes(json);
+            var publishPacket = new PublishPacket(qos, false, false)
+            {
+                PacketId = _packetId++,
+                TopicName = "/ig_send_message",
+                Payload = jsonBytes.AsBuffer()
+            };
+
+            await WriteAndFlushPacketAsync(publishPacket, _socket.OutputStream);
+        }
+
         private async void OnNetworkChanged(object sender)
         {
             var internetProfile = NetworkInformation.GetInternetConnectionProfile();
@@ -240,6 +254,9 @@ namespace InstagramAPI.Sync
                     var presenceEvent = container["presence_event"].ToObject<UserPresenceEventArgs>();
                     UserPresenceChanged?.Invoke(this, presenceEvent);
                     break;
+                
+                case "/ig_send_message_response":
+                    break;
             }
 
 
@@ -329,6 +346,10 @@ namespace InstagramAPI.Sync
                 Payload = jsonBytes.AsBuffer()
             };
             await WriteAndFlushPacketAsync(realtimeSubPublishPacket, outStream);
+            subscribePacket = new SubscribePacket(_packetId++,
+                new SubscriptionRequest("/ig_send_message_response", QualityOfService.AtMostOnce));
+            await WriteAndFlushPacketAsync(subscribePacket, outStream);
+            
             StartPingingLoop(ws);
         }
 
