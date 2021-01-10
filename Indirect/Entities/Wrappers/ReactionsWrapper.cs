@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using Indirect.Utilities;
 using InstagramAPI.Classes.Direct.ItemContent;
 using InstagramAPI.Classes.User;
 
@@ -10,15 +11,14 @@ namespace Indirect.Entities.Wrappers
     public class ReactionWithUser
     {
         public BaseUser User { get; set; }
-        
+
         public EmojiReaction Reaction { get; set; }
     }
-    
+
     class ReactionsWrapper : INotifyPropertyChanged
     {
         private readonly MainViewModel _viewModel;
         private readonly ICollection<BaseUser> _users;
-        private uint _likesCount;
         private bool _meLiked;
         private ReactionsContainer _reactionsContainer;
 
@@ -37,23 +37,12 @@ namespace Indirect.Entities.Wrappers
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MeLiked)));
             }
         }
-        
-        public uint LikesCount
-        {
-            get => _likesCount;
-            set
-            {
-                _likesCount = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LikesCount)));
-            }
-        }
 
         public ReactionsWrapper(MainViewModel viewModel)
         {
             _viewModel = viewModel;
             EmojiReactions = new ObservableCollection<ReactionWithUser>();
             MeLiked = false;
-            LikesCount = 0;
         }
 
         public ReactionsWrapper(MainViewModel viewModel, ReactionsContainer source, ICollection<BaseUser> usersList) :
@@ -65,9 +54,9 @@ namespace Indirect.Entities.Wrappers
 
         public void Clear()
         {
-            LikesCount = 0;
             MeLiked = false;
             Senders.Clear();
+            EmojiReactions.Clear();
         }
 
         public void Update(ReactionsContainer source)
@@ -75,33 +64,20 @@ namespace Indirect.Entities.Wrappers
             if (source == null) return;
             _reactionsContainer = source;
 
-            #region To Be Deprecated
-            
-            //TODO: TO BE DEPRECATED
-            var likes = source.Likes ?? new LikeReaction[0];
-            LikesCount = source.LikesCount;
-            MeLiked = likes.Any(x => x.SenderId == _viewModel.LoggedInUser.Pk);
-            Senders.Clear();
-
-            foreach (var like in likes)
-            {
-                var user = _users?.FirstOrDefault(x => x.Pk == like.SenderId);
-                if (user != null)
-                {
-                    Senders.Add(user);
-                }
-                else
-                {
-                    if (like.SenderId == _viewModel.LoggedInUser.Pk)
-                    {
-                        Senders.Add(_viewModel.LoggedInUser);
-                    }
-                }
-            }
-
-            #endregion
-
             if (source.Emojis == null || source.Emojis.Length == 0) return;
+
+            var emojiReactions = new List<EmojiReaction>(source.Emojis);
+
+            if (source.Likes != null && source.Likes.Length > 0)
+            {
+                emojiReactions.AddRange(source.Likes.Select(x =>
+                {
+                    var emojiReaction = new EmojiReaction();
+                    PropertyCopier<LikeReaction, EmojiReaction>.Copy(x, emojiReaction);
+                    emojiReaction.Emoji = "♥";
+                    return emojiReaction;
+                }));
+            }
 
             var consistent = true;
             if (source.Emojis.Length == EmojiReactions.Count)
@@ -126,13 +102,15 @@ namespace Indirect.Entities.Wrappers
             {
                 return;
             }
-            
+
             EmojiReactions.Clear();
             foreach (var emojiReaction in source.Emojis)
             {
                 EmojiReactions.Add(new ReactionWithUser
-                    {Reaction = emojiReaction, User = GetUserFromId(emojiReaction.SenderId)});
+                { Reaction = emojiReaction, User = GetUserFromId(emojiReaction.SenderId) });
             }
+
+            MeLiked = EmojiReactions.Any(x => x.User.Equals(_viewModel.LoggedInUser));
         }
 
         public void Update(ReactionsWrapper source) => Update(source._reactionsContainer);
