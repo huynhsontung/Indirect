@@ -7,11 +7,17 @@ using InstagramAPI.Classes.User;
 
 namespace Indirect.Entities.Wrappers
 {
+    public class ReactionWithUser
+    {
+        public BaseUser User { get; set; }
+        
+        public EmojiReaction Reaction { get; set; }
+    }
+    
     class ReactionsWrapper : INotifyPropertyChanged
     {
         private readonly MainViewModel _viewModel;
         private readonly ICollection<BaseUser> _users;
-        private readonly ObservableCollection<EmojiReaction> _emojiReactions;
         private uint _likesCount;
         private bool _meLiked;
         private ReactionsContainer _reactionsContainer;
@@ -20,7 +26,7 @@ namespace Indirect.Entities.Wrappers
 
         public ObservableCollection<BaseUser> Senders = new ObservableCollection<BaseUser>();
 
-        public ReadOnlyObservableCollection<EmojiReaction> EmojiReactions { get; }
+        public ObservableCollection<ReactionWithUser> EmojiReactions { get; }
 
         public bool MeLiked
         {
@@ -45,8 +51,7 @@ namespace Indirect.Entities.Wrappers
         public ReactionsWrapper(MainViewModel viewModel)
         {
             _viewModel = viewModel;
-            _emojiReactions = new ObservableCollection<EmojiReaction>();
-            EmojiReactions = new ReadOnlyObservableCollection<EmojiReaction>(_emojiReactions);
+            EmojiReactions = new ObservableCollection<ReactionWithUser>();
             MeLiked = false;
             LikesCount = 0;
         }
@@ -99,13 +104,13 @@ namespace Indirect.Entities.Wrappers
             if (source.Emojis == null || source.Emojis.Length == 0) return;
 
             var consistent = true;
-            if (source.Emojis.Length == _emojiReactions.Count)
+            if (source.Emojis.Length == EmojiReactions.Count)
             {
-                for (int i = 0; i < _emojiReactions.Count; i++)
+                for (int i = 0; i < EmojiReactions.Count; i++)
                 {
-                    var local = _emojiReactions[i];
+                    var local = EmojiReactions[i];
                     var reference = source.Emojis[i];
-                    if (local.SenderId != reference.SenderId || local.Timestamp != reference.Timestamp)
+                    if (local.Reaction.SenderId != reference.SenderId || local.Reaction.Timestamp != reference.Timestamp)
                     {
                         consistent = false;
                         break;
@@ -122,14 +127,22 @@ namespace Indirect.Entities.Wrappers
                 return;
             }
             
-            _emojiReactions.Clear();
+            EmojiReactions.Clear();
             foreach (var emojiReaction in source.Emojis)
             {
-                _emojiReactions.Add(emojiReaction);
+                EmojiReactions.Add(new ReactionWithUser
+                    {Reaction = emojiReaction, User = GetUserFromId(emojiReaction.SenderId)});
             }
         }
 
         public void Update(ReactionsWrapper source) => Update(source._reactionsContainer);
+
+        private BaseUser GetUserFromId(long userId)
+        {
+            return userId == _viewModel.LoggedInUser.Pk
+                ? _viewModel.LoggedInUser
+                : _users?.FirstOrDefault(x => x.Pk == userId);
+        }
     }
 
 }

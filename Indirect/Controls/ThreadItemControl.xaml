@@ -57,11 +57,6 @@
             <converters:NullVisibilityConverter x:Key="NullVisibilityConverter"/>
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
             <converters:FromMeBoolToGridColumnConverter x:Key="FromMeBoolToGridColumnConverter"/>
-            <converters:ReactionsFromMeConverter x:Key="ReactionsFromMeConverter"
-                                                 FromMe="{StaticResource FromMeReaction}"
-                                                 FromThem="{StaticResource FromThemReaction}"/>
-            <converters:ReactionsVisibilityConverter x:Key="ReactionsVisibilityConverter"/>
-            <converters:ReactionTextVisibilityConverter x:Key="ReactionTextVisibilityConverter"/>
             <converters:FromMeBoolToAlignmentConverter x:Key="FromMeAlignmentConverter"/>
             <converters:ReelShareTextVisibilityConverter x:Key="ReelShareTextVisibilityConverter"/>
             <converters:FromMeBoolToBrushConverter x:Key="FromMeBrushConverter" 
@@ -73,14 +68,6 @@
             <converters:VariableMaxWidthConverter x:Key="VariableMaxWidthConverter"/>
             <converters:ReelShareImageMarginConverter x:Key="ReelShareImageMarginConverter"/>
             <converters:HumanizedDateTimeConverter x:Key="HumanizedDateTimeConverter"/>
-
-            <Style x:Name="FromMeReaction" TargetType="FontIcon">
-                <Setter Property="Glyph" Value="&#xEB52;"/>
-                <Setter Property="Foreground" Value="Crimson"/>
-            </Style>
-            <Style x:Name="FromThemReaction" TargetType="FontIcon">
-                <Setter Property="Glyph" Value="&#xEB51;"/>
-            </Style>
 
             <Style x:Name="AvailableOpen" BasedOn="{StaticResource ButtonRevealStyle}" TargetType="Button">
                 <Setter Property="Content" Value="📷 Photo"/>
@@ -497,33 +484,11 @@
                 </ContentControl.ContextFlyout>
             </ContentControl>
 
-            <Border Margin="6,-2,6,0" Background="{ThemeResource FromThemItemBackground}" CornerRadius="6" Padding="6,2,6,2"
-                    BorderBrush="{ThemeResource MainBackground}" BorderThickness="2"
-                    HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
-                    Visibility="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionsVisibilityConverter}, FallbackValue=Collapsed}"
-                    Tapped="ReactionsBorder_Tapped">
-                <FlyoutBase.AttachedFlyout>
-                    <Flyout Placement="Bottom">
-                        <ListView ItemsSource="{x:Bind Item.ObservableReactions.Senders, Mode=OneWay}" SelectionMode="None" MaxHeight="260">
-                            <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="user:BaseUser">
-                                    <StackPanel Orientation="Horizontal">
-                                        <controls:ImageEx Source="{x:Bind ProfilePictureUrl}" Width="28" Height="28" CornerRadius="99" Margin="0,0,10,0" />
-                                        <TextBlock Text="{x:Bind Username}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </Flyout>
-                </FlyoutBase.AttachedFlyout>
-                <StackPanel x:Name="Reactions" Orientation="Horizontal">
-                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="12"
-                            Style="{x:Bind Item.ObservableReactions.MeLiked, Mode=OneWay, Converter={StaticResource ReactionsFromMeConverter}}"/>
-                    <TextBlock Text="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay}" Margin="2,0,0,0"
-                               Visibility="{x:Bind Item.ObservableReactions.LikesCount, Mode=OneWay, Converter={StaticResource ReactionTextVisibilityConverter}}"
-                               Style="{ThemeResource FluentCaptionTextStyle}"/>
-                </StackPanel>
-            </Border>
+            <controls1:ReactionsControl BorderBrush="{ThemeResource MainBackground}" 
+                                        BorderThickness="2" Margin="6,-2,6,0" Background="{ThemeResource FromThemItemBackground}"
+                                        HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}" 
+                                        Tapped="ReactionsBorder_Tapped" Reactions="{x:Bind Item.ObservableReactions.EmojiReactions}"/>
+
             <TextBlock x:Name="SeenIndicator" Margin="4,2,4,4"
                        Text="{x:Bind SeenTextConverter(Item.Parent.LastSeenAt), Mode=OneWay}"
                        Style="{ThemeResource FluentCaptionTextStyle}" TextWrapping="Wrap"

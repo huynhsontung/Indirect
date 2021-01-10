@@ -129,6 +129,9 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Controls\ReactionsControl.xaml.cs">
+      <DependentUpon>ReactionsControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainViewModel.Handlers.cs" />
     <Compile Include="Services\ContactsService.cs" />
     <Compile Include="Controls\AnimatedImagePicker.xaml.cs">
@@ -180,9 +183,6 @@
     <Compile Include="Controls\ChatListView.cs" />
     <Compile Include="Converters\FromMeBoolToGridColumnConverter.cs" />
     <Compile Include="Converters\OpenButtonStyleConverter.cs" />
-    <Compile Include="Converters\ReactionsFromMeConverter.cs" />
-    <Compile Include="Converters\ReactionTextVisibilityConverter.cs" />
-    <Compile Include="Converters\ReactionsVisibilityConverter.cs" />
     <Compile Include="Converters\HasNewMessageStyleConverter.cs" />
     <Compile Include="Converters\FromMeBoolToAlignmentConverter.cs" />
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
@@ -311,6 +311,10 @@
     <Page Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ReactionsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\Styles\CustomTransportControl.xaml">
       <SubType>Designer</SubType>
