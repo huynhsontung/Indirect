@@ -41,16 +41,7 @@ namespace Indirect.Controls
             var view = (ThreadItemControl) d;
             var item = (DirectItemWrapper) e.NewValue;
             view.ProcessItem();
-            view.LikeItemMenuOption.IsEnabled = !item.Parent.Pending;
-            if (item.ItemType == DirectItemType.ActionLog)
-            {
-                view.ItemContainer.Visibility = item.HideInThread ? Visibility.Collapsed : Visibility.Visible;
-                view.MainContentControl.ContextFlyout = null;
-            }
-            if (item.ItemType == DirectItemType.Text)
-            {
-                view.MenuCopyOption.Visibility = Visibility.Visible;
-            }
+            view.UpdateContextMenu();
             view.Bindings.Update();
         }
 
@@ -64,6 +55,20 @@ namespace Indirect.Controls
             Item.Timestamp = Item.Timestamp.ToLocalTime();
             if (Item.ItemType == DirectItemType.Link)
                 Item.Text = Item.Link.Text;
+        }
+
+        private void UpdateContextMenu()
+        {
+            LikeItemMenuOption.IsEnabled = !Item.Parent.Pending;
+            if (Item.ItemType == DirectItemType.ActionLog)
+            {
+                ItemContainer.Visibility = Item.HideInThread ? Visibility.Collapsed : Visibility.Visible;
+                MainContentControl.ContextFlyout = null;
+            }
+            if (Item.ItemType == DirectItemType.Text)
+            {
+                MenuCopyOption.Visibility = Visibility.Visible;
+            }
         }
 
         private string SeenTextConverter(Dictionary<long, LastSeen> lastSeenAt)
