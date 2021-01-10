@@ -142,11 +142,12 @@ namespace InstagramAPI.Sync
             }
         }
 
-        public async Task SendMessage(JObject json, QualityOfService qos)
+        public async Task SendMessage(JObject json)
         {
             if (!IsRunning) return;
+            json = MakeSendMessageJson(json);
             var jsonBytes = GetJsonBytes(json);
-            var publishPacket = new PublishPacket(qos, false, false)
+            var publishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
             {
                 PacketId = _packetId++,
                 TopicName = "/ig_send_message",
@@ -154,6 +155,14 @@ namespace InstagramAPI.Sync
             };
 
             await WriteAndFlushPacketAsync(publishPacket, _socket.OutputStream);
+        }
+
+        private JObject MakeSendMessageJson(JObject content)
+        {
+            content["client_context"] = DateTime.UtcNow.Ticks.ToString();
+            content["device_id"] = _instaApi.Device.Uuid.ToString().ToUpper();
+            content["action"] = "send_item";
+            return content;
         }
 
         private async void OnNetworkChanged(object sender)

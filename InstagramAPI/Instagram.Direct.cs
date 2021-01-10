@@ -431,11 +431,9 @@ namespace InstagramAPI
             Contract.Requires(!string.IsNullOrEmpty(item?.ItemId));
             Contract.Requires(!string.IsNullOrEmpty(threadId));
             Contract.Requires(!string.IsNullOrEmpty(text));
+            
             var json = new JObject
             {
-                {"client_context", DateTime.UtcNow.Ticks.ToString()},
-                {"device_id", Device.Uuid.ToString().ToUpper()},
-                {"action", "send_item"},
                 {"item_type", "text"},
                 {"mutation_token", DateTime.UtcNow.Ticks.ToString()},
                 {"replied_to_item_id", item.ItemId},
@@ -448,8 +446,35 @@ namespace InstagramAPI
                 json["replied_to_client_context"] = item.ClientContext;
             }
 
-            return SyncClient.SendMessage(json, QualityOfService.AtLeastOnce);
+            return SyncClient.SendMessage(json);
         }
+
+        public Task ReactToItemAsync(DirectItem item, string threadId, string emoji)
+        {
+            Contract.Requires(!string.IsNullOrEmpty(item?.ItemId));
+            Contract.Requires(!string.IsNullOrEmpty(threadId));
+
+            if (emoji == null)
+            {
+                emoji = string.Empty;
+            }
+
+            var json = new JObject
+            {
+                {"item_id", item.ItemId},
+                {"item_type", "reaction"},
+                {"node_type", "item"},
+                {"reaction_status", string.IsNullOrEmpty(emoji) ? "deleted" : "created"},
+                {"reaction_type", "like"},
+                {"target_item_type", JToken.FromObject(item.ItemType)},
+                {"thread_id", threadId},
+                {"emoji", emoji}
+            };
+
+            return SyncClient.SendMessage(json);
+        }
+
+        public Task RemoveReactionToItemAsync(DirectItem item, string threadId) => ReactToItemAsync(item, threadId, "");
 
         /// <summary>
         ///     Send link address to direct thread
