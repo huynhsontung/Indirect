@@ -465,8 +465,17 @@
                             SizeChanged="ConfigTooltip_OnSizeChanged" DoubleTapped="Item_DoubleTapped" >
                 <ContentControl.ContextFlyout>
                     <MenuFlyout>
-                        <MenuFlyoutItem x:Name="LikeItemMenuOption" Style="{x:Bind Item.ObservableReactions.MeLiked, Mode=OneWay, Converter={StaticResource LikeUnlikeStyleConverter}}"
-                                        Click="LikeUnlike_Click"/>
+                        <MenuFlyoutItem Text="Add a Reaction" Click="AddReactionMenuItem_OnClick">
+                            <MenuFlyoutItem.Icon>
+                                <SymbolIcon Symbol="Emoji" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Remove Reaction" Click="RemoveReactionMenuItem_OnClick" 
+                                        Visibility="{x:Bind Item.ObservableReactions.MeLiked, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" >
+                            <MenuFlyoutItem.Icon>
+                                <SymbolIcon Symbol="Clear" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
                         <MenuFlyoutItem Text="Reply" Visibility="{x:Bind Item.IsReplyable, Converter={StaticResource BooleanVisibilityConverter}}" Click="ReplyToItem_OnClick" >
                             <MenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE97A;" />

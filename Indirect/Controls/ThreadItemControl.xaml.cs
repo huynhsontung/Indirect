@@ -59,7 +59,6 @@ namespace Indirect.Controls
 
         private void UpdateContextMenu()
         {
-            LikeItemMenuOption.IsEnabled = !Item.Parent.Pending;
             if (Item.ItemType == DirectItemType.ActionLog)
             {
                 ItemContainer.Visibility = Item.HideInThread ? Visibility.Collapsed : Visibility.Visible;
@@ -139,25 +138,10 @@ namespace Indirect.Controls
             }
         }
 
-        private void Item_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e) => LikeUnlikeItem();
-
-        private void LikeUnlike_Click(object sender, RoutedEventArgs e) => LikeUnlikeItem();
-
-        private bool _timeout;
-        private async void LikeUnlikeItem()
+        private async void Item_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            if (_timeout || Item.Parent.Pending) return;
-            if (Item.ObservableReactions.MeLiked)
-            {
-                Item.UnlikeItem();
-            }
-            else
-            {
-                Item.LikeItem();
-            }
-            _timeout = true;
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            _timeout = false;
+            if (Item.ObservableReactions.MeLiked) return;
+            await ViewModel.ChatService.ReactToItem(Item, "♥");
         }
 
         private void MenuCopyOption_Click(object sender, RoutedEventArgs e)
@@ -211,6 +195,23 @@ namespace Indirect.Controls
         private void ReplyToItem_OnClick(object sender, RoutedEventArgs e)
         {
             Item.Parent.ReplyingItem = Item;
+        }
+
+        private async void AddReactionMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            var emoji = await EmojiPicker.ShowAsync(MainContentControl,
+                new FlyoutShowOptions {Placement = Item.FromMe ? FlyoutPlacementMode.Left : FlyoutPlacementMode.Right});
+            
+            if (string.IsNullOrEmpty(emoji)) return;
+
+            await ViewModel.ChatService.ReactToItem(Item, emoji);
+        }
+
+        private async void RemoveReactionMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (!Item.ObservableReactions.MeLiked) return;
+
+            await ViewModel.ChatService.RemoveReactionToItem(Item);
         }
     }
 }
