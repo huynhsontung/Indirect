@@ -496,7 +496,7 @@
             <controls1:ReactionsControl BorderBrush="{ThemeResource MainBackground}" 
                                         BorderThickness="2" Margin="6,-2,6,0" Background="{ThemeResource FromThemItemBackground}"
                                         HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}" 
-                                        Tapped="ReactionsBorder_Tapped" Reactions="{x:Bind Item.ObservableReactions.EmojiReactions}"/>
+                                        Reactions="{x:Bind Item.ObservableReactions.EmojiReactions}"/>
 
             <TextBlock x:Name="SeenIndicator" Margin="4,2,4,4"
                        Text="{x:Bind SeenTextConverter(Item.Parent.LastSeenAt), Mode=OneWay}"

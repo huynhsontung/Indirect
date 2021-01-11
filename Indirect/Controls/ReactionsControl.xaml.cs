@@ -91,5 +91,10 @@ namespace Indirect.Controls
         {
             UpdateEmojiPreviews();
         }
+
+        private void ReactionsControl_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout(this);
+        }
     }
 }

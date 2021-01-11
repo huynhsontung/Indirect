@@ -186,12 +186,6 @@ namespace Indirect.Controls
             await Launcher.LaunchUriAsync(uri);
         }
 
-        private void ReactionsBorder_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            if (Item.ObservableReactions.Senders.Count == 0) return;
-            FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
-        }
-
         private void ReplyToItem_OnClick(object sender, RoutedEventArgs e)
         {
             Item.Parent.ReplyingItem = Item;
