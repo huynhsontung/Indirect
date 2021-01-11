@@ -24,7 +24,7 @@ namespace InstagramAPI.Classes
         [JsonProperty("guid")] public Guid Guid => _instaApi.Device.Uuid;
         [JsonProperty("_uuid")] public string Uuid => Guid.ToString();
         [JsonProperty("device_id")] public string DeviceId => _instaApi.Device.DeviceId;
-        [JsonProperty("password")] public string Password => _instaApi.Session.Password;
+        [JsonProperty("enc_password")] public string Password => $"#PWD_INSTAGRAM:0:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:{_instaApi.Session.Password}";
         [JsonProperty("login_attempt_count")] public string LoginAttemptCount { get; set; } = "0";
 
         public ApiRequestMessage(Instagram instaApi)
