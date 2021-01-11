@@ -127,6 +127,37 @@ namespace Indirect.Services
             }
         }
 
+        public async Task ReactToItem(DirectItemWrapper item, string emoji)
+        {
+            Contract.Requires(item != null);
+            Contract.Requires(!string.IsNullOrEmpty(emoji));
+
+            if (item.ItemType == DirectItemType.ActionLog) return;
+            
+            try
+            {
+                await _api.ReactToItemAsync(item, item.Parent.ThreadId, emoji);
+            }
+            catch (Exception)
+            {
+                // pass
+            }
+        }
+
+        public async Task RemoveReactionToItem(DirectItemWrapper item)
+        {
+            Contract.Requires(item != null);
+
+            try
+            {
+                await _api.RemoveReactionToItemAsync(item, item.Parent.ThreadId);
+            }
+            catch (Exception)
+            {
+                // pass
+            }
+        }
+
         public async Task Unsend(DirectItemWrapper item)
         {
             var result = await _api.UnsendMessageAsync(item.Parent.ThreadId, item.ItemId);
