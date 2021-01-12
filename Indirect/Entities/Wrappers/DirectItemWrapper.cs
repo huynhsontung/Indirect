@@ -146,6 +146,9 @@ namespace Indirect.Entities.Wrappers
                 case DirectItemType.Profile:
                     return Profile.ProfileUrl;
 
+                case DirectItemType.Clip when !string.IsNullOrEmpty(Clip?.Clip?.Code):
+                    return new Uri("https://www.instagram.com/p/" + Clip.Clip.Code);
+
                 default:
                     return null;
             }
@@ -238,6 +241,9 @@ namespace Indirect.Entities.Wrappers
 
                 case DirectItemType.AnimatedMedia:
                     return AnimatedMedia.Image.Url;
+
+                case DirectItemType.Clip:
+                    return GetPreviewImage(Clip?.Clip?.Images)?.Url;
 
                 default:
                     return null;

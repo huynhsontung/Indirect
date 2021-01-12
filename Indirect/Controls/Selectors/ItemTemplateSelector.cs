@@ -23,6 +23,7 @@ namespace Indirect.Controls.Selectors
         public DataTemplate StoryShareTemplate { get; set; }
         public DataTemplate VideoCallTemplate { get; set; }
         public DataTemplate ProfileTemplate { get; set; }
+        public DataTemplate ClipTemplate { get; set; }
         public DataTemplate NotSupportedTemplate { get; set; }
         public DataTemplate UnexpectedTemplate { get; set; }
         public DataTemplate PlaceholderTemplate { get; set; }
@@ -83,6 +84,9 @@ namespace Indirect.Controls.Selectors
 
                     case DirectItemType.Profile:
                         return ProfileTemplate;
+
+                    case DirectItemType.Clip:
+                        return ClipTemplate;
 
                     case DirectItemType.Placeholder:
                         return PlaceholderTemplate;

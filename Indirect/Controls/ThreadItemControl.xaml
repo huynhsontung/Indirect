@@ -179,6 +179,37 @@
                 </StackPanel>
             </DataTemplate>
 
+            <DataTemplate x:Key="ClipTemplate" x:DataType="wrappers:DirectItemWrapper">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                <controls:ImageEx Grid.Row="0" Grid.RowSpan="3"
+                                  MaxWidth="250" MaxHeight="300"
+                                  IsCacheEnabled="True"
+                                  CornerRadius="2"
+                                  Source="{x:Bind PreviewImageUri}"
+                                  HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
+                                  Tapped="OpenWebLink"/>
+
+                <Image Grid.Row="0" Width="32" Height="32" Source="../Assets/clip-icon.svg" 
+                       HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0, 8"/>
+                
+                <controls:ImageEx Grid.Row="1" Width="24" Height="24" 
+                                  Source="{x:Bind Clip.Clip.User.ProfilePictureUrl}"
+                                  CornerRadius="99" 
+                                  HorizontalAlignment="Left" 
+                                  Margin="8,0,8,2" />
+
+                <TextBlock Grid.Row="2" Text="{x:Bind Clip.Clip.User.Username}" 
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Left" 
+                           Margin="8,0,8,8" />
+                </Grid>
+            </DataTemplate>
+
             <DataTemplate x:Key="ImageTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <controls:ImageEx x:Name="ImageFrame"
                                   MaxWidth="250" MaxHeight="350"
@@ -420,6 +451,7 @@
                                             StoryShareTemplate="{StaticResource StoryShareTemplate}"
                                             VideoCallTemplate="{StaticResource VideoCallTemplate}"
                                             ProfileTemplate="{StaticResource ProfileTemplate}"
+                                            ClipTemplate="{StaticResource ClipTemplate}"
                                             UnexpectedTemplate="{StaticResource UnexpectedTemplate}"
                                             PlaceholderTemplate="{StaticResource PlaceholderTemplate}"/>
         </ResourceDictionary>
