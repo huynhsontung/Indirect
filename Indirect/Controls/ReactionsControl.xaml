@@ -18,15 +18,15 @@
                     <DataTemplate x:DataType="wrappers:ReactionWithUser">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition />
-                                <ColumnDefinition />
-                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
                             <controls:ImageEx Grid.Column="0" Source="{x:Bind User.ProfilePictureUrl}" Width="28" Height="28" 
                                               CornerRadius="99" Margin="0,0,10,0" />
                             <TextBlock Grid.Column="1" Text="{x:Bind User.Username}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="{x:Bind Reaction.Emoji}" VerticalAlignment="Center" Margin="48,0,0,0" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind Reaction.Emoji}" VerticalAlignment="Center" Margin="10,0,0,0" />
 
                         </Grid>
                     </DataTemplate>
