@@ -15,7 +15,8 @@
                 <ControlTemplate TargetType="class:EmojiPicker">
                     <Grid 
                         MaxWidth="{TemplateBinding MaxWidth}"
-                        MaxHeight="{TemplateBinding MaxHeight}">
+                        MaxHeight="{TemplateBinding MaxHeight}"
+                        XYFocusKeyboardNavigation="Enabled" >
 
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup>
@@ -37,7 +38,6 @@
                                 <Setter Property="Height" Value="40" />
                                 <Setter Property="HorizontalAlignment" Value="Stretch" />
                                 <Setter Property="VerticalAlignment" Value="Stretch" />
-                                <Setter Property="IsTabStop" Value="False" />
                             </Style>
 
                             <Style TargetType="Button" BasedOn="{StaticResource BasicButtonStyle}">
@@ -69,8 +69,7 @@
                             x:Name="CloseButton"
                             Visibility="Collapsed"
                             Grid.Column="2"
-                            Style="{ThemeResource BasicButtonStyle}"
-                            IsTabStop="False" >
+                            Style="{ThemeResource BasicButtonStyle}" >
                             <SymbolIcon Symbol="Clear" Height="10" />
                         </Button>
 
@@ -80,22 +79,21 @@
                             Content="✋"
                             Visibility="Collapsed"
                             Style="{ThemeResource BasicButtonStyle}"
-                            IsTabStop="False"
-                            />
+                        />
 
                         <GridView
                             x:Name="EmojiPresenter"
                             Grid.Row="1"
                             Grid.ColumnSpan="3"
-                            IsTabStop="False"
                             TabIndex="0"
+                            IsItemClickEnabled="True"
+                            SelectionMode="None"
                             Padding="14,0,8,0">
 
                             <GridView.ItemContainerStyle>
                                 <Style TargetType="GridViewItem">
                                     <Setter Property="Margin" Value="0" />
                                     <Setter Property="Padding" Value="0" />
-                                    <Setter Property="IsTabStop" Value="False" />
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                                     <Setter Property="VerticalContentAlignment" Value="Stretch" />
                                 </Style>

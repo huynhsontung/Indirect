@@ -31,6 +31,8 @@ namespace Indirect.Controls
         {
             this.DefaultStyleKey = typeof(EmojiPicker);
             this.categoryButtons = new Button[6];
+            
+            Loaded += OnLoaded;
         }
 
         public static async Task<string> ShowAsync(FrameworkElement placementTarget, FlyoutShowOptions showOptions)
@@ -44,8 +46,6 @@ namespace Indirect.Controls
 
             openFlyout.ShowAt(placementTarget, showOptions);
             
-            picker.Focus(FocusState.Programmatic);
-
             var tcs = new TaskCompletionSource<string>();
 
             openFlyout.Closed += (_, __) => tcs.SetResult(picker.selectedEmoji);
@@ -73,7 +73,7 @@ namespace Indirect.Controls
 
             this.skinToneButton.Click += this.SkinToneButtonClick;
             this.closeButton.Click += this.CloseButtonClick;
-            this.emojiPresenter.SelectionChanged += this.EmojiSelected;
+            this.emojiPresenter.ItemClick += this.EmojiSelected;
             this.searchBox.TextChanged += SearchBoxTextChanged;
 
             foreach (var button in this.categoryButtons)
@@ -85,16 +85,9 @@ namespace Indirect.Controls
             this.allEmoji = new ObservableCollection<SingleEmoji>();
         }
 
-        protected override void OnKeyDown(KeyRoutedEventArgs e)
+        private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (e.Key == VirtualKey.Tab)
-            {
-                var shift = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shift) == CoreVirtualKeyStates.Down;
-                var current = Grid.GetColumn(this.highlightBorder);
-                var i = this.PositiveModulo(shift ? current - 2 : current, 6);
-                this.SetCurrentEmoji(i);
-                Grid.SetColumn(this.highlightBorder, i + 1);
-            }
+            this.searchBox.Focus(FocusState.Programmatic);
         }
 
         private void RefreshSearch(string phrase)
@@ -124,28 +117,25 @@ namespace Indirect.Controls
         {
             var skinToneName = SkinTones[this.skinToneIndex].Name;
 
-            // remove emoji which don't satisfy current search phrase
-            this.allEmoji
-                .Where(e => !e.SearchTerms.Any(s => s.StartsWith(phrase)))
-                .ToList()
-                .ForEach(s => this.allEmoji.Remove(s));
-
             // add emoji which satisfy current search phrase
-            AllEmoji()
-                .Where(e => e.SearchTerms.Any(s => s.StartsWith(phrase)))
-                .Where(e => !this.allEmoji.Contains(e))
-                .ToList()
-                .ForEach(s => this.allEmoji.Add(s));
+            var emojisToAdd = AllEmoji()
+                .Where(e => e.SearchTerms.Any(s => s.StartsWith(phrase)));
+
+            this.allEmoji.Clear();
+            foreach (var emoji in emojisToAdd)
+            {
+                this.allEmoji.Add(emoji);
+            }
         }
 
         private void SearchBoxTextChanged(object sender, TextChangedEventArgs e)
         {
-            RefreshSearch(searchBox.Text);
+            RefreshSearch(searchBox.Text.ToLower());
         }
 
-        private void EmojiSelected(object sender, SelectionChangedEventArgs e)
+        private void EmojiSelected(object sender, ItemClickEventArgs e)
         {
-            this.selectedEmoji = ((SingleEmoji)e.AddedItems.First()).ToString();
+            this.selectedEmoji = ((SingleEmoji)e.ClickedItem).ToString();
             openFlyout.Hide();
         }
 
@@ -161,11 +151,6 @@ namespace Indirect.Controls
         private void CloseButtonClick(object sender, RoutedEventArgs e)
         {
             openFlyout.Hide();
-        }
-
-        private int PositiveModulo(int x, int m)
-        {
-            return (x % m + m) % m;
         }
 
         private void SetCurrentEmoji(int id)

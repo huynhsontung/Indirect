@@ -26,7 +26,8 @@
                             <controls:ImageEx Grid.Column="0" Source="{x:Bind User.ProfilePictureUrl}" Width="28" Height="28" 
                                               CornerRadius="99" Margin="0,0,10,0" />
                             <TextBlock Grid.Column="1" Text="{x:Bind User.Username}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="{x:Bind Reaction.Emoji}" VerticalAlignment="Center" Margin="10,0,0,0" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind Reaction.Emoji}" VerticalAlignment="Center" 
+                                       FontSize="18" Margin="10,0,0,0" />
 
                         </Grid>
                     </DataTemplate>
