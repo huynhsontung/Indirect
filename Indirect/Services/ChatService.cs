@@ -130,13 +130,12 @@ namespace Indirect.Services
         public async Task ReactToItem(DirectItemWrapper item, string emoji)
         {
             Contract.Requires(item != null);
-            Contract.Requires(!string.IsNullOrEmpty(emoji));
 
             if (item.ItemType == DirectItemType.ActionLog) return;
             
             try
             {
-                await _api.ReactToItemAsync(item, item.Parent.ThreadId, emoji);
+                await _api.LikeItemAsync(item.Parent.ThreadId, item.ItemId, emoji);
             }
             catch (Exception)
             {
@@ -150,7 +149,7 @@ namespace Indirect.Services
 
             try
             {
-                await _api.RemoveReactionToItemAsync(item, item.Parent.ThreadId);
+                await _api.UnlikeItemAsync(item.Parent.ThreadId, item.ItemId);
             }
             catch (Exception)
             {

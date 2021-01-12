@@ -364,7 +364,7 @@ namespace InstagramAPI
                     {"_csrftoken", Session.CsrfToken},
                     {"_uuid", Device.Uuid.ToString()},
                     {"thread_id", $"{threadId}"},
-                    {"client_context", Guid.NewGuid().ToString()}
+                    {"client_context", DateTimeOffset.UtcNow.Ticks.ToString()}
                 };
                 var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
@@ -448,33 +448,6 @@ namespace InstagramAPI
 
             return SyncClient.SendMessage(json);
         }
-
-        public Task ReactToItemAsync(DirectItem item, string threadId, string emoji)
-        {
-            Contract.Requires(!string.IsNullOrEmpty(item?.ItemId));
-            Contract.Requires(!string.IsNullOrEmpty(threadId));
-
-            if (emoji == null)
-            {
-                emoji = string.Empty;
-            }
-
-            var json = new JObject
-            {
-                {"item_id", item.ItemId},
-                {"item_type", "reaction"},
-                {"node_type", "item"},
-                {"reaction_status", string.IsNullOrEmpty(emoji) ? "deleted" : "created"},
-                {"reaction_type", "like"},
-                {"target_item_type", JToken.FromObject(item.ItemType)},
-                {"thread_id", threadId},
-                {"emoji", emoji}
-            };
-
-            return SyncClient.SendMessage(json);
-        }
-
-        public Task RemoveReactionToItemAsync(DirectItem item, string threadId) => ReactToItemAsync(item, threadId, "");
 
         /// <summary>
         ///     Send link address to direct thread
@@ -721,7 +694,8 @@ namespace InstagramAPI
         /// </summary>
         /// <param name="threadId">Thread id</param>
         /// <param name="itemId">Item id (message id)</param>
-        public async Task<Result<ItemAckResponse>> LikeItemAsync(string threadId, string itemId)
+        /// <param name="emoji">Emoji reaction to react</param>
+        public async Task<Result<ItemAckResponse>> LikeItemAsync(string threadId, string itemId, string emoji = "")
         {
             ValidateLoggedIn();
             try
@@ -736,10 +710,11 @@ namespace InstagramAPI
                     {"_csrftoken", Session.CsrfToken},
                     {"_uuid", Device.Uuid.ToString()},
                     {"thread_ids", $"[{threadId}]"},
-                    {"client_context", Guid.NewGuid().ToString()},
+                    {"client_context", DateTimeOffset.UtcNow.Ticks.ToString()},
                     {"node_type", "item"},
                     {"reaction_status", "created"},
-                    {"item_id", itemId}
+                    {"item_id", itemId},
+                    {"emoji", string.IsNullOrEmpty(emoji) ? string.Empty : emoji}
                 };
                 var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
@@ -806,10 +781,11 @@ namespace InstagramAPI
                     {"_csrftoken", Session.CsrfToken},
                     {"_uuid", Device.Uuid.ToString()},
                     {"thread_ids", $"[{threadId}]"},
-                    {"client_context", Guid.NewGuid().ToString()},
+                    {"client_context", DateTimeOffset.UtcNow.Ticks.ToString()},
                     {"node_type", "item"},
                     {"reaction_status", "deleted"},
-                    {"item_id", itemId}
+                    {"item_id", itemId},
+                    {"emoji", ""}
                 };
                 var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();

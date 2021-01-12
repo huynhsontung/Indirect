@@ -337,17 +337,5 @@ namespace Indirect.Entities.Wrappers
                     return false;
             }
         }
-
-        public async void LikeItem()
-        {
-            if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId) || ItemType == DirectItemType.ActionLog) return;
-            await _viewModel.InstaApi.LikeItemAsync(Parent.ThreadId, ItemId).ConfigureAwait(false);
-        }
-
-        public async void UnlikeItem()
-        {
-            if (string.IsNullOrEmpty(Parent.ThreadId) || string.IsNullOrEmpty(ItemId)) return;
-            await _viewModel.InstaApi.UnlikeItemAsync(Parent.ThreadId, ItemId).ConfigureAwait(false);
-        }
     }
 }

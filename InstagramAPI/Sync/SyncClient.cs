@@ -76,19 +76,7 @@ namespace InstagramAPI.Sync
                 _pinging = new CancellationTokenSource();
                 _packetId = 1;
                 var device = _instaApi.Device;
-                var baseHttpFilter = new HttpBaseProtocolFilter();
-                var cookies = baseHttpFilter.CookieManager.GetCookies(new Uri("https://i.instagram.com"));
-                foreach (var cookie in cookies)
-                {
-                    var copyCookie = new HttpCookie(cookie.Name, "edge-chat.instagram.com", "/chat")
-                    {
-                        Value = cookie.Value,
-                        Expires = cookie.Expires,
-                        HttpOnly = cookie.HttpOnly,
-                        Secure = cookie.Secure
-                    };
-                    baseHttpFilter.CookieManager.SetCookie(copyCookie);
-                }
+
                 var connectPacket = new ConnectPacket
                 {
                     CleanSession = true,
@@ -99,9 +87,9 @@ namespace InstagramAPI.Sync
                     ProtocolLevel = 3,
                     ProtocolName = "MQIsdp"
                 };
-                var aid = GenerateDigitsRandom(16);
+                
                 var userAgent =
-                    $"Mozilla/5.0 (Linux; Android 10; {device.DeviceName}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.93 Mobile Safari/537.36";
+                    $"Mozilla/5.0 (Linux; Android 10; {device.DeviceName}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Mobile Safari/537.36 Edg/87.0.664.66";
                 var json = new JObject(
                     new JProperty("u", _instaApi.Session.LoggedInUser.Pk),
                     new JProperty("s", GenerateDigitsRandom(16)),
@@ -112,11 +100,12 @@ namespace InstagramAPI.Sync
                     new JProperty("d", device.PhoneId.ToString()),
                     new JProperty("ct", "cookie_auth"),
                     new JProperty("mqtt_sid", ""),
-                    new JProperty("aid", aid),
+                    new JProperty("aid", GenerateDigitsRandom(16)),
                     new JProperty("st", new JArray()),
                     new JProperty("pm", new JArray()),
                     new JProperty("dc", ""),
                     new JProperty("no_auto_fg", true),
+                    new JProperty("asi", new JObject(new JProperty("Accept-Language", "en"))),
                     new JProperty("a", userAgent)
                 );
                 var username = JsonConvert.SerializeObject(json, Formatting.None);
@@ -159,10 +148,14 @@ namespace InstagramAPI.Sync
 
         private JObject MakeSendMessageJson(JObject content)
         {
-            content["client_context"] = DateTime.UtcNow.Ticks.ToString();
-            content["device_id"] = _instaApi.Device.Uuid.ToString().ToUpper();
-            content["action"] = "send_item";
-            return content;
+            var message = new JObject
+            {
+                {"client_context", DateTime.UtcNow.Ticks.ToString()},
+                {"device_id", _instaApi.Device.PhoneId.ToString().ToUpper()},
+                {"action", "send_item"}
+            };
+            message.Merge(content);
+            return message;
         }
 
         private async void OnNetworkChanged(object sender)
@@ -233,7 +226,7 @@ namespace InstagramAPI.Sync
             if (publishPacket.Payload == null)
                 throw new Exception($"{nameof(SyncClient)}: Publish packet received but payload is null");
             var payload = Encoding.UTF8.GetString(publishPacket.Payload.ToArray());
-            this.Log($"Publish to {publishPacket.TopicName} with payload: {payload}");
+            this.Log($"Publish to {publishPacket.TopicName} ({publishPacket.PacketId}) with payload: {payload}");
             switch (publishPacket.TopicName)
             {
                 case "/ig_message_sync":
@@ -263,7 +256,10 @@ namespace InstagramAPI.Sync
                     var presenceEvent = container["presence_event"].ToObject<UserPresenceEventArgs>();
                     UserPresenceChanged?.Invoke(this, presenceEvent);
                     break;
-                
+
+                case "/ig_sub_iris_response":
+                    break;
+
                 case "/ig_send_message_response":
                     break;
             }
@@ -396,7 +392,8 @@ namespace InstagramAPI.Sync
             if (packet is PublishPacket publishPacket)
             {
                 var json = Encoding.UTF8.GetString(publishPacket.Payload.ToArray());
-                DebugLogger.Log(nameof(SyncClient), $"Payload: {json}");
+                DebugLogger.Log(nameof(SyncClient),
+                    $"Publish to {publishPacket.TopicName} ({publishPacket.PacketId}) with payload: {json}");
             }
         }
 
