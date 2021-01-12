@@ -29,7 +29,7 @@ namespace InstagramAPI.Classes.JsonConverters
 
             serializer.NullValueHandling = NullValueHandling.Ignore;
             var itemJson = reader.TokenType == JsonToken.String
-                ? JObject.Parse((string) reader.Value)
+                ? JObject.Parse((string)reader.Value)
                 : JObject.Load(reader);
             var rawJson = itemJson.ToString(Formatting.None);
             var itemSender = itemJson["user_id"]?.ToObject<long>(serializer) ?? 0;
@@ -37,6 +37,13 @@ namespace InstagramAPI.Classes.JsonConverters
             var item = itemJson.ToObject<DirectItem>(serializer);
             item.RawJson = rawJson;
             item.FromMe = itemSender == viewerPk;
+            SetDescriptionText(item);
+
+            return item;
+        }
+
+        private void SetDescriptionText(DirectItem item)
+        {
             try
             {
                 switch (item.ItemType)
@@ -133,13 +140,11 @@ namespace InstagramAPI.Classes.JsonConverters
                         break;
                 }
             }
-            catch
+            catch (Exception)
             {
-                this.Log($"Failed to write item description. Json: {rawJson}");
-                // Not important enough to throw. Pass
+                this.Log($"Failed to write item description. Json: {item.RawJson}");
+                // pass
             }
-
-            return item;
         }
     }
 }

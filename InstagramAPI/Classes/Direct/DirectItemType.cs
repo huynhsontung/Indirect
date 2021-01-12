@@ -47,5 +47,7 @@ namespace InstagramAPI.Classes.Direct
         LiveViewerInvite,
         [EnumMember(Value = "video_call_event")]
         VideoCallEvent,
+        [EnumMember(Value = "clip")]
+        Clip,
     }
 }

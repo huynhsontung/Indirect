@@ -130,6 +130,9 @@
     <Compile Include="Classes\Direct\DirectItemType.cs" />
     <Compile Include="Classes\Direct\DirectThreadItemsOnly.cs" />
     <Compile Include="Classes\Direct\ItemContent\AnimatedMedia.cs" />
+    <Compile Include="Classes\Direct\ItemContent\Clip\Clip.cs" />
+    <Compile Include="Classes\Direct\ItemContent\Clip\ClipCaption.cs" />
+    <Compile Include="Classes\Direct\ItemContent\Clip\ItemClip.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectActionLog.cs" />
     <Compile Include="Classes\JsonConverters\BoolConverter.cs" />
     <Compile Include="Classes\Media\InstaMedia.cs" />

@@ -61,6 +61,13 @@ namespace InstagramAPI.Classes.Direct
 
         #endregion
 
+        #region Clip
+
+        [JsonProperty("clip")]
+        public ItemClip Clip { get; set; }
+
+        #endregion
+
         #region DirectMedia
 
         [JsonProperty("media")] public InstaMedia Media { get; set; }
