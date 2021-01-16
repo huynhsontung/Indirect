@@ -6,43 +6,33 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls1="using:Indirect.Controls"
+    xmlns:controls1="using:Indirect.Controls" 
+    xmlns:contract7Present="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
     <UserControl.Resources>
         <ResourceDictionary>
-             <DataTemplate x:Key="ImageView"> 
-                 <controls:ImageEx x:Name="ImageFrame" Source="{Binding}" /> 
-             </DataTemplate> 
-             
-             <DataTemplate x:Key="VideoView"> 
-                 <controls1:AutoVideoControl x:Name="VideoFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+            <DataTemplate x:Key="ImageView">
+                <controls:ImageEx x:Name="ImageFrame" Source="{Binding}" />
+            </DataTemplate>
+
+            <DataTemplate x:Key="VideoView">
+                <controls1:AutoVideoControl x:Name="VideoFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                                          AreTransportControlsEnabled="{Binding AreTransportControlsEnabled, Mode=OneWay, FallbackValue=False}"
                                          Source="{Binding}" 
-                                         Tapped="VideoFrame_OnTapped"/> 
-             </DataTemplate>
+                                         Tapped="VideoFrame_OnTapped"/>
+            </DataTemplate>
 
-            
+
         </ResourceDictionary>
     </UserControl.Resources>
 
     <ContentControl x:Name="ContentControl"
-                    CornerRadius="{x:Bind CornerRadius}" Content="{x:Bind _source, Mode=OneWay}">
+                    contract7Present:CornerRadius="{x:Bind CornerRadius}" Content="{x:Bind _source, Mode=OneWay}">
         <ContentControl.ContentTemplateSelector>
             <controls1:PhotoVideoTemplateSelector ImageView="{StaticResource ImageView}"
-                                              VideoView="{StaticResource VideoView}"/>
+                                                  VideoView="{StaticResource VideoView}" />
         </ContentControl.ContentTemplateSelector>
     </ContentControl>
-
-    <!-- <Grid CornerRadius="{x:Bind CornerRadius}"> -->
-    <!--     <Grid.ColumnDefinitions> -->
-    <!--         <ColumnDefinition Width="Auto"/> -->
-    <!--     </Grid.ColumnDefinitions> -->
-    <!--     <controls:ImageEx x:Name="ImageFrame" Source="{x:Bind _imageSource}" /> -->
-    <!--     <local:AutoVideoControl x:Name="VideoFrame" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" -->
-    <!--                             AreTransportControlsEnabled="False" Visibility="Collapsed" -->
-    <!--                             Source="{x:Bind _videoSource}" -->
-    <!--                             Tapped="VideoFrame_OnTapped"/> -->
-    <!-- </Grid> -->
 </UserControl>
