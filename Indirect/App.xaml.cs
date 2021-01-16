@@ -28,7 +28,7 @@ namespace Indirect
     {
         private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
 
-        internal MainViewModel ViewModel { get; } = MainViewModel.Instance;
+        internal MainViewModel ViewModel { get; } = new MainViewModel();
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code

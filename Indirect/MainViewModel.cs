@@ -30,18 +30,6 @@ namespace Indirect
 {
     internal partial class MainViewModel : INotifyPropertyChanged, IDisposable
     {
-        private static MainViewModel _instance;
-        public static MainViewModel Instance
-        {
-            get
-            {
-                if (_instance != null) return _instance;
-                _instance = new MainViewModel();
-                return _instance;
-            }
-        }
-
-
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
         private DirectThreadWrapper _selectedThread;
         private FileStream _lockFile;
@@ -76,7 +64,7 @@ namespace Indirect
         public ReelsFeed ReelsFeed { get; } = new ReelsFeed();
         public ChatService ChatService { get; }
 
-        private MainViewModel()
+        public MainViewModel()
         {
             Inbox = new InboxWrapper(this);
             //PendingInbox = new InboxWrapper(this, true);
