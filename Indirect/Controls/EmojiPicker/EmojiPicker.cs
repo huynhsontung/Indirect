@@ -1,12 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.System;
-using Windows.UI.Core;
+using Windows.Foundation.Metadata;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Input;
 using NeoSmart.Unicode;
 
 namespace Indirect.Controls
@@ -43,6 +41,11 @@ namespace Indirect.Controls
             {
                 Content = picker
             };
+
+            if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 8))
+            {
+                openFlyout.ShouldConstrainToRootBounds = false;
+            }
 
             openFlyout.ShowAt(placementTarget, showOptions);
             
