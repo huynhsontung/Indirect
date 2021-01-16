@@ -256,17 +256,14 @@ namespace Indirect.Controls
             FilePickerFlyout.Hide();
         }
 
-        private async void Details_OnProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)
+        private async void MessageTextBox_OnCtrlV(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
         {
-            if (args.Key == VirtualKey.V && args.Modifiers == VirtualKeyModifiers.Control)
+            var dataPackage = Clipboard.GetContent();
+            if (dataPackage.Contains(StandardDataFormats.Bitmap))
             {
-                var dataPackage = Clipboard.GetContent();
-                if (dataPackage.Contains(StandardDataFormats.Bitmap))
-                {
-                    var imageStream = await dataPackage.GetBitmapAsync();
-                    FilePickerPreview.Source = await imageStream.OpenReadAsync();
-                    FilePickerFlyout.ShowAt(AddFilesButton);
-                }
+                var imageStream = await dataPackage.GetBitmapAsync();
+                FilePickerPreview.Source = await imageStream.OpenReadAsync();
+                FilePickerFlyout.ShowAt(AddFilesButton);
             }
         }
 

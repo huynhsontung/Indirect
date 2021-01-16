@@ -23,7 +23,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid ProcessKeyboardAccelerators="Details_OnProcessKeyboardAccelerators" Background="Transparent" AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop">
+    <Grid Background="Transparent" AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="Auto"/>
@@ -252,6 +252,7 @@
                      TabIndex="0">
                 <TextBox.KeyboardAccelerators>
                     <KeyboardAccelerator Key="Enter" Modifiers="None" Invoked="MessageTextBox_OnEnterPressed"/>
+                    <KeyboardAccelerator Key="V" Modifiers="Control" Invoked="MessageTextBox_OnCtrlV" />
                 </TextBox.KeyboardAccelerators>
             </TextBox>
 

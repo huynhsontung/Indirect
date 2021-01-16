@@ -110,7 +110,7 @@ namespace Indirect.Entities.Wrappers
                 { Reaction = emojiReaction, User = GetUserFromId(emojiReaction.SenderId) });
             }
 
-            MeLiked = EmojiReactions.Any(x => x.User.Equals(_viewModel.LoggedInUser));
+            MeLiked = EmojiReactions.Any(x => x?.User != null && x.User.Equals(_viewModel.LoggedInUser));
         }
 
         public void Update(ReactionsWrapper source) => Update(source._reactionsContainer);
