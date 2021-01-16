@@ -240,12 +240,12 @@ namespace Indirect.Utilities
                         OnError.Invoke(ex);
                     }
 
-                    if (data != null && data.Any() && !_cancellationToken.IsCancellationRequested)
+                    var collection = data as ICollection<IType> ?? data?.ToArray();
+                    if (data != null && collection.Any() && !_cancellationToken.IsCancellationRequested)
                     {
-                        resultCount = (uint)data.Count();
+                        resultCount = (uint)collection.Count;
 
-                        var reversed = data.Reverse();
-                        foreach (var item in reversed)
+                        foreach (var item in collection.Reverse())
                         {
                             Insert(0, item);
                         }

@@ -316,13 +316,22 @@ namespace Indirect.Entities.Wrappers
         public async Task<IEnumerable<DirectItemWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
         {
             // Without ThreadId we cant fetch thread items.
-            if (string.IsNullOrEmpty(ThreadId) || !(HasOlder ?? true)) return new List<DirectItemWrapper>(0);
+            if (string.IsNullOrEmpty(ThreadId) || !(HasOlder ?? true))
+            {
+                return new List<DirectItemWrapper>(0);
+            }
+            
             var pagesToLoad = pageSize / 20;
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(OldestCursor);
+            
             var result = await _viewModel.InstaApi.GetThreadAsync(ThreadId, pagination);
-            if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0) return new List<DirectItemWrapper>(0);
+            if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0)
+            {
+                return new List<DirectItemWrapper>(0);
+            }
+            
             await UpdateExcludeItemList(result.Value);
             var wrappedItems = DecorateItems(result.Value.Items);
             return wrappedItems;
@@ -357,7 +366,9 @@ namespace Indirect.Entities.Wrappers
         private List<DirectItemWrapper> DecorateItems(ICollection<DirectItem> items)
         {
             if (items == null || items.Count == 0) return new List<DirectItemWrapper>(0);
-            var wrappedItems = items.Select(x => new DirectItemWrapper(_viewModel, x, this)).ToList();
+            var wrappedItems = items.Where(x => x != null)
+                .Select(x => new DirectItemWrapper(_viewModel, x, this))
+                .ToList();
             var lastItem = ObservableItems.FirstOrDefault();
             var itemList = wrappedItems.ToList();
             var refItem = itemList.Last();
