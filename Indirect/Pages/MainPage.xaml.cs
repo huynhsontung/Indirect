@@ -314,7 +314,7 @@ namespace Indirect.Pages
             await ViewModel.ReelsFeed.UpdateReelsFeed(ReelsTrayFetchReason.PullToRefresh);
         }
 
-        private async void TestButton_OnClick(object sender, RoutedEventArgs e)
+        private void TestButton_OnClick(object sender, RoutedEventArgs e)
         {
             //await ContactsService.DeleteAllAppContacts();
         }
