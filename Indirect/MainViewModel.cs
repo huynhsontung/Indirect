@@ -128,21 +128,17 @@ namespace Indirect
             });
         }
 
-        public async Task UpdateSelectedThread()
+        public async Task UpdateThread(DirectThreadWrapper thread)
         {
-            if (SelectedThread == null)
+            if (thread == null)
+            {
                 return;
-            try
-            {
-                var result = await InstaApi.GetThreadAsync(SelectedThread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
-                if (result.IsSucceeded)
-                    await SelectedThread.Dispatcher.RunAsync(
-                        CoreDispatcherPriority.Normal,
-                        () => { SelectedThread.Update(result.Value); });
             }
-            catch (Exception e)
+            
+            var result = await InstaApi.GetThreadAsync(thread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
+            if (result.IsSucceeded)
             {
-                DebugLogger.LogException(e);
+                await thread.Dispatcher.AwaitableRunAsync(() => { thread.Update(result.Value); });
             }
         }
 
@@ -151,15 +147,16 @@ namespace Indirect
             _lastUpdated = DateTime.Now;
             await Inbox.UpdateInbox();
             if (SelectedThread == null) return;
-            if (Inbox.Threads.Contains(SelectedThread))
+            var selectedThread = SelectedThread;
+            if (Inbox.Threads.Contains(selectedThread))
             {
-                await UpdateSelectedThread();
-                await SelectedThread.MarkLatestItemSeen();
+                await UpdateThread(selectedThread);
+                await selectedThread.MarkLatestItemSeen();
             }
             else
             {
                 var preferSelectedThread = Inbox.Threads.FirstOrDefault(x =>
-                    x != null && SelectedThread != null && x.ThreadId == SelectedThread.ThreadId);
+                    x != null && x.ThreadId == selectedThread.ThreadId);
                 if (preferSelectedThread != null)
                 {
                     SelectedThread = preferSelectedThread;

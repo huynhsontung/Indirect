@@ -121,8 +121,15 @@ namespace InstagramAPI.Push
 
             if (ApiInformation.IsTypePresent("Windows.ApplicationModel.Background.ToastNotificationActionTrigger"))
             {
-                TryRegisterBackgroundTaskOnce(BACKGROUND_REPLY_NAME, BACKGROUND_REPLY_ENTRY_POINT,
-                    new Windows.ApplicationModel.Background.ToastNotificationActionTrigger(), out _);
+                try
+                {
+                    TryRegisterBackgroundTaskOnce(BACKGROUND_REPLY_NAME, BACKGROUND_REPLY_ENTRY_POINT,
+                        new Windows.ApplicationModel.Background.ToastNotificationActionTrigger(), out _);
+                }
+                catch (Exception)
+                {
+                    // ToastNotificationActionTrigger is present but cannot instantiate
+                }
             }
             return activityTaskRegistered;
         }
@@ -295,7 +302,6 @@ namespace InstagramAPI.Push
             this.Log("Stopping push server");
             _runningTokenSource?.Cancel();
             _inboundReader?.Dispose();
-            _outboundWriter?.DetachStream();
             _outboundWriter?.Dispose();
         }
 

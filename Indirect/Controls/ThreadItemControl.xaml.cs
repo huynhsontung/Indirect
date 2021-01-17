@@ -71,18 +71,32 @@ namespace Indirect.Controls
 
         private string SeenTextConverter(Dictionary<long, LastSeen> lastSeenAt)
         {
+            if (lastSeenAt == null || lastSeenAt.Count == 0)
+            {
+                return string.Empty;
+            }
+            
             var seenList = lastSeenAt.Where(x => 
                     x.Value.ItemId == Item.ItemId &&    // Match item id
                     x.Key != Item.Parent.ViewerId &&    // Not from viewer
                     x.Key != Item.Sender.Pk             // Not from sender
                 ).Select(y => y.Key).ToArray();
-            if (seenList.Length == 0) return string.Empty;
+            if (seenList.Length == 0)
+            {
+                return string.Empty;
+            }
+            
             if (Item.Parent.Users.Count == 1)
             {
                 if (Item.FromMe && Item.Parent.LastPermanentItem.ItemId != Item.ItemId) return string.Empty;
                 return "Seen";
             }
-            if (Item.Parent.Users.Count <= seenList.Length) return "Seen by everyone";
+            
+            if (Item.Parent.Users.Count <= seenList.Length)
+            {
+                return "Seen by everyone";
+            }
+            
             var seenUsers = seenList.Select(x => Item.Parent.Users.FirstOrDefault(y => x == y.Pk)?.Username).ToArray();
             if (seenUsers.Length <= 3)
             {

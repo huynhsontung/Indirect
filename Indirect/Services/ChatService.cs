@@ -28,14 +28,24 @@ namespace Indirect.Services
 
         public async Task SendMessage(DirectThreadWrapper thread, string content)
         {
+            if (string.IsNullOrEmpty(content) || thread == null)
+            {
+                return;
+            }
+            
             content = content.Trim(' ', '\n', '\r');
-            if (string.IsNullOrEmpty(content)) return;
+            if (string.IsNullOrEmpty(content))
+            {
+                return;
+            }
+            
             content = content.Replace('\r', '\n');
             var tokens = content.Split("\t\n ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             var links = tokens.Where(x =>
-                x.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
-                x.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase) ||
-                x.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                !string.IsNullOrEmpty(x) &&
+                (x.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
+                 x.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase) ||
+                 x.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase))).ToList();
             Result<DirectThread[]> result;
             Result<ItemAckPayloadResponse> ackResult;   // for links and hashtags
             try
