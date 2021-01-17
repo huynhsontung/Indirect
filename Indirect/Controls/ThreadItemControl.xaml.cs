@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.System;
@@ -11,10 +10,10 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Indirect.Entities.Wrappers;
-using Indirect.Services;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
+using NeoSmart.Unicode;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -141,7 +140,7 @@ namespace Indirect.Controls
         private async void Item_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             if (Item.ObservableReactions.MeLiked) return;
-            await ViewModel.ChatService.ReactToItem(Item, "♥");
+            await ViewModel.ChatService.ReactToItem(Item, Emoji.RedHeart.ToString());
         }
 
         private void MenuCopyOption_Click(object sender, RoutedEventArgs e)
