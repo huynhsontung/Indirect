@@ -127,6 +127,12 @@ namespace Indirect.Controls
             // check if selection actually changed
             if (view.SelectedItem != newValue)
             {
+                if (newValue == null && view.SelectedItem != null && !view.Items.Contains(view.SelectedItem))
+                {
+                    newValue = view.SelectedItem;
+                    view.SetValue(SelectedItemProperty, null);
+                }
+
                 // sync SelectedItem
                 view.SetValue(SelectedItemProperty, newValue);
                 view.UpdateSelection(oldValue, newValue);
