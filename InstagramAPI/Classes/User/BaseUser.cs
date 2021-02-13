@@ -25,11 +25,11 @@ namespace InstagramAPI.Classes.User
         [JsonProperty("latest_reel_media")] public long? LatestReelMedia { get; set; }
 
         [JsonProperty("interop_user_type", NullValueHandling = NullValueHandling.Ignore)]
-        public long? InteropUserType { get; set; }
-
-        [JsonProperty("is_facebook_friend", NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(BoolConverter))]
-        public bool IsFacebookFriend { get; set; }
+        public bool InteropUserType { get; set; }
+
+        [JsonProperty("interop_messaging_user_fbid", NullValueHandling = NullValueHandling.Ignore)]
+        public long? InteropMessagingUserFbid { get; set; }
 
         public static BaseUser Empty => new BaseUser {FullName = string.Empty, Username = string.Empty};
 
