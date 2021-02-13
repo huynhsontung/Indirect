@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
-using Indirect.Entities.Wrappers;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Sync;
 using InstagramAPI.Utils;
@@ -52,7 +51,11 @@ namespace Indirect
                 var updateInbox = false;
                 foreach (var syncEvent in data)
                 {
-                    if (syncEvent.Data.Count == 0) continue;
+                    if (syncEvent.Data.Count == 0)
+                    {
+                        continue;
+                    }
+
                     var itemData = syncEvent.Data[0];
                     if (syncEvent.SeqId > Inbox.SeqId)
                     {

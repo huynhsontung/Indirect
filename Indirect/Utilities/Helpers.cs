@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices.WindowsRuntime;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Media.Imaging;
 
 namespace Indirect.Utilities
 {
@@ -19,6 +16,18 @@ namespace Indirect.Utilities
         public static bool IsHttpUri(Uri uri)
         {
             return uri.IsAbsoluteUri && (uri.Scheme == "http" || uri.Scheme == "https");
+        }
+
+        public static List<string> ExtractLinks(string text)
+        {
+            text = text.Replace('\r', '\n');
+            var tokens = text.Split("\t\n ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            var links = tokens.Where(x =>
+                !string.IsNullOrEmpty(x) &&
+                (x.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
+                 x.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase) ||
+                 x.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase))).ToList();
+            return links;
         }
 
         public static async Task<IBuffer> CompressImage(StorageFile imagefile, int reqWidth, int reqHeight)

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement.Core;
 using Windows.UI.Xaml;
@@ -15,7 +13,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Indirect.Converters;
 using Indirect.Entities.Wrappers;
-using Indirect.Services;
+using Indirect.Utilities;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
@@ -150,15 +148,45 @@ namespace Indirect.Controls
             {
                 await ViewModel.ChatService.SendLike(Thread);
             }
-            else if (Thread.ReplyingItem != null)
-            {
-                var replyingItem = Thread.ReplyingItem;
-                Thread.ReplyingItem = null;
-                await ViewModel.ChatService.ReplyToItem(replyingItem, message);
-            } 
             else
             {
-                await ViewModel.ChatService.SendMessage(Thread, message);
+                message = message.Trim(' ', '\n', '\r');
+                if (string.IsNullOrEmpty(message))
+                {
+                    return;
+                }
+
+                if (Thread.ReplyingItem != null)
+                {
+                    var replyingItem = Thread.ReplyingItem;
+                    Thread.ReplyingItem = null;
+                    await ViewModel.ChatService.ReplyToItem(replyingItem, message);
+                } 
+                else
+                {
+                    var links = Helpers.ExtractLinks(message);
+                    if (links.Count > 0)
+                    {
+                        await ViewModel.ChatService.SendLink(Thread, message, links);
+                    }
+                    else
+                    {
+                        var responseThreads = await ViewModel.ChatService.SendTextMessage(Thread, message);
+                        if (responseThreads == null)
+                        {
+                            return;
+                        }
+
+                        if (responseThreads.Length == 0)
+                        {
+                            await ViewModel.UpdateThread(Thread);
+                        }
+                        else
+                        {
+                            Thread.Update(responseThreads[0]);
+                        }
+                    }
+                }
             }
         }
 

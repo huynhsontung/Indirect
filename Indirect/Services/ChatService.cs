@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +13,6 @@ using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
-using InstagramAPI.Classes.Responses;
 using InstagramAPI.Utils;
 
 namespace Indirect.Services
@@ -26,65 +26,54 @@ namespace Indirect.Services
             _api = api;
         }
 
-        public async Task SendMessage(DirectThreadWrapper thread, string content)
+        public async Task SendLink(DirectThreadWrapper thread, string text, List<string> links)
         {
-            if (string.IsNullOrEmpty(content) || thread == null)
-            {
-                return;
-            }
-            
-            content = content.Trim(' ', '\n', '\r');
-            if (string.IsNullOrEmpty(content))
-            {
-                return;
-            }
-            
-            content = content.Replace('\r', '\n');
-            var tokens = content.Split("\t\n ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            var links = tokens.Where(x =>
-                !string.IsNullOrEmpty(x) &&
-                (x.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
-                 x.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase) ||
-                 x.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase))).ToList();
-            Result<DirectThread[]> result;
-            Result<ItemAckPayloadResponse> ackResult;   // for links and hashtags
+            Contract.Requires(thread != null);
+            Contract.Requires(!string.IsNullOrEmpty(text));
+            Contract.Requires(links?.Count > 0);
+
             try
             {
                 if (!string.IsNullOrEmpty(thread.ThreadId))
                 {
-                    if (links.Any())
-                    {
-                        ackResult = await _api.SendLinkAsync(content, links, thread.ThreadId);
-                        return;
-                    }
-
-                    result = await _api.SendTextAsync(null, thread.ThreadId, content);
+                    await _api.SendLinkAsync(text, links, thread.ThreadId);
                 }
                 else
                 {
-                    if (links.Any())
-                    {
-                        ackResult = await _api.SendLinkToRecipientsAsync(content, links,
-                            thread.Users.Select(x => x.Pk).ToArray());
-                        return;
-                    }
-
-                    result = await _api.SendTextAsync(thread.Users.Select(x => x.Pk),
-                        null, content);
+                    await _api.SendLinkToRecipientsAsync(text, links,
+                        thread.Users.Select(x => x.Pk).ToArray());
                 }
             }
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                //await HandleException("Failed to send message");
-                return;
             }
+        }
 
-            if (result.IsSucceeded && result.Value.Length > 0)
+        public async Task<DirectThread[]> SendTextMessage(DirectThreadWrapper thread, string text)
+        {
+            Contract.Requires(thread != null);
+            Contract.Requires(!string.IsNullOrEmpty(text));
+
+            try
             {
-                // SyncClient will take care of updating. Update here is just for precaution.
-                thread.Update(result.Value[0]);
-                // await Inbox.UpdateInbox();
+                Result<DirectThread[]> result;
+                if (!string.IsNullOrEmpty(thread.ThreadId))
+                {
+                    result = await _api.SendTextAsync(null, thread.ThreadId, text);
+                }
+                else
+                {
+                    result = await _api.SendTextAsync(thread.Users.Select(x => x.Pk),
+                        null, text);
+                }
+
+                return result.Value ?? new DirectThread[0];
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+                return null;
             }
         }
 
