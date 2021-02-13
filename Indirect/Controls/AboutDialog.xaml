@@ -2,27 +2,53 @@
     x:Class="Indirect.Controls.AboutDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Indirect"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Indirect"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
     CloseButtonText="Close"
-    DefaultButton="Close">
+    DefaultButton="Close"
+    mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical">
-        <TextBlock Style="{ThemeResource FluentHeaderTextStyle}" Text="Indirect" Margin="0,0,0,-2"/>
-        <TextBlock Style="{ThemeResource FluentCaptionTextStyle}" x:Name="VersionText" Text="Version" 
-                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+        <TextBlock
+            Margin="0,0,0,-2"
+            Style="{ThemeResource FluentHeaderTextStyle}"
+            Text="Indirect" />
+
+        <TextBlock
+            x:Name="VersionText"
+            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+            Style="{ThemeResource FluentCaptionTextStyle}"
+            Text="Version" />
+
         <RichTextBlock FontSize="12" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}">
             <Paragraph>
-                Current identity:
-                <Run x:Name="Identity" FontWeight="Bold" Text="Android Phone"/>
+                Current identity:<Run
+                    x:Name="Identity"
+                    FontWeight="Bold"
+                    Text="Android Phone" />
             </Paragraph>
         </RichTextBlock>
-        <HyperlinkButton Margin="0,12,0,0" Content="Data Policy" NavigateUri="https://help.instagram.com/519522125107875"/>
-        <HyperlinkButton Margin="0,6,0,0" Content="GitHub page" NavigateUri="https://github.com/huynhsontung/Indirect"/>
-        <HyperlinkButton Margin="0,6,0,0" Content="UWP Community Discord" NavigateUri="https://discord.gg/eBHZSKG"/>
-        <TextBlock Style="{ThemeResource FluentBodyTextStyle}" Text="Developed by Tung Huynh" Margin="0,16,0,0"/>
+
+        <HyperlinkButton
+            Margin="0,12,0,0"
+            Content="Data Policy"
+            NavigateUri="https://help.instagram.com/519522125107875" />
+
+        <HyperlinkButton
+            Margin="0,6,0,0"
+            Content="GitHub page"
+            NavigateUri="https://github.com/huynhsontung/Indirect" />
+
+        <HyperlinkButton
+            Margin="0,6,0,0"
+            Content="UWP Community Discord"
+            NavigateUri="https://discord.gg/eBHZSKG" />
+
+        <TextBlock
+            Margin="0,16,0,0"
+            Style="{ThemeResource FluentBodyTextStyle}"
+            Text="Developed by Tung Huynh" />
 
     </StackPanel>
 </ContentDialog>
