@@ -44,6 +44,7 @@ namespace Indirect.Entities
         private void SyncReels(Reel[] target)
         {
             if (target.Length == 0) return;
+            target = target.Where(x => x.ReelType == "user_reel").ToArray();
 
             lock (Reels)
             {

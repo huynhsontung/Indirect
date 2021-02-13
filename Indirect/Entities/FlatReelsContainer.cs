@@ -27,7 +27,6 @@ namespace Indirect.Entities
             _userIndex = selected;
             foreach (var reel in initialReels)
             {
-                if (reel.ReelType != "user_reel") continue;
                 UserOrder.Add(reel.User.Pk);
                 _userReelsDictionary[reel.User.Pk] = reel;
             }
