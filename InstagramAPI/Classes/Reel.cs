@@ -4,13 +4,14 @@ using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.User;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace InstagramAPI.Classes
 {
     public class Reel : IEquatable<Reel>
     {
         [JsonProperty("id")]
-        public long Id { get; set; }
+        public JValue Id { get; set; }
 
         [JsonProperty("latest_reel_media")]
         [JsonConverter(typeof(TimestampConverter))]
@@ -80,7 +81,7 @@ namespace InstagramAPI.Classes
 
         public bool Equals(Reel other)
         {
-            return Id == other?.Id;
+            return Id.Equals(other?.Id);
         }
     }
 }

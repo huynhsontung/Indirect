@@ -51,7 +51,7 @@ namespace Indirect.Entities
                 for (int i = 0; i < Reels.Count; i++)
                 {
                     var existingReel = Reels[i];
-                    if (target.All(x => x.Id != existingReel.Id))
+                    if (target.All(x => !x.Id.Equals(existingReel.Id)))
                     {
                         Reels.RemoveAt(i);
                         i--;
@@ -66,7 +66,7 @@ namespace Indirect.Entities
                     var equivalentIndex = -1;
                     for (int j = 0; j < Reels.Count; j++)
                     {
-                        if (Reels[j].Id == reel.Id)
+                        if (Reels[j].Id.Equals(reel.Id))
                         {
                             equivalent = Reels[j];
                             equivalentIndex = j;

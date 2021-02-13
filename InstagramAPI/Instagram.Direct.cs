@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Web.Http;
@@ -527,7 +528,7 @@ namespace InstagramAPI
             }
         }
 
-        public async Task<Result<ItemAckPayloadResponse>> SendReelShareAsync(long reelId, string mediaId,
+        public async Task<Result<ItemAckPayloadResponse>> SendReelShareAsync(JValue reelId, string mediaId,
             InstaMediaType mediaType, string threadId,
             string text)
         {
@@ -541,7 +542,7 @@ namespace InstagramAPI
                     {"action", "send_item"},
                     {"client_context", clientContext},
                     {"mutation_token", clientContext},
-                    {"reel_id", reelId.ToString()},
+                    {"reel_id", reelId.ToString(CultureInfo.InvariantCulture)},
                     {"media_id", mediaId},
                     {"thread_ids", $"[{threadId}]"},
                     {"text", text},
@@ -568,7 +569,7 @@ namespace InstagramAPI
             }
         }
 
-        public async Task<Result<ItemAckPayloadResponse>> SendReelReactAsync(long reelId, string mediaId, string threadId, string text)
+        public async Task<Result<ItemAckPayloadResponse>> SendReelReactAsync(JValue reelId, string mediaId, string threadId, string text)
         {
             ValidateLoggedIn();
             try
@@ -580,7 +581,7 @@ namespace InstagramAPI
                     {"action", "send_item"},
                     {"client_context", clientContext},
                     {"mutation_token", clientContext},
-                    {"reel_id", reelId.ToString()},
+                    {"reel_id", reelId},
                     {"media_id", mediaId},
                     {"thread_ids", $"[{threadId}]"},
                     {"text", text},

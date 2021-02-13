@@ -106,13 +106,13 @@ namespace Indirect.Controls
             {
                 return;
             }
-            else if (selected.Parent.Id != previous?.Parent.Id)
+            else if (!selected.Parent.Id.Equals(previous?.Parent.Id))
             {
                 var start = 0;
                 var end = 0;
                 for (int i = 0; i < Source.Items.Count; i++)
                 {
-                    if (selected.Parent.Id == Source.Items[i].Parent.Id)
+                    if (selected.Parent.Id.Equals(Source.Items[i].Parent.Id))
                     {
                         start = i;
                         break;
@@ -121,7 +121,7 @@ namespace Indirect.Controls
 
                 for (int i = Source.Items.Count - 1; i >= 0; i--)
                 {
-                    if (selected.Parent.Id == Source.Items[i].Parent.Id)
+                    if (selected.Parent.Id.Equals(Source.Items[i].Parent.Id))
                     {
                         end = i;
                         break;
