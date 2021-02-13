@@ -1,4 +1,5 @@
 ﻿using System;
+using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.User
@@ -22,6 +23,13 @@ namespace InstagramAPI.Classes.User
         [JsonProperty("has_anonymous_profile_picture")] public bool? HasAnonymousProfilePicture { get; set; }
 
         [JsonProperty("latest_reel_media")] public long? LatestReelMedia { get; set; }
+
+        [JsonProperty("interop_user_type", NullValueHandling = NullValueHandling.Ignore)]
+        public long? InteropUserType { get; set; }
+
+        [JsonProperty("is_facebook_friend", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(BoolConverter))]
+        public bool IsFacebookFriend { get; set; }
 
         public static BaseUser Empty => new BaseUser {FullName = string.Empty, Username = string.Empty};
 
