@@ -50,7 +50,7 @@ namespace Indirect.Services
             }
         }
 
-        public async Task<DirectThread[]> SendTextMessage(DirectThreadWrapper thread, string text)
+        public async Task<DirectThread> SendTextMessage(DirectThreadWrapper thread, string text)
         {
             Contract.Requires(thread != null);
             Contract.Requires(!string.IsNullOrEmpty(text));
@@ -68,7 +68,7 @@ namespace Indirect.Services
                         null, text);
                 }
 
-                return result.Value ?? new DirectThread[0];
+                return result.Value?[0];
             }
             catch (Exception e)
             {

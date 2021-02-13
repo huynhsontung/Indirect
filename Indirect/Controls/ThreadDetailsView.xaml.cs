@@ -171,19 +171,10 @@ namespace Indirect.Controls
                     }
                     else
                     {
-                        var responseThreads = await ViewModel.ChatService.SendTextMessage(Thread, message);
-                        if (responseThreads == null)
+                        var responseThread = await ViewModel.ChatService.SendTextMessage(Thread, message);
+                        if (responseThread != null)
                         {
-                            return;
-                        }
-
-                        if (responseThreads.Length == 0)
-                        {
-                            await ViewModel.UpdateThread(Thread);
-                        }
-                        else
-                        {
-                            Thread.Update(responseThreads[0]);
+                            Thread.Update(responseThread);
                         }
                     }
                 }
