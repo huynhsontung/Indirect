@@ -62,7 +62,13 @@ namespace InstagramAPI
             _apiRequestMessage = new ApiRequestMessage(this);
 
             IsUserAuthenticated = IsUserAuthenticatedPersistent;
-            PushClient = new PushClient(this, IsUserAuthenticated);
+            var fbnsConnectionData = new FbnsConnectionData();
+            if (IsUserAuthenticated)
+            {
+                fbnsConnectionData.LoadFromAppSettings();
+            }
+
+            PushClient = new PushClient(this, fbnsConnectionData);
             SyncClient = new SyncClient(this);
 
             if (!IsUserAuthenticated) return;

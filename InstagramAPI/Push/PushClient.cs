@@ -23,7 +23,7 @@ namespace InstagramAPI.Push
     public class PushClient
     {
         public event EventHandler<PushReceivedEventArgs> MessageReceived;
-        public FbnsConnectionData ConnectionData { get; } = new FbnsConnectionData();
+        public FbnsConnectionData ConnectionData { get; }
         public StreamSocket Socket { get; private set; }
         public bool Running => !(_runningTokenSource?.IsCancellationRequested ?? true);
 
@@ -44,11 +44,11 @@ namespace InstagramAPI.Push
         private DataWriter _outboundWriter;
         private readonly Instagram _instaApi;
 
-        public PushClient(Instagram api, bool tryLoadData = true)
+        public PushClient(Instagram api, FbnsConnectionData connectionData)
         {
             _instaApi = api ?? throw new ArgumentException("Api can't be null", nameof(api));
 
-            if (tryLoadData) ConnectionData.LoadFromAppSettings();
+            ConnectionData = connectionData;
 
             // If token is older than 24 hours then discard it
             if ((DateTimeOffset.Now - ConnectionData.FbnsTokenLastUpdated).TotalHours > 24) ConnectionData.FbnsToken = "";
@@ -301,16 +301,12 @@ namespace InstagramAPI.Push
         {
             this.Log("Stopping push server");
             _runningTokenSource?.Cancel();
-            _inboundReader?.Dispose();
-            _outboundWriter?.Dispose();
         }
 
         private async void Restart()
         {
             this.Log("Restarting push server");
             _runningTokenSource?.Cancel();
-            _inboundReader?.Dispose();
-            _outboundWriter?.Dispose();
             await Task.Delay(TimeSpan.FromSeconds(3));
             if (Running) return;
             await StartFresh();
