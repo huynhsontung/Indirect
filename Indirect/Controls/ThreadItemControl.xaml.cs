@@ -12,7 +12,7 @@ using Windows.UI.Xaml.Input;
 using Indirect.Entities.Wrappers;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
-using Microsoft.Toolkit.Uwp.UI.Extensions;
+using Microsoft.Toolkit.Uwp.UI;
 using NeoSmart.Unicode;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236

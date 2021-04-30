@@ -13,9 +13,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.UI.Controls;
-using Microsoft.Toolkit.Uwp.UI.Extensions;
+using Microsoft.Toolkit.Uwp.UI;
 
 // ReSharper disable CheckNamespace
 namespace Indirect.Controls
@@ -309,7 +308,7 @@ namespace Indirect.Controls
         /// <param name="args">The event args</param>
         private void OnFrameNavigating(object sender, NavigatingCancelEventArgs args)
         {
-            if ((args.NavigationMode == NavigationMode.Back) && (ViewState == MasterDetailsViewState.Details))
+            if ((args.NavigationMode == NavigationMode.Back) && (ViewState == ListDetailsViewState.Details))
             {
                 SelectedItem = null;
                 args.Cancel = true;
@@ -323,7 +322,7 @@ namespace Indirect.Controls
         /// <param name="args">The event args</param>
         private void OnBackRequested(object sender, BackRequestedEventArgs args)
         {
-            if (ViewState == MasterDetailsViewState.Details)
+            if (ViewState == ListDetailsViewState.Details)
             {
                 // let the OnFrameNavigating method handle it if
                 if (_frame == null || !_frame.CanGoBack)
@@ -357,7 +356,7 @@ namespace Indirect.Controls
                 details.Translation += new Vector3(0, 0, 16);
                 ViewStateChanged += (sender, state) =>
                 {
-                    if (state == MasterDetailsViewState.Master || state == MasterDetailsViewState.Details)
+                    if (state == ListDetailsViewState.List || state == ListDetailsViewState.Details)
                     {
                         shadow.Receivers.Clear();
                     }
@@ -382,7 +381,7 @@ namespace Indirect.Controls
         /// <summary>
         /// Sets the back button visibility based on the current visual state and selected item
         /// </summary>
-        private void SetBackButtonVisibility(MasterDetailsViewState? previousState = null)
+        private void SetBackButtonVisibility(ListDetailsViewState? previousState = null)
         {
             const int backButtonVisible = 1;
 
@@ -391,7 +390,7 @@ namespace Indirect.Controls
                 return;
             }
 
-            if (ViewState == MasterDetailsViewState.Details)
+            if (ViewState == ListDetailsViewState.Details)
             {
                 if ((BackButtonBehavior == BackButtonBehavior.Inline) && (_inlineBackButton != null))
                 {
@@ -425,7 +424,7 @@ namespace Indirect.Controls
                     navigationManager.AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
                 }
             }
-            else if (previousState == MasterDetailsViewState.Details)
+            else if (previousState == ListDetailsViewState.Details)
             {
                 if ((BackButtonBehavior == BackButtonBehavior.Inline) && (_inlineBackButton != null))
                 {
@@ -461,11 +460,11 @@ namespace Indirect.Controls
 
             if (ActualWidth < CompactModeThresholdWidth)
             {
-                ViewState = SelectedItem == null ? MasterDetailsViewState.Master : MasterDetailsViewState.Details;
+                ViewState = SelectedItem == null ? ListDetailsViewState.List : ListDetailsViewState.Details;
             }
             else
             {
-                ViewState = MasterDetailsViewState.Both;
+                ViewState = ListDetailsViewState.Both;
             }
 
             if (previousState != ViewState)
@@ -565,9 +564,9 @@ namespace Indirect.Controls
         /// Sets whether the selected item should change when focused with the keyboard based on the view state
         /// </summary>
         /// <param name="viewState">the view state</param>
-        private void SetListSelectionWithKeyboardFocusOnVisualStateChanged(MasterDetailsViewState viewState)
+        private void SetListSelectionWithKeyboardFocusOnVisualStateChanged(ListDetailsViewState viewState)
         {
-            if (viewState == MasterDetailsViewState.Both)
+            if (viewState == ListDetailsViewState.Both)
             {
                 SetListSelectionWithKeyboardFocus(true);
             }
@@ -607,9 +606,9 @@ namespace Indirect.Controls
         /// Sets focus to the relevant control based on the viewState.
         /// </summary>
         /// <param name="viewState">the view state</param>
-        private void SetFocus(MasterDetailsViewState viewState)
+        private void SetFocus(ListDetailsViewState viewState)
         {
-            if (viewState != MasterDetailsViewState.Details)
+            if (viewState != ListDetailsViewState.Details)
             {
                 FocusItemList();
             }
