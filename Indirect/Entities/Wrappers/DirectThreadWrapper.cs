@@ -427,19 +427,22 @@ namespace Indirect.Entities.Wrappers
         public async Task UpdateLastSeenAt(long userId, DateTimeOffset timestamp, string itemId)
         {
             if (userId == default || timestamp == default || itemId == default) return;
-            if (LastSeenAt.TryGetValue(userId, out var lastSeen))
+            var lastSeenAt = new Dictionary<long, LastSeen>(LastSeenAt);
+            if (lastSeenAt.TryGetValue(userId, out var lastSeen))
             {
                 lastSeen.Timestamp = timestamp;
                 lastSeen.ItemId = itemId;
             }
             else
             {
-                LastSeenAt[userId] = new LastSeen
+                lastSeenAt[userId] = new LastSeen
                 {
                     ItemId = itemId,
                     Timestamp = timestamp
                 };
             }
+
+            LastSeenAt = lastSeenAt;
 
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
