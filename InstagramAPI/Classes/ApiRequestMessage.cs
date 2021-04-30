@@ -1,4 +1,5 @@
 ﻿using System;
+using InstagramAPI.Classes.Core;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

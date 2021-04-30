@@ -123,7 +123,7 @@
     <Compile Include="Classes\Android\AndroidDevice.cs" />
     <Compile Include="Classes\Android\AndroidVersion.cs" />
     <Compile Include="Classes\ApiRequestMessage.cs" />
-    <Compile Include="Classes\ApiVersion.cs" />
+    <Compile Include="Classes\Core\ApiVersion.cs" />
     <Compile Include="Classes\Challenge\ChallengeLoginInfo.cs" />
     <Compile Include="Classes\Challenge\ChallengeSelectMethodStep.cs" />
     <Compile Include="Classes\Direct\DirectItem.cs" />
@@ -197,7 +197,7 @@
     <Compile Include="Classes\Media\InstaVideoUpload.cs" />
     <Compile Include="Classes\Media\MediaCaption.cs" />
     <Compile Include="Classes\Media\ReelMedia.cs" />
-    <Compile Include="Classes\PaginationParameters.cs" />
+    <Compile Include="Classes\Core\PaginationParameters.cs" />
     <Compile Include="Classes\Responses\BaseStatusResponse.cs" />
     <Compile Include="Classes\Responses\DefaultResponse.cs" />
     <Compile Include="Classes\Responses\ItemAckResponse.cs" />
@@ -205,11 +205,11 @@
     <Compile Include="Classes\Responses\LoginResponse.cs" />
     <Compile Include="Classes\Responses\RankedRecipientsResponse.cs" />
     <Compile Include="Classes\Responses\ItemAddedResponse.cs" />
-    <Compile Include="Classes\Result.cs" />
+    <Compile Include="Classes\Core\Result.cs" />
     <Compile Include="Classes\StoryUploadOptions.cs" />
-    <Compile Include="Classes\TwoFactorLoginInfo.cs" />
-    <Compile Include="Classes\UserPresenceResponse.cs" />
-    <Compile Include="Classes\UserSessionData.cs" />
+    <Compile Include="Classes\Challenge\TwoFactorLoginInfo.cs" />
+    <Compile Include="Classes\Responses\UserPresenceResponse.cs" />
+    <Compile Include="Classes\Core\UserSessionData.cs" />
     <Compile Include="Classes\User\CurrentUser.cs" />
     <Compile Include="Classes\User\BaseUser.cs" />
     <Compile Include="Classes\User\UserInfo.cs" />

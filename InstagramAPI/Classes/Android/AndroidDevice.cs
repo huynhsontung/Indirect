@@ -1,4 +1,5 @@
-﻿using System;
+﻿using InstagramAPI.Classes.Core;
+using System;
 
 namespace InstagramAPI.Classes.Android
 {

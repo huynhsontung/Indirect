@@ -10,11 +10,11 @@ using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.UI.Core;
 using Indirect.Utilities;
-using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
 using Microsoft.Toolkit.Collections;
+using InstagramAPI.Classes.Core;
 
 namespace Indirect.Entities.Wrappers
 {

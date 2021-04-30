@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace InstagramAPI.Classes
+namespace InstagramAPI.Classes.Core
 {
     public enum ResultStatus
     {
@@ -18,7 +18,7 @@ namespace InstagramAPI.Classes
         public string Json { get; }
 
         public string Message { get; }
-        
+
         public Exception Exception { get; }
 
         public Result(ResultStatus status, string message = null, string json = null)
@@ -41,13 +41,13 @@ namespace InstagramAPI.Classes
     {
         public T Value { get; }
 
-        public Result(ResultStatus status, T passingValue, string message = null, string json = null) 
+        public Result(ResultStatus status, T passingValue, string message = null, string json = null)
             : base(status, message, json)
         {
             Value = passingValue;
         }
 
-        public Result(Exception exception, T passingValue, string message = null, string json = null) 
+        public Result(Exception exception, T passingValue, string message = null, string json = null)
             : base(exception, message, json)
         {
             Value = passingValue;

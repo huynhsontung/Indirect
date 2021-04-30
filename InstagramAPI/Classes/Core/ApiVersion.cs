@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace InstagramAPI.Classes
+namespace InstagramAPI.Classes.Core
 {
     [Serializable]
     public class ApiVersion

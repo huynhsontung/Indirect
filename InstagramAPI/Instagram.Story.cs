@@ -8,6 +8,7 @@ using InstagramAPI.Classes.Responses;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using InstagramAPI.Classes.Core;
 
 namespace InstagramAPI
 {

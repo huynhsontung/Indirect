@@ -14,6 +14,7 @@ using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Utils;
+using InstagramAPI.Classes.Core;
 
 namespace Indirect.Services
 {

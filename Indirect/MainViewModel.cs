@@ -17,7 +17,6 @@ using Indirect.Pages;
 using Indirect.Services;
 using Indirect.Utilities;
 using InstagramAPI;
-using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.User;
@@ -25,6 +24,8 @@ using InstagramAPI.Push;
 using InstagramAPI.Sync;
 using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.Helpers;
+using InstagramAPI.Classes.Responses;
+using InstagramAPI.Classes.Core;
 
 namespace Indirect
 {

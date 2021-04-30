@@ -9,8 +9,8 @@ using Windows.UI.Xaml.Navigation;
 using Indirect.Controls;
 using Indirect.Utilities;
 using InstagramAPI;
-using InstagramAPI.Classes;
 using InstagramAPI.Utils;
+using InstagramAPI.Classes.Core;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 

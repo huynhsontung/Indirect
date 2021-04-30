@@ -1,7 +1,7 @@
 ﻿using InstagramAPI.Classes.Android;
 using System;
 using System.Collections.Generic;
-using InstagramAPI.Classes;
+using InstagramAPI.Classes.Core;
 
 // ReSharper disable StringLiteralTypo
 

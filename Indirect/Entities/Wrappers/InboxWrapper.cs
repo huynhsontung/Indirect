@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using Microsoft.Toolkit.Collections;
 using Microsoft.Toolkit.Uwp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using InstagramAPI.Classes.Core;
 
 namespace Indirect.Entities.Wrappers
 {

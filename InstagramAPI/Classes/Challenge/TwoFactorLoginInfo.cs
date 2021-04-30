@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace InstagramAPI.Classes
+namespace InstagramAPI.Classes.Challenge
 {
     public class TwoFactorLoginInfo
     {

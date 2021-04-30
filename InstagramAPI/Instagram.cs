@@ -19,6 +19,7 @@ using Newtonsoft.Json.Linq;
 using HttpClient = Windows.Web.Http.HttpClient;
 using HttpMethod = Windows.Web.Http.HttpMethod;
 using HttpRequestMessage = Windows.Web.Http.HttpRequestMessage;
+using InstagramAPI.Classes.Core;
 
 namespace InstagramAPI
 {

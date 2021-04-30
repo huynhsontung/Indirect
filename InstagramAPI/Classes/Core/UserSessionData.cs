@@ -1,7 +1,7 @@
 ﻿using System;
 using InstagramAPI.Classes.User;
 
-namespace InstagramAPI.Classes
+namespace InstagramAPI.Classes.Core
 {
     public class UserSessionData
     {
@@ -57,27 +57,27 @@ namespace InstagramAPI.Classes
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             var composite = (Windows.Storage.ApplicationDataCompositeValue)localSettings.Values["_userSessionData"];
             if (composite == null) return;
-            Username = (string) composite["Username"];
-            Password = (string) composite["Password"];
-            RankToken = (string) composite["RankToken"];
-            FacebookUserId = (string) composite["FacebookUserId"];
-            FacebookAccessToken = (string) composite["FacebookAccessToken"];
+            Username = (string)composite["Username"];
+            Password = (string)composite["Password"];
+            RankToken = (string)composite["RankToken"];
+            FacebookUserId = (string)composite["FacebookUserId"];
+            FacebookAccessToken = (string)composite["FacebookAccessToken"];
             LoggedInUser = new BaseUser
             {
-                IsVerified = (bool) composite["LoggedInUser.IsVerified"],
-                IsPrivate = (bool) composite["LoggedInUser.IsPrivate"],
-                Pk = (long) composite["LoggedInUser.Pk"],
-                ProfilePictureUrl = new Uri((string) composite["LoggedInUser.ProfilePictureUrl"]),
-                ProfilePictureId = (string) composite["LoggedInUser.ProfilePictureId"],
-                Username = (string) composite["LoggedInUser.Username"],
-                FullName = (string) composite["LoggedInUser.FullName"]
+                IsVerified = (bool)composite["LoggedInUser.IsVerified"],
+                IsPrivate = (bool)composite["LoggedInUser.IsPrivate"],
+                Pk = (long)composite["LoggedInUser.Pk"],
+                ProfilePictureUrl = new Uri((string)composite["LoggedInUser.ProfilePictureUrl"]),
+                ProfilePictureId = (string)composite["LoggedInUser.ProfilePictureId"],
+                Username = (string)composite["LoggedInUser.Username"],
+                FullName = (string)composite["LoggedInUser.FullName"]
             };
         }
 
         public static UserSessionData CreateFromAppSettings()
         {
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var composite = (Windows.Storage.ApplicationDataCompositeValue) localSettings.Values["_userSessionData"];
+            var composite = (Windows.Storage.ApplicationDataCompositeValue)localSettings.Values["_userSessionData"];
             if (composite == null) return null;
             var session = new UserSessionData();
             session.LoadFromAppSettings();

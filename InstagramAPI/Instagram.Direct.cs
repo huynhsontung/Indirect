@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Web.Http;
-using InstagramAPI.Classes;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Mqtt.Packets;
@@ -13,6 +12,7 @@ using InstagramAPI.Classes.Responses;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using InstagramAPI.Classes.Core;
 
 namespace InstagramAPI
 {
@@ -804,7 +804,7 @@ namespace InstagramAPI
             }
         }
 
-        public async Task<Result<UserPresenceResponse>> GetPresence()
+        public async Task<Result< UserPresenceResponse>> GetPresence()
         {
             ValidateLoggedIn();
             try
