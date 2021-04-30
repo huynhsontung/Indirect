@@ -224,10 +224,11 @@ namespace InstagramAPI.Push
 
             if (Running) throw new Exception("Push client is already running");
 
+            _runningTokenSource = new CancellationTokenSource();
             var connectPacket = new FbnsConnectPacket();
             try
             {
-                connectPacket.Payload = await PayloadProcessor.BuildPayload(ConnectionData);
+                connectPacket.Payload = await PayloadProcessor.BuildPayload(ConnectionData, _runningTokenSource.Token);
             }
             catch (Exception e)
             {
@@ -252,7 +253,6 @@ namespace InstagramAPI.Push
                 _inboundReader.ByteOrder = ByteOrder.BigEndian;
                 _inboundReader.InputStreamOptions = InputStreamOptions.Partial;
                 _outboundWriter.ByteOrder = ByteOrder.BigEndian;
-                _runningTokenSource = new CancellationTokenSource();
                 await FbnsPacketEncoder.EncodePacket(connectPacket, _outboundWriter);
             }
             catch (Exception e)
