@@ -61,29 +61,6 @@ namespace InstagramAPI
             }.ToString(Formatting.None);
         }
 
-        private void ClearCookies()
-        {
-            var myFilter = new HttpBaseProtocolFilter();
-            var cookieManager = myFilter.CookieManager;
-            var instagramApiCookies = cookieManager.GetCookies(UriCreator.BaseInstagramUri);
-            foreach (var cookie in instagramApiCookies)
-            {
-                cookieManager.DeleteCookie(cookie);
-            }
-
-            var instagramCookies = cookieManager.GetCookies(new Uri("https://www.instagram.com/"));
-            foreach (var cookie in instagramCookies)
-            {
-                cookieManager.DeleteCookie(cookie);
-            }
-
-            var fbCookies = cookieManager.GetCookies(new Uri("https://www.facebook.com/"));
-            foreach (var cookie in fbCookies)
-            {
-                cookieManager.DeleteCookie(cookie);
-            }
-        }
-
         public static bool InternetAvailable()
         {
             var internetProfile = NetworkInformation.GetInternetConnectionProfile();

@@ -1,18 +1,31 @@
 ﻿using System;
+using System.Collections.Generic;
+using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.User;
+using InstagramAPI.Push;
+using InstagramAPI.Utils;
+using Newtonsoft.Json;
+using Windows.Web.Http;
 
 namespace InstagramAPI.Classes.Core
 {
     public class UserSessionData
     {
-        public string Username { get; internal set; }
-        public string Password { get; internal set; }
-
-        public BaseUser LoggedInUser { get; internal set; }
-        public string RankToken { get; internal set; }
-
         private string _csrfToken;
 
+        [JsonProperty]
+        public string Username { get; internal set; }
+
+        [JsonProperty]
+        public string Password { get; internal set; }
+
+        [JsonProperty]
+        public BaseUser LoggedInUser { get; internal set; }
+
+        [JsonProperty]
+        public string RankToken { get; internal set; }
+
+        [JsonIgnore]
         public string CsrfToken
         {
             get
@@ -26,9 +39,17 @@ namespace InstagramAPI.Classes.Core
         /// <summary>
         ///     Only for facebook login
         /// </summary>
+        [JsonProperty]
         public string FacebookUserId { get; internal set; } = string.Empty;
 
+        [JsonProperty]
         public string FacebookAccessToken { get; internal set; } = string.Empty;
+
+        [JsonProperty(ItemConverterType = typeof(HttpCookieConverter))]
+        internal List<HttpCookie> Cookies { get; set; }
+
+        [JsonProperty]
+        internal FbnsConnectionData PushData { get; set; }
 
         public void SaveToAppSettings()
         {
@@ -52,7 +73,7 @@ namespace InstagramAPI.Classes.Core
             localSettings.Values["_userSessionData"] = composite;
         }
 
-        public void LoadFromAppSettings()
+        public async void LoadFromAppSettings()
         {
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             var composite = (Windows.Storage.ApplicationDataCompositeValue)localSettings.Values["_userSessionData"];
@@ -72,6 +93,14 @@ namespace InstagramAPI.Classes.Core
                 Username = (string)composite["LoggedInUser.Username"],
                 FullName = (string)composite["LoggedInUser.FullName"]
             };
+
+            var activeSessionName = StorageHelper.SessionUsername;
+            if (string.IsNullOrEmpty(activeSessionName))
+            {
+                return;
+            }
+
+            var test = await StorageHelper.TryLoadSessionAsync(activeSessionName);
         }
 
         public static UserSessionData CreateFromAppSettings()

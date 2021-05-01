@@ -17,8 +17,16 @@ namespace InstagramAPI.Classes.JsonConverters
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
+            if (reader.Value == null && objectType == typeof(DateTimeOffset?))
+            {
+                return null;
+            }
+
             if (!(reader.Value is string unixTime))
-                unixTime = reader.Value.ToString();
+            {
+                unixTime = reader.Value?.ToString();
+            }
+
             return string.IsNullOrEmpty(unixTime) ? default : ReadTimestampJson(unixTime);
         }
 

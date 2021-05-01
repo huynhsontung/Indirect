@@ -135,6 +135,7 @@
     <Compile Include="Classes\Direct\ItemContent\Clip\ItemClip.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectActionLog.cs" />
     <Compile Include="Classes\JsonConverters\BoolConverter.cs" />
+    <Compile Include="Classes\JsonConverters\HttpCookieConverter.cs" />
     <Compile Include="Classes\Media\InstaMedia.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectMediaShare.cs" />
     <Compile Include="Classes\Direct\Inbox.cs" />
@@ -240,10 +241,12 @@
     <Compile Include="Sync\SyncBaseData.cs" />
     <Compile Include="Sync\SyncClient.cs" />
     <Compile Include="Sync\UserPresenceEventArgs.cs" />
+    <Compile Include="Utils\CookieHelper.cs" />
     <Compile Include="Utils\CryptoHelper.cs" />
     <Compile Include="Utils\DebugLogger.cs" />
     <Compile Include="UriCreator.cs" />
     <Compile Include="Utils\PersistentDictionary.cs" />
+    <Compile Include="Utils\StorageHelper.cs" />
     <EmbeddedResource Include="Properties\InstagramAPI.rd.xml" />
   </ItemGroup>
   <ItemGroup>

@@ -36,6 +36,7 @@ namespace InstagramAPI
             }
         }
 
+        // TODO: Remove IsUserAuthenticatedPersistent to use StorageHelper instead
         public static bool IsUserAuthenticatedPersistent
         {
             get => (bool?)LocalSettings.Values["_isUserAuthenticated"] ?? false;
@@ -366,9 +367,10 @@ namespace InstagramAPI
         /// No need to clear data. If IsUserAuthenticated is false, next time when constructor is called,
         /// data will not be loaded.
         /// </summary>
-        public void Logout()
+        public async void Logout()
         {
             IsUserAuthenticated = false;
+            await StorageHelper.RemoveSession(Session.Username);
             SyncClient.Shutdown();
             PushClient.UnregisterTasks();
             SaveToAppSettings();
@@ -442,13 +444,22 @@ namespace InstagramAPI
             }
         }
 
-        public void SaveToAppSettings()
+        public async void SaveToAppSettings()
         {
             IsUserAuthenticatedPersistent = IsUserAuthenticated;
-            if (!IsUserAuthenticated) ClearCookies();
+            StorageHelper.IsUserAuthenticated = IsUserAuthenticated;
+            StorageHelper.SessionUsername = Session.Username;
+            if (!IsUserAuthenticated)
+            {
+                CookieHelper.ClearCookies();
+            }
+
             Device.SaveToAppSettings();
             if (IsUserAuthenticated)
             {
+                Session.Cookies = CookieHelper.GetCookies();
+                Session.PushData = PushClient.ConnectionData;
+                await StorageHelper.SaveSessionAsync(Session);
                 Session.SaveToAppSettings();
                 PushClient.ConnectionData.SaveToAppSettings();
             }
