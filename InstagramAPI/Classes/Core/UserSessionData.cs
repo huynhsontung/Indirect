@@ -73,7 +73,7 @@ namespace InstagramAPI.Classes.Core
             localSettings.Values["_userSessionData"] = composite;
         }
 
-        public async void LoadFromAppSettings()
+        public void LoadFromAppSettings()
         {
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             var composite = (Windows.Storage.ApplicationDataCompositeValue)localSettings.Values["_userSessionData"];
@@ -94,13 +94,13 @@ namespace InstagramAPI.Classes.Core
                 FullName = (string)composite["LoggedInUser.FullName"]
             };
 
-            var activeSessionName = StorageHelper.SessionUsername;
-            if (string.IsNullOrEmpty(activeSessionName))
-            {
-                return;
-            }
+            //var activeSessionName = StorageHelper.SessionUsername;
+            //if (string.IsNullOrEmpty(activeSessionName))
+            //{
+            //    return;
+            //}
 
-            var test = await StorageHelper.TryLoadSessionAsync(activeSessionName);
+            //var test = await StorageHelper.TryLoadSessionAsync(activeSessionName);
         }
 
         public static UserSessionData CreateFromAppSettings()
