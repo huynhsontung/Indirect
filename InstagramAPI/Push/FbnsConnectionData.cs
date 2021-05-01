@@ -22,7 +22,6 @@ namespace InstagramAPI.Push
         private const bool FBNS_IS_INITIALLY_FOREGROUND = false;
         private const string FBNS_CLIENT_TYPE = "device_auth";
         private static readonly int[] FBNS_SUBSCRIBE_TOPICS = {MESSAGE_TOPIC_ID, REG_RESP_TOPIC_ID};
-        private string _fbnsToken;
 
         [JsonProperty]
         public string ClientId { get; set; } = Guid.NewGuid().ToString().Substring(0, 20);
@@ -61,18 +60,10 @@ namespace InstagramAPI.Push
         public string DeviceSecret { get; private set; }
 
         [JsonProperty]
-        public string FbnsToken
-        {
-            get => _fbnsToken;
-            set
-            {
-                _fbnsToken = value;
-                FbnsTokenLastUpdated = DateTimeOffset.Now;
-            }
-        }
+        public string FbnsToken { get; internal set; }
 
         [JsonProperty]
-        public DateTimeOffset FbnsTokenLastUpdated { get; private set; }
+        public DateTimeOffset FbnsTokenLastUpdated { get; internal set; }
 
         #endregion
 
@@ -119,7 +110,7 @@ namespace InstagramAPI.Push
                 ["Password"] = Password,
                 ["DeviceId"] = DeviceId,
                 ["DeviceSecret"] = DeviceSecret,
-                ["_fbnsToken"] = _fbnsToken,
+                ["_fbnsToken"] = FbnsToken,
                 ["FbnsTokenLastUpdated"] = FbnsTokenLastUpdated
             };
             localSettings.Values["_fbnsConnectionData"] = composite;
@@ -137,7 +128,7 @@ namespace InstagramAPI.Push
             Password = (string) composite["Password"];
             DeviceId = (string) composite["DeviceId"];
             DeviceSecret = (string) composite["DeviceSecret"];
-            _fbnsToken = (string) composite["_fbnsToken"];
+            FbnsToken = (string) composite["_fbnsToken"];
             FbnsTokenLastUpdated = (DateTimeOffset) composite["FbnsTokenLastUpdated"];
         }
 
@@ -160,7 +151,7 @@ namespace InstagramAPI.Push
             Password = default;
             DeviceId = default;
             DeviceSecret = default;
-            _fbnsToken = default;
+            FbnsToken = default;
             FbnsTokenLastUpdated = DateTimeOffset.Now;
         }
 

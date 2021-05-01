@@ -51,7 +51,11 @@ namespace InstagramAPI.Push
             ConnectionData = connectionData;
 
             // If token is older than 24 hours then discard it
-            if ((DateTimeOffset.Now - ConnectionData.FbnsTokenLastUpdated).TotalHours > 24) ConnectionData.FbnsToken = "";
+            if ((DateTimeOffset.Now - ConnectionData.FbnsTokenLastUpdated).TotalHours > 24)
+            {
+                ConnectionData.FbnsToken = "";
+                ConnectionData.FbnsTokenLastUpdated = DateTimeOffset.Now;
+            }
 
             // Build user agent for first time setup
             if (string.IsNullOrEmpty(ConnectionData.UserAgent))
@@ -454,7 +458,7 @@ namespace InstagramAPI.Push
             if (string.IsNullOrEmpty(token)) throw new ArgumentNullException(nameof(token));
             if (ConnectionData.FbnsToken == token)
             {
-                ConnectionData.FbnsToken = token;
+                ConnectionData.FbnsTokenLastUpdated = DateTimeOffset.Now;
                 return;
             }
 
@@ -473,6 +477,7 @@ namespace InstagramAPI.Push
             var result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields));
 
             ConnectionData.FbnsToken = token;
+            ConnectionData.FbnsTokenLastUpdated = DateTimeOffset.Now;
         }
 
 
