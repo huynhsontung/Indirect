@@ -99,6 +99,7 @@ namespace InstagramAPI.Utils
 
         private static async Task WriteToFileAsync(string fileName, IBuffer data)
         {
+            fileName = SanitizeFileName(fileName);
             var file = await LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
             using (var writeStream = await file.OpenAsync(FileAccessMode.ReadWrite))
             {
@@ -109,6 +110,7 @@ namespace InstagramAPI.Utils
 
         private static async Task<IBuffer> TryReadFromFileAsync(string fileName)
         {
+            fileName = SanitizeFileName(fileName);
             var file = await LocalFolder.TryGetItemAsync(fileName) as StorageFile;
             if (file == null)
             {
@@ -122,6 +124,13 @@ namespace InstagramAPI.Utils
                 await readStream.ReadAsync(buffer, (uint)readStream.Size, InputStreamOptions.None);
                 return buffer;
             }
+        }
+
+        private static string SanitizeFileName(string name)
+        {
+            var invalids = System.IO.Path.GetInvalidFileNameChars();
+            var newName = string.Join("_", name.Split(invalids, StringSplitOptions.RemoveEmptyEntries)).TrimEnd('.');
+            return newName;
         }
     }
 }
