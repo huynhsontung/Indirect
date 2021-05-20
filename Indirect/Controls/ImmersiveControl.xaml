@@ -2,74 +2,106 @@
     x:Class="Indirect.Controls.ImmersiveControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Indirect"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:controls1="using:Indirect.Controls" 
-    xmlns:wrappers="using:Indirect.Entities.Wrappers" 
+    xmlns:controls1="using:Indirect.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:entities="using:Indirect.Entities"
-    mc:Ignorable="d"
+    xmlns:local="using:Indirect"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wrappers="using:Indirect.Entities.Wrappers"
     d:DesignHeight="300"
-    d:DesignWidth="400">
+    d:DesignWidth="400"
+    mc:Ignorable="d">
 
     <UserControl.Resources>
         <ResourceDictionary>
             <DataTemplate x:Key="ImageView" x:DataType="wrappers:DirectItemWrapper">
-                <ScrollViewer x:Name="ScrollViewer" 
-                              Width="{Binding ElementName=MediaPopup, Path=Width}"
-                              Height="{Binding ElementName=MediaPopup, Path=Height}"
-                              HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Auto"
-                              ZoomMode="Enabled" MinZoomFactor="1"
-                              SizeChanged="ScrollViewer_OnSizeChanged"
-                              DoubleTapped="ScrollViewer_OnDoubleTapped"
-                              Loaded="ScrollViewer_OnLoaded">
-                    <controls:ImageEx x:Name="ImageView"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      Stretch="Uniform"
-                                      IsCacheEnabled="True"
-                                      Source="{x:Bind FullImageUri}"/>
+                <ScrollViewer
+                    x:Name="ScrollViewer"
+                    Width="{Binding ElementName=MediaPopup, Path=Width}"
+                    Height="{Binding ElementName=MediaPopup, Path=Height}"
+                    DoubleTapped="ScrollViewer_OnDoubleTapped"
+                    HorizontalScrollBarVisibility="Auto"
+                    HorizontalScrollMode="Enabled"
+                    Loaded="ScrollViewer_OnLoaded"
+                    MinZoomFactor="1"
+                    SizeChanged="ScrollViewer_OnSizeChanged"
+                    VerticalScrollBarVisibility="Auto"
+                    VerticalScrollMode="Enabled"
+                    ZoomMode="Enabled">
+                    <controls:ImageEx
+                        x:Name="ImageView"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsCacheEnabled="True"
+                        Source="{x:Bind FullImageUri}"
+                        Stretch="Uniform" />
                 </ScrollViewer>
             </DataTemplate>
 
             <DataTemplate x:Key="VideoView" x:DataType="wrappers:DirectItemWrapper">
-                <controls1:AutoVideoControl x:Name="MediaPlayer" Source="{x:Bind VideoUri}" 
-                                            Width="{Binding ElementName=MediaPopup, Path=Width}"
-                                            Height="{Binding ElementName=MediaPopup, Path=Height}" >
+                <controls1:AutoVideoControl
+                    x:Name="MediaPlayer"
+                    Width="{Binding ElementName=MediaPopup, Path=Width}"
+                    Height="{Binding ElementName=MediaPopup, Path=Height}"
+                    Source="{x:Bind VideoUri}">
                     <controls1:AutoVideoControl.TransportControls>
-                        <MediaTransportControls IsFullWindowEnabled="False" IsFullWindowButtonVisible="False"
-                                                IsZoomButtonVisible="False"/>
+                        <MediaTransportControls
+                            IsFullWindowButtonVisible="False"
+                            IsFullWindowEnabled="False"
+                            IsZoomButtonVisible="False" />
                     </controls1:AutoVideoControl.TransportControls>
                 </controls1:AutoVideoControl>
             </DataTemplate>
 
             <DataTemplate x:Key="ReelView" x:DataType="entities:FlatReelsContainer">
-                <controls1:ReelsControl Source="{x:Bind}"/>
+                <controls1:ReelsControl Source="{x:Bind}" />
             </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Popup x:Name="MediaPopup" IsOpen="False" Width="400" Height="200">
+    <Popup
+        x:Name="MediaPopup"
+        Width="400"
+        Height="200"
+        IsOpen="False">
         <Grid Background="{ThemeResource SystemControlAcrylicElementBrush}">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Button Style="{x:Null}" Click="CloseMediaPopup_OnClick" VerticalAlignment="Top" HorizontalAlignment="Left" Canvas.ZIndex="1" 
-                    AutomationProperties.Name="Close immersive view">
+            <Button
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                AutomationProperties.Name="Close immersive view"
+                Canvas.ZIndex="1"
+                Click="CloseMediaPopup_OnClick"
+                Style="{x:Null}">
                 <Button.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="Escape"/>
+                    <KeyboardAccelerator Key="Escape" />
                 </Button.KeyboardAccelerators>
-                <SymbolIcon Symbol="Cancel"/>
+                <SymbolIcon Symbol="Cancel" />
             </Button>
 
-            <ContentControl x:Name="MainControl" Content="{x:Bind Item, Mode=OneWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+            <ContentControl
+                x:Name="MainControl"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Content="{x:Bind Item, Mode=OneWay}">
+                <ContentControl.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="Download" Click="DownloadMenuItem_OnClick">
+                            <MenuFlyoutItem.Icon>
+                                <SymbolIcon Symbol="Download" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                    </MenuFlyout>
+                </ContentControl.ContextFlyout>
+            </ContentControl>
         </Grid>
     </Popup>
-    
+
 </UserControl>

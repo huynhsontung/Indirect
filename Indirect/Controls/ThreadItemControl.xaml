@@ -735,6 +735,16 @@
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
 
+                        <MenuFlyoutItem
+                            x:Name="DownloadMenuItem"
+                            Click="DownloadMenuItem_OnClick"
+                            Text="Download"
+                            Visibility="Collapsed">
+                            <MenuFlyoutItem.Icon>
+                                <SymbolIcon Symbol="Download" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+
                         <MenuFlyoutSeparator Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
 
                         <MenuFlyoutItem

@@ -4,6 +4,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Indirect.Entities;
 using Indirect.Entities.Wrappers;
+using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using Microsoft.Toolkit.Uwp.UI.Controls;
@@ -139,6 +140,18 @@ namespace Indirect.Controls
         }
 
         private void CloseMediaPopup_OnClick(object sender, RoutedEventArgs e) => Close();
+
+        private async void DownloadMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            var item = Item as DirectItemWrapper;
+            var url = item?.VideoUri != null ? item.VideoUri : item?.FullImageUri;
+            if (url == null)
+            {
+                return;
+            }
+
+            await MediaHelpers.DownloadMedia(url).ConfigureAwait(false);
+        }
 
         public void Open(object item)
         {

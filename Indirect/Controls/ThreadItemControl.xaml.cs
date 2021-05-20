@@ -10,6 +10,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Indirect.Entities.Wrappers;
+using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using Microsoft.Toolkit.Uwp.UI;
@@ -31,14 +32,14 @@ namespace Indirect.Controls
 
         public DirectItemWrapper Item
         {
-            get => (DirectItemWrapper) GetValue(ItemProperty);
+            get => (DirectItemWrapper)GetValue(ItemProperty);
             set => SetValue(ItemProperty, value);
         }
 
         private static void OnItemSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var view = (ThreadItemControl) d;
-            var item = (DirectItemWrapper) e.NewValue;
+            var view = (ThreadItemControl)d;
+            var item = (DirectItemWrapper)e.NewValue;
             view.ProcessItem();
             view.UpdateContextMenu();
             view.Bindings.Update();
@@ -63,9 +64,15 @@ namespace Indirect.Controls
                 ItemContainer.Visibility = Item.HideInThread ? Visibility.Collapsed : Visibility.Visible;
                 MainContentControl.ContextFlyout = null;
             }
+
             if (Item.ItemType == DirectItemType.Text)
             {
                 MenuCopyOption.Visibility = Visibility.Visible;
+            }
+
+            if (Item.VideoUri != null || Item.FullImageUri != null)
+            {
+                DownloadMenuItem.Visibility = Visibility.Visible;
             }
         }
 
@@ -75,8 +82,8 @@ namespace Indirect.Controls
             {
                 return string.Empty;
             }
-            
-            var seenList = lastSeenAt.Where(x => 
+
+            var seenList = lastSeenAt.Where(x =>
                     x.Value.ItemId == Item.ItemId &&    // Match item id
                     x.Key != Item.Parent.ViewerId &&    // Not from viewer
                     x.Key != Item.Sender.Pk             // Not from sender
@@ -85,18 +92,17 @@ namespace Indirect.Controls
             {
                 return string.Empty;
             }
-            
+
             if (Item.Parent.Users.Count == 1)
             {
-                if (Item.FromMe && Item.Parent.LastPermanentItem.ItemId != Item.ItemId) return string.Empty;
-                return "Seen";
+                return Item.FromMe && Item.Parent.LastPermanentItem.ItemId != Item.ItemId ? string.Empty : "Seen";
             }
-            
+
             if (Item.Parent.Users.Count <= seenList.Length)
             {
                 return "Seen by everyone";
             }
-            
+
             var seenUsers = seenList.Select(x => Item.Parent.Users.FirstOrDefault(y => x == y.Pk)?.Username).ToArray();
             if (seenUsers.Length <= 3)
             {
@@ -172,8 +178,8 @@ namespace Indirect.Controls
         {
             var tooltip = new ToolTip();
             tooltip.Content = $"{Item.Timestamp:f}";
-            tooltip.PlacementRect = new Rect(0,12, e.NewSize.Width, e.NewSize.Height);
-            ToolTipService.SetToolTip((DependencyObject) sender, tooltip);
+            tooltip.PlacementRect = new Rect(0, 12, e.NewSize.Width, e.NewSize.Height);
+            ToolTipService.SetToolTip((DependencyObject)sender, tooltip);
         }
 
         private async void UnsendMessage(object sender, RoutedEventArgs e)
@@ -207,8 +213,8 @@ namespace Indirect.Controls
         private async void AddReactionMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
             var emoji = await EmojiPicker.ShowAsync(MainContentControl,
-                new FlyoutShowOptions {Placement = Item.FromMe ? FlyoutPlacementMode.Left : FlyoutPlacementMode.Right});
-            
+                new FlyoutShowOptions { Placement = Item.FromMe ? FlyoutPlacementMode.Left : FlyoutPlacementMode.Right });
+
             if (string.IsNullOrEmpty(emoji)) return;
 
             await ViewModel.ChatService.ReactToItem(Item, emoji);
@@ -219,6 +225,17 @@ namespace Indirect.Controls
             if (!Item.ObservableReactions.MeLiked) return;
 
             await ViewModel.ChatService.RemoveReactionToItem(Item);
+        }
+
+        private async void DownloadMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            var url = Item?.VideoUri != null ? Item.VideoUri : Item?.FullImageUri;
+            if (url == null)
+            {
+                return;
+            }
+
+            await MediaHelpers.DownloadMedia(url).ConfigureAwait(false);
         }
     }
 }
