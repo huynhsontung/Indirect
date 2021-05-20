@@ -105,7 +105,7 @@ namespace Indirect.Pages
                 catch (Exception e)
                 {
                     await ShowLoginErrorDialog(
-                        "Unexpected error occured while logging in with Facebook. Please try again later or log in with Instagram account instead.");
+                        "Unexpected error occurred while logging in with Facebook. Please try again later or log in with Instagram account instead.");
                     DebugLogger.LogException(e);
                 }
                 finally
