@@ -13,7 +13,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
 
@@ -609,7 +608,7 @@ namespace Indirect.Controls
         /// <param name="viewState">the view state</param>
         private void SetFocus(MasterDetailsViewState viewState)
         {
-            if (viewState != MasterDetailsViewState.Details)
+            if (viewState == MasterDetailsViewState.Master)
             {
                 FocusItemList();
             }
@@ -626,7 +625,9 @@ namespace Indirect.Controls
         {
             if (GetTemplateChild(PartDetailsPanel) is DependencyObject details)
             {
-                var focusableElement = FocusManager.FindFirstFocusableElement(details);
+                var focusableElement = string.IsNullOrEmpty(DetailsElementToFocus)
+                    ? FocusManager.FindFirstFocusableElement(details)
+                    : details.FindDescendantByName(DetailsElementToFocus);
                 (focusableElement as Control)?.Focus(FocusState.Programmatic);
             }
         }
