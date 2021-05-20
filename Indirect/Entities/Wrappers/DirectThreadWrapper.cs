@@ -138,6 +138,11 @@ namespace Indirect.Entities.Wrappers
             if (items.Count == 0) return;
             await UpdateItemListAsync(DecorateItems(items));
 
+            if (LastPermanentItem == null)
+            {
+                return;
+            }
+
             var latestItem = ObservableItems.Last();    // Assuming order of item is maintained. Last item after update should be the latest.
             if (latestItem.Timestamp > LastPermanentItem.Timestamp)
             {
