@@ -11,8 +11,13 @@ namespace Indirect.Converters
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var b = (bool) value;
-            return b ? NotAvailableStyle : AvailableStyle;
+            if (value is bool b)
+            {
+
+                return b ? NotAvailableStyle : AvailableStyle;
+            }
+
+            return AvailableStyle;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

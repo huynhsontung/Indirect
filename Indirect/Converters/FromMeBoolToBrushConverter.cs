@@ -11,10 +11,9 @@ namespace Indirect.Converters
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            bool? b = (bool?)value;
-            if (b ?? false)
+            if (value is bool b)
             {
-                return FromMe;
+                return b ? FromMe : FromThem;
             }
 
             return FromThem;

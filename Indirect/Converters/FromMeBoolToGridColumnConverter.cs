@@ -9,13 +9,12 @@ namespace Indirect.Converters
     {
         object IValueConverter.Convert(object value, Type targetType, object parameter, string language)
         {
-            bool? b = (bool?)value;
-            if (b ?? false)
+            if (value is bool b)
             {
-                return 0;
+                return b ? 0 : 2;
             }
-            return 2;
 
+            return 2;
         }
 
         object IValueConverter.ConvertBack(object value, Type targetType, object parameter, string language)

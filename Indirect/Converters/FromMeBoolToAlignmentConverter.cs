@@ -8,13 +8,12 @@ namespace Indirect.Converters
     {
         object IValueConverter.Convert(object value, Type targetType, object parameter, string language)
         {
-            bool? b = (bool?)value;
-            if (b ?? false)
+            if (value is bool b)
             {
-                return HorizontalAlignment.Right;
+                return b ? HorizontalAlignment.Right : HorizontalAlignment.Left;
             }
-            return HorizontalAlignment.Left;
 
+            return HorizontalAlignment.Left;
         }
 
         object IValueConverter.ConvertBack(object value, Type targetType, object parameter, string language)

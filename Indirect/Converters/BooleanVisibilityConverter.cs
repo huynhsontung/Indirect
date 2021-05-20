@@ -14,10 +14,14 @@ namespace Indirect.Converters
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var b = (bool) value;
-            if (Invert)
-                return b ? Visibility.Collapsed : Visibility.Visible;
-            return b ? Visibility.Visible : Visibility.Collapsed;
+            if (value is bool b)
+            {
+                if (Invert)
+                    return b ? Visibility.Collapsed : Visibility.Visible;
+                return b ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            return Invert ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
