@@ -85,7 +85,7 @@
                         AutoPlay="True"
                         AutoStop="True"
                         PosterSource="{x:Bind Images[0].Url}"
-                        Source="{x:Bind VideoVersions[0].Url}"
+                        Source="{x:Bind Videos[0].Url}"
                         VideoHeight="1137"
                         VideoWidth="640" />
 
@@ -223,6 +223,16 @@
             ItemsSource="{x:Bind Source.Items, Mode=OneWay}"
             Loaded="StoryView_OnLoaded"
             SelectionChanged="StoryView_OnSelectionChanged">
+            <FlipView.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem Click="DownloadMenuItem_OnClick" Text="Download">
+                        <MenuFlyoutItem.Icon>
+                            <SymbolIcon Symbol="Download" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                </MenuFlyout>
+            </FlipView.ContextFlyout>
+
             <FlipView.ItemTemplateSelector>
                 <selectors:StoryTemplateSelector ImageTemplate="{StaticResource ImageTemplate}" VideoTemplate="{StaticResource VideoTemplate}" />
             </FlipView.ItemTemplateSelector>

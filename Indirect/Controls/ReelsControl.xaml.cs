@@ -217,5 +217,16 @@ namespace Indirect.Controls
             }
             FlyoutBase.ShowAttachedFlyout(UserInfoGrid);
         }
+
+        private async void DownloadMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            var story = (ReelItemWrapper)StoryView.SelectedItem;
+            if (story == null)
+            {
+                return;
+            }
+
+            await story.Download().ConfigureAwait(false);
+        }
     }
 }

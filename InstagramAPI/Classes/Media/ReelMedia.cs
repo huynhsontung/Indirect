@@ -98,8 +98,5 @@ namespace InstagramAPI.Classes.Media
         [JsonProperty("imported_taken_at", NullValueHandling = NullValueHandling.Ignore)]
         [JsonConverter(typeof(TimestampConverter))]
         public DateTimeOffset? ImportedTakenAt { get; set; }
-
-        [JsonProperty("video_versions", NullValueHandling = NullValueHandling.Ignore)]
-        public InstaVideo[] VideoVersions { get; set; }
     }
 }
