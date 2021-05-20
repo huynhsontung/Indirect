@@ -164,26 +164,26 @@ namespace Indirect.Entities.Wrappers
         {
             switch (ItemType)
             {
-                case DirectItemType.Media:
+                case DirectItemType.Media when Media?.Images?.Length > 0:
                     return Media.Images.GetFullImageUri();
 
-                case DirectItemType.MediaShare when MediaShare.CarouselMedia?.Length > 0:
+                case DirectItemType.MediaShare when MediaShare?.CarouselMedia?.Length > 0:
                     return MediaShare.CarouselMedia[0].Images.GetFullImageUri();
 
-                case DirectItemType.MediaShare:
+                case DirectItemType.MediaShare when MediaShare?.Images?.Length > 0:
                     return MediaShare.Images.GetFullImageUri();
 
-                case DirectItemType.RavenMedia when RavenMedia != null:
+                case DirectItemType.RavenMedia when RavenMedia?.Images?.Length > 0:
                     return RavenMedia.Images.GetFullImageUri();
 
-                case DirectItemType.RavenMedia when VisualMedia != null:
+                case DirectItemType.RavenMedia when VisualMedia?.Media?.Images?.Length > 0:
                     return VisualMedia.Media.Images.GetFullImageUri();
 
-                case DirectItemType.ReelShare:
+                case DirectItemType.ReelShare when ReelShareMedia?.Media?.Images?.Length > 0:
                     return ReelShareMedia.Media.Images.GetFullImageUri();
 
-                case DirectItemType.StoryShare:
-                    return StoryShareMedia.Media?.Images.GetFullImageUri();
+                case DirectItemType.StoryShare when StoryShareMedia?.Media?.Images?.Length > 0:
+                    return StoryShareMedia.Media.Images.GetFullImageUri();
 
                 case DirectItemType.AnimatedMedia:
                     return PreviewImageUri;
@@ -197,26 +197,26 @@ namespace Indirect.Entities.Wrappers
         {
             switch (ItemType)
             {
-                case DirectItemType.Media:
+                case DirectItemType.Media when Media?.Images?.Length > 0:
                     return Media.Images.GetPreviewImageUri();
 
-                case DirectItemType.MediaShare when MediaShare.CarouselMedia?.Length > 0:
+                case DirectItemType.MediaShare when MediaShare?.CarouselMedia?.Length > 0:
                     return MediaShare.CarouselMedia[0].Images.GetPreviewImageUri();
 
-                case DirectItemType.MediaShare:
+                case DirectItemType.MediaShare when MediaShare?.Images?.Length > 0:
                     return MediaShare.Images.GetPreviewImageUri();
 
-                case DirectItemType.RavenMedia when RavenMedia != null:
+                case DirectItemType.RavenMedia when RavenMedia?.Images?.Length > 0:
                     return RavenMedia.Images.GetPreviewImageUri();
 
-                case DirectItemType.RavenMedia when VisualMedia != null:
+                case DirectItemType.RavenMedia when VisualMedia?.Media?.Images?.Length > 0:
                     return VisualMedia.Media.Images.GetPreviewImageUri();
 
-                case DirectItemType.ReelShare:
+                case DirectItemType.ReelShare when ReelShareMedia?.Media?.Images?.Length > 0:
                     return ReelShareMedia.Media.Images.GetPreviewImageUri();
 
-                case DirectItemType.StoryShare:
-                    return StoryShareMedia.Media?.Images.GetPreviewImageUri();
+                case DirectItemType.StoryShare when StoryShareMedia?.Media?.Images?.Length > 0:
+                    return StoryShareMedia.Media.Images.GetPreviewImageUri();
 
                 case DirectItemType.AnimatedMedia:
                     return AnimatedMedia.Image.Url;
@@ -257,25 +257,25 @@ namespace Indirect.Entities.Wrappers
         {
             switch (ItemType)
             {
-                case DirectItemType.Media when Media.Videos.Length > 0:
+                case DirectItemType.Media when Media?.Videos?.Length > 0:
                     return Media.Videos[0].Url;
 
-                case DirectItemType.MediaShare when MediaShare.Videos.Length > 0:
+                case DirectItemType.MediaShare when MediaShare?.Videos?.Length > 0:
                     return MediaShare.Videos[0].Url;
 
-                case DirectItemType.RavenMedia when RavenMedia != null && RavenMedia.Videos.Length > 0:
+                case DirectItemType.RavenMedia when RavenMedia?.Videos?.Length > 0:
                     return RavenMedia.Videos[0].Url;
 
-                case DirectItemType.RavenMedia when VisualMedia != null && VisualMedia.Media.Videos.Length > 0:
+                case DirectItemType.RavenMedia when VisualMedia?.Media?.Videos?.Length > 0:
                     return VisualMedia.Media.Videos[0].Url;
 
-                case DirectItemType.ReelShare:
-                    return ReelShareMedia.Media?.Videos[0].Url;
+                case DirectItemType.ReelShare when ReelShareMedia?.Media?.Videos?.Length > 0:
+                    return ReelShareMedia.Media.Videos[0].Url;
 
-                case DirectItemType.StoryShare:
-                    return StoryShareMedia.Media?.Videos[0].Url;
+                case DirectItemType.StoryShare when StoryShareMedia?.Media?.Videos?.Length > 0:
+                    return StoryShareMedia.Media.Videos[0].Url;
 
-                case DirectItemType.VoiceMedia:
+                case DirectItemType.VoiceMedia when VoiceMedia?.Media?.Audio?.AudioSrc != null:
                     return VoiceMedia.Media.Audio.AudioSrc;
 
                 default:
