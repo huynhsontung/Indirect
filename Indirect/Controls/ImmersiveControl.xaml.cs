@@ -8,7 +8,7 @@ using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using Microsoft.Toolkit.Uwp.UI.Controls;
-using Microsoft.Toolkit.Uwp.UI;
+using Microsoft.Toolkit.Uwp.UI.Extensions;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 

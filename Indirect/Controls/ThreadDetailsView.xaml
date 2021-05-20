@@ -6,7 +6,7 @@
     xmlns:controls1="using:Indirect.Controls"
     xmlns:converters="using:Indirect.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:extensions="using:Microsoft.Toolkit.Uwp.UI"
+    xmlns:extensions="using:Microsoft.Toolkit.Uwp.UI.Extensions"
     xmlns:local="using:Indirect"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:user="using:InstagramAPI.Classes.User"

@@ -35,7 +35,7 @@ namespace Indirect.Controls
                 return baseEmoji;
             }
 
-            return baseEmoji.Select(emoji => NeoSmart.Unicode.Emoji.All.FirstOrDefault(one => one.Name == $"{emoji.Name}{lookupName}")).ToArray();
+            return baseEmoji.Select(emoji => NeoSmart.Unicode.Emoji.All.FirstOrDefault(one => one.Name == $"{emoji.Name}{lookupName}") ?? emoji).ToArray();
         }
 
     }

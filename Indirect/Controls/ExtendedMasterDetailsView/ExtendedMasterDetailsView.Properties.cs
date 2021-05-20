@@ -153,9 +153,9 @@ namespace Indirect.Controls
         /// <returns>The identifier for the <see cref="ViewState"/> dependency property.</returns>
         public static readonly DependencyProperty ViewStateProperty = DependencyProperty.Register(
             nameof(ViewState),
-            typeof(ListDetailsViewState),
+            typeof(MasterDetailsViewState),
             typeof(ExtendedMasterDetailsView),
-            new PropertyMetadata(default(ListDetailsViewState)));
+            new PropertyMetadata(default(MasterDetailsViewState)));
 
         /// <summary>
         /// Identifies the <see cref="MasterCommandBar"/> dependency property
@@ -329,9 +329,9 @@ namespace Indirect.Controls
         /// <summary>
         /// Gets the current visual state of the control
         /// </summary>
-        public ListDetailsViewState ViewState
+        public MasterDetailsViewState ViewState
         {
-            get { return (ListDetailsViewState)GetValue(ViewStateProperty); }
+            get { return (MasterDetailsViewState)GetValue(ViewStateProperty); }
             private set { SetValue(ViewStateProperty, value); }
         }
 

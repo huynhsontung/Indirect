@@ -23,7 +23,7 @@ namespace Indirect.Controls
         /// <summary>
         /// Occurs when the view state changes
         /// </summary>
-        public event EventHandler<ListDetailsViewState> ViewStateChanged;
+        public event EventHandler<MasterDetailsViewState> ViewStateChanged;
 
         private void OnSelectionChanged(SelectionChangedEventArgs e)
         {

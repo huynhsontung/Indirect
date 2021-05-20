@@ -14,7 +14,7 @@ using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes.User;
 using Microsoft.Toolkit.Uwp.UI.Controls;
-using Microsoft.Toolkit.Uwp.UI;
+using Microsoft.Toolkit.Uwp.UI.Extensions;
 using CoreWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
@@ -96,9 +96,9 @@ namespace Indirect.Pages
             }
         }
 
-        private void OnViewStateChange(object sender, ListDetailsViewState state)
+        private void OnViewStateChange(object sender, MasterDetailsViewState state)
         {
-            BackButton.Visibility = state == ListDetailsViewState.Details ? Visibility.Visible : Visibility.Collapsed;
+            BackButton.Visibility = state == MasterDetailsViewState.Details ? Visibility.Visible : Visibility.Collapsed;
             BackButtonPlaceholder.Visibility = BackButton.Visibility;
         }
 
@@ -115,7 +115,7 @@ namespace Indirect.Pages
             Debouncer.DelayExecute("OnThreadChanged", e.RemovedItems[0] == null ? 600 : 100, async cancelled =>
             {
                 if (cancelled) return;
-                var details = (TextBox) MainLayout.FindDescendant("MessageTextBox");
+                var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
                 details?.Focus(FocusState.Programmatic); // Focus to chat box after selecting a thread
                 await inboxThread.MarkLatestItemSeen().ConfigureAwait(false);
             });
@@ -263,12 +263,12 @@ namespace Indirect.Pages
 
         private void Candidate_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            (sender as FrameworkElement).FindDescendant("ClearSingleCandidateButton").Visibility = Visibility.Visible;
+            (sender as FrameworkElement).FindDescendantByName("ClearSingleCandidateButton").Visibility = Visibility.Visible;
         }
 
         private void Candidate_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
-            (sender as FrameworkElement).FindDescendant("ClearSingleCandidateButton").Visibility = Visibility.Collapsed;
+            (sender as FrameworkElement).FindDescendantByName("ClearSingleCandidateButton").Visibility = Visibility.Collapsed;
         }
 
         private void ClearSingleCandidateSwipe_OnInvoked(SwipeItem sender, SwipeItemInvokedEventArgs args)
