@@ -84,6 +84,7 @@ namespace Indirect.Controls
             }
 
             var seenList = lastSeenAt.Where(x =>
+                    x.Value != null &&
                     x.Value.ItemId == Item.ItemId &&    // Match item id
                     x.Key != Item.Parent.ViewerId &&    // Not from viewer
                     x.Key != Item.Sender.Pk             // Not from sender
