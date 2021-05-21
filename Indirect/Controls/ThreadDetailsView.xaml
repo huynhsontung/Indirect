@@ -314,7 +314,7 @@
                         FontFamily="Segoe MDL2 Assets"
                         FontWeight="Normal"
                         Text="&#xE97A;" />
-                    Replying to<Run Text="{x:Bind Thread.ReplyingItem.Sender.Username, Mode=OneWay}" />
+                    <Run Text="Replying to " /><Run Text="{x:Bind Thread.ReplyingItem.Sender.Username, Mode=OneWay}" />
                 </TextBlock>
 
                 <TextBlock

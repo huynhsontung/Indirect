@@ -441,11 +441,11 @@
                         Style="{ThemeResource FluentCaptionTextStyle}"
                         Visibility="{x:Bind StoryShareMedia.OwnerUsername, Converter={StaticResource NullVisibilityConverter}}">
                         <Span>
-                            Sent<Hyperlink Click="StoryShareOwnerLink_OnClick">
-                                @
+                            <Run Text="Sent " /><Hyperlink Click="StoryShareOwnerLink_OnClick">
+                                <Run Text="@" />
                                 <Run Text="{x:Bind StoryShareMedia.OwnerUsername}" />
                             </Hyperlink>
-                            's story</Span>
+                            <Run Text="'s story" /></Span>
                     </TextBlock>
                     <controls:ImageEx
                         Height="200"
@@ -678,7 +678,7 @@
                     HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
                     Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                     Style="{ThemeResource FluentCaptionTextStyle}">
-                    Replied to<Run Text="{x:Bind Item.RepliedItem.Sender.Username}" />
+                    <Run Text="Replied to " /><Run Text="{x:Bind Item.RepliedItem.Sender.Username}" />
                 </TextBlock>
 
                 <ContentControl
