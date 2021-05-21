@@ -138,13 +138,8 @@ namespace Indirect.Entities.Wrappers
             if (items.Count == 0) return;
             await UpdateItemListAsync(DecorateItems(items));
 
-            if (LastPermanentItem == null)
-            {
-                return;
-            }
-
             var latestItem = ObservableItems.Last();    // Assuming order of item is maintained. Last item after update should be the latest.
-            if (latestItem.Timestamp > LastPermanentItem.Timestamp)
+            if (LastPermanentItem == null || latestItem.Timestamp > LastPermanentItem.Timestamp)
             {
                 // This does not update thread data like users in the thread or is thread muted or not
                 LastPermanentItem = latestItem;
@@ -157,7 +152,7 @@ namespace Indirect.Entities.Wrappers
 
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(string.Empty)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
                 });
             }
         }
