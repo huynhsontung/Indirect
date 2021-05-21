@@ -309,6 +309,7 @@
                 <TextBlock
                     Grid.Row="0"
                     Grid.Column="0"
+                    Margin="0,0,3,0"
                     FontSize="12"
                     Opacity="0.5">
                     <Run Text="Replying to " /><Run Text="{x:Bind Thread.ReplyingItem.Sender.Username, Mode=OneWay}" />
@@ -317,6 +318,8 @@
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="0"
+                    Margin="0,0,3,0"
+                    MaxLines="1"
                     Text="{x:Bind Thread.ReplyingItem.Description, Mode=OneWay}" />
 
                 <controls:ImageEx
@@ -325,15 +328,17 @@
                     Grid.Column="1"
                     Width="32"
                     Height="32"
-                    Margin="6,2"
+                    Margin="3,2"
                     VerticalAlignment="Center"
                     Source="{x:Bind Thread.ReplyingItem.PreviewImageUri, Mode=OneWay}"
-                    Stretch="UniformToFill" />
+                    Stretch="UniformToFill"
+                    Visibility="{x:Bind Thread.ReplyingItem.PreviewImageUri, Converter={StaticResource NullVisibilityConverter}, Mode=OneWay}" />
 
                 <Button
                     Grid.Row="0"
                     Grid.RowSpan="2"
                     Grid.Column="2"
+                    Margin="3,0,0,0"
                     VerticalAlignment="Center"
                     Background="Transparent"
                     Click="ClearReplyButton_OnClick"
