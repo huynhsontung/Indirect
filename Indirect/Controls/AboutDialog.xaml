@@ -37,7 +37,7 @@
 
         <HyperlinkButton
             Margin="0,6,0,0"
-            Content="GitHub page"
+            Content="GitHub"
             NavigateUri="https://github.com/huynhsontung/Indirect" />
 
         <HyperlinkButton
