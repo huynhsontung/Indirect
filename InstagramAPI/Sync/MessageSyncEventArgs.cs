@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 
 namespace InstagramAPI.Sync
 {
-
     public class MessageSyncEventArgs : EventArgs
     {
         [JsonProperty("event")]
@@ -46,7 +45,7 @@ namespace InstagramAPI.Sync
                     return _item;
                 }
 
-                if (string.IsNullOrEmpty(Value) || Op != "add" || Op != "replace")
+                if (string.IsNullOrEmpty(Value) || Op != "add" && Op != "replace")
                 {
                     return null;
                 }
