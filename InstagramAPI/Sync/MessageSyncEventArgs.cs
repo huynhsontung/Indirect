@@ -41,9 +41,17 @@ namespace InstagramAPI.Sync
         {
             get
             {
-                if (string.IsNullOrEmpty(Value) || Op == "remove") return null;
-                if (_item == null) _item = JsonConvert.DeserializeObject<DirectItem>(Value, Converter);
-                return _item;
+                if (_item != null)
+                {
+                    return _item;
+                }
+
+                if (string.IsNullOrEmpty(Value) || Op != "add" || Op != "replace")
+                {
+                    return null;
+                }
+
+                return _item = JsonConvert.DeserializeObject<DirectItem>(Value, Converter);
             }
         }
     }
