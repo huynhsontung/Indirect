@@ -295,9 +295,17 @@ namespace Indirect.Controls
 
         private async void OnThreadPropertyChanged(object sender, PropertyChangedEventArgs args)
         {
-            if (args.PropertyName != nameof(Thread.IsSomeoneTyping) &&
-                !string.IsNullOrEmpty(args.PropertyName)) return;
-            if (!Thread.IsSomeoneTyping) return;
+            if (args.PropertyName == nameof(Thread.ReplyingItem) && Thread.ReplyingItem != null)
+            {
+                MessageTextBox.Focus(FocusState.Programmatic);
+            }
+
+            if (!Thread.IsSomeoneTyping || args.PropertyName != nameof(Thread.IsSomeoneTyping) &&
+                !string.IsNullOrEmpty(args.PropertyName))
+            {
+                return;
+            }
+
             var chatItemsStackPanel = (ItemsStackPanel) ItemsHolder.ItemsPanelRoot;
             if (chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 1 ||
                 chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 2)
