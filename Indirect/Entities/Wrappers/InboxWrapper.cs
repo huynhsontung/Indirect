@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
+using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using Microsoft.Toolkit.Collections;
 using Microsoft.Toolkit.Uwp;
@@ -67,7 +68,7 @@ namespace Indirect.Entities.Wrappers
                 container = result.Value;
             else return;
             UpdateExcludeThreads(container);
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
             {
                 foreach (var thread in container.Inbox.Threads)
                 {

@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Foundation;
 using Windows.UI.Core;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
@@ -41,7 +40,7 @@ namespace Indirect.Entities.Wrappers
             private set
             {
                 _isSomeoneTyping = value;
-                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                _ = Dispatcher.QuickRunAsync(() =>
                 {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSomeoneTyping)));
                 });
@@ -54,7 +53,7 @@ namespace Indirect.Entities.Wrappers
             set
             {
                 _draftMessage = value;
-                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                _ = Dispatcher.QuickRunAsync(() =>
                 {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DraftMessage)));
                 });
@@ -67,7 +66,7 @@ namespace Indirect.Entities.Wrappers
             set
             {
                 _replyingItem = value;
-                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                _ = Dispatcher.QuickRunAsync(() =>
                 {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ReplyingItem)));
                 });
@@ -150,7 +149,7 @@ namespace Indirect.Entities.Wrappers
                     LastNonSenderItemAt = latestItem.Timestamp;
                 }
 
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                await Dispatcher.QuickRunAsync(() =>
                 {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
                 });
@@ -162,7 +161,7 @@ namespace Indirect.Entities.Wrappers
         public async Task RemoveItem(string itemId)
         {
             if (string.IsNullOrEmpty(itemId)) return;
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.QuickRunAsync(() =>
             {
                 lock (ObservableItems)
                 {
@@ -235,15 +234,15 @@ namespace Indirect.Entities.Wrappers
             }
 
             await UpdateUserList(source.Users);
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.QuickRunAsync(() =>
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
             });
         }
 
-        private IAsyncAction UpdateItemListAsync(ICollection<DirectItemWrapper> source)
+        private Task UpdateItemListAsync(ICollection<DirectItemWrapper> source)
         {
-            return Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            return Dispatcher.QuickRunAsync(() =>
             {
                 UpdateItemList(source);
             });
@@ -292,7 +291,7 @@ namespace Indirect.Entities.Wrappers
         private async Task UpdateUserList(List<UserWithFriendship> users)
         {
             if (users == null || users.Count == 0) return;
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.QuickRunAsync(() =>
             {
                 lock (Users)
                 {
@@ -353,7 +352,7 @@ namespace Indirect.Entities.Wrappers
                 if (ObservableItems[i].ShowTimestampHeader != showTimestamp ||
                     ObservableItems[i].ShowNameHeader != showName)
                 {
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    await Dispatcher.QuickRunAsync(() =>
                     {
                         ObservableItems[i].ShowTimestampHeader = showTimestamp;
                         ObservableItems[i].ShowNameHeader = showName;
@@ -444,7 +443,7 @@ namespace Indirect.Entities.Wrappers
 
             LastSeenAt = lastSeenAt;
 
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.QuickRunAsync(() =>
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastSeenAt)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreadMessage)));
@@ -459,7 +458,7 @@ namespace Indirect.Entities.Wrappers
         public async void PingTypingIndicator(int ttl)
         {
             if (!IsSomeoneTyping && ttl == 0) return;
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            await Dispatcher.QuickRunAsync(async () =>
             {
                 if (ttl > 0)
                 {

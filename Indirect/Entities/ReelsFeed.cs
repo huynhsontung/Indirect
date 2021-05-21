@@ -25,7 +25,7 @@ namespace Indirect.Entities
             if (_justUpdated) return;
             var result = await Instagram.Instance.GetReelsTrayFeed(fetchReason);
             if (!result.IsSucceeded) return;
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
             {
                 try
                 {
@@ -36,7 +36,7 @@ namespace Indirect.Entities
                     // TODO: investigate origin of ArgumentOutOfRangeException
                     DebugLogger.LogException(e);
                 }
-            });
+            }, fetchReason == ReelsTrayFetchReason.PullToRefresh ? CoreDispatcherPriority.Normal : CoreDispatcherPriority.Low);
             _justUpdated = true;
             _ = Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(x => { _justUpdated = false; });
         }

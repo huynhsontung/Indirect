@@ -6,12 +6,12 @@ using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Storage;
-using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Pages;
+using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Utils;
 using Microsoft.AppCenter;
@@ -205,7 +205,7 @@ namespace Indirect
         public static async Task CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)
         {
             var newView = view ?? CoreApplication.CreateNewView();
-            await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            await newView.Dispatcher.QuickRunAsync(async () =>
             {
                 var newAppView = ApplicationView.GetForCurrentView();
                 newAppView.SetPreferredMinSize(new Size(380, 300));

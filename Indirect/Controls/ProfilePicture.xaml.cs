@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Indirect.Utilities;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
 
@@ -72,22 +72,26 @@ namespace Indirect.Controls
 
         private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName != nameof(MainViewModel.UserPresenceDictionary) && !string.IsNullOrEmpty(e.PropertyName)) return;
+            if (e.PropertyName != nameof(MainViewModel.UserPresenceDictionary) &&
+                !string.IsNullOrEmpty(e.PropertyName))
+            {
+                return;
+            }
+
             try
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                await Dispatcher.QuickRunAsync(() =>
                 {
-                    if (Source == null) return;
-                    if (Source.Any(user =>
-                        ((App) Application.Current).ViewModel.UserPresenceDictionary.TryGetValue(user.Pk, out var value) &&
-                        value.IsActive))
+                    if (Source == null)
                     {
-                        IsUserActive = true;
                         return;
                     }
 
-                    IsUserActive = false;
-                });
+                    IsUserActive = Source.Any(user =>
+                        ((App) Application.Current).ViewModel.UserPresenceDictionary
+                        .TryGetValue(user.Pk, out var value) &&
+                        value.IsActive);
+                }, CoreDispatcherPriority.Low);
             }
             catch (InvalidComObjectException exception)
             {

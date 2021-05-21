@@ -98,7 +98,7 @@ namespace Indirect.Controls
             if (args.PropertyName != nameof(MainViewModel.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
             try
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, OnUserPresenceChanged);
+                await Dispatcher.QuickRunAsync(OnUserPresenceChanged);
             }
             catch (InvalidComObjectException exception)
             {

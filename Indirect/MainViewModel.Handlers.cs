@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
+using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Sync;
 using InstagramAPI.Utils;
@@ -31,7 +32,7 @@ namespace Indirect
             await InstaApi.SyncClient.Start(seqId, snapshotAt, true).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(_threadToBeOpened) && Inbox.Threads.Count > 0)
             {
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
                 {
                     SelectedThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == _threadToBeOpened);
                 });
@@ -110,7 +111,7 @@ namespace Indirect
                                         var item = thread.ObservableItems.LastOrDefault(x => x.ItemId == itemData.Item.ItemId);
                                         if (item != null)
                                         {
-                                            await thread.Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                                            await thread.Dispatcher.QuickRunAsync(() =>
                                             {
                                                 if (itemData.Item.Reactions == null)
                                                 {

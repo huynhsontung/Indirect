@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Foundation;
 using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -275,7 +274,7 @@ namespace Indirect
             }
         }
 
-        public static IAsyncAction HandleException(string message = null, Exception e = null)
+        public static Task HandleException(string message = null, Exception e = null)
         {
             if (string.IsNullOrEmpty(message))
             {
@@ -284,7 +283,7 @@ namespace Indirect
                           "https://github.com/huynhsontung/Indirect";
             }
 
-            return CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            return CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(async () =>
             {
                 try
                 {
