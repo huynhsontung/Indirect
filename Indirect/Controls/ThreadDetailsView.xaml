@@ -189,7 +189,7 @@
                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                         Style="{ThemeResource FluentCaptionTextStyle}"
                         Text="Typing..."
-                        Visibility="{x:Bind Thread.IsSomeoneTyping, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
+                        Visibility="Collapsed" />
 
                     <TextBlock
                         Margin="0,0,0,16"

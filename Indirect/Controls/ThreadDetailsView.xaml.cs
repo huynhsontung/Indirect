@@ -300,7 +300,7 @@ namespace Indirect.Controls
                 MessageTextBox.Focus(FocusState.Programmatic);
             }
 
-            if (!Thread.IsSomeoneTyping || args.PropertyName != nameof(Thread.IsSomeoneTyping) &&
+            if (args.PropertyName != nameof(Thread.IsSomeoneTyping) &&
                 !string.IsNullOrEmpty(args.PropertyName))
             {
                 return;
@@ -310,12 +310,19 @@ namespace Indirect.Controls
             if (chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 1 ||
                 chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 2)
             {
-                await Task.Delay(100);
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                    () =>
+                await Dispatcher.QuickRunAsync(async () =>
+                {
+                    if (Thread.IsSomeoneTyping)
                     {
+                        TypingIndicator.Visibility = Visibility.Visible;
+                        await Task.Delay(100);
                         ItemsHolder.ScrollIntoView(ItemsHolder.Footer);
-                    });
+                    }
+                    else
+                    {
+                        TypingIndicator.Visibility = Visibility.Collapsed;
+                    }
+                });
             }
         }
 

@@ -6,6 +6,7 @@ using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.UI.Core;
 
 namespace Indirect.Utilities
 {
@@ -75,6 +76,19 @@ namespace Indirect.Utilities
             await resizedStream.ReadAsync(outBuffer, (uint)resizedStream.Size, InputStreamOptions.None);
             resizedStream.Dispose();
             return outBuffer;
+        }
+
+        public static async Task QuickRunAsync(this CoreDispatcher dispatcher, DispatchedHandler agileCallback,
+            CoreDispatcherPriority priority = CoreDispatcherPriority.Normal)
+        {
+            if (dispatcher.HasThreadAccess)
+            {
+                agileCallback.Invoke();
+            }
+            else
+            {
+                await dispatcher.RunAsync(priority, agileCallback);
+            }
         }
     }
 }
