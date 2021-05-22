@@ -2,10 +2,9 @@
 using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Security.Cryptography;
@@ -99,12 +98,20 @@ namespace InstagramAPI.Utils
 
         private static async Task WriteToFileAsync(string fileName, IBuffer data)
         {
-            fileName = SanitizeFileName(fileName);
-            var file = await LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
-            using (var writeStream = await file.OpenAsync(FileAccessMode.ReadWrite))
+            try
             {
-                await writeStream.WriteAsync(data);
-                await writeStream.FlushAsync();
+                fileName = SanitizeFileName(fileName);
+                var file = await LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
+                using (var writeStream = await file.OpenAsync(FileAccessMode.ReadWrite))
+                {
+                    await writeStream.WriteAsync(data);
+                    await writeStream.FlushAsync();
+                }
+            }
+            catch (FileLoadException)
+            {
+                // File being written from another thread
+                // pass
             }
         }
 
