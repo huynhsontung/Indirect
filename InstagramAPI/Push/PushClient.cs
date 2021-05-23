@@ -481,6 +481,7 @@ namespace InstagramAPI.Push
                 return;
             }
 
+            await Task.Delay(TimeSpan.FromSeconds(1));
             var uri = new Uri("https://i.instagram.com/api/v1/push/register/");
             var fields = new Dictionary<string, string>
             {
@@ -494,7 +495,6 @@ namespace InstagramAPI.Push
                 {"users", _instaApi.Session.LoggedInUser.Pk.ToString() }
             };
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
             var result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields));
 
             if (!result.IsSuccessStatusCode)
