@@ -232,14 +232,22 @@ namespace InstagramAPI.Sync
                 case "/ig_message_sync":
                     var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(payload);
                     var latest = messageSyncPayload.Last();
-                    var itemSyncData = latest.Data[0];
                     try
                     {
-                        if (latest.SeqId > _seqId && latest.Data.Count > 0)
+                        if (latest.SeqId > _seqId)
                         {
                             _seqId = latest.SeqId;
-                            if (itemSyncData.Op != "remove")
-                                _snapshotAt = itemSyncData.Item.Timestamp;
+                        }
+
+                        if (latest.Data?.Count > 0 && latest.Data[0].Op != "remove")
+                        {
+                            _snapshotAt = latest.Data[0].Item.Timestamp;
+                        }
+
+                        messageSyncPayload = messageSyncPayload.Where(x => x.Data?.Count > 0).ToList();
+                        if (messageSyncPayload.Count == 0)
+                        {
+                            break;
                         }
 
                         MessageReceived?.Invoke(this, messageSyncPayload);
@@ -247,24 +255,32 @@ namespace InstagramAPI.Sync
                     catch (Exception e)
                     {
                         // DEBUG CODE - TO BE REMOVED IN THE FUTURE
-                        string value;
-                        var token = JToken.Parse(itemSyncData.Value);
-                        if (token.Type == JTokenType.Object)
+                        if (latest.Data?.Count > 0)
                         {
-                            var jProps = JObject.Parse(itemSyncData.Value).Properties().Select(p => p.Name);
-                            value = string.Join(",", jProps);
+                            string value;
+                            var itemSyncData = latest.Data[0];
+                            var token = JToken.Parse(itemSyncData.Value);
+                            if (token.Type == JTokenType.Object)
+                            {
+                                var jProps = JObject.Parse(itemSyncData.Value).Properties().Select(p => p.Name);
+                                value = string.Join(",", jProps);
+                            }
+                            else
+                            {
+                                value = token.Type.ToString();
+                            }
+
+                            DebugLogger.LogException(e, properties: new Dictionary<string, string>
+                            {
+                                {"Op", itemSyncData.Op},
+                                {"Path", itemSyncData.Path.StripSensitive()},
+                                {"Value", value}
+                            });
                         }
                         else
                         {
-                            value = token.Type.ToString();
+                            DebugLogger.LogException(e);
                         }
-
-                        DebugLogger.LogException(e, properties: new Dictionary<string, string>
-                        {
-                            {"Op", itemSyncData.Op},
-                            {"Path", itemSyncData.Path.StripSensitive()},
-                            {"Value", value}
-                        });
                     }
 
                     break;
