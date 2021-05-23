@@ -31,10 +31,15 @@ namespace BackgroundPushClient
                     this.Log("No internet. Stop.");
                     return;
                 }
+
                 if (!await Utils.TryAcquireSyncLock())
                 {
                     this.Log("Failed to open SyncLock file. Main application might be running. Exit background task.");
-                    if (details.Reason == SocketActivityTriggerReason.SocketClosed) return;
+                    if (details.Reason == SocketActivityTriggerReason.SocketClosed)
+                    {
+                        return;
+                    }
+
                     var socket = details.SocketInformation.StreamSocket;
                     if (socket == null) return;
                     await socket.CancelIOAsync();
@@ -44,28 +49,30 @@ namespace BackgroundPushClient
                         TimeSpan.FromSeconds(PushClient.KEEP_ALIVE - 60));
                     return;
                 }
+
                 var instagram = Instagram.Instance;
                 instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
                 switch (details.Reason)
                 {
+                    case SocketActivityTriggerReason.KeepAliveTimerExpired:
+                    case SocketActivityTriggerReason.SocketActivity:
+                        var socket = details.SocketInformation.StreamSocket;
+                        instagram.PushClient.StartWithExistingSocket(socket);
+                        break;
                     case SocketActivityTriggerReason.SocketClosed:
-                    {
-                        await Task.Delay(TimeSpan.FromSeconds(5));
+                        await Task.Delay(TimeSpan.FromSeconds(3));
                         if (!await Utils.TryAcquireSyncLock())
                         {
                             this.Log("Failed to open SyncLock file after extended wait. Main application might be running. Exit background task.");
                             return;
                         }
+
                         await instagram.PushClient.StartFresh();
                         break;
-                    }
                     default:
-                    {
-                        var socket = details.SocketInformation.StreamSocket;
-                        instagram.PushClient.StartWithExistingSocket(socket);
-                        break;
-                    }
+                        return;
                 }
+
                 await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
                 instagram.PushClient.ConnectionData.SaveToAppSettings();
                 await instagram.PushClient.TransferPushSocket(false);

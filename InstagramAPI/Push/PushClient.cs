@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
@@ -70,6 +71,11 @@ namespace InstagramAPI.Push
             }
         }
 
+        public bool TaskExists(string name)
+        {
+            return BackgroundTaskRegistration.AllTasks.Any(pair => pair.Value.Name == name);
+        }
+
         public bool TryRegisterBackgroundTaskOnce(string name, string entryPoint, IBackgroundTrigger trigger, out IBackgroundTaskRegistration registeredTask)
         {
             foreach (var task in BackgroundTaskRegistration.AllTasks)
@@ -108,18 +114,30 @@ namespace InstagramAPI.Push
 
         private async Task<bool> RequestBackgroundAccess()
         {
-            try
+            if (!TaskExists(BACKGROUND_SOCKET_ACTIVITY_NAME) || !TaskExists(BACKGROUND_REPLY_NAME))
             {
-                var permissionResult = await BackgroundExecutionManager.RequestAccessAsync();
-                if (permissionResult == BackgroundAccessStatus.DeniedByUser ||
-                    permissionResult == BackgroundAccessStatus.DeniedBySystemPolicy ||
-                    permissionResult == BackgroundAccessStatus.Unspecified)
+                try
+                {
+                    var permissionResult = await BackgroundExecutionManager.RequestAccessAsync();
+                    if (permissionResult == BackgroundAccessStatus.DeniedByUser ||
+                        permissionResult == BackgroundAccessStatus.DeniedBySystemPolicy ||
+                        permissionResult == BackgroundAccessStatus.Unspecified)
+                    {
+                        return false;
+                    }
+                }
+                catch (Exception)
+                {
                     return false;
+                }
+
+                this.Log("Request background access successful!");
             }
-            catch (Exception)
+            else
             {
-                return false;
+                this.Log("Background tasks already registered.");
             }
+
             var activityTaskRegistered = TryRegisterBackgroundTaskOnce(BACKGROUND_SOCKET_ACTIVITY_NAME, SOCKET_ACTIVITY_ENTRY_POINT,
                 new SocketActivityTrigger(), out _socketActivityTask);
 
@@ -135,6 +153,7 @@ namespace InstagramAPI.Push
                     // ToastNotificationActionTrigger is present but cannot instantiate
                 }
             }
+
             return activityTaskRegistered;
         }
 
@@ -459,7 +478,6 @@ namespace InstagramAPI.Push
             if (string.IsNullOrEmpty(token)) throw new ArgumentNullException(nameof(token));
             if (ConnectionData.FbnsToken == token)
             {
-                ConnectionData.FbnsTokenLastUpdated = DateTimeOffset.Now;
                 return;
             }
 
@@ -475,10 +493,21 @@ namespace InstagramAPI.Push
                 {"_uuid", _instaApi.Device.Uuid.ToString() },
                 {"users", _instaApi.Session.LoggedInUser.Pk.ToString() }
             };
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
             var result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields));
 
-            ConnectionData.FbnsToken = token;
-            ConnectionData.FbnsTokenLastUpdated = DateTimeOffset.Now;
+            if (!result.IsSuccessStatusCode)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2));
+                result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields));
+            }
+
+            if (result.IsSuccessStatusCode)
+            {
+                ConnectionData.FbnsToken = token;
+                ConnectionData.FbnsTokenLastUpdated = DateTimeOffset.Now;
+            }
         }
 
 
