@@ -152,7 +152,7 @@
                         Source="{x:Bind Thread.Users, Mode=OneWay}" />
 
                     <StackPanel VerticalAlignment="Center" Orientation="Vertical">
-                        <TextBlock Style="{ThemeResource FluentBaseTextStyle}" Text="{x:Bind Thread.Title, Mode=OneWay}" />
+                        <TextBlock Style="{ThemeResource FluentBaseTextStyle}" Text="{x:Bind Thread.Source.Title, Mode=OneWay}" />
                         <TextBlock
                             x:Name="LastActiveText"
                             Margin="0,-1,0,0"

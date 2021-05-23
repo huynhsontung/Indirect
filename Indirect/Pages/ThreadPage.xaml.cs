@@ -35,7 +35,7 @@ namespace Indirect.Pages
                 MainView.ThreadHeaderVisibility = Visibility.Collapsed;
             }
             ApplicationView.GetForCurrentView().Consolidated += ViewConsolidated;
-            ApplicationView.GetForCurrentView().Title = _thread.Title + " - Thread";
+            ApplicationView.GetForCurrentView().Title = _thread.Source.Title + " - Thread";
             Bindings.Update();
         }
 

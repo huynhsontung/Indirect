@@ -149,7 +149,7 @@ namespace Indirect.Entities.Wrappers
 
         private void SortInboxThread()
         {
-            var sorted = Threads.OrderByDescending(x => x.LastActivity).ToList();
+            var sorted = Threads.OrderByDescending(x => x.Source.LastActivity).ToList();
             for (var i = 0; i < Threads.Count; i++)
             {
                 var satisfied = false;
@@ -192,7 +192,7 @@ namespace Indirect.Entities.Wrappers
 
         private void OnThreadChanged(object sender, PropertyChangedEventArgs args)
         {
-            if (args.PropertyName == nameof(DirectThreadWrapper.LastActivity) || string.IsNullOrEmpty(args.PropertyName))
+            if (args.PropertyName == nameof(DirectThreadWrapper.Source) || string.IsNullOrEmpty(args.PropertyName))
             {
                 SortInboxThread();
             }

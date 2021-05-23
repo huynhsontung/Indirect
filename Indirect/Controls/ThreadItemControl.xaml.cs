@@ -86,7 +86,7 @@ namespace Indirect.Controls
             var seenList = lastSeenAt.Where(x =>
                     x.Value != null &&
                     x.Value.ItemId == Item.ItemId &&    // Match item id
-                    x.Key != Item.Parent.ViewerId &&    // Not from viewer
+                    x.Key != Item.Parent.Source.ViewerId &&    // Not from viewer
                     x.Key != Item.Sender.Pk             // Not from sender
                 ).Select(y => y.Key).ToArray();
             if (seenList.Length == 0)
@@ -96,7 +96,7 @@ namespace Indirect.Controls
 
             if (Item.Parent.Users.Count == 1)
             {
-                return Item.FromMe && Item.Parent.LastPermanentItem.ItemId != Item.ItemId ? string.Empty : "Seen";
+                return Item.FromMe && Item.Parent.Source.LastPermanentItem.ItemId != Item.ItemId ? string.Empty : "Seen";
             }
 
             if (Item.Parent.Users.Count <= seenList.Length)

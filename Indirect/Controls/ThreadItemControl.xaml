@@ -771,7 +771,7 @@
                 HorizontalAlignment="Right"
                 Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                 Style="{ThemeResource FluentCaptionTextStyle}"
-                Text="{x:Bind SeenTextConverter(Item.Parent.LastSeenAt), Mode=OneWay}"
+                Text="{x:Bind SeenTextConverter(Item.Parent.Source.LastSeenAt), Mode=OneWay}"
                 TextWrapping="Wrap"
                 Visibility="{x:Bind SeenIndicator.Text, Converter={StaticResource NullVisibilityConverter}, Mode=OneWay}" />
         </StackPanel>

@@ -18,7 +18,7 @@ using InstagramAPI.Classes.Core;
 namespace Indirect.Entities.Wrappers
 {
     /// Wrapper of <see cref="DirectThread"/> with Observable lists
-    class DirectThreadWrapper : DirectThread, INotifyPropertyChanged, IIncrementalSource<DirectItemWrapper>
+    class DirectThreadWrapper : INotifyPropertyChanged, IIncrementalSource<DirectItemWrapper>, IEquatable<DirectThreadWrapper>
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -27,6 +27,8 @@ namespace Indirect.Entities.Wrappers
         private bool _isSomeoneTyping;
         private string _draftMessage;
         private DirectItemWrapper _replyingItem;
+
+        public DirectThread Source { get; private set; }
 
         public CoreDispatcher Dispatcher
         {
@@ -73,51 +75,58 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
-        public Dictionary<long,UserInfo> DetailedUserInfoDictionary { get; } = new Dictionary<long, UserInfo>();
+        public Dictionary<long,UserInfo> DetailedUserInfoDictionary { get; }
         public bool IsContactPanel { get; set; }
-        public ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper> ObservableItems { get; set; }
+        public ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper> ObservableItems { get; }
         public BaseUser Viewer => _viewModel.LoggedInUser;
-        public new ObservableCollection<BaseUser> Users { get; } = new ObservableCollection<BaseUser>();
+        public string ThreadId => Source.ThreadId;
+        public ObservableCollection<BaseUser> Users { get; }
 
         /// <summary>
         /// Only use this constructor to make empty placeholder thread.
         /// </summary>
         /// <param name="viewModel"></param>
         /// <param name="user"></param>
-        public DirectThreadWrapper(MainViewModel viewModel, BaseUser user) : this(viewModel)
+        public DirectThreadWrapper(MainViewModel viewModel, BaseUser user) : this(viewModel, null, null)
         {
-            Users.Add(user);
-            Title = user.Username;
-            if (Users.Count == 0) Users.Add(new BaseUser());
+            Users[0] = user;
+            Source.Title = user.Username;
         }
 
-        public DirectThreadWrapper(MainViewModel viewModel, RankedRecipientThread rankedThread) : this(viewModel)
+        public DirectThreadWrapper(MainViewModel viewModel, RankedRecipientThread rankedThread) : this(viewModel, rankedThread, null)
         {
-            PropertyCopier<RankedRecipientThread, DirectThreadWrapper>.Copy(rankedThread, this);
-            Title = rankedThread.ThreadTitle;
-            ThreadType = DirectThreadType.Private;
-            foreach (var user in rankedThread.Users)
+            if (string.IsNullOrEmpty(Source.Title))
             {
-                Users.Add(user);
+                Source.Title = rankedThread?.ThreadTitle;
             }
-            if (Users.Count == 0) Users.Add(new BaseUser());
         }
 
-        public DirectThreadWrapper(MainViewModel viewModel, DirectThread source = null, CoreDispatcher dispatcher = null)
+        public DirectThreadWrapper(MainViewModel viewModel, DirectThread source, CoreDispatcher dispatcher = null)
         {
-            _viewModel = viewModel;
+            Users = new ObservableCollection<BaseUser>();
             ObservableItems = new ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper>(this);
+            DetailedUserInfoDictionary = new Dictionary<long, UserInfo>();
+
+            _viewModel = viewModel;
             Dispatcher = dispatcher;
             if (source != null)
             {
-                PropertyCopier<DirectThread, DirectThreadWrapper>.Copy(source, this);
-                foreach (var instaUserShortFriendship in source.Users)
+                Source = source;
+                foreach (var user in source.Users)
                 {
-                    Users.Add(instaUserShortFriendship);
+                    Users.Add(user);
                 }
-                if (Users.Count == 0) Users.Add(new BaseUser());
 
                 UpdateItemList(DecorateItems(source.Items));
+            }
+            else
+            {
+                Source = new DirectThread();
+            }
+
+            if (Users.Count == 0)
+            {
+                Users.Add(new BaseUser());
             }
 
             ObservableItems.CollectionChanged += DecorateOnItemDeleted;
@@ -126,7 +135,7 @@ namespace Indirect.Entities.Wrappers
 
         public async Task<DirectThreadWrapper> CloneThreadForSecondaryView(CoreDispatcher dispatcher)
         {
-            var result = await _viewModel.InstaApi.GetThreadAsync(ThreadId, PaginationParameters.MaxPagesToLoad(1));
+            var result = await _viewModel.InstaApi.GetThreadAsync(Source.ThreadId, PaginationParameters.MaxPagesToLoad(1));
             if (!result.IsSucceeded) return null;
             var clone = new DirectThreadWrapper(_viewModel, result.Value, dispatcher);
             return clone;
@@ -134,24 +143,29 @@ namespace Indirect.Entities.Wrappers
 
         public async Task AddItems(List<DirectItem> items)
         {
-            if (items.Count == 0) return;
+            if (items.Count == 0)
+            {
+                return;
+            }
+
             await UpdateItemListAsync(DecorateItems(items));
 
             var latestItem = ObservableItems.Last();    // Assuming order of item is maintained. Last item after update should be the latest.
-            if (LastPermanentItem == null || latestItem.Timestamp > LastPermanentItem.Timestamp)
+            var source = Source;
+            if (source.LastPermanentItem == null || latestItem.Timestamp > source.LastPermanentItem.Timestamp)
             {
                 // This does not update thread data like users in the thread or is thread muted or not
-                LastPermanentItem = latestItem;
-                LastActivity = latestItem.Timestamp;
-                NewestCursor = latestItem.ItemId;
+                source.LastPermanentItem = latestItem;
+                source.LastActivity = latestItem.Timestamp;
+                source.NewestCursor = latestItem.ItemId;
                 if (!latestItem.FromMe)
                 {
-                    LastNonSenderItemAt = latestItem.Timestamp;
+                    source.LastNonSenderItemAt = latestItem.Timestamp;
                 }
 
                 await Dispatcher.QuickRunAsync(() =>
                 {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Source)));
                 });
             }
         }
@@ -189,54 +203,39 @@ namespace Indirect.Entities.Wrappers
             await UpdateItemListAsync(DecorateItems(source.Items));
         }
 
-        private async Task UpdateExcludeItemList(DirectThread source)
+        private async Task UpdateExcludeItemList(DirectThread target)
         {
-            Canonical = source.Canonical;
-            //HasNewer = source.HasNewer;
-            //HasOlder = source.HasOlder;
-            IsSpam = source.IsSpam;
-            Muted = source.Muted;
-            Named = source.Named;
-            Pending = source.Pending;
-            ViewerId = source.ViewerId;
-            LastActivity = source.LastActivity;
-            ThreadId = source.ThreadId;
-            IsGroup = source.IsGroup;
-            IsPin = source.IsPin;
-            ValuedRequest = source.ValuedRequest;
-            VCMuted = source.VCMuted;
-            ReshareReceiveCount = source.ReshareReceiveCount;
-            ReshareSendCount = source.ReshareSendCount;
-            ExpiringMediaReceiveCount = source.ExpiringMediaReceiveCount;
-            ExpiringMediaSendCount = source.ExpiringMediaSendCount;
-            ThreadType = source.ThreadType;
-            Title = source.Title;
-            MentionsMuted = source.MentionsMuted;
-
-            Inviter = source.Inviter;
-            LastPermanentItem = source.LastPermanentItem?.Timestamp > LastPermanentItem?.Timestamp ?
-                source.LastPermanentItem : LastPermanentItem;
-            LeftUsers = source.LeftUsers;
-            LastSeenAt = source.LastSeenAt;
-
-            if (string.IsNullOrEmpty(OldestCursor) || 
-                string.Compare(OldestCursor, source.OldestCursor, StringComparison.Ordinal) > 0)
+            if (target == null)
             {
-                OldestCursor = source.OldestCursor;
-                HasOlder = source.HasOlder;
+                return;
             }
 
-            if (string.IsNullOrEmpty(NewestCursor) || 
-                string.Compare(NewestCursor, source.NewestCursor, StringComparison.Ordinal) < 0)
+            var source = Source;
+            if (target.LastPermanentItem?.Timestamp < source.LastPermanentItem?.Timestamp)
             {
-                NewestCursor = source.NewestCursor;
+                target.LastPermanentItem = source.LastPermanentItem;
+            }
+
+            if (!string.IsNullOrEmpty(source.OldestCursor) &&
+                string.Compare(source.OldestCursor, target.OldestCursor, StringComparison.Ordinal) < 0)
+            {
+                target.OldestCursor = source.OldestCursor;
+                target.HasOlder = source.HasOlder;
+            }
+
+            if (!string.IsNullOrEmpty(source.NewestCursor) &&
+                string.Compare(source.NewestCursor, target.NewestCursor, StringComparison.Ordinal) > 0)
+            {
+                target.NewestCursor = source.NewestCursor;
                 // This implementation never has HasNewer = true
             }
 
-            await UpdateUserList(source.Users);
+            Source = target;
+
+            await UpdateUserList(target.Users);
             await Dispatcher.QuickRunAsync(() =>
             {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Source)));
             });
         }
 
@@ -315,7 +314,8 @@ namespace Indirect.Entities.Wrappers
         public async Task<IEnumerable<DirectItemWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
         {
             // Without ThreadId we cant fetch thread items.
-            if (string.IsNullOrEmpty(ThreadId) || !(HasOlder ?? true))
+            var source = Source;
+            if (string.IsNullOrEmpty(source.ThreadId) || !(source.HasOlder ?? true))
             {
                 return new List<DirectItemWrapper>(0);
             }
@@ -323,9 +323,9 @@ namespace Indirect.Entities.Wrappers
             var pagesToLoad = pageSize / 20;
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
-            pagination.StartFromMaxId(OldestCursor);
+            pagination.StartFromMaxId(source.OldestCursor);
             
-            var result = await _viewModel.InstaApi.GetThreadAsync(ThreadId, pagination);
+            var result = await _viewModel.InstaApi.GetThreadAsync(source.ThreadId, pagination);
             if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0)
             {
                 return new List<DirectItemWrapper>(0);
@@ -408,13 +408,14 @@ namespace Indirect.Entities.Wrappers
         {
             try
             {
-                if (string.IsNullOrEmpty(ThreadId) || LastSeenAt == null) return;
-                if (LastSeenAt.TryGetValue(ViewerId, out var lastSeen))
+                var source = Source;
+                if (string.IsNullOrEmpty(source.ThreadId) || source.LastSeenAt == null) return;
+                if (source.LastSeenAt.TryGetValue(source.ViewerId, out var lastSeen))
                 {
-                    if (string.IsNullOrEmpty(LastPermanentItem?.ItemId) ||
-                        lastSeen.ItemId == LastPermanentItem.ItemId ||
-                        LastPermanentItem.FromMe) return;
-                    await _viewModel.InstaApi.MarkItemSeenAsync(ThreadId, LastPermanentItem.ItemId).ConfigureAwait(false);
+                    if (string.IsNullOrEmpty(source.LastPermanentItem?.ItemId) ||
+                        lastSeen.ItemId == source.LastPermanentItem.ItemId ||
+                        source.LastPermanentItem.FromMe) return;
+                    await _viewModel.InstaApi.MarkItemSeenAsync(source.ThreadId, source.LastPermanentItem.ItemId).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -425,8 +426,13 @@ namespace Indirect.Entities.Wrappers
 
         public async Task UpdateLastSeenAt(long userId, DateTimeOffset timestamp, string itemId)
         {
-            if (userId == default || timestamp == default || itemId == default) return;
-            var lastSeenAt = new Dictionary<long, LastSeen>(LastSeenAt);
+            if (userId == default || timestamp == default || itemId == default)
+            {
+                return;
+            }
+
+            var source = Source;
+            var lastSeenAt = new Dictionary<long, LastSeen>(source.LastSeenAt);
             if (lastSeenAt.TryGetValue(userId, out var lastSeen))
             {
                 lastSeen.Timestamp = timestamp;
@@ -441,12 +447,11 @@ namespace Indirect.Entities.Wrappers
                 };
             }
 
-            LastSeenAt = lastSeenAt;
+            source.LastSeenAt = lastSeenAt;
 
             await Dispatcher.QuickRunAsync(() =>
             {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastSeenAt)));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreadMessage)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Source)));
             });
         }
 
@@ -482,6 +487,11 @@ namespace Indirect.Entities.Wrappers
             {
                 PingTypingIndicator(0);
             }
+        }
+
+        public bool Equals(DirectThreadWrapper other)
+        {
+            return !string.IsNullOrEmpty(Source.ThreadId) && Source.ThreadId == other?.Source?.ThreadId;
         }
     }
 }

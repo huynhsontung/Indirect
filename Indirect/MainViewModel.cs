@@ -96,7 +96,7 @@ namespace Indirect
         {
             if (Inbox.Threads.Count > 0)
             {
-                SelectedThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == threadId);
+                SelectedThread = Inbox.Threads.FirstOrDefault(x => x.Source.ThreadId == threadId);
             }
             else
             {
@@ -135,7 +135,7 @@ namespace Indirect
                 return;
             }
             
-            var result = await InstaApi.GetThreadAsync(thread.ThreadId, PaginationParameters.MaxPagesToLoad(1));
+            var result = await InstaApi.GetThreadAsync(thread.Source.ThreadId, PaginationParameters.MaxPagesToLoad(1));
             if (result.IsSucceeded)
             {
                 await thread.Dispatcher.AwaitableRunAsync(() => { thread.Update(result.Value); });
@@ -156,7 +156,7 @@ namespace Indirect
             else
             {
                 var preferSelectedThread = Inbox.Threads.FirstOrDefault(x =>
-                    x != null && x.ThreadId == selectedThread.ThreadId);
+                    x != null && x.Source.ThreadId == selectedThread.Source.ThreadId);
                 if (preferSelectedThread != null)
                 {
                     SelectedThread = preferSelectedThread;
@@ -181,8 +181,13 @@ namespace Indirect
             list.AddRange(threadsFromUser);
             var decoratedList = list.Select(x =>
             {
-                if (x.LastPermanentItem == null) x.LastPermanentItem = new DirectItem();
-                x.LastPermanentItem.Text = x.Users.Count == 1 ? x.Users?[0].FullName : $"{x.Users.Count} participants";
+                var directThread = x.Source;
+                if (directThread.LastPermanentItem == null)
+                {
+                    directThread.LastPermanentItem = new DirectItem();
+                }
+
+                directThread.LastPermanentItem.Text = x.Users.Count == 1 ? x.Users?[0].FullName : $"{x.Users.Count} participants";
                 return x;
             }).ToList();
             updateAction?.Invoke(decoratedList);
@@ -214,7 +219,7 @@ namespace Indirect
             var result = await InstaApi.CreateGroupThreadAsync(userIds);
             if (!result.IsSucceeded) return;
             var thread = result.Value;
-            var existingThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == thread.ThreadId);
+            var existingThread = Inbox.Threads.FirstOrDefault(x => x.Source.ThreadId == thread.ThreadId);
             SelectedThread = existingThread ?? new DirectThreadWrapper(this, thread);
         }
 
@@ -229,7 +234,7 @@ namespace Indirect
         public async void MakeProperInboxThread(DirectThreadWrapper placeholderThread)
         {
             DirectThreadWrapper thread;
-            if (string.IsNullOrEmpty(placeholderThread.ThreadId))
+            if (string.IsNullOrEmpty(placeholderThread.Source.ThreadId))
             {
                 var userIds = placeholderThread.Users.Select(x => x.Pk);
                 var result = await InstaApi.GetThreadByParticipantsAsync(userIds);
@@ -249,9 +254,9 @@ namespace Indirect
                 break;
             }
 
-            if (thread.LastPermanentItem == null)
+            if (thread.Source.LastPermanentItem == null)
             {
-                thread.LastPermanentItem = new DirectItem() {Description = thread.Users?[0].FullName};
+                thread.Source.LastPermanentItem = new DirectItem() {Description = thread.Users?[0].FullName};
             }
 
             SelectedThread = thread;

@@ -136,7 +136,7 @@ namespace Indirect.Pages
         private void SearchBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
         {
             var selectedItem = (DirectThreadWrapper) args.SelectedItem;
-            sender.Text = selectedItem.Title;
+            sender.Text = selectedItem.Source.Title;
         }
 
         private void SearchBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
@@ -153,6 +153,7 @@ namespace Indirect.Pages
                     ViewModel.MakeProperInboxThread(updatedList[0]);
                 });
             }
+
             sender.Text = string.Empty;
             sender.ItemsSource = null;
         }

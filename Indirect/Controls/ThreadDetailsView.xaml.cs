@@ -73,7 +73,7 @@ namespace Indirect.Controls
             thread.PropertyChanged += view.OnThreadPropertyChanged;
 
             view.ViewProfileAppBarButton.Visibility = thread.Users?.Count == 1 ? Visibility.Visible : Visibility.Collapsed;
-            view.MessageInputGrid.Visibility = thread.Pending ? Visibility.Collapsed : Visibility.Visible;
+            view.MessageInputGrid.Visibility = thread.Source.Pending ? Visibility.Collapsed : Visibility.Visible;
             view._needUpdateCaret = true;
             view.OnUserPresenceChanged();
         }

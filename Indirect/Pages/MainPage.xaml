@@ -284,7 +284,7 @@
                             MaxLines="1"
                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
                             Style="{ThemeResource FluentTitleTextStyle}"
-                            Text="{x:Bind Title}" />
+                            Text="{x:Bind Source.Title}" />
 
                         <TextBlock
                             Grid.Row="1"
@@ -293,8 +293,8 @@
                             VerticalAlignment="Top"
                             MaxLines="1"
                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                            Style="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}"
-                            Text="{x:Bind LastPermanentItem.Description, Mode=OneWay}" />
+                            Style="{x:Bind Source.HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}"
+                            Text="{x:Bind Source.LastPermanentItem.Description, Mode=OneWay}" />
                     </Grid>
                 </DataTemplate>
             </controls1:ExtendedMasterDetailsView.ItemTemplate>
@@ -556,7 +556,7 @@
                                         Margin="12,0,0,0"
                                         VerticalAlignment="Center"
                                         MaxLines="1"
-                                        Text="{x:Bind Title}" />
+                                        Text="{x:Bind Source.Title}" />
                                 </StackPanel>
                             </DataTemplate>
                         </AutoSuggestBox.ItemTemplate>

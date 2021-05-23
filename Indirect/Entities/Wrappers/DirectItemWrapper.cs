@@ -87,13 +87,13 @@ namespace Indirect.Entities.Wrappers
             }
 
             // Lookup BaseUser from user id
-            if (UserId == parent.ViewerId)
+            if (UserId == parent.Source.ViewerId)
             {
                 Sender = parent.Viewer ?? new BaseUser
                 {
                     Username = "UNKNOWN_VIEWER",
                     FullName = "UNKNOWN_VIEWER",
-                    Pk = parent.ViewerId
+                    Pk = parent.Source.ViewerId
                 };
             }
             else
