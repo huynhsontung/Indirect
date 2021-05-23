@@ -60,10 +60,10 @@ namespace InstagramAPI.Utils
             WriteContent(response.Content, Formatting.None, 0);
         }
 
-        public static void LogException(Exception ex, bool track = true)
+        public static void LogException(Exception ex, bool track = true, Dictionary<string, string> properties = null)
         {
 #if !DEBUG
-            if (track) Crashes.TrackError(ex);
+            if (track) Crashes.TrackError(ex, properties);
 #endif
             if (LogLevel < LogLevel.Exceptions) return;
 #if NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NETSTANDARD1_0 || NETSTANDARD1_1 || NETSTANDARD1_2 || NETSTANDARD1_3 || NETSTANDARD1_4 || NETSTANDARD1_5 || NETSTANDARD1_6 || NETSTANDARD2_0 || NETSTANDARD2_1 || NETSTANDARD2_2 || NETSTANDARD2_3
@@ -71,7 +71,6 @@ namespace InstagramAPI.Utils
             Console.WriteLine($"Stacktrace: {ex.StackTrace}");
 #else
             Log("Exception", ex);
-            Debug.WriteLine($"Stacktrace: {ex.StackTrace}");
 #endif
         }
 
@@ -79,6 +78,16 @@ namespace InstagramAPI.Utils
         {
             if (LogLevel < LogLevel.Info) return;
             Write($"Info:{Environment.NewLine}{info}");
+        }
+
+        public static string StripSensitive(this string target)
+        {
+            if (string.IsNullOrEmpty(target))
+            {
+                return target;
+            }
+
+            return string.Join(string.Empty, target.Select(c => char.IsDigit(c) ? '#' : c));
         }
 
         private static void WriteHeaders(HttpRequestHeaderCollection headers)

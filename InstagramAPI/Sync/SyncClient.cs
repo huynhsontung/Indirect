@@ -215,7 +215,7 @@ namespace InstagramAPI.Sync
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                this.Log("Exception occured when processing incoming sync message.");
+                this.Log("Exception occurred when processing incoming sync message.");
             }
         }
 
@@ -232,13 +232,41 @@ namespace InstagramAPI.Sync
                 case "/ig_message_sync":
                     var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(payload);
                     var latest = messageSyncPayload.Last();
-                    if (latest.SeqId > _seqId && latest.Data.Count > 0)
+                    var itemSyncData = latest.Data[0];
+                    try
                     {
-                        _seqId = latest.SeqId;
-                        if (latest.Data[0].Op != "remove")
-                            _snapshotAt = latest.Data[0].Item.Timestamp;
+                        if (latest.SeqId > _seqId && latest.Data.Count > 0)
+                        {
+                            _seqId = latest.SeqId;
+                            if (itemSyncData.Op != "remove")
+                                _snapshotAt = itemSyncData.Item.Timestamp;
+                        }
+
+                        MessageReceived?.Invoke(this, messageSyncPayload);
                     }
-                    MessageReceived?.Invoke(this, messageSyncPayload);
+                    catch (Exception e)
+                    {
+                        // DEBUG CODE - TO BE REMOVED IN THE FUTURE
+                        string value;
+                        var token = JToken.Parse(itemSyncData.Value);
+                        if (token.Type == JTokenType.Object)
+                        {
+                            var jProps = JObject.Parse(itemSyncData.Value).Properties().Select(p => p.Name);
+                            value = string.Join(",", jProps);
+                        }
+                        else
+                        {
+                            value = token.Type.ToString();
+                        }
+
+                        DebugLogger.LogException(e, properties: new Dictionary<string, string>
+                        {
+                            {"Op", itemSyncData.Op},
+                            {"Path", itemSyncData.Path.StripSensitive()},
+                            {"Value", value}
+                        });
+                    }
+
                     break;
 
                 case "/pubsub":
@@ -248,6 +276,7 @@ namespace InstagramAPI.Sync
                     {
                         ActivityIndicatorChanged?.Invoke(this, pubsub);
                     }
+
                     break;
 
                 case "/ig_realtime_sub":
