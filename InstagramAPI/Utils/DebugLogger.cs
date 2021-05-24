@@ -87,7 +87,7 @@ namespace InstagramAPI.Utils
                 return target;
             }
 
-            return string.Join(string.Empty, target.Select(c => char.IsDigit(c) ? '#' : c));
+            return string.Join(string.Empty, target.Select(c => char.IsDigit(c) || char.IsUpper(c) ? '#' : c));
         }
 
         private static void WriteHeaders(HttpRequestHeaderCollection headers)

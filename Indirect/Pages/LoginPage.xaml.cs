@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI.Core;
@@ -106,7 +107,10 @@ namespace Indirect.Pages
                 {
                     await ShowLoginErrorDialog(
                         "Unexpected error occurred while logging in with Facebook. Please try again later or log in with Instagram account instead.");
-                    DebugLogger.LogException(e);
+                    DebugLogger.LogException(e, properties: new Dictionary<string, string>
+                    {
+                        {"Uri", args.Uri.ToString().StripSensitive()}
+                    });
                 }
                 finally
                 {
