@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking.Connectivity;
@@ -21,10 +22,10 @@ namespace BackgroundPushClient
 #endif
             var deferral = taskInstance.GetDeferral();
             this.Log("-------------- Start of background task --------------");
+            var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
+            this.Log($"{details.Reason}");
             try
             {
-                var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
-                this.Log($"{details.Reason}");
                 var internetProfile = NetworkInformation.GetInternetConnectionProfile();
                 if (internetProfile == null)
                 {
@@ -79,7 +80,10 @@ namespace BackgroundPushClient
             }
             catch (Exception e)
             {
-                DebugLogger.LogException(e);
+                DebugLogger.LogException(e, properties: new Dictionary<string, string>
+                {
+                    {"SocketActivityTriggerReason", details.Reason.ToString()}
+                });
                 this.Log($"{typeof(SocketActivity).FullName}: Can't finish push cycle. Abort.");
             }
             finally
