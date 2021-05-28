@@ -59,6 +59,7 @@
             <Task Type="systemEvent"/>
           </BackgroundTasks>
         </Extension>
+        <Extension Category="windows.updateTask" EntryPoint="BackgroundPushClient.UpdateTask"/>
       </Extensions>
     </Application>
   </Applications>

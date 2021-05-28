@@ -35,8 +35,6 @@ namespace InstagramAPI.Push
         private const string BACKGROUND_REPLY_ENTRY_POINT = "BackgroundPushClient.ReplyAction";
         public const string SOCKET_ID = "mqtt_fbns";
 
-        private IBackgroundTaskRegistration _socketActivityTask;
-
         public const int KEEP_ALIVE = 900;    // seconds
         private const int TIMEOUT = 5;
         private bool _waitingForPubAck;
@@ -63,20 +61,20 @@ namespace InstagramAPI.Push
                 ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(api.Device);
         }
 
-        public void UnregisterTasks()
+        public static void UnregisterTasks()
         {
             foreach (var task in BackgroundTaskRegistration.AllTasks)
             {
-                if (task.Value.Name == BACKGROUND_SOCKET_ACTIVITY_NAME) task.Value.Unregister(true);
+                task.Value.Unregister(true);
             }
         }
 
-        public bool TaskExists(string name)
+        public static bool TaskExists(string name)
         {
             return BackgroundTaskRegistration.AllTasks.Any(pair => pair.Value.Name == name);
         }
 
-        public bool TryRegisterBackgroundTaskOnce(string name, string entryPoint, IBackgroundTrigger trigger, out IBackgroundTaskRegistration registeredTask)
+        public static bool TryRegisterBackgroundTaskOnce(string name, string entryPoint, IBackgroundTrigger trigger, out IBackgroundTaskRegistration registeredTask)
         {
             foreach (var task in BackgroundTaskRegistration.AllTasks)
             {
@@ -110,7 +108,7 @@ namespace InstagramAPI.Push
             return true;
         }
 
-        private async Task<bool> RequestBackgroundAccess()
+        public static async Task<IBackgroundTaskRegistration> RequestBackgroundAccess()
         {
             if (!TaskExists(BACKGROUND_SOCKET_ACTIVITY_NAME) || !TaskExists(BACKGROUND_REPLY_NAME))
             {
@@ -121,23 +119,23 @@ namespace InstagramAPI.Push
                         permissionResult == BackgroundAccessStatus.DeniedBySystemPolicy ||
                         permissionResult == BackgroundAccessStatus.Unspecified)
                     {
-                        return false;
+                        return null;
                     }
                 }
                 catch (Exception)
                 {
-                    return false;
+                    return null;
                 }
 
-                this.Log("Request background access successful!");
+                DebugLogger.Log(nameof(PushClient), "Request background access successful!");
             }
             else
             {
-                this.Log("Background tasks already registered.");
+                DebugLogger.Log(nameof(PushClient), "Background tasks already registered.");
             }
 
-            var activityTaskRegistered = TryRegisterBackgroundTaskOnce(BACKGROUND_SOCKET_ACTIVITY_NAME, SOCKET_ACTIVITY_ENTRY_POINT,
-                new SocketActivityTrigger(), out _socketActivityTask);
+            TryRegisterBackgroundTaskOnce(BACKGROUND_SOCKET_ACTIVITY_NAME, SOCKET_ACTIVITY_ENTRY_POINT,
+                new SocketActivityTrigger(), out var socketActivityTask);
 
             if (ApiInformation.IsTypePresent("Windows.ApplicationModel.Background.ToastNotificationActionTrigger"))
             {
@@ -152,7 +150,7 @@ namespace InstagramAPI.Push
                 }
             }
 
-            return activityTaskRegistered;
+            return socketActivityTask;
         }
 
         /// <summary>
@@ -288,10 +286,11 @@ namespace InstagramAPI.Push
 
         private async Task<bool> TryEnableTransferOwnershipOnSocket()
         {
-            if (!await RequestBackgroundAccess()) return false;
+            var socketActivityTask = await RequestBackgroundAccess();
+            if (socketActivityTask == null) return false;
             try
             {
-                Socket.EnableTransferOwnership(_socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
+                Socket.EnableTransferOwnership(socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
             }
             catch (Exception connectedStandby)
             {
@@ -299,7 +298,7 @@ namespace InstagramAPI.Push
                 this.Log("Connected standby not available");
                 try
                 {
-                    Socket.EnableTransferOwnership(_socketActivityTask.TaskId,
+                    Socket.EnableTransferOwnership(socketActivityTask.TaskId,
                         SocketActivityConnectedStandbyAction.DoNotWake);
                 }
                 catch (InvalidOperationException e)
