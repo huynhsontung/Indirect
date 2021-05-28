@@ -118,6 +118,30 @@ namespace BackgroundPushClient
             ToastNotificationManager.CreateToastNotifier().Show(toast);
         }
 
+        public static void PopMessageToast(string message)
+        {
+            var toastContent = new ToastContent
+            {
+                Header = new ToastHeader("message_toast", "Message toast", string.Empty),
+                Visual = new ToastVisual
+                {
+                    BindingGeneric = new ToastBindingGeneric
+                    {
+                        Children =
+                        {
+                            new AdaptiveText
+                            {
+                                Text = message
+                            }
+                        }
+                    }
+                }
+            };
+
+            var toast = new ToastNotification(toastContent.GetXml());
+            ToastNotificationManager.CreateToastNotifier().Show(toast);
+        }
+
         /// <summary>
         /// Hide previous toast early if another toast is ready to show up
         /// </summary>
