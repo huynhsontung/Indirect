@@ -1,18 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
+﻿using System.ComponentModel;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -49,7 +37,7 @@ namespace Indirect.Controls
             }
             var deferral = args.GetDeferral();
             this.IsPrimaryButtonEnabled = false;
-            var result = await InstagramAPI.Instagram.Instance.LoginWithTwoFactorAsync(CodeBox.Text);
+            var result = await ((App)App.Current).ViewModel.InstaApi.LoginWithTwoFactorAsync(CodeBox.Text);
             if (!result.IsSucceeded)
             {
                 args.Cancel = true;

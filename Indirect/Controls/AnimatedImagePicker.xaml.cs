@@ -70,7 +70,7 @@ namespace Indirect.Controls
             {
                 case "sticker":
                     {
-                        var result = await Instagram.Instance.SearchAnimatedImageAsync(query, AnimatedImageType.Sticker);
+                        var result = await ViewModel.InstaApi.SearchAnimatedImageAsync(query, AnimatedImageType.Sticker);
                         if (result.Value == null) return;
                         _stickers = result.Value;
                         PrepareImagesForDisplay(_stickers);
@@ -78,7 +78,7 @@ namespace Indirect.Controls
                     break;
                 case "gif":
                     {
-                        var result = await Instagram.Instance.SearchAnimatedImageAsync(query, AnimatedImageType.Gif);
+                        var result = await ViewModel.InstaApi.SearchAnimatedImageAsync(query, AnimatedImageType.Gif);
                         if (result.Value == null) return;
                         _gifs = result.Value;
                         PrepareImagesForDisplay(_gifs);

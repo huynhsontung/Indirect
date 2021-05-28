@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Contacts;
 using Windows.Foundation.Metadata;
 using Windows.Storage.Streams;
-using InstagramAPI;
 using InstagramAPI.Classes.User;
 
 namespace Indirect.Services
@@ -103,7 +102,7 @@ namespace Indirect.Services
                 if (contactList == null || annotationList == null) return;
 
                 var toBeAdded = new List<BaseUser>();
-                var currentUser = Instagram.Instance.Session.LoggedInUser;
+                var currentUser = ((App)App.Current).ViewModel.InstaApi.Session.LoggedInUser;
                 foreach (var user in users)
                 {
                     if (user.Pk == currentUser.Pk) continue;

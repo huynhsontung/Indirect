@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using Windows.UI.Core;
 using Windows.UI.ViewManagement.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -350,7 +349,7 @@ namespace Indirect.Controls
         {
             if (!Thread.DetailedUserInfoDictionary.ContainsKey(pk))
             {
-                var userInfoResult = await InstagramAPI.Instagram.Instance.GetUserInfoAsync(pk);
+                var userInfoResult = await ViewModel.InstaApi.GetUserInfoAsync(pk);
                 if (!userInfoResult.IsSucceeded) return;
                 Thread.DetailedUserInfoDictionary[pk] = userInfoResult.Value;
             }

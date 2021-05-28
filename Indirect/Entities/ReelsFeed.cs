@@ -23,7 +23,7 @@ namespace Indirect.Entities
         public async Task UpdateReelsFeed(ReelsTrayFetchReason fetchReason = ReelsTrayFetchReason.ColdStart)
         {
             if (_justUpdated) return;
-            var result = await Instagram.Instance.GetReelsTrayFeed(fetchReason);
+            var result = await ((App)App.Current).ViewModel.InstaApi.GetReelsTrayFeed(fetchReason);
             if (!result.IsSucceeded) return;
             await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
             {

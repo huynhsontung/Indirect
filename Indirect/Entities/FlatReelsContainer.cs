@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls.Primitives;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
-using InstagramAPI;
 using InstagramAPI.Classes;
 
 namespace Indirect.Entities
@@ -16,6 +15,7 @@ namespace Indirect.Entities
         public ObservableCollection<ReelItemWrapper> Items { get; } = new ObservableCollection<ReelItemWrapper>();
         public List<long> UserOrder { get; } = new List<long>();
 
+        private static MainViewModel ViewModel => ((App)Windows.UI.Xaml.Application.Current).ViewModel;
         private readonly Dictionary<long, ReelWrapper> _userReelsDictionary = new Dictionary<long, ReelWrapper>();
         private int _userIndex;
         private bool _loaded;
@@ -135,7 +135,7 @@ namespace Indirect.Entities
         {
             var story = Items[storyIndex];
             if (story.Parent.Seen != null && story.Parent.Seen >= story.TakenAt) return;
-            await Instagram.Instance.MarkStorySeenAsync(story.Id, story.User.Pk, story.TakenAt ?? DateTimeOffset.Now);
+            await ViewModel.InstaApi.MarkStorySeenAsync(story.Id, story.User.Pk, story.TakenAt ?? DateTimeOffset.Now);
             story.Parent.Seen = story.TakenAt;
             story.Parent.OnSeenChanged();
         }
@@ -143,7 +143,7 @@ namespace Indirect.Entities
         private async Task FetchStories(params long[] users)
         {
             if (users == null || users.Length == 0) return;
-            var result = await Instagram.Instance.GetReels(users);
+            var result = await ViewModel.InstaApi.GetReels(users);
             if (result.IsSucceeded)
             {
                 foreach (var (userId, reel) in result.Value)

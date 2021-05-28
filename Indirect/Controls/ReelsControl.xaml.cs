@@ -1,8 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -211,7 +209,7 @@ namespace Indirect.Controls
             if (userId == 0) return;
             if (UserInfoView.User?.Pk != userId)
             {
-                var userInfoResult = await InstagramAPI.Instagram.Instance.GetUserInfoAsync(userId);
+                var userInfoResult = await ((App)Application.Current).ViewModel.InstaApi.GetUserInfoAsync(userId);
                 if (!userInfoResult.IsSucceeded) return;
                 UserInfoView.User = userInfoResult.Value;
             }
