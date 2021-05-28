@@ -26,7 +26,9 @@ namespace InstagramAPI
     public partial class Instagram
     {
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
+        private static bool _initialized;
         private static Instagram _instance;
+
         public static Instagram Instance
         {
             get
@@ -83,6 +85,12 @@ namespace InstagramAPI
 
         public async Task InitializeAsync()
         {
+            if (_initialized)
+            {
+                return;
+            }
+
+            _initialized = true;
             var session = await SessionManager.TryLoadLastSessionAsync();
             if (session == null)
             {
