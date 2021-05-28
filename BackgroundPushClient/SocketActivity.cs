@@ -26,13 +26,6 @@ namespace BackgroundPushClient
             this.Log($"{details.Reason}");
             try
             {
-                var internetProfile = NetworkInformation.GetInternetConnectionProfile();
-                if (internetProfile == null)
-                {
-                    this.Log("No internet. Stop.");
-                    return;
-                }
-
                 if (!await Utils.TryAcquireSyncLock())
                 {
                     this.Log("Failed to open SyncLock file. Main application might be running. Exit background task.");
