@@ -87,17 +87,15 @@ namespace InstagramAPI.Push
                 }
             }
 
-            var taskBuilder = !string.IsNullOrEmpty(entryPoint)
-                ? new BackgroundTaskBuilder
-                {
-                    Name = name,
-                    TaskEntryPoint = entryPoint
-                }
-                : new BackgroundTaskBuilder
-                {
-                    Name = name
-                };
+            var taskBuilder = new BackgroundTaskBuilder
+            {
+                Name = name,
+                TaskEntryPoint = entryPoint,
+                IsNetworkRequested = true,
+                CancelOnConditionLoss = false
+            };
             taskBuilder.SetTrigger(trigger);
+            taskBuilder.AddCondition(new SystemCondition(SystemConditionType.InternetAvailable));
             try
             {
                 registeredTask = taskBuilder.Register();
