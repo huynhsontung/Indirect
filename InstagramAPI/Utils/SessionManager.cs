@@ -11,15 +11,18 @@ using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.DataProtection;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.Web.Http;
 
 namespace InstagramAPI.Utils
 {
-    internal static class StorageHelper
+    internal static class SessionManager
     {
         private const string SESSION_EXT = ".session";
+        private const string SESSION_PFP_EXT = ".jpg";
 
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
         private static readonly StorageFolder LocalFolder = ApplicationData.Current.LocalFolder;
+        private static readonly HttpClient HttpClient = new HttpClient();
 
         public static bool IsUserAuthenticated
         {
@@ -41,14 +44,46 @@ namespace InstagramAPI.Utils
             }
 
             var sessionName = session.Username;
-            var json = JsonConvert.SerializeObject(session, Formatting.None, new TimestampConverter());
+            var json = JsonConvert.SerializeObject(session, Formatting.None);
             var encoded = CryptographicBuffer.ConvertStringToBinary(json, BinaryStringEncoding.Utf8);
             var secured = await ProtectAsync(encoded);
             await WriteToFileAsync(sessionName + SESSION_EXT, secured);
+
+            // Also save profile picture for preview later
+            try
+            {
+                var pfpUrl = session.LoggedInUser.ProfilePictureUrl;
+                if (pfpUrl == null)
+                {
+                    return;
+                }
+
+                var response = await HttpClient.GetAsync(pfpUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    var pfpData = await response.Content.ReadAsBufferAsync();
+                    await WriteToFileAsync(sessionName + SESSION_PFP_EXT, pfpData);
+                }
+            }
+            catch (Exception)
+            {
+                // Not important if fail
+                // pass
+            }
+        }
+
+        public static Task<UserSessionData> TryLoadLastSessionAsync()
+        {
+            return string.IsNullOrEmpty(SessionUsername) ? TryLoadFirstSessionAsync() : TryLoadSessionAsync(SessionUsername);
         }
 
         public static async Task<UserSessionData> TryLoadSessionAsync(string sessionName)
         {
+            if (string.IsNullOrEmpty(sessionName))
+            {
+                return null;
+            }
+
             var data = await TryReadFromFileAsync(sessionName + SESSION_EXT);
             if (data == null)
             {
@@ -61,25 +96,23 @@ namespace InstagramAPI.Utils
             return session;
         }
 
-        public static IAsyncOperation<IBuffer> ProtectAsync(IBuffer data)
-        {
-            var provider = new DataProtectionProvider("LOCAL=user");
-            return provider.ProtectAsync(data);
-        }
-
-        public static IAsyncOperation<IBuffer> UnprotectAsync(IBuffer data)
-        {
-            var provider = new DataProtectionProvider();
-            return provider.UnprotectAsync(data);
-        }
-
-        public static async Task<string[]> GetAvailableSessionsAsync()
+        public static async Task<UserSessionData> TryLoadFirstSessionAsync()
         {
             var files = await LocalFolder.GetFilesAsync();
-            return files.Where(x => x.FileType == SESSION_EXT).Select(x => x.DisplayName).ToArray();
+            return await TryLoadSessionAsync(files.FirstOrDefault(x => x.FileType == SESSION_EXT)?.DisplayName);
         }
 
-        public static async Task<bool> RemoveSession(string sessionName)
+        public static async Task<UserSessionMetadata[]> GetAvailableSessionsAsync()
+        {
+            var files = await LocalFolder.GetFilesAsync();
+            return files.Where(x => x.FileType == SESSION_EXT).Select(x => new UserSessionMetadata
+            {
+                Username = x.DisplayName,
+                ProfilePicture = new Uri($"{LocalFolder.Path}\\{x.DisplayName}{SESSION_PFP_EXT}")
+            }).ToArray();
+        }
+
+        public static async Task<bool> TryRemoveSessionAsync(string sessionName)
         {
             if (string.IsNullOrEmpty(sessionName))
             {
@@ -92,8 +125,41 @@ namespace InstagramAPI.Utils
                 return false;
             }
 
-            await item.DeleteAsync(StorageDeleteOption.PermanentDelete);
+            try
+            {
+                await item.DeleteAsync(StorageDeleteOption.PermanentDelete);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            var pfp = await LocalFolder.TryGetItemAsync(sessionName + SESSION_PFP_EXT);
+            if (pfp != null)
+            {
+                try
+                {
+                    await pfp.DeleteAsync(StorageDeleteOption.PermanentDelete);
+                }
+                catch (Exception )
+                {
+                    // pass
+                }
+            }
+
             return true;
+        }
+
+        private static IAsyncOperation<IBuffer> ProtectAsync(IBuffer data)
+        {
+            var provider = new DataProtectionProvider("LOCAL=user");
+            return provider.ProtectAsync(data);
+        }
+
+        private static IAsyncOperation<IBuffer> UnprotectAsync(IBuffer data)
+        {
+            var provider = new DataProtectionProvider();
+            return provider.UnprotectAsync(data);
         }
 
         private static async Task WriteToFileAsync(string fileName, IBuffer data)

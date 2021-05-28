@@ -1,29 +1,58 @@
 ﻿using InstagramAPI.Classes.Core;
 using System;
+using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Android
 {
     public class AndroidDevice
     {
+        [JsonProperty]
         public string DeviceId { get; internal set; } // format: android-{md5}
+
+        [JsonProperty]
         public Guid PhoneId { get; internal set; } = Guid.NewGuid();
+
+        [JsonProperty]
         public Guid Uuid { get; internal set; } = Guid.NewGuid();
+
+        [JsonProperty]
         public Guid GoogleAdId { get; internal set; } = Guid.NewGuid();
+
+        [JsonProperty]
         public Guid RankToken { get; internal set; } = Guid.NewGuid();
+
+        [JsonProperty]
         public Guid AdId { get; internal set; } = Guid.NewGuid();
 
+        [JsonProperty]
         public string UserAgent { get; internal set; }
+
+        [JsonProperty]
         public AndroidVersion AndroidVersion { get; internal set; }
+
+        [JsonProperty]
         public int Dpi { get; internal set; }
-        public Resolution ScreenResolution;
+
+        [JsonProperty]
+        public Resolution ScreenResolution { get; internal set; }
+
+        [JsonProperty]
         public string DeviceName { get; internal set; }
+
+        [JsonProperty]
         public string Cpu { get; internal set; }
+
+        [JsonProperty]
         public string HardwareManufacturer { get; internal set; }
+
+        [JsonProperty]
         public string HardwareModel { get; internal set; }
 
         public const string CPU_ABI = "armeabi-v7a:armeabi";
 
-        private string _deviceString;
+        [JsonProperty]
+        private string DeviceString { get; set; }
+
         private static readonly string[] DEVICES =
         {
             "24/7.0; 380dpi; 1080x1920; OnePlus; ONEPLUS A3010; OnePlus3T; qcom",
@@ -52,14 +81,17 @@ namespace InstagramAPI.Classes.Android
                 device.AndroidVersion = AndroidVersion.FromString(components[0].Split('/')[1]);
                 device.Dpi = int.Parse(components[1].Remove(components[1].Length - 3));
                 var resolutionValues = components[2].Split('x');
-                device.ScreenResolution.Width = int.Parse(resolutionValues[0]);
-                device.ScreenResolution.Height = int.Parse(resolutionValues[1]);
+                device.ScreenResolution = new Resolution
+                {
+                    Width = int.Parse(resolutionValues[0]),
+                    Height = int.Parse(resolutionValues[1])
+                };
                 device.HardwareManufacturer = components[3].Split('/')[0];
                 device.HardwareModel = components[4];
                 device.DeviceName = components[5];
                 device.Cpu = components[6];
                 device.DeviceId = ApiRequestMessage.GenerateDeviceIdFromGuid(device.Uuid);
-                device._deviceString = userAgent;
+                device.DeviceString = userAgent;
             }
             catch (Exception e)
             {
@@ -97,7 +129,7 @@ namespace InstagramAPI.Classes.Android
                 ["GoogleAdId"] = GoogleAdId,
                 ["RankToken"] = RankToken,
                 ["AdId"] = AdId,
-                ["_deviceString"] = _deviceString
+                ["_deviceString"] = DeviceString
             };
             localSettings.Values["_androidDevice"] = composite;
         }

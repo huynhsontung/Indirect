@@ -25,6 +25,7 @@ namespace InstagramAPI
 {
     public partial class Instagram
     {
+        private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
         private static Instagram _instance;
         public static Instagram Instance
         {
@@ -36,7 +37,7 @@ namespace InstagramAPI
             }
         }
 
-        // TODO: Remove IsUserAuthenticatedPersistent to use StorageHelper instead
+        // TODO: Remove IsUserAuthenticatedPersistent to use SessionManager instead
         public static bool IsUserAuthenticatedPersistent
         {
             get => (bool?)LocalSettings.Values["_isUserAuthenticated"] ?? false;
@@ -44,26 +45,27 @@ namespace InstagramAPI
         }
 
         public bool IsUserAuthenticated { get; private set; }
-        public UserSessionData Session { get; private set; } = new UserSessionData();
-        public AndroidDevice Device { get; } = AndroidDevice.GetRandomAndroidDevice();
-        public PushClient PushClient { get; }
+        public UserSessionData Session { get; private set; }
+        public AndroidDevice Device { get; private set; }
+        public PushClient PushClient { get; private set; }
         public SyncClient SyncClient { get; }
+        public TwoFactorLoginInfo TwoFactorInfo { get; private set; }  // Only used when login returns two factor
+        public ChallengeLoginInfo ChallengeInfo { get; private set; }  // Only used when login returns challenge
 
         private readonly HttpClient _httpClient = new HttpClient();
         private readonly ApiRequestMessage _apiRequestMessage;
-        public TwoFactorLoginInfo TwoFactorInfo { get; private set; }  // Only used when login returns two factor
-        public ChallengeLoginInfo ChallengeInfo { get; private set; }  // Only used when login returns challenge
-        private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
 
         private Instagram()
         {
 #if DEBUG
             DebugLogger.LogLevel = LogLevel.All;
 #endif
-            SetDefaultRequestHeaders();
             _apiRequestMessage = new ApiRequestMessage(this);
-
             IsUserAuthenticated = IsUserAuthenticatedPersistent;
+            Device = AndroidDevice.GetRandomAndroidDevice();
+            Session = new UserSessionData();
+            SetDefaultRequestHeaders();
+
             var fbnsConnectionData = new FbnsConnectionData();
             if (IsUserAuthenticated)
             {
@@ -75,8 +77,31 @@ namespace InstagramAPI
 
             if (!IsUserAuthenticated) return;
             Session.LoadFromAppSettings();
-            Device = AndroidDevice.CreateFromAppSettings() ?? Device;
+            Device = AndroidDevice.CreateFromAppSettings();
             SetDefaultRequestHeaders();
+        }
+
+        public async Task InitializeAsync()
+        {
+            var session = await SessionManager.TryLoadLastSessionAsync();
+            if (session == null)
+            {
+                return;
+            }
+
+            Session = session;
+
+            if (session.Device != null)
+            {
+                Device = session.Device;
+                SetDefaultRequestHeaders();
+            }
+
+            if (session.PushData != null)
+            {
+                PushClient?.Shutdown();
+                PushClient = new PushClient(this, session.PushData);
+            }
         }
 
         /// <summary>
@@ -370,7 +395,7 @@ namespace InstagramAPI
         public async void Logout()
         {
             IsUserAuthenticated = false;
-            await StorageHelper.RemoveSession(Session.Username);
+            await SessionManager.TryRemoveSessionAsync(Session.Username);
             SyncClient.Shutdown();
             PushClient.UnregisterTasks();
             SaveToAppSettings();
@@ -447,8 +472,8 @@ namespace InstagramAPI
         public async void SaveToAppSettings()
         {
             IsUserAuthenticatedPersistent = IsUserAuthenticated;
-            StorageHelper.IsUserAuthenticated = IsUserAuthenticated;
-            StorageHelper.SessionUsername = Session.Username;
+            SessionManager.IsUserAuthenticated = IsUserAuthenticated;
+            SessionManager.SessionUsername = Session.Username;
             if (!IsUserAuthenticated)
             {
                 CookieHelper.ClearCookies();
@@ -459,7 +484,8 @@ namespace InstagramAPI
             {
                 Session.Cookies = CookieHelper.GetCookies();
                 Session.PushData = PushClient.ConnectionData;
-                await StorageHelper.SaveSessionAsync(Session);
+                Session.Device = Device;
+                await SessionManager.SaveSessionAsync(Session);
                 Session.SaveToAppSettings();
                 PushClient.ConnectionData.SaveToAppSettings();
             }

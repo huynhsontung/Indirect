@@ -6,6 +6,7 @@ using InstagramAPI.Push;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Windows.Web.Http;
+using InstagramAPI.Classes.Android;
 
 namespace InstagramAPI.Classes.Core
 {
@@ -51,6 +52,9 @@ namespace InstagramAPI.Classes.Core
         [JsonProperty]
         internal FbnsConnectionData PushData { get; set; }
 
+        [JsonProperty]
+        internal AndroidDevice Device { get; set; }
+
         public void SaveToAppSettings()
         {
             if (LoggedInUser == null) return;
@@ -94,13 +98,13 @@ namespace InstagramAPI.Classes.Core
                 FullName = (string)composite["LoggedInUser.FullName"]
             };
 
-            //var activeSessionName = StorageHelper.SessionUsername;
+            //var activeSessionName = SessionManager.SessionUsername;
             //if (string.IsNullOrEmpty(activeSessionName))
             //{
             //    return;
             //}
 
-            //var test = await StorageHelper.TryLoadSessionAsync(activeSessionName);
+            //var test = await SessionManager.TryLoadSessionAsync(activeSessionName);
         }
 
         public static UserSessionData CreateFromAppSettings()
