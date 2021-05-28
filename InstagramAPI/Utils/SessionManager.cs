@@ -90,10 +90,18 @@ namespace InstagramAPI.Utils
                 return null;
             }
 
-            var encoded = await UnprotectAsync(data);
-            var json = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, encoded);
-            var session = JsonConvert.DeserializeObject<UserSessionData>(json, new TimestampConverter());
-            return session;
+            try
+            {
+                var encoded = await UnprotectAsync(data);
+                var json = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, encoded);
+                var session = JsonConvert.DeserializeObject<UserSessionData>(json);
+                return session;
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+                return null;
+            }
         }
 
         public static async Task<UserSessionData> TryLoadFirstSessionAsync()
