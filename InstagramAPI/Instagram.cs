@@ -402,7 +402,7 @@ namespace InstagramAPI
         public async void Logout()
         {
             IsUserAuthenticated = false;
-            await SessionManager.TryRemoveSessionAsync(Session.Username);
+            //await SessionManager.TryRemoveSessionAsync(Session.Username); // TODO: uncomment once SessionManager is stable
             SyncClient.Shutdown();
             PushClient.UnregisterTasks();
             await SaveToAppSettings();

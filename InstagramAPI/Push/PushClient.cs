@@ -33,7 +33,7 @@ namespace InstagramAPI.Push
         private const string SOCKET_ACTIVITY_ENTRY_POINT = "BackgroundPushClient.SocketActivity";
         private const string BACKGROUND_REPLY_NAME = "BackgroundPushClient.ReplyAction";
         private const string BACKGROUND_REPLY_ENTRY_POINT = "BackgroundPushClient.ReplyAction";
-        public const string SOCKET_ID = "mqtt_fbns";
+        public const string SOCKET_ID = "mqtt_fbns";    // TODO: handle multiple socket IDs for multiple profiles
 
         public const int KEEP_ALIVE = 900;    // seconds
         private CancellationTokenSource _runningTokenSource;
@@ -197,17 +197,23 @@ namespace InstagramAPI.Push
                 {
                     var socket = socketInformation.StreamSocket;
                     if (string.IsNullOrEmpty(ConnectionData.FbnsToken)) // if we don't have any push data, start fresh
+                    {
+                        socket?.Dispose();
                         await StartFresh().ConfigureAwait(false);
+                    }
                     else
+                    {
                         StartWithExistingSocket(socket);
+                    }
                 }
                 else
                 {
                     await StartFresh().ConfigureAwait(false);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                this.Log(e);
                 await StartFresh().ConfigureAwait(false);
             }
         }
