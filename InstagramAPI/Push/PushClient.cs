@@ -36,8 +36,6 @@ namespace InstagramAPI.Push
         public const string SOCKET_ID = "mqtt_fbns";
 
         public const int KEEP_ALIVE = 900;    // seconds
-        private const int TIMEOUT = 5;
-        private bool _waitingForPubAck;
         private CancellationTokenSource _runningTokenSource;
         private DataReader _inboundReader;
         private DataWriter _outboundWriter;
@@ -428,6 +426,7 @@ namespace InstagramAPI.Push
                                 }
                                 break;
                             case TopicIds.RegResp:
+                                this.Log("Received token to register");
                                 await OnRegisterResponse(json);
                                 StartKeepAliveLoop();
                                 break;
@@ -440,7 +439,6 @@ namespace InstagramAPI.Push
 
                     case PacketType.PUBACK:
                         this.Log("Received PUBACK");
-                        _waitingForPubAck = false;
                         break;
 
                     case PacketType.PINGRESP:
@@ -548,28 +546,7 @@ namespace InstagramAPI.Push
                 TopicName = ((byte)TopicIds.RegReq).ToString()
             };
 
-            // Send PUBLISH packet then wait for PUBACK
-            // Retry after TIMEOUT seconds
-            if (!Running) return;
-            try
-            {
-                await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
-                WaitForPubAck();
-            }
-            catch (ObjectDisposedException)
-            {
-                // pass
-            }
-        }
-
-        private async void WaitForPubAck()
-        {
-            _waitingForPubAck = true;
-            await Task.Delay(TimeSpan.FromSeconds(TIMEOUT));
-            if (_waitingForPubAck)
-            {
-                await RegisterMqttClient();
-            }
+            await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
         }
 
         private async void StartKeepAliveLoop()
