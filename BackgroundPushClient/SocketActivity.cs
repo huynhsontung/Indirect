@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
-using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using InstagramAPI;
 using InstagramAPI.Push;
@@ -29,18 +28,6 @@ namespace BackgroundPushClient
                 if (!await Utils.TryAcquireSyncLock())
                 {
                     this.Log("Failed to open SyncLock file. Main application might be running. Exit background task.");
-                    if (details.Reason == SocketActivityTriggerReason.SocketClosed)
-                    {
-                        return;
-                    }
-
-                    var socket = details.SocketInformation.StreamSocket;
-                    if (socket == null) return;
-                    await socket.CancelIOAsync();
-                    socket.TransferOwnership(
-                        PushClient.SOCKET_ID,
-                        null,
-                        TimeSpan.FromSeconds(PushClient.KEEP_ALIVE - 60));
                     return;
                 }
 
@@ -50,9 +37,27 @@ namespace BackgroundPushClient
                 {
                     case SocketActivityTriggerReason.KeepAliveTimerExpired:
                     case SocketActivityTriggerReason.SocketActivity:
-                        var socket = details.SocketInformation.StreamSocket;
-                        instagram.PushClient.StartWithExistingSocket(socket);
+                        StreamSocket socket = null;
+                        try
+                        {
+                            socket = details.SocketInformation.StreamSocket;
+                        }
+                        catch (Exception)
+                        {
+                            // pass
+                        }
+
+                        if (socket != null)
+                        {
+                            instagram.PushClient.StartWithExistingSocket(socket);
+                        }
+                        else
+                        {
+                            await instagram.PushClient.StartFresh();
+                        }
+
                         break;
+
                     case SocketActivityTriggerReason.SocketClosed:
                         await Task.Delay(TimeSpan.FromSeconds(3));
                         if (!await Utils.TryAcquireSyncLock())
@@ -63,6 +68,7 @@ namespace BackgroundPushClient
 
                         await instagram.PushClient.StartFresh();
                         break;
+
                     default:
                         return;
                 }
