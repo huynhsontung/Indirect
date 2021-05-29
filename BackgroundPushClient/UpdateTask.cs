@@ -20,16 +20,16 @@ namespace BackgroundPushClient
             var deferral = taskInstance.GetDeferral();
             try
             {
-                PushClient.UnregisterTasks();
-                BackgroundExecutionManager.RemoveAccess();
-                await Task.Delay(TimeSpan.FromSeconds(15));  // Quota exception if there is no wait
+                //PushClient.UnregisterTasks();
+                //BackgroundExecutionManager.RemoveAccess();
+                //await Task.Delay(TimeSpan.FromSeconds(15));  // Quota exception if there is no wait
                 if (!await Utils.TryAcquireSyncLock())
                 {
                     return;
                 }
 
                 var instagram = Instagram.Instance;
-                if (instagram.IsUserAuthenticated)
+                if (instagram.IsUserAuthenticated && !PushClient.TasksRegistered())
                 {
                     instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
                     await instagram.PushClient.StartFresh();
@@ -39,6 +39,12 @@ namespace BackgroundPushClient
 #if DEBUG
                     Utils.PopMessageToast("Finished background tasks update.");
 #endif
+                }
+
+                if (instagram.IsUserAuthenticated && await Utils.TryAcquireSyncLock())
+                {
+                    // Switch to file based session
+                    await instagram.SaveToAppSettings();
                 }
             }
             catch (Exception e)

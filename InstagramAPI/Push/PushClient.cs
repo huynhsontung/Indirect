@@ -108,6 +108,11 @@ namespace InstagramAPI.Push
             return true;
         }
 
+        public static bool TasksRegistered()
+        {
+            return TaskExists(BACKGROUND_SOCKET_ACTIVITY_NAME) && TaskExists(BACKGROUND_REPLY_NAME);
+        }
+
         public static async Task<IBackgroundTaskRegistration> RequestBackgroundAccess()
         {
             if (!TaskExists(BACKGROUND_SOCKET_ACTIVITY_NAME) || !TaskExists(BACKGROUND_REPLY_NAME))
