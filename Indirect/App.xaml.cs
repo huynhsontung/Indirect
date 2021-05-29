@@ -186,9 +186,17 @@ namespace Indirect
             }
         }
 
-        private void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)
+        private async void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)
         {
-            ViewModel.SaveToAppSettings();
+            var deferral = e.GetDeferral();
+            try
+            {
+                await ViewModel.SaveToAppSettings();
+            }
+            finally
+            {
+                deferral.Complete();
+            }
         }
 
         private static void ConfigureMainView()

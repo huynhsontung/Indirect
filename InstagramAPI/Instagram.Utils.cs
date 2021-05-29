@@ -15,7 +15,7 @@ namespace InstagramAPI
                 throw new ArgumentException("user name and password or access token must be specified");
         }
 
-        private void ValidateLoggedIn()
+        private async void ValidateLoggedIn()
         {
             try
             {
@@ -27,7 +27,7 @@ namespace InstagramAPI
             {
                 // Saved data may be corrupted. Force logout.
                 IsUserAuthenticated = false;
-                SaveToAppSettings();
+                await SaveToAppSettings();  // TODO: change to explicit delete once SessionManager is stable
                 throw;
             }
         }

@@ -327,10 +327,10 @@ namespace Indirect
             ReleaseSyncLock();
         }
 
-        public void SaveToAppSettings()
+        public async Task SaveToAppSettings()
         {
-            InstaApi.SaveToAppSettings();
             ThreadInfoPersistentDictionary.SaveToAppSettings();
+            await InstaApi.SaveToAppSettings();
         }
 
         internal async Task<bool> TryAcquireSyncLock()

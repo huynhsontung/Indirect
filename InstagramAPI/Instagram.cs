@@ -201,7 +201,6 @@ namespace InstagramAPI
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
                 Session.RankToken = $"{loginInfo.User.Pk}_{_apiRequestMessage.PhoneId}";
-                SaveToAppSettings();
                 return Result<LoginResult>.Success(LoginResult.Success, json: json);
             }
             catch (Exception exception)
@@ -406,7 +405,7 @@ namespace InstagramAPI
             await SessionManager.TryRemoveSessionAsync(Session.Username);
             SyncClient.Shutdown();
             PushClient.UnregisterTasks();
-            SaveToAppSettings();
+            await SaveToAppSettings();
             PushClient.Shutdown();
             PushClient.ConnectionData.Clear();
         }
@@ -477,7 +476,7 @@ namespace InstagramAPI
             }
         }
 
-        public async void SaveToAppSettings()
+        public async Task SaveToAppSettings()
         {
             IsUserAuthenticatedPersistent = IsUserAuthenticated;
             SessionManager.IsUserAuthenticated = IsUserAuthenticated;
@@ -499,6 +498,7 @@ namespace InstagramAPI
             }
             else
             {
+                await SessionManager.TryRemoveSessionAsync(Session.Username);
                 Session.RemoveFromAppSettings();
                 PushClient.ConnectionData.RemoveFromAppSettings();
             }

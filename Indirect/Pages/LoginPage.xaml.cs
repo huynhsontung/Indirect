@@ -247,6 +247,7 @@ namespace Indirect.Pages
             else
             {
                 Frame.Navigate(typeof(MainPage));
+                await ViewModel.InstaApi.SaveToAppSettings().ConfigureAwait(false);
             }
         }
 
