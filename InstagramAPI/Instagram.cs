@@ -185,10 +185,12 @@ namespace InstagramAPI
                 {
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
+
                 IsUserAuthenticated = true;
+                Session.AuthenticationToken = GetAuthToken(response.Headers);
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
-                Session.RankToken = $"{loginInfo.User.Pk}_{_apiRequestMessage.PhoneId}";
+                SetDefaultRequestHeaders();
                 return Result<LoginResult>.Success(LoginResult.Success, json: json);
             }
             catch (Exception exception)
@@ -308,11 +310,12 @@ namespace InstagramAPI
                 if (loginInfoUser == null) return Result<LoginResult>.Fail(LoginResult.Exception, json: json);
 
                 IsUserAuthenticated = true;
+                Session.AuthenticationToken = GetAuthToken(response.Headers);
                 Session.LoggedInUser = loginInfoUser;
-                Session.RankToken = $"{Session.LoggedInUser.Pk}_{Device.PhoneId}";
                 Session.FacebookUserId = fbUserId;
                 Session.Username = loginInfoUser.Username;
                 Session.Password = "LOGGED_IN_THROUGH_FB";
+                SetDefaultRequestHeaders();
                 return Result<LoginResult>.Success(LoginResult.Success, json);
             }
             catch (Exception exception)
@@ -370,10 +373,11 @@ namespace InstagramAPI
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
                 IsUserAuthenticated = true;
+                Session.AuthenticationToken = GetAuthToken(response.Headers);
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
-                Session.RankToken = $"{loginInfo.User.Pk}_{_apiRequestMessage.PhoneId}";
                 TwoFactorInfo = null;
+                SetDefaultRequestHeaders();
                 return Result<LoginResult>.Success(LoginResult.Success);
             }
             catch (Exception exception)

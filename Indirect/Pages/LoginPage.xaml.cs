@@ -297,6 +297,8 @@ namespace Indirect.Pages
             }
             WebviewPopup.IsOpen = true;
             // https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/#login
+            // Potentially upgrade to new WebAuthenticationBroker whenever it gets updated.
+            // Tracking: https://github.com/MicrosoftEdge/WebView2Feedback/issues/171
             LoginWebview.Navigate(new Uri("https://m.facebook.com/v6.0/dialog/oauth?client_id=124024574287414&scope=email&response_type=token&redirect_uri=https%3A%2F%2Fwww.instagram.com%2Faccounts%2Fsignup%2F"));
         }
     }

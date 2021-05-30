@@ -23,9 +23,6 @@ namespace InstagramAPI.Classes.Core
         [JsonProperty]
         public BaseUser LoggedInUser { get; internal set; }
 
-        [JsonProperty]
-        public string RankToken { get; internal set; }
-
         [JsonIgnore]
         public string CsrfToken
         {
@@ -46,6 +43,9 @@ namespace InstagramAPI.Classes.Core
         [JsonProperty]
         public string FacebookAccessToken { get; internal set; } = string.Empty;
 
+        [JsonProperty]
+        public string AuthenticationToken { get; internal set; } = string.Empty;
+
         [JsonProperty(ItemConverterType = typeof(HttpCookieConverter))]
         internal List<HttpCookie> Cookies { get; set; }
 
@@ -63,7 +63,6 @@ namespace InstagramAPI.Classes.Core
             {
                 ["Username"] = Username,
                 ["Password"] = Password,
-                ["RankToken"] = RankToken,
                 ["FacebookUserId"] = FacebookUserId,
                 ["FacebookAccessToken"] = FacebookAccessToken,
                 ["LoggedInUser.IsVerified"] = LoggedInUser.IsVerified,
@@ -84,7 +83,6 @@ namespace InstagramAPI.Classes.Core
             if (composite == null) return;
             Username = (string)composite["Username"];
             Password = (string)composite["Password"];
-            RankToken = (string)composite["RankToken"];
             FacebookUserId = (string)composite["FacebookUserId"];
             FacebookAccessToken = (string)composite["FacebookAccessToken"];
             LoggedInUser = new BaseUser

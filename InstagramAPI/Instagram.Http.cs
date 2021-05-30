@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.Web.Http;
 using Windows.Web.Http.Filters;
+using Windows.Web.Http.Headers;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
@@ -30,6 +31,25 @@ namespace InstagramAPI
             defaultHeaders.TryAdd("X-Ig-Connection-Type", "WIFI");
             defaultHeaders.TryAdd("X-Ig-App-ID", "567067343352427");
             defaultHeaders.TryAdd("X-Fb-Http-Engine", "Liger");
+
+            var loggedInUser = Session.LoggedInUser;
+            if (loggedInUser != null && loggedInUser.Pk != default)
+            {
+                defaultHeaders.TryAdd("Ig-Intended-User-Id", loggedInUser.Pk.ToString());
+                defaultHeaders.TryAdd("Ig-U-Ds-User-Id", loggedInUser.Pk.ToString());
+            }
+
+            var authenticationToken = Session.AuthenticationToken;
+            if (!string.IsNullOrEmpty(authenticationToken))
+            {
+                defaultHeaders.Authorization = HttpCredentialsHeaderValue.Parse(authenticationToken);
+            }
+        }
+
+        private static string GetAuthToken(HttpResponseHeaderCollection headers)
+        {
+            headers.TryGetValue("Ig-Set-Authorization", out var token);
+            return token;
         }
 
         public static string GetCsrfToken()
