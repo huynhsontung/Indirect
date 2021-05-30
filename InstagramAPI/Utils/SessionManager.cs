@@ -30,10 +30,10 @@ namespace InstagramAPI.Utils
             set => LocalSettings.Values["IsUserAuthenticated"] = value;
         }
 
-        public static string SessionUsername
+        public static string LastSessionName
         {
-            get => (string)LocalSettings.Values["SessionUsername"];
-            set => LocalSettings.Values["SessionUsername"] = value;
+            get => (string)LocalSettings.Values["LastSessionName"];
+            set => LocalSettings.Values["LastSessionName"] = value;
         }
 
         public static async Task SaveSessionAsync(UserSessionData session)
@@ -74,7 +74,7 @@ namespace InstagramAPI.Utils
 
         public static Task<UserSessionData> TryLoadLastSessionAsync()
         {
-            return string.IsNullOrEmpty(SessionUsername) ? TryLoadFirstSessionAsync() : TryLoadSessionAsync(SessionUsername);
+            return string.IsNullOrEmpty(LastSessionName) ? TryLoadFirstSessionAsync() : TryLoadSessionAsync(LastSessionName);
         }
 
         public static async Task<UserSessionData> TryLoadSessionAsync(string sessionName)

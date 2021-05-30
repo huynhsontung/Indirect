@@ -12,8 +12,6 @@ namespace InstagramAPI.Classes.Core
 {
     public class UserSessionData
     {
-        private string _csrfToken;
-
         [JsonProperty]
         public string Username { get; internal set; }
 
@@ -24,27 +22,19 @@ namespace InstagramAPI.Classes.Core
         public BaseUser LoggedInUser { get; internal set; }
 
         [JsonIgnore]
-        public string CsrfToken
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_csrfToken))
-                    _csrfToken = Instagram.GetCsrfToken();
-                return _csrfToken;
-            }
-        }
+        public string CsrfToken => Instagram.GetCsrfToken();
 
         /// <summary>
         ///     Only for facebook login
         /// </summary>
         [JsonProperty]
-        public string FacebookUserId { get; internal set; } = string.Empty;
+        public string FacebookUserId { get; internal set; }
 
         [JsonProperty]
-        public string FacebookAccessToken { get; internal set; } = string.Empty;
+        public string FacebookAccessToken { get; internal set; }
 
         [JsonProperty]
-        public string AuthorizationToken { get; internal set; } = string.Empty;
+        public string AuthorizationToken { get; internal set; }
 
         [JsonProperty(ItemConverterType = typeof(HttpCookieConverter))]
         internal List<HttpCookie> Cookies { get; set; }
@@ -65,6 +55,7 @@ namespace InstagramAPI.Classes.Core
                 ["Password"] = Password,
                 ["FacebookUserId"] = FacebookUserId,
                 ["FacebookAccessToken"] = FacebookAccessToken,
+                ["AuthorizationToken"] = AuthorizationToken,
                 ["LoggedInUser.IsVerified"] = LoggedInUser.IsVerified,
                 ["LoggedInUser.IsPrivate"] = LoggedInUser.IsPrivate,
                 ["LoggedInUser.Pk"] = LoggedInUser.Pk,
@@ -85,6 +76,7 @@ namespace InstagramAPI.Classes.Core
             Password = (string)composite["Password"];
             FacebookUserId = (string)composite["FacebookUserId"];
             FacebookAccessToken = (string)composite["FacebookAccessToken"];
+            AuthorizationToken = (string) composite["AuthorizationToken"];
             LoggedInUser = new BaseUser
             {
                 IsVerified = (bool)composite["LoggedInUser.IsVerified"],
@@ -96,13 +88,7 @@ namespace InstagramAPI.Classes.Core
                 FullName = (string)composite["LoggedInUser.FullName"]
             };
 
-            //var activeSessionName = SessionManager.SessionUsername;
-            //if (string.IsNullOrEmpty(activeSessionName))
-            //{
-            //    return;
-            //}
-
-            //var test = await SessionManager.TryLoadSessionAsync(activeSessionName);
+            //var test = SessionManager.TryLoadLastSessionAsync();
         }
 
         public static UserSessionData CreateFromAppSettings()

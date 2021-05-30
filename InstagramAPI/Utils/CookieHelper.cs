@@ -40,7 +40,6 @@ namespace InstagramAPI.Utils
 
             var cookiesList = new List<HttpCookie>();
             cookiesList.AddRange(cookieManager.GetCookies(UriCreator.BaseInstagramUri));
-            cookiesList.AddRange(cookieManager.GetCookies(new Uri("https://www.instagram.com/")));
             cookiesList.AddRange(cookieManager.GetCookies(new Uri("https://www.facebook.com/")));
 
             return cookiesList;

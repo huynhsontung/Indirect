@@ -472,7 +472,7 @@ namespace InstagramAPI
         {
             IsUserAuthenticatedPersistent = IsUserAuthenticated;
             SessionManager.IsUserAuthenticated = IsUserAuthenticated;
-            SessionManager.SessionUsername = Session.Username;
+            SessionManager.LastSessionName = Session.Username;
             if (!IsUserAuthenticated)
             {
                 CookieHelper.ClearCookies();
