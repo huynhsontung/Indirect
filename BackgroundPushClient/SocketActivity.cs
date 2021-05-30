@@ -79,6 +79,9 @@ namespace BackgroundPushClient
             }
             catch (Exception e)
             {
+#if DEBUG
+                Utils.PopMessageToast($"[{details.Reason}] {e}");
+#endif
                 DebugLogger.LogException(e, properties: new Dictionary<string, string>
                 {
                     {"SocketActivityTriggerReason", details.Reason.ToString()}
