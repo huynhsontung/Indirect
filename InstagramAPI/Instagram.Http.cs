@@ -39,10 +39,11 @@ namespace InstagramAPI
                 defaultHeaders.TryAdd("Ig-U-Ds-User-Id", loggedInUser.Pk.ToString());
             }
 
-            var authenticationToken = Session.AuthenticationToken;
-            if (!string.IsNullOrEmpty(authenticationToken))
+            var authorizationToken = Session.AuthorizationToken;
+            if (!string.IsNullOrEmpty(authorizationToken))
             {
-                defaultHeaders.Authorization = HttpCredentialsHeaderValue.Parse(authenticationToken);
+                defaultHeaders.Authorization =
+                    new HttpCredentialsHeaderValue("Bearer", Session.AuthorizationToken.Substring(7));
             }
         }
 

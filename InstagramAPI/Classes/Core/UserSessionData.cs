@@ -44,7 +44,7 @@ namespace InstagramAPI.Classes.Core
         public string FacebookAccessToken { get; internal set; } = string.Empty;
 
         [JsonProperty]
-        public string AuthenticationToken { get; internal set; } = string.Empty;
+        public string AuthorizationToken { get; internal set; } = string.Empty;
 
         [JsonProperty(ItemConverterType = typeof(HttpCookieConverter))]
         internal List<HttpCookie> Cookies { get; set; }

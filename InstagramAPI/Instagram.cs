@@ -187,7 +187,7 @@ namespace InstagramAPI
                 }
 
                 IsUserAuthenticated = true;
-                Session.AuthenticationToken = GetAuthToken(response.Headers);
+                Session.AuthorizationToken = GetAuthToken(response.Headers);
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
                 SetDefaultRequestHeaders();
@@ -310,7 +310,7 @@ namespace InstagramAPI
                 if (loginInfoUser == null) return Result<LoginResult>.Fail(LoginResult.Exception, json: json);
 
                 IsUserAuthenticated = true;
-                Session.AuthenticationToken = GetAuthToken(response.Headers);
+                Session.AuthorizationToken = GetAuthToken(response.Headers);
                 Session.LoggedInUser = loginInfoUser;
                 Session.FacebookUserId = fbUserId;
                 Session.Username = loginInfoUser.Username;
@@ -373,7 +373,7 @@ namespace InstagramAPI
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
                 IsUserAuthenticated = true;
-                Session.AuthenticationToken = GetAuthToken(response.Headers);
+                Session.AuthorizationToken = GetAuthToken(response.Headers);
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
                 TwoFactorInfo = null;
