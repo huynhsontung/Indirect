@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.Web.Http;
 using Windows.Web.Http.Filters;
-using InstagramAPI.Classes;
+using InstagramAPI.Classes.Core;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,15 +19,17 @@ namespace InstagramAPI
         private void SetDefaultRequestHeaders()
         {
             var defaultHeaders = _httpClient.DefaultRequestHeaders;
-            defaultHeaders.Connection.TryParseAdd("Keep-Alive");
+            defaultHeaders.Clear();
             defaultHeaders.UserAgent.TryParseAdd(Device.UserAgent);
             defaultHeaders.AcceptEncoding.TryParseAdd("gzip, deflate");
-            defaultHeaders.Accept.TryParseAdd("*/*");
             defaultHeaders.AcceptLanguage.TryParseAdd("en-US");
-            defaultHeaders.TryAdd("X-IG-Capabilities", "3brTBw==");
-            defaultHeaders.TryAdd("X-IG-Connection-Type", "WIFI");
-            defaultHeaders.TryAdd("X-IG-App-ID", "567067343352427");
-            defaultHeaders.TryAdd("X-FB-HTTP-Engine", "Liger");
+            defaultHeaders.TryAdd("X-Ig-Android-Id", Device.DeviceId);
+            defaultHeaders.TryAdd("X-Ig-App-Locale", "en_US");
+            defaultHeaders.TryAdd("X-Ig-Timezone-Offset", ((int) DateTimeOffset.Now.Offset.TotalSeconds).ToString());
+            defaultHeaders.TryAdd("X-Ig-Capabilities", ApiVersion.Current.Capabilities);
+            defaultHeaders.TryAdd("X-Ig-Connection-Type", "WIFI");
+            defaultHeaders.TryAdd("X-Ig-App-ID", "567067343352427");
+            defaultHeaders.TryAdd("X-Fb-Http-Engine", "Liger");
         }
 
         public static string GetCsrfToken()
@@ -75,45 +77,5 @@ namespace InstagramAPI
             //request.Properties.Add("ig_sig_key_version", "4");
             return request;
         }
-
-        // private static async Task<IHttpContent> DecompressHttpContent(IHttpContent content)
-        // {
-        //     var encoding = content.Headers.ContentEncoding;
-        //     var isGzip = encoding.Contains(new HttpContentCodingHeaderValue("gzip"));
-        //     var isDeflate = encoding.Contains(new HttpContentCodingHeaderValue("deflate"));
-        //     if (!isGzip && !isDeflate && encoding.Count != 0)
-        //     {
-        //         throw new ArgumentException("DecompressHttpContent: Compression type not supported.");
-        //     }
-        //
-        //     if (encoding.Count == 0)
-        //     {
-        //         return content;
-        //     }
-        //
-        //     var decompressed = new InMemoryRandomAccessStream();
-        //     var data = await content.ReadAsInputStreamAsync();
-        //     if (isDeflate)
-        //     {
-        //         using (var deflateStream = new DeflateStream(data.AsStreamForRead(), CompressionMode.Decompress))
-        //         {
-        //             await deflateStream.CopyToAsync(decompressed.AsStreamForWrite()).ConfigureAwait(false);
-        //         }
-        //     }
-        //     else if (isGzip)
-        //     {
-        //         using (var gzipStream = new GZipStream(data.AsStreamForRead(), CompressionMode.Decompress))
-        //         {
-        //             await gzipStream.CopyToAsync(decompressed.AsStreamForWrite()).ConfigureAwait(false);
-        //         }
-        //     }
-        //
-        //     decompressed.Seek(0);
-        //     var newContent = new HttpStreamContent(decompressed);
-        //     newContent.Headers.ContentType = content.Headers.ContentType;
-        //     newContent.Headers.ContentLanguage.ParseAdd(content.Headers.ContentLanguage.ToString());
-        //     newContent.Headers.ContentLength = decompressed.Size;
-        //     return newContent;
-        // }
     }
 }
