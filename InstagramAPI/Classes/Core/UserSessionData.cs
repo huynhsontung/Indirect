@@ -12,6 +12,10 @@ namespace InstagramAPI.Classes.Core
 {
     public class UserSessionData
     {
+        [JsonIgnore] public string CsrfToken => Instagram.GetCsrfToken();
+
+        [JsonIgnore] public bool IsAuthenticated => LoggedInUser?.Pk > 0;
+
         [JsonProperty]
         public string Username { get; internal set; }
 
@@ -20,9 +24,6 @@ namespace InstagramAPI.Classes.Core
 
         [JsonProperty]
         public BaseUser LoggedInUser { get; internal set; }
-
-        [JsonIgnore]
-        public string CsrfToken => Instagram.GetCsrfToken();
 
         /// <summary>
         ///     Only for facebook login

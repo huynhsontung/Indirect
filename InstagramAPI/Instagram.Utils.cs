@@ -8,27 +8,13 @@ namespace InstagramAPI
 {
     public partial class Instagram
     {
-        private void ValidateUser()
-        {
-            if ((string.IsNullOrEmpty(Session.Username) || string.IsNullOrEmpty(Session.Password)) &&
-                string.IsNullOrEmpty(Session.FacebookAccessToken))
-                throw new ArgumentException("user name and password or access token must be specified");
-        }
 
-        private async void ValidateLoggedIn()
+        private void ValidateLoggedIn()
         {
-            try
+            if (!IsUserAuthenticated)
             {
-                ValidateUser();
-                if (!IsUserAuthenticated)
-                    throw new ArgumentException("user must be authenticated");
-            }
-            catch (ArgumentException)
-            {
-                // Saved data may be corrupted. Force logout.
-                IsUserAuthenticated = false;
-                await SaveToAppSettings();  // TODO: change to explicit delete once SessionManager is stable
-                throw;
+                IsUserAuthenticatedPersistent = IsUserAuthenticated;
+                throw new ArgumentException("user must be authenticated");
             }
         }
 

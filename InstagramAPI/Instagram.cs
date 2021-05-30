@@ -35,7 +35,7 @@ namespace InstagramAPI
             private set => LocalSettings.Values["_isUserAuthenticated"] = value;
         }
 
-        public bool IsUserAuthenticated { get; private set; }
+        public bool IsUserAuthenticated => Session?.IsAuthenticated ?? false;
         public UserSessionData Session { get; private set; }
         public AndroidDevice Device { get; }
         public PushClient PushClient { get; }
@@ -52,12 +52,11 @@ namespace InstagramAPI
             DebugLogger.LogLevel = LogLevel.All;
 #endif
             _apiRequestMessage = new ApiRequestMessage(this);
-            IsUserAuthenticated = IsUserAuthenticatedPersistent;
             Device = AndroidDevice.GetRandomAndroidDevice();
             Session = new UserSessionData();
 
             var fbnsConnectionData = new FbnsConnectionData();
-            if (IsUserAuthenticated)
+            if (IsUserAuthenticatedPersistent)
             {
                 fbnsConnectionData.LoadFromAppSettings();
             }
@@ -66,7 +65,7 @@ namespace InstagramAPI
             SyncClient = new SyncClient(this);
             DirectItemConverter.InstagramInstance = this;
 
-            if (IsUserAuthenticated)
+            if (IsUserAuthenticatedPersistent)
             {
                 Session.LoadFromAppSettings();
                 Device = AndroidDevice.CreateFromAppSettings();
@@ -80,11 +79,9 @@ namespace InstagramAPI
 #if DEBUG
             DebugLogger.LogLevel = LogLevel.All;
 #endif
-            IsUserAuthenticated = SessionManager.IsUserAuthenticated;
             _apiRequestMessage = new ApiRequestMessage(this);
             if (session == null)
             {
-                IsUserAuthenticated = false;
                 session = new UserSessionData
                 {
                     Device = AndroidDevice.GetRandomAndroidDevice(), PushData = new FbnsConnectionData()
@@ -186,7 +183,6 @@ namespace InstagramAPI
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
 
-                IsUserAuthenticated = true;
                 Session.AuthorizationToken = GetAuthToken(response.Headers);
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
@@ -309,7 +305,6 @@ namespace InstagramAPI
 
                 if (loginInfoUser == null) return Result<LoginResult>.Fail(LoginResult.Exception, json: json);
 
-                IsUserAuthenticated = true;
                 Session.AuthorizationToken = GetAuthToken(response.Headers);
                 Session.LoggedInUser = loginInfoUser;
                 Session.FacebookUserId = fbUserId;
@@ -372,7 +367,7 @@ namespace InstagramAPI
                 {
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
-                IsUserAuthenticated = true;
+
                 Session.AuthorizationToken = GetAuthToken(response.Headers);
                 Session.Username = loginInfo.User.Username;
                 Session.LoggedInUser = loginInfo.User;
@@ -393,10 +388,10 @@ namespace InstagramAPI
         /// </summary>
         public async void Logout()
         {
-            IsUserAuthenticated = false;
             //await SessionManager.TryRemoveSessionAsync(Session.Username); // TODO: uncomment once SessionManager is stable
             SyncClient.Shutdown();
             PushClient.UnregisterTasks();
+            Session.LoggedInUser = null;
             await SaveToAppSettings();
             PushClient.Shutdown();
             PushClient.ConnectionData.Clear();
