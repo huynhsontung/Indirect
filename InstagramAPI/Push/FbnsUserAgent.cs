@@ -18,8 +18,8 @@ namespace InstagramAPI.Push
             var fields = new Dictionary<string, string>
             {
                 {"FBAN", appName},
-                {"FBAV", ApiVersion.CurrentApiVersion.AppVersion},
-                {"FBBV", ApiVersion.CurrentApiVersion.AppVersionCode},
+                {"FBAV", ApiVersion.Current.AppVersion},
+                {"FBBV", ApiVersion.Current.AppVersionCode},
                 {"FBDM",
                     $"{{density={Math.Round(device.Dpi / 160f, 1):F1},width={device.ScreenResolution.Width},height={device.ScreenResolution.Height}}}"
                 },

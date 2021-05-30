@@ -155,7 +155,7 @@ namespace InstagramAPI.Classes.Core
         /// <summary>
         ///     This property has data for signed requests. Changing this leads to changes in request handling of all the processors.
         /// </summary>
-        public static ApiVersion CurrentApiVersion { get; set; } = GetApiVersion(ApiVersionNumber.Latest);
+        public static ApiVersion Current { get; set; } = GetApiVersion(ApiVersionNumber.Latest);
 
         public string SignatureKey { get; set; }
         public string AppVersion { get; set; }
