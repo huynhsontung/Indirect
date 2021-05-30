@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Linq;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
@@ -50,6 +51,7 @@ namespace Indirect.Controls
         private void TwoFactorAuthDialog_OnOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
         {
             ErrorMessage = string.Empty;
+            CodeBox.Focus(FocusState.Programmatic);
         }
 
         private void CodeBox_OnTextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
