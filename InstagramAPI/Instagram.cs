@@ -20,24 +20,13 @@ using HttpClient = Windows.Web.Http.HttpClient;
 using HttpMethod = Windows.Web.Http.HttpMethod;
 using HttpRequestMessage = Windows.Web.Http.HttpRequestMessage;
 using InstagramAPI.Classes.Core;
+using InstagramAPI.Classes.JsonConverters;
 
 namespace InstagramAPI
 {
     public partial class Instagram
     {
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
-        private static bool _initialized;
-        private static Instagram _instance;
-
-        public static Instagram Instance
-        {
-            get
-            {
-                if (_instance != null) return _instance;
-                _instance = new Instagram();
-                return _instance;
-            }
-        }
 
         // TODO: Remove IsUserAuthenticatedPersistent to use SessionManager instead
         public static bool IsUserAuthenticatedPersistent
@@ -48,8 +37,8 @@ namespace InstagramAPI
 
         public bool IsUserAuthenticated { get; private set; }
         public UserSessionData Session { get; private set; }
-        public AndroidDevice Device { get; private set; }
-        public PushClient PushClient { get; private set; }
+        public AndroidDevice Device { get; }
+        public PushClient PushClient { get; }
         public SyncClient SyncClient { get; }
         public TwoFactorLoginInfo TwoFactorInfo { get; private set; }  // Only used when login returns two factor
         public ChallengeLoginInfo ChallengeInfo { get; private set; }  // Only used when login returns challenge
@@ -57,7 +46,7 @@ namespace InstagramAPI
         private readonly HttpClient _httpClient = new HttpClient();
         private readonly ApiRequestMessage _apiRequestMessage;
 
-        private Instagram()
+        public Instagram()
         {
 #if DEBUG
             DebugLogger.LogLevel = LogLevel.All;
@@ -66,7 +55,6 @@ namespace InstagramAPI
             IsUserAuthenticated = IsUserAuthenticatedPersistent;
             Device = AndroidDevice.GetRandomAndroidDevice();
             Session = new UserSessionData();
-            SetDefaultRequestHeaders();
 
             var fbnsConnectionData = new FbnsConnectionData();
             if (IsUserAuthenticated)
@@ -76,40 +64,40 @@ namespace InstagramAPI
 
             PushClient = new PushClient(this, fbnsConnectionData);
             SyncClient = new SyncClient(this);
+            DirectItemConverter.InstagramInstance = this;
 
-            if (!IsUserAuthenticated) return;
-            Session.LoadFromAppSettings();
-            Device = AndroidDevice.CreateFromAppSettings();
+            if (IsUserAuthenticated)
+            {
+                Session.LoadFromAppSettings();
+                Device = AndroidDevice.CreateFromAppSettings();
+            }
+
             SetDefaultRequestHeaders();
         }
 
-        public async Task InitializeAsync()
+        public Instagram(UserSessionData session)
         {
-            if (_initialized)
-            {
-                return;
-            }
-
-            _initialized = true;
-            var session = await SessionManager.TryLoadLastSessionAsync();
+#if DEBUG
+            DebugLogger.LogLevel = LogLevel.All;
+#endif
+            IsUserAuthenticated = SessionManager.IsUserAuthenticated;
+            _apiRequestMessage = new ApiRequestMessage(this);
             if (session == null)
             {
-                return;
+                IsUserAuthenticated = false;
+                session = new UserSessionData
+                {
+                    Device = AndroidDevice.GetRandomAndroidDevice(), PushData = new FbnsConnectionData()
+                };
             }
 
             Session = session;
+            Device = session.Device;
+            PushClient = new PushClient(this, session.PushData);
+            SyncClient = new SyncClient(this);
+            DirectItemConverter.InstagramInstance = this;
 
-            if (session.Device != null)
-            {
-                Device = session.Device;
-                SetDefaultRequestHeaders();
-            }
-
-            if (session.PushData != null)
-            {
-                PushClient?.Shutdown();
-                PushClient = new PushClient(this, session.PushData);
-            }
+            SetDefaultRequestHeaders();
         }
 
         /// <summary>

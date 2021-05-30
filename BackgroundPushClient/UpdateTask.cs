@@ -28,7 +28,7 @@ namespace BackgroundPushClient
                     return;
                 }
 
-                var instagram = Instagram.Instance;
+                var instagram = new Instagram();
                 if (instagram.IsUserAuthenticated && !PushClient.TasksRegistered())
                 {
                     instagram.PushClient.MessageReceived += Utils.OnMessageReceived;

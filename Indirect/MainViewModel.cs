@@ -37,7 +37,7 @@ namespace Indirect
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public Instagram InstaApi { get; } = Instagram.Instance;
+        public Instagram InstaApi { get; }
         public bool BackgroundSyncLocked => _lockFile != null;
         public bool StartedFromMainView { get; set; }
         public PushClient PushClient => InstaApi.PushClient;
@@ -66,6 +66,7 @@ namespace Indirect
 
         public MainViewModel()
         {
+            InstaApi = new Instagram(); // TODO: create a method to initialize Instagram with a session instead
             Inbox = new InboxWrapper(this);
             //PendingInbox = new InboxWrapper(this, true);
             ChatService = new ChatService(InstaApi);

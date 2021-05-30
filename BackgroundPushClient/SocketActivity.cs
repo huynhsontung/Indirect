@@ -31,7 +31,7 @@ namespace BackgroundPushClient
                     return;
                 }
 
-                var instagram = Instagram.Instance;
+                var instagram = new Instagram();
                 instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
                 switch (details.Reason)
                 {

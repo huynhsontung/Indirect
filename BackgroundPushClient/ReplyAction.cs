@@ -17,7 +17,7 @@ namespace BackgroundPushClient
 #if !DEBUG
             AppCenter.Start(Secrets.APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
 #endif
-            var instagram = Instagram.Instance;
+            var instagram = new Instagram();
             var deferral = taskInstance.GetDeferral();
             try
             {

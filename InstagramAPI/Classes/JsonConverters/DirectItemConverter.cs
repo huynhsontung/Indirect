@@ -9,6 +9,8 @@ namespace InstagramAPI.Classes.JsonConverters
 {
     public class DirectItemConverter : JsonConverter<DirectItem>
     {
+        public static Instagram InstagramInstance { get; set; }
+
         public override void WriteJson(JsonWriter writer, DirectItem value, JsonSerializer serializer)
         {
             throw new NotImplementedException();
@@ -33,7 +35,7 @@ namespace InstagramAPI.Classes.JsonConverters
                 : JObject.Load(reader);
             var rawJson = itemJson.ToString(Formatting.None);
             var itemSender = itemJson["user_id"]?.ToObject<long>(serializer) ?? 0;
-            var viewerPk = Instagram.Instance.Session.LoggedInUser.Pk;
+            var viewerPk = InstagramInstance.Session.LoggedInUser.Pk;
             var item = itemJson.ToObject<DirectItem>(serializer);
             item.RawJson = rawJson;
             item.FromMe = itemSender == viewerPk;
