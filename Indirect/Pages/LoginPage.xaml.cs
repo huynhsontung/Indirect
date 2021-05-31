@@ -73,24 +73,22 @@ namespace Indirect.Pages
             {
                 // Uri looks like this: https://www.instagram.com/accounts/signup/?#access_token=...
                 WebviewPopup.IsOpen = false;
-                
+
                 if (_loading) return;
                 DisableButtons();
                 try
                 {
                     var query = args.Uri.Fragment.Substring(1); // turn fragment into query (remove the '#')
                     var urlParams = new WwwFormUrlDecoder(query);
-                    var fbToken = urlParams.GetFirstValueByName("access_token");
-                    if (string.IsNullOrEmpty(fbToken))
+                    if (query.Contains("access_token="))
                     {
-                        await ShowLoginErrorDialog("Failed to acquire access token");
-                        return;
-                    }
-
-                    var result = await ViewModel.LoginWithFacebook(fbToken).ConfigureAwait(true);
-                    if (!result.IsSucceeded)
-                    {
-                        if (result.Value == LoginResult.TwoFactorRequired)
+                        var fbToken = urlParams.GetFirstValueByName("access_token");
+                        var result = await ViewModel.LoginWithFacebook(fbToken).ConfigureAwait(true);
+                        if (result.IsSucceeded)
+                        {
+                            await TryNavigateToMainPage();
+                        }
+                        else if (result.Value == LoginResult.TwoFactorRequired)
                         {
                             await TwoFactorAuthAsync();
                         }
@@ -98,15 +96,19 @@ namespace Indirect.Pages
                         {
                             await ShowLoginErrorDialog(result.Message);
                         }
-                        return;
                     }
-
-                    await TryNavigateToMainPage();
+                    else
+                    {
+                        var errorMessage = query.Contains("error_reason=")
+                            ? urlParams.GetFirstValueByName("error_reason")
+                            : "Failed to acquire access token. Please try again later or log in with an Instagram account instead.";
+                        await ShowLoginErrorDialog(errorMessage);
+                    }
                 }
                 catch (Exception e)
                 {
                     await ShowLoginErrorDialog(
-                        "Unexpected error occurred while logging in with Facebook. Please try again later or log in with Instagram account instead.");
+                        "Unexpected error occurred while logging in with Facebook. Please try again later or log in with an Instagram account instead.");
                     DebugLogger.LogException(e, properties: new Dictionary<string, string>
                     {
                         {"Uri", args.Uri.ToString().StripSensitive()}
@@ -127,7 +129,7 @@ namespace Indirect.Pages
 
         private void TextBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
-            if(e.Key == Windows.System.VirtualKey.Enter)
+            if (e.Key == Windows.System.VirtualKey.Enter)
                 LoginButton_Click(sender, e);
         }
 
@@ -236,10 +238,7 @@ namespace Indirect.Pages
 
         private async Task TryNavigateToMainPage()
         {
-            if ((string.IsNullOrEmpty(ViewModel.InstaApi.Session.Username) ||
-                 string.IsNullOrEmpty(ViewModel.InstaApi.Session.Password)) &&
-                string.IsNullOrEmpty(ViewModel.InstaApi.Session.FacebookAccessToken) ||
-                !ViewModel.InstaApi.IsUserAuthenticated)
+            if (!ViewModel.InstaApi.IsUserAuthenticated)
             {
                 await ShowLoginErrorDialog("Something went wrong. Please try again later.");
                 DebugLogger.LogException(new Exception("Try to navigate to MainPage but user validation failed"));
