@@ -22,7 +22,6 @@ namespace InstagramAPI.Utils
 
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
         private static readonly StorageFolder LocalFolder = ApplicationData.Current.LocalFolder;
-        private static readonly HttpClient HttpClient = new HttpClient();
 
         public static bool IsUserAuthenticated
         {
@@ -36,8 +35,9 @@ namespace InstagramAPI.Utils
             set => LocalSettings.Values["LastSessionName"] = value;
         }
 
-        public static async Task SaveSessionAsync(UserSessionData session)
+        public static async Task SaveSessionAsync(Instagram instagram)
         {
+            var session = instagram.Session;
             if (string.IsNullOrEmpty(session.Username))
             {
                 return;
@@ -58,7 +58,7 @@ namespace InstagramAPI.Utils
                     return;
                 }
 
-                var response = await HttpClient.GetAsync(pfpUrl);
+                var response = await instagram.GetAsync(pfpUrl);
                 if (response.IsSuccessStatusCode)
                 {
                     var pfpData = await response.Content.ReadAsBufferAsync();

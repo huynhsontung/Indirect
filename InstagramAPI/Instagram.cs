@@ -28,6 +28,8 @@ namespace InstagramAPI
     {
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
 
+        public static Instagram Current { get; private set; }
+
         // TODO: Remove IsUserAuthenticatedPersistent to use SessionManager instead
         public static bool IsUserAuthenticatedPersistent
         {
@@ -51,6 +53,7 @@ namespace InstagramAPI
 #if DEBUG
             DebugLogger.LogLevel = LogLevel.All;
 #endif
+            Current = this;
             _apiRequestMessage = new ApiRequestMessage(this);
             Device = AndroidDevice.GetRandomAndroidDevice();
             Session = new UserSessionData();
@@ -63,7 +66,6 @@ namespace InstagramAPI
 
             PushClient = new PushClient(this, fbnsConnectionData);
             SyncClient = new SyncClient(this);
-            DirectItemConverter.InstagramInstance = this;
 
             if (IsUserAuthenticatedPersistent)
             {
@@ -79,6 +81,7 @@ namespace InstagramAPI
 #if DEBUG
             DebugLogger.LogLevel = LogLevel.All;
 #endif
+            Current = this;
             _apiRequestMessage = new ApiRequestMessage(this);
             if (session == null)
             {
@@ -92,7 +95,6 @@ namespace InstagramAPI
             Device = session.Device;
             PushClient = new PushClient(this, session.PushData);
             SyncClient = new SyncClient(this);
-            DirectItemConverter.InstagramInstance = this;
 
             SetDefaultRequestHeaders();
         }
@@ -479,7 +481,7 @@ namespace InstagramAPI
                 Session.Cookies = CookieHelper.GetCookies();
                 Session.PushData = PushClient.ConnectionData;
                 Session.Device = Device;
-                await SessionManager.SaveSessionAsync(Session);
+                await SessionManager.SaveSessionAsync(this);
                 Session.SaveToAppSettings();
                 PushClient.ConnectionData.SaveToAppSettings();
             }
