@@ -57,7 +57,18 @@ namespace InstagramAPI.Utils
         {
             if (LogLevel < LogLevel.Response) return;
             Write($"Response: {response.RequestMessage.Method} {response.RequestMessage.RequestUri} [{response.StatusCode}]");
-            WriteContent(response.Content, Formatting.None, 0);
+            var mediaType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
+            bool isAudio = mediaType.Contains("audio");
+            bool isVideo = mediaType.Contains("video");
+            bool isImage = mediaType.Contains("image");
+            if (isAudio || isVideo || isImage)
+            {
+                Write($"ContentType: {response.Content.Headers.ContentType}");
+            }
+            else
+            {
+                WriteContent(response.Content, Formatting.None, 0);
+            }
         }
 
         public static void LogException(Exception ex, bool track = true, Dictionary<string, string> properties = null)

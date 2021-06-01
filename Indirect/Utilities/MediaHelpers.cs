@@ -52,11 +52,10 @@ namespace Indirect.Utilities
             if (saveFile != null)
             {
                 CachedFileManager.DeferUpdates(saveFile);
-                var client = new HttpClient();
-                var response = await client.TryGetAsync(url);
-                if (response.Succeeded)
+                var response = await ((App) App.Current).ViewModel.InstaApi.GetAsync(url);
+                if (response.IsSuccessStatusCode)
                 {
-                    var content = await response.ResponseMessage.Content.ReadAsBufferAsync();
+                    var content = await response.Content.ReadAsBufferAsync();
                     await FileIO.WriteBufferAsync(saveFile, content);
                 }
 
