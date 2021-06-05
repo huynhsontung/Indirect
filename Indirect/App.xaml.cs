@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Navigation;
 using Indirect.Pages;
 using Indirect.Utilities;
 using InstagramAPI;
+using InstagramAPI.Classes.Core;
 using InstagramAPI.Utils;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
@@ -80,6 +81,8 @@ namespace Indirect
 
         private async void OnLaunchedOrActivated(IActivatedEventArgs e)
         {
+            await ViewModel.Initialize();
+
             if (e is ContactPanelActivatedEventArgs cpEventArgs)
             {
                 // Contact Panel flow
@@ -90,6 +93,7 @@ namespace Indirect
             else
             {
                 // Normal launch or activated flow
+                await ViewModel.TryAcquireSyncLock();
                 ViewModel.StartedFromMainView = true;
                 Frame rootFrame = Window.Current.Content as Frame;
 
@@ -97,7 +101,6 @@ namespace Indirect
                 // just ensure that the window is active
                 if (rootFrame == null)
                 {
-                    await ViewModel.TryAcquireSyncLock();
                     ConfigureMainView();
 
                     // Create a Frame to act as the navigation context and navigate to the first page
@@ -116,7 +119,7 @@ namespace Indirect
 
                 if (rootFrame.Content == null)
                 {
-                    rootFrame.Navigate(Instagram.IsUserAuthenticatedPersistent ? typeof(MainPage) : typeof(LoginPage));
+                    rootFrame.Navigate(ViewModel.IsUserAuthenticated ? typeof(MainPage) : typeof(LoginPage));
                 }
 
                 if (e is ToastNotificationActivatedEventArgs toastActivationArgs)
@@ -176,11 +179,11 @@ namespace Indirect
             {
                 await ViewModel.TryAcquireSyncLock();
                 ViewModel.PushClient.Start();
-                await ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt, true);
                 await ViewModel.UpdateInboxAndSelectedThread();
                 ViewModel.ReelsFeed.StartReelsFeedUpdateLoop();
             }
-            else
+
+            if (ViewModel.Inbox.SeqId > 0)
             {
                 await ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt, true);
             }
@@ -191,7 +194,7 @@ namespace Indirect
             var deferral = e.GetDeferral();
             try
             {
-                await ViewModel.SaveToAppSettings();
+                await ViewModel.SaveDataAsync();
             }
             finally
             {

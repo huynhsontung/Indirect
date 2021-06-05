@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using InstagramAPI;
+using InstagramAPI.Classes.Android;
+using InstagramAPI.Classes.Core;
 using InstagramAPI.Push;
 using InstagramAPI.Utils;
 using Microsoft.AppCenter;
@@ -28,13 +30,27 @@ namespace BackgroundPushClient
                     return;
                 }
 
-                var instagram = new Instagram();
+                var session = await SessionManager.TryLoadLastSessionAsync();
+                if (session == null && Instagram.IsUserAuthenticatedPersistent)
+                {
+                    var device = AndroidDevice.CreateFromAppSettings();
+                    var pushData = new FbnsConnectionData();
+                    pushData.LoadFromAppSettings();
+                    session = new UserSessionData(device, pushData);
+                    session.LoadFromAppSettings();
+                }
+
+                if (session == null)
+                {
+                    return;
+                }
+
+                var instagram = new Instagram(session);
                 if (instagram.IsUserAuthenticated && !PushClient.TasksRegistered())
                 {
                     instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
                     await instagram.PushClient.StartFresh();
                     await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
-                    instagram.PushClient.ConnectionData.SaveToAppSettings();
                     await instagram.PushClient.TransferPushSocket(false);
 #if DEBUG
                     Utils.PopMessageToast("Finished background tasks update.");
@@ -44,7 +60,11 @@ namespace BackgroundPushClient
                 if (instagram.IsUserAuthenticated && await Utils.TryAcquireSyncLock())
                 {
                     // Switch to file based session
-                    await instagram.SaveToAppSettings();
+                    await SessionManager.SaveSessionAsync(instagram);
+
+                    UserSessionData.RemoveFromAppSettings();
+                    AndroidDevice.RemoveFromAppSettings();
+                    FbnsConnectionData.RemoveFromAppSettings();
                 }
             }
             catch (Exception e)

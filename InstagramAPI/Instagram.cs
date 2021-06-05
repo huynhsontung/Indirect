@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Storage;
-using Windows.System;
 using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Challenge;
-using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
@@ -20,7 +18,6 @@ using HttpClient = Windows.Web.Http.HttpClient;
 using HttpMethod = Windows.Web.Http.HttpMethod;
 using HttpRequestMessage = Windows.Web.Http.HttpRequestMessage;
 using InstagramAPI.Classes.Core;
-using InstagramAPI.Classes.JsonConverters;
 
 namespace InstagramAPI
 {
@@ -30,51 +27,19 @@ namespace InstagramAPI
 
         public static Instagram Current { get; private set; }
 
-        // TODO: Remove IsUserAuthenticatedPersistent to use SessionManager instead
-        public static bool IsUserAuthenticatedPersistent
-        {
-            get => (bool?)LocalSettings.Values["_isUserAuthenticated"] ?? false;
-            private set => LocalSettings.Values["_isUserAuthenticated"] = value;
-        }
+        // TODO: Remove IsUserAuthenticatedPersistent after migration
+        public static bool IsUserAuthenticatedPersistent => (bool?)LocalSettings.Values["_isUserAuthenticated"] ?? false;
 
         public bool IsUserAuthenticated => Session?.IsAuthenticated ?? false;
         public UserSessionData Session { get; private set; }
-        public AndroidDevice Device { get; }
+        public AndroidDevice Device => Session.Device;
         public PushClient PushClient { get; }
         public SyncClient SyncClient { get; }
         public TwoFactorLoginInfo TwoFactorInfo { get; private set; }  // Only used when login returns two factor
         public ChallengeLoginInfo ChallengeInfo { get; private set; }  // Only used when login returns challenge
 
-        private readonly HttpClient _httpClient = new HttpClient();
+        private readonly HttpClient _httpClient;
         private readonly ApiRequestMessage _apiRequestMessage;
-
-        public Instagram()
-        {
-#if DEBUG
-            DebugLogger.LogLevel = LogLevel.All;
-#endif
-            Current = this;
-            _apiRequestMessage = new ApiRequestMessage(this);
-            Device = AndroidDevice.GetRandomAndroidDevice();
-            Session = new UserSessionData();
-
-            var fbnsConnectionData = new FbnsConnectionData();
-            if (IsUserAuthenticatedPersistent)
-            {
-                fbnsConnectionData.LoadFromAppSettings();
-            }
-
-            PushClient = new PushClient(this, fbnsConnectionData);
-            SyncClient = new SyncClient(this);
-
-            if (IsUserAuthenticatedPersistent)
-            {
-                Session.LoadFromAppSettings();
-                Device = AndroidDevice.CreateFromAppSettings();
-            }
-
-            SetDefaultRequestHeaders();
-        }
 
         public Instagram(UserSessionData session)
         {
@@ -82,20 +47,17 @@ namespace InstagramAPI
             DebugLogger.LogLevel = LogLevel.All;
 #endif
             Current = this;
-            _apiRequestMessage = new ApiRequestMessage(this);
             if (session == null)
             {
-                session = new UserSessionData
-                {
-                    Device = AndroidDevice.GetRandomAndroidDevice(), PushData = new FbnsConnectionData()
-                };
+                session = new UserSessionData();
             }
 
             Session = session;
-            Device = session.Device;
-            PushClient = new PushClient(this, session.PushData);
+            PushClient = new PushClient(this);
             SyncClient = new SyncClient(this);
 
+            _httpClient = new HttpClient(CookieHelper.SetCookies(session.Cookies));
+            _apiRequestMessage = new ApiRequestMessage(this);
             SetDefaultRequestHeaders();
         }
 
@@ -113,7 +75,11 @@ namespace InstagramAPI
         /// </returns>
         public async Task<Result<LoginResult>> LoginAsync(string username, string password, bool isNewLogin = true)
         {
-            Session = new UserSessionData();
+            if (Session.IsAuthenticated)
+            {
+                return Result<LoginResult>.Success(LoginResult.Success);
+            }
+
             Session.Username = username;
             Session.Password = password;
             ValidateRequestMessage();
@@ -212,7 +178,11 @@ namespace InstagramAPI
         /// </returns>
         public async Task<Result<LoginResult>> LoginWithFacebookAsync(string fbAccessToken)
         {
-            Session = new UserSessionData();
+            if (Session.IsAuthenticated)
+            {
+                return Result<LoginResult>.Success(LoginResult.Success);
+            }
+
             try
             {
                 if (string.IsNullOrEmpty(fbAccessToken)) throw new ArgumentNullException(nameof(fbAccessToken));
@@ -388,15 +358,13 @@ namespace InstagramAPI
         /// No need to clear data. If IsUserAuthenticated is false, next time when constructor is called,
         /// data will not be loaded.
         /// </summary>
-        public async void Logout()
+        public async Task Logout()
         {
-            //await SessionManager.TryRemoveSessionAsync(Session.Username); // TODO: uncomment once SessionManager is stable
+            await SessionManager.TryRemoveSessionAsync(Session);
             SyncClient.Shutdown();
-            PushClient.UnregisterTasks();
-            Session.LoggedInUser = null;
-            await SaveToAppSettings();
             PushClient.Shutdown();
-            PushClient.ConnectionData.Clear();
+            CookieHelper.ClearCookies();
+            Session = new UserSessionData(Device);
         }
 
         public async Task<bool> UpdateLoggedInUser()
@@ -462,34 +430,6 @@ namespace InstagramAPI
             {
                 DebugLogger.LogException(exception);
                 return Result<UserInfo>.Except(exception);
-            }
-        }
-
-        public async Task SaveToAppSettings()
-        {
-            IsUserAuthenticatedPersistent = IsUserAuthenticated;
-            SessionManager.IsUserAuthenticated = IsUserAuthenticated;
-            SessionManager.LastSessionName = Session.Username;
-            if (!IsUserAuthenticated)
-            {
-                CookieHelper.ClearCookies();
-            }
-
-            Device.SaveToAppSettings();
-            if (IsUserAuthenticated)
-            {
-                Session.Cookies = CookieHelper.GetCookies();
-                Session.PushData = PushClient.ConnectionData;
-                Session.Device = Device;
-                await SessionManager.SaveSessionAsync(this);
-                Session.SaveToAppSettings();
-                PushClient.ConnectionData.SaveToAppSettings();
-            }
-            else
-            {
-                await SessionManager.TryRemoveSessionAsync(Session.Username);
-                Session.RemoveFromAppSettings();
-                PushClient.ConnectionData.RemoveFromAppSettings();
             }
         }
     }

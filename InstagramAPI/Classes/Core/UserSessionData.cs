@@ -41,31 +41,25 @@ namespace InstagramAPI.Classes.Core
         internal List<HttpCookie> Cookies { get; set; }
 
         [JsonProperty]
-        internal FbnsConnectionData PushData { get; set; }
+        internal FbnsConnectionData PushData { get; }
 
         [JsonProperty]
-        internal AndroidDevice Device { get; set; }
+        internal AndroidDevice Device { get; }
 
-        public void SaveToAppSettings()
+        public UserSessionData(AndroidDevice device = null, FbnsConnectionData pushData = null)
         {
-            if (LoggedInUser == null) return;
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var composite = new Windows.Storage.ApplicationDataCompositeValue
+            if (device == null)
             {
-                ["Username"] = Username,
-                ["Password"] = Password,
-                ["FacebookUserId"] = FacebookUserId,
-                ["FacebookAccessToken"] = FacebookAccessToken,
-                ["AuthorizationToken"] = AuthorizationToken,
-                ["LoggedInUser.IsVerified"] = LoggedInUser.IsVerified,
-                ["LoggedInUser.IsPrivate"] = LoggedInUser.IsPrivate,
-                ["LoggedInUser.Pk"] = LoggedInUser.Pk,
-                ["LoggedInUser.ProfilePictureUrl"] = LoggedInUser.ProfilePictureUrl.ToString(),
-                ["LoggedInUser.ProfilePictureId"] = LoggedInUser.ProfilePictureId,
-                ["LoggedInUser.Username"] = LoggedInUser.Username,
-                ["LoggedInUser.FullName"] = LoggedInUser.FullName
-            };
-            localSettings.Values["_userSessionData"] = composite;
+                device = AndroidDevice.GetRandomAndroidDevice();
+            }
+
+            if (pushData == null)
+            {
+                pushData = new FbnsConnectionData();
+            }
+
+            Device = device;
+            PushData = pushData;
         }
 
         public void LoadFromAppSettings()
@@ -92,17 +86,7 @@ namespace InstagramAPI.Classes.Core
             //var test = SessionManager.TryLoadLastSessionAsync();
         }
 
-        public static UserSessionData CreateFromAppSettings()
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var composite = (Windows.Storage.ApplicationDataCompositeValue)localSettings.Values["_userSessionData"];
-            if (composite == null) return null;
-            var session = new UserSessionData();
-            session.LoadFromAppSettings();
-            return session;
-        }
-
-        public void RemoveFromAppSettings()
+        public static void RemoveFromAppSettings()
         {
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             localSettings.Values.Remove("_userSessionData");

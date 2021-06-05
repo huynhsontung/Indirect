@@ -37,7 +37,7 @@ namespace Indirect
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public Instagram InstaApi { get; }
+        public Instagram InstaApi { get; private set; }
         public bool BackgroundSyncLocked => _lockFile != null;
         public bool StartedFromMainView { get; set; }
         public PushClient PushClient => InstaApi.PushClient;
@@ -66,17 +66,28 @@ namespace Indirect
 
         public MainViewModel()
         {
-            InstaApi = new Instagram(); // TODO: create a method to initialize Instagram with a session instead
             Inbox = new InboxWrapper(this);
             //PendingInbox = new InboxWrapper(this, true);
-            ChatService = new ChatService(InstaApi);
+            ChatService = new ChatService(this);
             ThreadInfoPersistentDictionary.LoadFromAppSettings();
-            SubscribeHandlers();
+
+            Inbox.FirstUpdated += OnInboxFirstUpdated;
+        }
+
+        public async Task Initialize()
+        {
+            var session = await SessionManager.TryLoadLastSessionAsync() ?? new UserSessionData();
+            InstaApi = new Instagram(session);
+            RegisterSyncClientHandlers(InstaApi.SyncClient);
+            InstaApi.PushClient.MessageReceived += (sender, args) =>
+            {
+                this.Log("Background notification: " + args.Json);
+            };
         }
 
         public async Task OnLoggedIn()
         {
-            if (!InstaApi.IsUserAuthenticated) throw new Exception("User is not logged in.");
+            if (!IsUserAuthenticated) throw new Exception("User is not logged in.");
             await Inbox.ClearInbox();
             GetUserPresence();
             PushClient.Start();
@@ -110,9 +121,9 @@ namespace Indirect
         public Task<Result<LoginResult>> LoginWithFacebook(string fbAccessToken) =>
             InstaApi.LoginWithFacebookAsync(fbAccessToken);
 
-        public void Logout()
+        public async Task Logout()
         {
-            InstaApi.Logout();
+            await InstaApi.Logout();
             //await ContactsService.DeleteAllAppContacts();
             ThreadInfoPersistentDictionary.RemoveFromAppSettings();
             // TODO: Close all secondary views
@@ -328,10 +339,10 @@ namespace Indirect
             ReleaseSyncLock();
         }
 
-        public async Task SaveToAppSettings()
+        public async Task SaveDataAsync()
         {
             ThreadInfoPersistentDictionary.SaveToAppSettings();
-            await InstaApi.SaveToAppSettings();
+            await SessionManager.SaveSessionAsync(InstaApi);
         }
 
         internal async Task<bool> TryAcquireSyncLock()

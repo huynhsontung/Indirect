@@ -14,22 +14,22 @@ namespace Indirect
 {
     internal partial class MainViewModel
     {
-        void SubscribeHandlers()
+        private void RegisterSyncClientHandlers(SyncClient client)
         {
-            InstaApi.SyncClient.MessageReceived += OnMessageSyncReceived;
-            InstaApi.SyncClient.ActivityIndicatorChanged += OnActivityIndicatorChanged;
-            InstaApi.SyncClient.UserPresenceChanged += OnUserPresenceChanged;
-            InstaApi.SyncClient.FailedToStart += OnSyncClientFailedToStart;
-            Inbox.FirstUpdated += OnInboxFirstUpdated;
-            PushClient.MessageReceived += (sender, args) =>
-            {
-                this.Log("Background notification: " + args.Json);
-            };
+            client.MessageReceived -= OnMessageSyncReceived;
+            client.ActivityIndicatorChanged -= OnActivityIndicatorChanged;
+            client.UserPresenceChanged -= OnUserPresenceChanged;
+            client.FailedToStart -= OnSyncClientFailedToStart;
+
+            client.MessageReceived += OnMessageSyncReceived;
+            client.ActivityIndicatorChanged += OnActivityIndicatorChanged;
+            client.UserPresenceChanged += OnUserPresenceChanged;
+            client.FailedToStart += OnSyncClientFailedToStart;
         }
 
         private async void OnInboxFirstUpdated(int seqId, DateTimeOffset snapshotAt)
         {
-            await InstaApi.SyncClient.Start(seqId, snapshotAt, true).ConfigureAwait(false);
+            await SyncClient.Start(seqId, snapshotAt, true).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(_threadToBeOpened) && Inbox.Threads.Count > 0)
             {
                 await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>

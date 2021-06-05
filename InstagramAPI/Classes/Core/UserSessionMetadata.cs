@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace InstagramAPI.Classes.Core
 {
-    internal struct UserSessionMetadata
+    public struct UserSessionMetadata
     {
         public string Username { get; set; }
 

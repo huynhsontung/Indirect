@@ -3,6 +3,7 @@ using System.Web;
 using Windows.ApplicationModel.Background;
 using Windows.UI.Notifications;
 using InstagramAPI;
+using InstagramAPI.Classes.Core;
 using InstagramAPI.Utils;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
@@ -17,7 +18,14 @@ namespace BackgroundPushClient
 #if !DEBUG
             AppCenter.Start(Secrets.APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
 #endif
-            var instagram = new Instagram();
+            var session = await SessionManager.TryLoadLastSessionAsync();
+            if (session == null)
+            {
+                Utils.PopMessageToast("Reply failed. Account is not logged in. Tap this message to resolve this issue.");
+                return;
+            }
+
+            var instagram = new Instagram(session);
             var deferral = taskInstance.GetDeferral();
             try
             {

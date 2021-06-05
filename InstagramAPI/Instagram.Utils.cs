@@ -13,7 +13,6 @@ namespace InstagramAPI
         {
             if (!IsUserAuthenticated)
             {
-                IsUserAuthenticatedPersistent = IsUserAuthenticated;
                 throw new ArgumentException("user must be authenticated");
             }
         }

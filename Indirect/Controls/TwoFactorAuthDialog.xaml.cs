@@ -2,6 +2,7 @@
 using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using InstagramAPI.Utils;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -43,7 +44,13 @@ namespace Indirect.Controls
             {
                 args.Cancel = true;
                 ErrorMessage = result.Message;
+
+                if (result.Exception != null)
+                {
+                    DebugLogger.LogException(result.Exception);
+                }
             }
+
             this.IsPrimaryButtonEnabled = true;
             deferral.Complete();
         }

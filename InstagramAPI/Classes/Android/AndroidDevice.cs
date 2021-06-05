@@ -118,20 +118,10 @@ namespace InstagramAPI.Classes.Android
             return BuildDeviceFromString(DEVICES[randomDeviceIndex]);
         }
 
-        public void SaveToAppSettings()
+        public static void RemoveFromAppSettings()
         {
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var composite = new Windows.Storage.ApplicationDataCompositeValue
-            {
-                ["DeviceId"] = DeviceId, 
-                ["PhoneId"] = PhoneId,
-                ["Uuid"] = Uuid,
-                ["GoogleAdId"] = GoogleAdId,
-                ["RankToken"] = RankToken,
-                ["AdId"] = AdId,
-                ["_deviceString"] = DeviceString
-            };
-            localSettings.Values["_androidDevice"] = composite;
+            localSettings.Values.Remove("_androidDevice");
         }
 
         public static AndroidDevice CreateFromAppSettings()

@@ -68,14 +68,14 @@ namespace Indirect.Pages
             var confirmDialog = new ContentDialog()
             {
                 Title = "Are you sure?",
-                Content = "Logging out will delete all session data, including cached images and videos.",
+                Content = "Logging out will delete all session data. You will stop receive push notifications.",
                 CloseButtonText = "Close",
                 PrimaryButtonText = "Logout", 
                 DefaultButton = ContentDialogButton.Close
             };
             var confirmation = await confirmDialog.ShowAsync();
             if (confirmation != ContentDialogResult.Primary) return;
-            ViewModel.Logout();
+            await ViewModel.Logout();
             Frame.Navigate(typeof(LoginPage));
         }
         

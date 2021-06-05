@@ -20,11 +20,12 @@ namespace Indirect.Services
 {
     internal class ChatService
     {
-        private readonly Instagram _api;
-        
-        public ChatService(Instagram api)
+        private readonly MainViewModel _viewModel;
+        private Instagram Api => _viewModel.InstaApi;
+
+        public ChatService(MainViewModel viewModel)
         {
-            _api = api;
+            _viewModel = viewModel;
         }
 
         public async Task SendLink(DirectThreadWrapper thread, string text, List<string> links)
@@ -37,11 +38,11 @@ namespace Indirect.Services
             {
                 if (!string.IsNullOrEmpty(thread.ThreadId))
                 {
-                    await _api.SendLinkAsync(text, links, thread.ThreadId);
+                    await Api.SendLinkAsync(text, links, thread.ThreadId);
                 }
                 else
                 {
-                    await _api.SendLinkToRecipientsAsync(text, links,
+                    await Api.SendLinkToRecipientsAsync(text, links,
                         thread.Users.Select(x => x.Pk).ToArray());
                 }
             }
@@ -61,11 +62,11 @@ namespace Indirect.Services
                 Result<DirectThread[]> result;
                 if (!string.IsNullOrEmpty(thread.ThreadId))
                 {
-                    result = await _api.SendTextAsync(null, thread.ThreadId, text);
+                    result = await Api.SendTextAsync(null, thread.ThreadId, text);
                 }
                 else
                 {
-                    result = await _api.SendTextAsync(thread.Users.Select(x => x.Pk),
+                    result = await Api.SendTextAsync(thread.Users.Select(x => x.Pk),
                         null, text);
                 }
 
@@ -88,7 +89,7 @@ namespace Indirect.Services
                 {
                     return;
                 } 
-                await _api.ReplyToItemAsync(item.Item, item.Parent.ThreadId, message);
+                await Api.ReplyToItemAsync(item.Item, item.Parent.ThreadId, message);
             }
             catch (Exception)
             {
@@ -101,7 +102,7 @@ namespace Indirect.Services
             try
             {
                 if (string.IsNullOrEmpty(thread?.ThreadId)) return;
-                var result = await _api.SendAnimatedImageAsync(imageId, isSticker, thread.ThreadId);
+                var result = await Api.SendAnimatedImageAsync(imageId, isSticker, thread.ThreadId);
                 if (result.IsSucceeded && result.Value.Length > 0)
                 {
                     thread.Update(result.Value[0]);
@@ -118,7 +119,7 @@ namespace Indirect.Services
             try
             {
                 if (string.IsNullOrEmpty(thread.ThreadId)) return;
-                var result = await _api.SendLikeAsync(thread.ThreadId);
+                var result = await Api.SendLikeAsync(thread.ThreadId);
                 //if (result.IsSucceeded) UpdateInboxAndSelectedThread();
             }
             catch (Exception)
@@ -135,7 +136,7 @@ namespace Indirect.Services
             
             try
             {
-                await _api.LikeItemAsync(item.Parent.ThreadId, item.ItemId, emoji);
+                await Api.LikeItemAsync(item.Parent.ThreadId, item.ItemId, emoji);
             }
             catch (Exception)
             {
@@ -149,7 +150,7 @@ namespace Indirect.Services
 
             try
             {
-                await _api.UnlikeItemAsync(item.Parent.ThreadId, item.ItemId);
+                await Api.UnlikeItemAsync(item.Parent.ThreadId, item.ItemId);
             }
             catch (Exception)
             {
@@ -159,7 +160,7 @@ namespace Indirect.Services
 
         public async Task Unsend(DirectItemWrapper item)
         {
-            var result = await _api.UnsendMessageAsync(item.Parent.ThreadId, item.ItemId);
+            var result = await Api.UnsendMessageAsync(item.Parent.ThreadId, item.ItemId);
             if (result.IsSucceeded)
             {
                 await item.Parent.RemoveItem(item.ItemId);
@@ -218,7 +219,7 @@ namespace Indirect.Services
                         Width = (int)thumbnail.OriginalWidth,
                         Height = (int)thumbnail.OriginalHeight
                     };
-                    await _api.SendDirectVideoAsync(progress,
+                    await Api.SendDirectVideoAsync(progress,
                         new InstaVideoUpload(instaVideo, thumbnailImage), thread.ThreadId);
                 }
             }
@@ -278,7 +279,7 @@ namespace Indirect.Services
             };
             if (string.IsNullOrEmpty(thread.ThreadId)) return;
             var uploadId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            await _api.SendDirectPhotoAsync(instaImage, thread.ThreadId, uploadId, progress);
+            await Api.SendDirectPhotoAsync(instaImage, thread.ThreadId, uploadId, progress);
         }
     }
 }

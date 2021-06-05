@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Windows.Foundation.Metadata;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Push
@@ -32,18 +33,18 @@ namespace InstagramAPI.Push
         [JsonProperty]
         public long ClientMqttSessionId { get; set; }
 
-        public long ClientCapabilities { get; } = FBNS_CLIENT_CAPABILITIES;
-        public long EndpointCapabilities { get; } = FBNS_ENDPOINT_CAPABILITIES;
-        public int PublishFormat { get; } = FBNS_PUBLISH_FORMAT;
-        public bool NoAutomaticForeground { get; } = FBNS_NO_AUTOMATIC_FOREGROUND;
-        public bool MakeUserAvailableInForeground { get; } = FBNS_MAKE_USER_AVAILABLE_IN_FOREGROUND;
-        public bool IsInitiallyForeground { get; } = FBNS_IS_INITIALLY_FOREGROUND;
-        public int NetworkType { get; } = FBNS_NETWORK_TYPE;
-        public int NetworkSubtype { get; } = FBNS_NETWORK_SUBTYPE;
-        public int[] SubscribeTopics { get; } = FBNS_SUBSCRIBE_TOPICS;
-        public string ClientType { get; } = FBNS_CLIENT_TYPE;
-        public long AppId { get; } = FBNS_APP_ID;
-        public sbyte ClientStack { get; } = FBNS_CLIENT_STACK;
+        public long ClientCapabilities => FBNS_CLIENT_CAPABILITIES;
+        public long EndpointCapabilities => FBNS_ENDPOINT_CAPABILITIES;
+        public int PublishFormat => FBNS_PUBLISH_FORMAT;
+        public bool NoAutomaticForeground => FBNS_NO_AUTOMATIC_FOREGROUND;
+        public bool MakeUserAvailableInForeground => FBNS_MAKE_USER_AVAILABLE_IN_FOREGROUND;
+        public bool IsInitiallyForeground => FBNS_IS_INITIALLY_FOREGROUND;
+        public int NetworkType => FBNS_NETWORK_TYPE;
+        public int NetworkSubtype => FBNS_NETWORK_SUBTYPE;
+        public int[] SubscribeTopics => FBNS_SUBSCRIBE_TOPICS;
+        public string ClientType => FBNS_CLIENT_TYPE;
+        public long AppId => FBNS_APP_ID;
+        public sbyte ClientStack => FBNS_CLIENT_STACK;
 
         #region DeviceAuth
 
@@ -59,11 +60,11 @@ namespace InstagramAPI.Push
         [JsonProperty]
         public string DeviceSecret { get; private set; }
 
-        [JsonProperty]
-        public string FbnsToken { get; internal set; }
+        //[JsonProperty]
+        //public string FbnsToken { get; internal set; }
 
-        [JsonProperty]
-        public DateTimeOffset FbnsTokenLastUpdated { get; internal set; }
+        //[JsonProperty]
+        //public DateTimeOffset FbnsTokenLastUpdated { get; internal set; }
 
         #endregion
 
@@ -98,24 +99,6 @@ namespace InstagramAPI.Push
             // TODO: sr, rc ?
         }
 
-        public void SaveToAppSettings()
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var composite = new Windows.Storage.ApplicationDataCompositeValue
-            {
-                ["ClientId"] = ClientId,
-                ["UserAgent"] = UserAgent,
-                ["ClientMqttSessionId"] = ClientMqttSessionId,
-                ["UserId"] = UserId,
-                ["Password"] = Password,
-                ["DeviceId"] = DeviceId,
-                ["DeviceSecret"] = DeviceSecret,
-                ["_fbnsToken"] = FbnsToken,
-                ["FbnsTokenLastUpdated"] = FbnsTokenLastUpdated
-            };
-            localSettings.Values["_fbnsConnectionData"] = composite;
-        }
-
         public void LoadFromAppSettings()
         {
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
@@ -128,34 +111,11 @@ namespace InstagramAPI.Push
             Password = (string) composite["Password"];
             DeviceId = (string) composite["DeviceId"];
             DeviceSecret = (string) composite["DeviceSecret"];
-            FbnsToken = (string) composite["_fbnsToken"];
-            FbnsTokenLastUpdated = (DateTimeOffset) composite["FbnsTokenLastUpdated"];
+            //FbnsToken = (string) composite["_fbnsToken"];
+            //FbnsTokenLastUpdated = (DateTimeOffset) composite["FbnsTokenLastUpdated"];
         }
 
-        public static FbnsConnectionData CreateFromAppSettings()
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var composite = (Windows.Storage.ApplicationDataCompositeValue) localSettings.Values["_fbnsConnectionData"];
-            if (composite == null) return null;
-            var data = new FbnsConnectionData();
-            data.LoadFromAppSettings();
-            return data;
-        }
-
-        public void Clear()
-        {;
-            ClientId = Guid.NewGuid().ToString().Substring(0, 20);
-            UserAgent = default;
-            ClientMqttSessionId = default;
-            UserId = default;
-            Password = default;
-            DeviceId = default;
-            DeviceSecret = default;
-            FbnsToken = default;
-            FbnsTokenLastUpdated = DateTimeOffset.Now;
-        }
-
-        public void RemoveFromAppSettings()
+        public static void RemoveFromAppSettings()
         {
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             localSettings.Values.Remove("_fbnsConnectionData");

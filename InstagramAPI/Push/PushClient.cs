@@ -13,6 +13,7 @@ using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
+using InstagramAPI.Classes.Core;
 using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
 using InstagramAPI.Utils;
@@ -24,39 +25,43 @@ namespace InstagramAPI.Push
     public class PushClient
     {
         public event EventHandler<PushReceivedEventArgs> MessageReceived;
-        public FbnsConnectionData ConnectionData { get; }
+        public FbnsConnectionData ConnectionData => _instaApi.Session.PushData;
         public StreamSocket Socket { get; private set; }
         public bool Running => !(_runningTokenSource?.IsCancellationRequested ?? true);
+        public string SocketId => SocketIdPrefix + _instaApi.Session?.LoggedInUser?.Pk;
 
-        private const string HOST_NAME = "mqtt-mini.facebook.com";
-        private const string BACKGROUND_SOCKET_ACTIVITY_NAME = "BackgroundPushClient.SocketActivity";
-        private const string SOCKET_ACTIVITY_ENTRY_POINT = "BackgroundPushClient.SocketActivity";
-        private const string BACKGROUND_REPLY_NAME = "BackgroundPushClient.ReplyAction";
-        private const string BACKGROUND_REPLY_ENTRY_POINT = "BackgroundPushClient.ReplyAction";
-        public const string SOCKET_ID = "mqtt_fbns";    // TODO: handle multiple socket IDs for multiple profiles
+        private const string HostName = "mqtt-mini.facebook.com";
+        private const string BackgroundSocketActivityName = "BackgroundPushClient.SocketActivity";
+        private const string SocketActivityEntryPoint = "BackgroundPushClient.SocketActivity";
+        private const string BackgroundReplyName = "BackgroundPushClient.ReplyAction";
+        private const string BackgroundReplyEntryPoint = "BackgroundPushClient.ReplyAction";
+        private const string SocketIdPrefix = "mqtt_fbns_";
+        public const string SocketIdLegacy = "mqtt_fbns";    // TODO: handle multiple socket IDs for multiple profiles
+        public const int KeepAlive = 900;    // seconds
 
-        public const int KEEP_ALIVE = 900;    // seconds
         private CancellationTokenSource _runningTokenSource;
         private DataReader _inboundReader;
         private DataWriter _outboundWriter;
         private readonly Instagram _instaApi;
 
-        public PushClient(Instagram api, FbnsConnectionData connectionData)
+        public PushClient(Instagram api)
         {
             _instaApi = api ?? throw new ArgumentException("Api can't be null", nameof(api));
+        }
 
-            ConnectionData = connectionData;
-
-            // If token is older than 24 hours then discard it
-            if ((DateTimeOffset.Now - ConnectionData.FbnsTokenLastUpdated).TotalHours > 24)
+        public void DisposeBackgroundSocket()
+        {
+            if (SocketActivityInformation.AllSockets.TryGetValue(SocketId, out var socketInformation))
             {
-                ConnectionData.FbnsToken = "";
-                ConnectionData.FbnsTokenLastUpdated = DateTimeOffset.Now;
+                try
+                {
+                    socketInformation.StreamSocket.Dispose();
+                }
+                catch (Exception)
+                {
+                    // pass
+                }
             }
-
-            // Build user agent for first time setup
-            if (string.IsNullOrEmpty(ConnectionData.UserAgent))
-                ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(api.Device);
         }
 
         public static void UnregisterTasks()
@@ -108,12 +113,12 @@ namespace InstagramAPI.Push
 
         public static bool TasksRegistered()
         {
-            return TaskExists(BACKGROUND_SOCKET_ACTIVITY_NAME) && TaskExists(BACKGROUND_REPLY_NAME);
+            return TaskExists(BackgroundSocketActivityName) && TaskExists(BackgroundReplyName);
         }
 
         public static async Task<IBackgroundTaskRegistration> RequestBackgroundAccess()
         {
-            if (!TaskExists(BACKGROUND_SOCKET_ACTIVITY_NAME) || !TaskExists(BACKGROUND_REPLY_NAME))
+            if (!TaskExists(BackgroundSocketActivityName) || !TaskExists(BackgroundReplyName))
             {
                 try
                 {
@@ -137,14 +142,14 @@ namespace InstagramAPI.Push
                 DebugLogger.Log(nameof(PushClient), "Background tasks already registered.");
             }
 
-            TryRegisterBackgroundTaskOnce(BACKGROUND_SOCKET_ACTIVITY_NAME, SOCKET_ACTIVITY_ENTRY_POINT,
+            TryRegisterBackgroundTaskOnce(BackgroundSocketActivityName, SocketActivityEntryPoint,
                 new SocketActivityTrigger(), out var socketActivityTask);
 
             if (ApiInformation.IsTypePresent("Windows.ApplicationModel.Background.ToastNotificationActionTrigger"))
             {
                 try
                 {
-                    TryRegisterBackgroundTaskOnce(BACKGROUND_REPLY_NAME, BACKGROUND_REPLY_ENTRY_POINT,
+                    TryRegisterBackgroundTaskOnce(BackgroundReplyName, BackgroundReplyEntryPoint,
                         new Windows.ApplicationModel.Background.ToastNotificationActionTrigger(), out _);
                 }
                 catch (Exception)
@@ -176,9 +181,9 @@ namespace InstagramAPI.Push
             try
             {
                 Socket.TransferOwnership(
-                    SOCKET_ID,
+                    SocketIdLegacy,
                     null,
-                    TimeSpan.FromSeconds(KEEP_ALIVE - 60));
+                    TimeSpan.FromSeconds(KeepAlive - 60));
             }
             catch (Exception e)
             {
@@ -193,18 +198,10 @@ namespace InstagramAPI.Push
             if (!_instaApi.IsUserAuthenticated || Running) return;
             try
             {
-                if (SocketActivityInformation.AllSockets.TryGetValue(SOCKET_ID, out var socketInformation))
+                if (SocketActivityInformation.AllSockets.TryGetValue(SocketIdLegacy, out var socketInformation))
                 {
                     var socket = socketInformation.StreamSocket;
-                    if (string.IsNullOrEmpty(ConnectionData.FbnsToken)) // if we don't have any push data, start fresh
-                    {
-                        socket?.Dispose();
-                        await StartFresh().ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        StartWithExistingSocket(socket);
-                    }
+                    StartWithExistingSocket(socket);
                 }
                 else
                 {
@@ -252,6 +249,10 @@ namespace InstagramAPI.Push
 
             if (Running) throw new Exception("Push client is already running");
 
+            // Build user agent for first time setup
+            if (string.IsNullOrEmpty(ConnectionData.UserAgent))
+                ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(_instaApi.Device);
+
             var connectPacket = new FbnsConnectPacket();
             try
             {
@@ -275,7 +276,7 @@ namespace InstagramAPI.Push
 
             try
             {
-                await Socket.ConnectAsync(new HostName(HOST_NAME), "443", SocketProtectionLevel.Tls12);
+                await Socket.ConnectAsync(new HostName(HostName), "443", SocketProtectionLevel.Tls12);
                 _inboundReader = new DataReader(Socket.InputStream);
                 _outboundWriter = new DataWriter(Socket.OutputStream);
                 _inboundReader.ByteOrder = ByteOrder.BigEndian;
@@ -469,12 +470,17 @@ namespace InstagramAPI.Push
         {
             var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
 
-            if (!string.IsNullOrEmpty(response["error"]))
+            if (!string.IsNullOrEmpty(response?["error"]))
             {
                 throw new Exception(response["error"]);
             }
 
-            var token = response["token"];
+            var token = response?["token"];
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new Exception($"Push token is invalid: {json}");
+            }
 
             await RegisterClient(token);
         }
@@ -482,12 +488,8 @@ namespace InstagramAPI.Push
         private async Task RegisterClient(string token)
         {
             if (string.IsNullOrEmpty(token)) throw new ArgumentNullException(nameof(token));
-            if (ConnectionData.FbnsToken == token)
-            {
-                return;
-            }
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
             var uri = new Uri("https://i.instagram.com/api/v1/push/register/");
             var fields = new Dictionary<string, string>
             {
@@ -501,19 +503,7 @@ namespace InstagramAPI.Push
                 {"users", _instaApi.Session.LoggedInUser.Pk.ToString() }
             };
 
-            var result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields));
-
-            if (!result.IsSuccessStatusCode)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(2));
-                result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields));
-            }
-
-            if (result.IsSuccessStatusCode)
-            {
-                ConnectionData.FbnsToken = token;
-                ConnectionData.FbnsTokenLastUpdated = DateTimeOffset.Now;
-            }
+            var result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields)).ConfigureAwait(false);
         }
 
 
@@ -526,8 +516,8 @@ namespace InstagramAPI.Push
         {
             var message = new Dictionary<string, string>
             {
-                {"pkg_name", "com.instagram.android"},
-                {"appid", "567067343352427"}
+                {"pkg_name", ApiVersion.PackageName},
+                {"appid", ApiVersion.AppId}
             };
 
             var json = JsonConvert.SerializeObject(message);
@@ -562,7 +552,7 @@ namespace InstagramAPI.Push
                 while (Running)
                 {
                     await SendPing();
-                    await Task.Delay(TimeSpan.FromSeconds(KEEP_ALIVE - 60), _runningTokenSource.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(KeepAlive - 60), _runningTokenSource.Token);
                 }
             }
             catch (TaskCanceledException)

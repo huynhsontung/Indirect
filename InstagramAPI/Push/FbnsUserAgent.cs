@@ -7,12 +7,11 @@ using InstagramAPI.Classes.Core;
 
 namespace InstagramAPI.Push
 {
-    public sealed class FbnsUserAgent
+    internal sealed class FbnsUserAgent
     {
         const string FBNS_APPLICATION_NAME = "MQTT";
         const string INSTAGRAM_APPLICATION_NAME = "Instagram";  // for Realtime features
 
-        // todo: implement Realtime status like "message seen"
         public static string BuildFbUserAgent(AndroidDevice device, string appName = FBNS_APPLICATION_NAME, string userLocale = "en_US")
         {
             var fields = new Dictionary<string, string>
@@ -27,7 +26,7 @@ namespace InstagramAPI.Push
                 {"FBCR", ""},   // We don't have cellular
                 {"FBMF", device.HardwareManufacturer},
                 {"FBBD", device.HardwareManufacturer},
-                {"FBPN", "com.instagram.android"},
+                {"FBPN", ApiVersion.PackageName},
                 {"FBDV", device.HardwareModel},
                 {"FBSV", device.AndroidVersion.VersionNumber},
                 {"FBLR", "0"},  // android.hardware.ram.low

@@ -20,6 +20,11 @@ namespace InstagramAPI.Utils
 
         public void SaveToAppSettings()
         {
+            if (Count == 0)
+            {
+                return;
+            }
+
             var composite = new Windows.Storage.ApplicationDataCompositeValue();
             lock (this)
             {

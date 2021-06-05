@@ -10,6 +10,7 @@ using Windows.UI.Xaml.Navigation;
 using Indirect.Entities.Wrappers;
 using Indirect.Services;
 using InstagramAPI;
+using InstagramAPI.Utils;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -83,7 +84,7 @@ namespace Indirect.Pages
                     ShowErrorMessage("Error getting contact. Please make sure Indirect has access to Contacts.");
                     return null;
                 }
-                if (!Instagram.IsUserAuthenticatedPersistent)
+                if (!ViewModel.IsUserAuthenticated)
                 {
                     ShowErrorMessage("Not logged in.");
                     return null;

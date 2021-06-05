@@ -7,6 +7,9 @@ namespace InstagramAPI.Classes.Core
     [Serializable]
     public class ApiVersion
     {
+        public const string AppId = "567067343352427";
+        public const string PackageName = "com.instagram.android";
+
         public enum ApiVersionNumber
         {
             Latest = 0,

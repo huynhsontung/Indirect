@@ -29,7 +29,7 @@ namespace InstagramAPI
             defaultHeaders.TryAdd("X-Ig-Timezone-Offset", ((int) DateTimeOffset.Now.Offset.TotalSeconds).ToString());
             defaultHeaders.TryAdd("X-Ig-Capabilities", ApiVersion.Current.Capabilities);
             defaultHeaders.TryAdd("X-Ig-Connection-Type", "WIFI");
-            defaultHeaders.TryAdd("X-Ig-App-ID", "567067343352427");
+            defaultHeaders.TryAdd("X-Ig-App-ID", ApiVersion.AppId);
             defaultHeaders.TryAdd("X-Fb-Http-Engine", "Liger");
 
             var loggedInUser = Session.LoggedInUser;

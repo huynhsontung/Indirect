@@ -1,5 +1,4 @@
 ﻿using InstagramAPI.Classes.Core;
-using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -11,11 +10,10 @@ using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.DataProtection;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using Windows.Web.Http;
 
 namespace InstagramAPI.Utils
 {
-    internal static class SessionManager
+    public static class SessionManager
     {
         private const string SESSION_EXT = ".session";
         private const string SESSION_PFP_EXT = ".jpg";
@@ -23,31 +21,42 @@ namespace InstagramAPI.Utils
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
         private static readonly StorageFolder LocalFolder = ApplicationData.Current.LocalFolder;
 
-        public static bool IsUserAuthenticated
-        {
-            get => (bool?)LocalSettings.Values["IsUserAuthenticated"] ?? false;
-            set => LocalSettings.Values["IsUserAuthenticated"] = value;
-        }
-
         public static string LastSessionName
         {
             get => (string)LocalSettings.Values["LastSessionName"];
-            set => LocalSettings.Values["LastSessionName"] = value;
+            private set => LocalSettings.Values["LastSessionName"] = value;
         }
 
         public static async Task SaveSessionAsync(Instagram instagram)
         {
             var session = instagram.Session;
-            if (string.IsNullOrEmpty(session.Username))
+            if (!session.IsAuthenticated)
             {
                 return;
             }
 
-            var sessionName = session.Username;
+            if (session.LoggedInUser?.Pk == default)
+            {
+                throw new Exception("Session is authenticated but has no user data.");
+            }
+
+            session.Cookies = CookieHelper.GetCookies();
+            var sessionName = session.LoggedInUser.Pk.ToString();
             var json = JsonConvert.SerializeObject(session, Formatting.None);
             var encoded = CryptographicBuffer.ConvertStringToBinary(json, BinaryStringEncoding.Utf8);
             var secured = await ProtectAsync(encoded);
-            await WriteToFileAsync(sessionName + SESSION_EXT, secured);
+            try
+            {
+                await WriteToFileAsync(sessionName + SESSION_EXT, secured);
+            }
+            catch (FileLoadException)
+            {
+                DebugLogger.Log(nameof(SessionManager),
+                    $"Session file {sessionName + SESSION_EXT} is being used. Cannot write session to file.");
+                return;
+            }
+
+            LastSessionName = sessionName;
 
             // Also save profile picture for preview later
             try
@@ -72,9 +81,9 @@ namespace InstagramAPI.Utils
             }
         }
 
-        public static Task<UserSessionData> TryLoadLastSessionAsync()
+        public static async Task<UserSessionData> TryLoadLastSessionAsync()
         {
-            return string.IsNullOrEmpty(LastSessionName) ? TryLoadFirstSessionAsync() : TryLoadSessionAsync(LastSessionName);
+            return await TryLoadSessionAsync(LastSessionName) ?? await TryLoadFirstSessionAsync();
         }
 
         public static async Task<UserSessionData> TryLoadSessionAsync(string sessionName)
@@ -112,6 +121,7 @@ namespace InstagramAPI.Utils
 
         public static async Task<UserSessionMetadata[]> GetAvailableSessionsAsync()
         {
+            throw new NotImplementedException();
             var files = await LocalFolder.GetFilesAsync();
             return files.Where(x => x.FileType == SESSION_EXT).Select(x => new UserSessionMetadata
             {
@@ -120,13 +130,14 @@ namespace InstagramAPI.Utils
             }).ToArray();
         }
 
-        public static async Task<bool> TryRemoveSessionAsync(string sessionName)
+        public static async Task<bool> TryRemoveSessionAsync(UserSessionData session)
         {
-            if (string.IsNullOrEmpty(sessionName))
+            if (session.LoggedInUser?.Pk == default)
             {
                 return false;
             }
 
+            var sessionName = session.LoggedInUser.Pk.ToString();
             var item = await LocalFolder.TryGetItemAsync(sessionName + SESSION_EXT);
             if (item == null)
             {
@@ -172,20 +183,12 @@ namespace InstagramAPI.Utils
 
         private static async Task WriteToFileAsync(string fileName, IBuffer data)
         {
-            try
+            fileName = SanitizeFileName(fileName);
+            var file = await LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
+            using (var writeStream = await file.OpenAsync(FileAccessMode.ReadWrite))
             {
-                fileName = SanitizeFileName(fileName);
-                var file = await LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
-                using (var writeStream = await file.OpenAsync(FileAccessMode.ReadWrite))
-                {
-                    await writeStream.WriteAsync(data);
-                    await writeStream.FlushAsync();
-                }
-            }
-            catch (FileLoadException)
-            {
-                // File being written from another thread
-                // pass
+                await writeStream.WriteAsync(data);
+                await writeStream.FlushAsync();
             }
         }
 

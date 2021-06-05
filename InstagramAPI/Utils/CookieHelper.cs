@@ -10,18 +10,12 @@ namespace InstagramAPI.Utils
 {
     internal static class CookieHelper
     {
-        public static void ClearCookies()
+        public static HttpBaseProtocolFilter ClearCookies()
         {
-            var myFilter = new HttpBaseProtocolFilter();
-            var cookieManager = myFilter.CookieManager;
+            var filter = new HttpBaseProtocolFilter();
+            var cookieManager = filter.CookieManager;
             var instagramApiCookies = cookieManager.GetCookies(UriCreator.BaseInstagramUri);
             foreach (var cookie in instagramApiCookies)
-            {
-                cookieManager.DeleteCookie(cookie);
-            }
-
-            var instagramCookies = cookieManager.GetCookies(new Uri("https://www.instagram.com/"));
-            foreach (var cookie in instagramCookies)
             {
                 cookieManager.DeleteCookie(cookie);
             }
@@ -31,6 +25,8 @@ namespace InstagramAPI.Utils
             {
                 cookieManager.DeleteCookie(cookie);
             }
+
+            return filter;
         }
 
         public static List<HttpCookie> GetCookies()
@@ -45,15 +41,22 @@ namespace InstagramAPI.Utils
             return cookiesList;
         }
 
-        public static void SetCookies(IEnumerable<HttpCookie> cookies)
+        public static HttpBaseProtocolFilter SetCookies(IEnumerable<HttpCookie> cookies)
         {
-            var myFilter = new HttpBaseProtocolFilter();
-            var cookieManager = myFilter.CookieManager;
+            if (cookies == null)
+            {
+                return new HttpBaseProtocolFilter();
+            }
+
+            var filter = new HttpBaseProtocolFilter();
+            var cookieManager = filter.CookieManager;
 
             foreach (var cookie in cookies)
             {
                 cookieManager.SetCookie(cookie);
             }
+
+            return filter;
         }
     }
 }

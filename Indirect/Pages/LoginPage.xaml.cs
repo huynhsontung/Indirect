@@ -238,7 +238,7 @@ namespace Indirect.Pages
 
         private async Task TryNavigateToMainPage()
         {
-            if (!ViewModel.InstaApi.IsUserAuthenticated)
+            if (!ViewModel.IsUserAuthenticated)
             {
                 await ShowLoginErrorDialog("Something went wrong. Please try again later.");
                 DebugLogger.LogException(new Exception("Try to navigate to MainPage but user validation failed"));
@@ -246,7 +246,7 @@ namespace Indirect.Pages
             else
             {
                 Frame.Navigate(typeof(MainPage));
-                await ViewModel.InstaApi.SaveToAppSettings().ConfigureAwait(false);
+                await ViewModel.SaveDataAsync().ConfigureAwait(false);
             }
         }
 

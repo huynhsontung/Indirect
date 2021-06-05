@@ -31,7 +31,19 @@ namespace BackgroundPushClient
                     return;
                 }
 
-                var instagram = new Instagram();
+                // TODO: Load specific session based on context data
+                var session = await SessionManager.TryLoadLastSessionAsync();
+                if (session == null)
+                {
+                    if (details.Reason == SocketActivityTriggerReason.SocketClosed)
+                    {
+                        return;
+                    }
+
+                    throw new Exception($"{nameof(SocketActivity)} triggered without session.");
+                }
+
+                var instagram = new Instagram(session);
                 instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
                 switch (details.Reason)
                 {
@@ -74,8 +86,8 @@ namespace BackgroundPushClient
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
-                instagram.PushClient.ConnectionData.SaveToAppSettings();
                 await instagram.PushClient.TransferPushSocket(false);
+                await SessionManager.SaveSessionAsync(instagram);
             }
             catch (Exception e)
             {
