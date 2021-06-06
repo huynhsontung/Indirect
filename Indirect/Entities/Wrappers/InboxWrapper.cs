@@ -10,8 +10,6 @@ using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using Microsoft.Toolkit.Collections;
 using Microsoft.Toolkit.Uwp;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using InstagramAPI.Classes.Core;
 
 namespace Indirect.Entities.Wrappers
@@ -34,6 +32,7 @@ namespace Indirect.Entities.Wrappers
 
         private readonly MainViewModel _viewModel;
         private bool _firstTime = true;
+
         public InboxWrapper(MainViewModel viewModel, bool pending = false)
         {
             _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -108,21 +107,12 @@ namespace Indirect.Entities.Wrappers
             }
             UpdateExcludeThreads(container);
 
-            var wrappedThreadList = new List<DirectThreadWrapper>();
+            var wrappedThreadList = new List<DirectThreadWrapper>(container.Inbox.Threads.Count);
             foreach (var directThread in container.Inbox.Threads)
             {
                 var wrappedThread = new DirectThreadWrapper(_viewModel, directThread);
                 wrappedThread.PropertyChanged += OnThreadChanged;
                 wrappedThreadList.Add(wrappedThread);
-                _viewModel.ThreadInfoPersistentDictionary[directThread.ThreadId] = new JObject
-                {
-                    {"title", directThread.Title},
-                    {"users", new JArray(directThread.Users.Select(x => x.Pk).ToArray())}
-                }.ToString(Formatting.None);
-                foreach (var user in directThread.Users)
-                {
-                    _viewModel.CentralUserRegistry[user.Pk] = user;
-                }
             }
 
             return wrappedThreadList;

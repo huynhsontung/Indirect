@@ -129,6 +129,7 @@
     <Compile Include="Classes\Core\UserSessionMetadata.cs" />
     <Compile Include="Classes\Direct\DirectItem.cs" />
     <Compile Include="Classes\Direct\DirectItemType.cs" />
+    <Compile Include="Classes\Direct\DirectThreadInfo.cs" />
     <Compile Include="Classes\Direct\DirectThreadItemsOnly.cs" />
     <Compile Include="Classes\Direct\ItemContent\AnimatedMedia.cs" />
     <Compile Include="Classes\Direct\ItemContent\Clip\Clip.cs" />
@@ -241,11 +242,11 @@
     <Compile Include="Sync\SyncBaseData.cs" />
     <Compile Include="Sync\SyncClient.cs" />
     <Compile Include="Sync\UserPresenceEventArgs.cs" />
+    <Compile Include="Utils\CacheManager.cs" />
     <Compile Include="Utils\CookieHelper.cs" />
     <Compile Include="Utils\CryptoHelper.cs" />
     <Compile Include="Utils\DebugLogger.cs" />
     <Compile Include="UriCreator.cs" />
-    <Compile Include="Utils\PersistentDictionary.cs" />
     <Compile Include="Utils\SessionManager.cs" />
     <EmbeddedResource Include="Properties\InstagramAPI.rd.xml" />
   </ItemGroup>

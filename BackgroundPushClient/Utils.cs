@@ -6,9 +6,12 @@ using Windows.UI.Notifications;
 using InstagramAPI.Push;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using InstagramAPI.Classes.Direct;
+using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -19,7 +22,9 @@ namespace BackgroundPushClient
         private static readonly ApplicationDataContainer LocalSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         private static CancellationTokenSource _rapidToast = new CancellationTokenSource();
 
-        public static void OnMessageReceived(object sender, PushReceivedEventArgs args)
+        private static Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; set; }
+
+        public static async void OnMessageReceived(object sender, PushReceivedEventArgs args)
         {
             var notificationContent = args.NotificationContent;
             var igAction = notificationContent.IgAction;
@@ -28,21 +33,29 @@ namespace BackgroundPushClient
             var queryParams = HttpUtility.ParseQueryString(igAction.Substring(querySeparatorIndex));
             var threadId = queryParams["id"];
             var itemId = queryParams["x"];
-            var threadInfo = GetThreadInfoFromAppSettings(threadId);
+            if (threadId == null || itemId == null || notificationContent.Message == null)
+            {
+                return;
+            }
+
+            var threadInfo = await GetThreadInfoAsync(threadId);
             var threadTitle = string.Empty;
-            long? threadUser = null;
+            long? threadUserId = null;
             if (threadInfo != null)
             {
-                threadTitle = threadInfo["title"]?.ToObject<string>();
-                var users = threadInfo["users"]?.ToObject<long[]>();
-                if (users?.Length == 1)
+                threadTitle = threadInfo.Title;
+                var users = threadInfo.Users;
+                if (users.Count == 1)
                 {
-                    threadUser = users[0];
+                    threadUserId = users[0].Pk;
                 }
             }
-            if (threadId == null || itemId == null || notificationContent.Message == null) return;
+
             if (string.IsNullOrEmpty(threadTitle))
+            {
                 threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(' '));
+            }
+
             var toastContent = new ToastContent
             {
                 Header = new ToastHeader(threadId, threadTitle, string.Empty),
@@ -93,10 +106,10 @@ namespace BackgroundPushClient
                     }
                 },
                 Launch = $"action=open&threadId={threadId}",
-                HintPeople = threadUser != null
+                HintPeople = threadUserId != null
                     ? new ToastPeople
                     {
-                        RemoteId = $"{threadUser}@Indirect"
+                        RemoteId = $"{threadUserId}@Indirect"
                     }
                     : null
             };
@@ -172,12 +185,22 @@ namespace BackgroundPushClient
             }
         }
 
-        private static JObject GetThreadInfoFromAppSettings(string threadId)
+        private static async Task<DirectThreadInfo> GetThreadInfoAsync(string threadId)
         {
-            if (string.IsNullOrEmpty(threadId)) return null;
-            var composite = (Windows.Storage.ApplicationDataCompositeValue)LocalSettings.Values["ThreadInfoPersistentDictionary"];
-            var json = (string) composite?[threadId];
-            return string.IsNullOrEmpty(json) ? null : JsonConvert.DeserializeObject<JObject>(json);
+            if (ThreadInfoDictionary != null)
+            {
+                ThreadInfoDictionary.TryGetValue(threadId, out var info);
+                return info;
+            }
+
+            var dict = await CacheManager.ReadCacheAsync<Dictionary<string, DirectThreadInfo>>(nameof(ThreadInfoDictionary));
+            if (dict == null || !dict.ContainsKey(threadId))
+            {
+                return null;
+            }
+
+            ThreadInfoDictionary = dict;
+            return dict[threadId];
         }
 
         public static async Task<bool> TryAcquireSyncLock()

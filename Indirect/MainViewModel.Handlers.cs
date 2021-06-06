@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Sync;
@@ -24,6 +26,30 @@ namespace Indirect
             client.ActivityIndicatorChanged += OnActivityIndicatorChanged;
             client.UserPresenceChanged += OnUserPresenceChanged;
             client.FailedToStart += OnSyncClientFailedToStart;
+        }
+
+        private void InboxThreads_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems == null)
+            {
+                return;
+            }
+
+            foreach (var item in e.NewItems)
+            {
+                var thread = (DirectThreadWrapper) item;
+                if (string.IsNullOrEmpty(thread.ThreadId))
+                {
+                    continue;
+                }
+
+                ThreadInfoDictionary[thread.ThreadId] = new DirectThreadInfo(thread.Source);
+
+                foreach (var user in thread.Users)
+                {
+                    CentralUserRegistry[user.Pk] = user;
+                }
+            }
         }
 
         private async void OnInboxFirstUpdated(long seqId, DateTimeOffset snapshotAt)

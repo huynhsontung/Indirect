@@ -31,8 +31,6 @@ namespace InstagramAPI.Classes.User
         [JsonProperty("interop_messaging_user_fbid", NullValueHandling = NullValueHandling.Ignore)]
         public long? InteropMessagingUserFbid { get; set; }
 
-        public static BaseUser Empty => new BaseUser {FullName = string.Empty, Username = string.Empty};
-
         [JsonIgnore]
         public Uri ProfileUrl => string.IsNullOrEmpty(Username) ? null : new Uri($"https://www.instagram.com/{Username}/");
 

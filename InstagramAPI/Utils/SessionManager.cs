@@ -210,7 +210,7 @@ namespace InstagramAPI.Utils
             }
         }
 
-        private static string SanitizeFileName(string name)
+        internal static string SanitizeFileName(string name)
         {
             var invalids = System.IO.Path.GetInvalidFileNameChars();
             var newName = string.Join("_", name.Split(invalids, StringSplitOptions.RemoveEmptyEntries)).TrimEnd('.');

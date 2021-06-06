@@ -47,7 +47,7 @@ namespace Indirect
         public InboxWrapper Inbox { get; }
         public List<DirectThreadWrapper> SecondaryThreads { get; } = new List<DirectThreadWrapper>();
         public BaseUser LoggedInUser => InstaApi.Session.LoggedInUser;
-        public PersistentDictionary<string> ThreadInfoPersistentDictionary { get; } = new PersistentDictionary<string>("ThreadInfoPersistentDictionary");
+        public Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; private set; }
         public Dictionary<long, BaseUser> CentralUserRegistry { get; } = new Dictionary<long, BaseUser>();
         public DirectThreadWrapper SelectedThread
         {
@@ -69,9 +69,9 @@ namespace Indirect
             Inbox = new InboxWrapper(this);
             //PendingInbox = new InboxWrapper(this, true);
             ChatService = new ChatService(this);
-            ThreadInfoPersistentDictionary.LoadFromAppSettings();
 
             Inbox.FirstUpdated += OnInboxFirstUpdated;
+            Inbox.Threads.CollectionChanged += InboxThreads_OnCollectionChanged;
         }
 
         public async Task Initialize()
@@ -83,6 +83,10 @@ namespace Indirect
             {
                 this.Log("Background notification: " + args.Json);
             };
+
+            ThreadInfoDictionary =
+                await CacheManager.ReadCacheAsync<Dictionary<string, DirectThreadInfo>>(nameof(ThreadInfoDictionary)) ??
+                new Dictionary<string, DirectThreadInfo>();
         }
 
         public async Task OnLoggedIn()
@@ -125,8 +129,7 @@ namespace Indirect
         {
             await InstaApi.Logout();
             //await ContactsService.DeleteAllAppContacts();
-            ThreadInfoPersistentDictionary.RemoveFromAppSettings();
-            // TODO: Close all secondary views
+            await CacheManager.RemoveCacheAsync(nameof(ThreadInfoDictionary));
             // _settings.Values.Clear();
         }
 
@@ -342,8 +345,8 @@ namespace Indirect
 
         public async Task SaveDataAsync()
         {
-            ThreadInfoPersistentDictionary.SaveToAppSettings();
             await SessionManager.SaveSessionAsync(InstaApi);
+            await CacheManager.WriteCacheAsync(nameof(ThreadInfoDictionary), ThreadInfoDictionary);
         }
 
         internal async Task<bool> TryAcquireSyncLock()
