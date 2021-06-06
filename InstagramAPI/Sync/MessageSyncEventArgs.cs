@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using InstagramAPI.Classes.Direct;
-using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Sync
@@ -32,7 +31,6 @@ namespace InstagramAPI.Sync
 
     public class ItemSyncData : SyncBaseData
     {
-        private static readonly DirectItemConverter Converter = new DirectItemConverter();
         private DirectItem _item;
 
         [JsonIgnore]
@@ -50,7 +48,7 @@ namespace InstagramAPI.Sync
                     return null;
                 }
 
-                return _item = JsonConvert.DeserializeObject<DirectItem>(Value, Converter);
+                return _item = JsonConvert.DeserializeObject<DirectItem>(Value);
             }
         }
     }

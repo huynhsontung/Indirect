@@ -294,7 +294,7 @@
                             MaxLines="1"
                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
                             Style="{x:Bind Source.HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}"
-                            Text="{x:Bind Source.LastPermanentItem.Description, Mode=OneWay}" />
+                            Text="{x:Bind LastPermanentItem.Description, Mode=OneWay}" />
                     </Grid>
                 </DataTemplate>
             </controls1:ExtendedMasterDetailsView.ItemTemplate>

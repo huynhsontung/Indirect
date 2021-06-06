@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Globalization;
@@ -16,7 +15,6 @@ namespace Indirect.Entities.Wrappers
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private readonly MainViewModel _viewModel;
         private bool _showTimestampHeader;
         private bool _showNameHeader;
 
@@ -46,6 +44,10 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
+        public string Description { get; set; }
+
+        public bool FromMe { get; set; }
+
         public bool IsReplyable => GetItemReplyable();
 
         public HorizontalAlignment HorizontalAlignment => GetHorizontalAlignment();
@@ -74,16 +76,17 @@ namespace Indirect.Entities.Wrappers
             Contract.Requires(viewModel != null);
             Contract.Requires(source != null);
             Contract.Requires(parent != null);
-            
-            _viewModel = viewModel;
+
             Item = source;
             Parent = parent;
             PropertyCopier<DirectItem, DirectItemWrapper>.Copy(source, this);
             ObservableReactions = source.Reactions != null ? new ReactionsWrapper(viewModel, source.Reactions, parent.Users) : new ReactionsWrapper(viewModel);
+            FromMe = viewModel.LoggedInUser?.Pk == source.UserId;
+            SetDescriptionText();
 
             if (source.RepliedToMessage != null)
             {
-                RepliedItem = new DirectItemWrapper(_viewModel, source.RepliedToMessage, Parent);
+                RepliedItem = new DirectItemWrapper(viewModel, source.RepliedToMessage, Parent);
             }
 
             // Lookup BaseUser from user id
@@ -320,6 +323,110 @@ namespace Indirect.Entities.Wrappers
                 case DirectItemType.VideoCallEvent:
                 default:
                     return false;
+            }
+        }
+
+        private void SetDescriptionText()
+        {
+            try
+            {
+                switch (ItemType)
+                {
+                    case DirectItemType.ActionLog:
+                        Description = ActionLog.Description;
+                        break;
+
+                    case DirectItemType.AnimatedMedia:
+                        Description = FromMe ? "You sent a GIF" : "Sent you a GIF";
+                        break;
+
+                    case DirectItemType.Hashtag:
+                        Description = "#" + HashtagMedia.Name;
+                        break;
+
+                    case DirectItemType.Like:
+                        Description = Like;
+                        break;
+
+                    case DirectItemType.Link:
+                        Description = Link.Text;
+                        break;
+
+                    case DirectItemType.Media:
+                        if (Media.MediaType == InstaMediaType.Image)
+                            Description = FromMe ? "You sent a photo" : "Sent you a photo";
+                        else
+                            Description = FromMe ? "You sent a video" : "Sent you a video";
+                        break;
+
+                    case DirectItemType.MediaShare:
+                        Description = FromMe ? "You shared a post" : "Shared a post";
+                        break;
+
+                    case DirectItemType.RavenMedia:
+                        var mediaType = RavenMedia?.MediaType ??
+                                        VisualMedia.Media.MediaType;
+                        if (mediaType == InstaMediaType.Image)
+                            Description = FromMe ? "You sent a photo" : "Sent you a photo";
+                        else
+                            Description = FromMe ? "You sent a video" : "Sent you a video";
+                        break;
+
+                    case DirectItemType.ReelShare:
+                        switch (ReelShareMedia.Type)
+                        {
+                            case "reaction":
+                                Description = FromMe
+                                    ? $"You reacted to their story {ReelShareMedia.Text}"
+                                    : $"Reacted to your story {ReelShareMedia.Text}";
+                                break;
+                            case "reply":
+                                Description = FromMe ? "You replied to their story" : "Replied to your story";
+                                break;
+                            case "mention":
+                                Description = FromMe
+                                    ? "You mentioned them in your story"
+                                    : "Mentioned you in their story";
+                                break;
+                        }
+
+                        break;
+
+                    case DirectItemType.StoryShare:
+                        Description = FromMe ? "You sent a story" : "Sent you a story";
+                        break;
+
+                    case DirectItemType.Text:
+                        Description = Text;
+                        break;
+
+                    case DirectItemType.VoiceMedia:
+                        Description = FromMe ? "You sent a voice clip" : "Sent you a voice clip";
+                        break;
+
+                    case DirectItemType.VideoCallEvent:
+                        if (VideoCallEvent?.Action == "video_call_started")
+                        {
+                            Description = FromMe ? "You started a video chat" : "Video chat started";
+                        }
+                        else
+                        {
+                            Description = "Video chat ended";
+                        }
+                        break;
+
+                    case DirectItemType.Profile:
+                        Description = FromMe ? "You sent a profile" : "Sent a profile";
+                        break;
+
+                    default:
+                        Description = ItemType.ToString();
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                // pass
             }
         }
     }

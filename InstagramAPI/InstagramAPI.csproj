@@ -183,7 +183,6 @@
     <Compile Include="Classes\Responses\FacebookResponse.cs" />
     <Compile Include="Classes\Responses\RuploadResponse.cs" />
     <Compile Include="Classes\UploaderProgress.cs" />
-    <Compile Include="Classes\JsonConverters\DirectItemConverter.cs" />
     <Compile Include="Classes\JsonConverters\JsonPathConverter.cs" />
     <Compile Include="Classes\JsonConverters\TimestampConverter.cs" />
     <Compile Include="Classes\Media\InstaAnimatedImage.cs" />

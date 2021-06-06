@@ -11,7 +11,7 @@ namespace InstagramAPI.Classes.Direct
 {
     public class DirectThreadItemsOnly : BaseStatusResponse
     {
-        [JsonProperty("items", ItemConverterType = typeof(DirectItemConverter))]
+        [JsonProperty("items")]
         public List<DirectItem> Items { get; set; }
     }
 }

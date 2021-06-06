@@ -27,6 +27,8 @@ namespace Indirect.Entities.Wrappers
 
         public DirectThread Source { get; private set; }
 
+        public DirectItemWrapper LastPermanentItem { get; private set; }
+
         public CoreDispatcher Dispatcher { get; }
 
         public bool IsSomeoneTyping { get; private set; }   // UI property
@@ -225,41 +227,49 @@ namespace Indirect.Entities.Wrappers
         {
             if (source == null || source.Count == 0) return;
 
-            lock (ObservableItems)
+            try
             {
-                if (ObservableItems.Count == 0)
+                lock (ObservableItems)
                 {
+                    if (ObservableItems.Count == 0)
+                    {
+                        foreach (var item in source)
+                            ObservableItems.Add(item);
+                        return;
+                    }
+
                     foreach (var item in source)
-                        ObservableItems.Add(item);
-                    return;
-                }
-
-                foreach (var item in source)
-                {
-                    var existingItem = ObservableItems.LastOrDefault(x => x.Equals(item));
-                    var existed = existingItem != null;
-
-                    if (existed)
                     {
-                        existingItem.ObservableReactions.Update(item.ObservableReactions);
-                        continue;
-                    }
-                    for (var i = ObservableItems.Count - 1; i >= 0; i--)
-                    {
-                        if (item.Timestamp > ObservableItems[i].Timestamp)
+                        var existingItem = ObservableItems.LastOrDefault(x => x.Equals(item));
+                        var existed = existingItem != null;
+
+                        if (existed)
                         {
-                            ObservableItems.Insert(i + 1, item);
-                            break;
+                            existingItem.ObservableReactions.Update(item.ObservableReactions);
+                            continue;
                         }
-
-                        if (i == 0)
+                        for (var i = ObservableItems.Count - 1; i >= 0; i--)
                         {
-                            ObservableItems.Insert(0, item);
+                            if (item.Timestamp > ObservableItems[i].Timestamp)
+                            {
+                                ObservableItems.Insert(i + 1, item);
+                                break;
+                            }
+
+                            if (i == 0)
+                            {
+                                ObservableItems.Insert(0, item);
+                            }
                         }
                     }
-                }
 
-                Source.Items = ObservableItems.Select(x => x.Item).ToList();
+                    Source.Items = ObservableItems.Select(x => x.Item).ToList();
+                }
+            }
+            finally
+            {
+                LastPermanentItem = ObservableItems.LastOrDefault();
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastPermanentItem)));
             }
         }
 
@@ -390,7 +400,7 @@ namespace Indirect.Entities.Wrappers
                 {
                     if (string.IsNullOrEmpty(source.LastPermanentItem?.ItemId) ||
                         lastSeen.ItemId == source.LastPermanentItem.ItemId ||
-                        source.LastPermanentItem.FromMe) return;
+                        LastPermanentItem.FromMe) return;
                     await _viewModel.InstaApi.MarkItemSeenAsync(source.ThreadId, source.LastPermanentItem.ItemId).ConfigureAwait(false);
                 }
             }

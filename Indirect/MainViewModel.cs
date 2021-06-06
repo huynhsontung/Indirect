@@ -272,11 +272,6 @@ namespace Indirect
                 break;
             }
 
-            if (thread.Source.LastPermanentItem == null)
-            {
-                thread.Source.LastPermanentItem = new DirectItem() {Description = thread.Users?[0].FullName};
-            }
-
             SelectedThread = thread;
         }
 

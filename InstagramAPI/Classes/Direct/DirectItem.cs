@@ -11,12 +11,6 @@ namespace InstagramAPI.Classes.Direct
 {
     public class DirectItem : BaseStatusResponse, IEquatable<DirectItem>
     {
-        public string Description { get; set; }
-
-        public string RawJson { get; set; }
-
-        public bool FromMe { get; set; } = false;
-
         [JsonProperty("user_id")] public long UserId { get; set; }
 
         [JsonProperty("timestamp")]
@@ -38,7 +32,6 @@ namespace InstagramAPI.Classes.Direct
         [JsonProperty("is_shh_mode")] public bool IsShhMode { get; set; }
 
         [JsonProperty("replied_to_message", NullValueHandling = NullValueHandling.Ignore)]
-        [JsonConverter(typeof(DirectItemConverter))] 
         public DirectItem RepliedToMessage { get; set; }
 
         // Below are content belong to specific item type. The reason not to split up these into

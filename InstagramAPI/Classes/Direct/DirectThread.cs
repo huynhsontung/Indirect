@@ -59,11 +59,10 @@ namespace InstagramAPI.Classes.Direct
         [JsonProperty("thread_type")] 
         public DirectThreadType ThreadType { get; set; } = DirectThreadType.Private;
 
-        [JsonProperty("items", ItemConverterType = typeof(DirectItemConverter))]
+        [JsonProperty("items")]
         public List<DirectItem> Items { get; set; }
 
         [JsonProperty("last_permanent_item")]
-        [JsonConverter(typeof(DirectItemConverter))]
         public DirectItem LastPermanentItem { get; set; }
 
         [JsonProperty("is_pin")]
