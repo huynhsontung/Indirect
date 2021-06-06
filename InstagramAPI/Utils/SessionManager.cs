@@ -67,6 +67,12 @@ namespace InstagramAPI.Utils
                     return;
                 }
 
+                var pfpFile = await LocalFolder.TryGetItemAsync(sessionName + SESSION_PFP_EXT);
+                if (pfpFile != null)
+                {
+                    return;
+                }
+
                 var response = await instagram.GetAsync(pfpUrl);
                 if (response.IsSuccessStatusCode)
                 {
