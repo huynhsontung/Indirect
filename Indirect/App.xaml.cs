@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Pages;
 using Indirect.Utilities;
+using InstagramAPI;
 using InstagramAPI.Utils;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;

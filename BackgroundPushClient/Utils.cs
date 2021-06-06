@@ -152,6 +152,14 @@ namespace BackgroundPushClient
             ToastNotificationManager.CreateToastNotifier().Show(toast);
         }
 
+        public static void PushClientOnExceptionsCaught(object sender, UnhandledExceptionEventArgs e)
+        {
+            var exception = (Exception)e.ExceptionObject;
+#if DEBUG
+            PopMessageToast(exception.ToString());
+#endif
+        }
+
         /// <summary>
         /// Hide previous toast early if another toast is ready to show up
         /// </summary>

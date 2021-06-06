@@ -60,6 +60,7 @@ namespace BackgroundPushClient
                 if (instagram.IsUserAuthenticated && !PushClient.TasksRegistered())
                 {
                     instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
+                    instagram.PushClient.ExceptionsCaught += Utils.PushClientOnExceptionsCaught;
                     await instagram.PushClient.StartFresh();
                     await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));  // Wait 5s to complete all outstanding IOs (hopefully)
                     await instagram.PushClient.TransferPushSocket(false);
