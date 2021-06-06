@@ -46,6 +46,17 @@ namespace BackgroundPushClient
                 }
 
                 var instagram = new Instagram(session);
+
+                if (instagram.IsUserAuthenticated)
+                {
+                    // Switch to file based session
+                    await SessionManager.SaveSessionAsync(instagram);
+
+                    UserSessionData.RemoveFromAppSettings();
+                    AndroidDevice.RemoveFromAppSettings();
+                    FbnsConnectionData.RemoveFromAppSettings();
+                }
+
                 if (instagram.IsUserAuthenticated && !PushClient.TasksRegistered())
                 {
                     instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
@@ -55,16 +66,6 @@ namespace BackgroundPushClient
 #if DEBUG
                     Utils.PopMessageToast("Finished background tasks update.");
 #endif
-                }
-
-                if (instagram.IsUserAuthenticated && await Utils.TryAcquireSyncLock())
-                {
-                    // Switch to file based session
-                    await SessionManager.SaveSessionAsync(instagram);
-
-                    UserSessionData.RemoveFromAppSettings();
-                    AndroidDevice.RemoveFromAppSettings();
-                    FbnsConnectionData.RemoveFromAppSettings();
                 }
             }
             catch (Exception e)

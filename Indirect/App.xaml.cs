@@ -214,9 +214,16 @@ namespace Indirect
             if (ViewModel.StartedFromMainView)
             {
                 await ViewModel.TryAcquireSyncLock();
-                ViewModel.PushClient.Start();
                 await ViewModel.UpdateInboxAndSelectedThread();
                 ViewModel.ReelsFeed.StartReelsFeedUpdateLoop();
+                try
+                {
+                    await ViewModel.PushClient.StartFromForeground();
+                }
+                catch (Exception ex)
+                {
+                    DebugLogger.LogException(ex);
+                }
             }
 
             if (ViewModel.Inbox.SeqId > 0)

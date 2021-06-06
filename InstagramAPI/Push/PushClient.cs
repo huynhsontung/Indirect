@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Foundation.Metadata;
 using Windows.Networking;
+using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage.Streams;
@@ -39,6 +40,7 @@ namespace InstagramAPI.Push
         public const string SocketIdLegacy = "mqtt_fbns";    // TODO: handle multiple socket IDs for multiple profiles
         public const int KeepAlive = 900;    // seconds
 
+        private bool _transferred;
         private CancellationTokenSource _runningTokenSource;
         private DataReader _inboundReader;
         private DataWriter _outboundWriter;
@@ -47,6 +49,7 @@ namespace InstagramAPI.Push
         public PushClient(Instagram api)
         {
             _instaApi = api ?? throw new ArgumentException("Api can't be null", nameof(api));
+            //NetworkInformation.NetworkStatusChanged += OnNetworkChanged;
         }
 
         public void DisposeBackgroundSocket()
@@ -70,6 +73,23 @@ namespace InstagramAPI.Push
             {
                 task.Value.Unregister(true);
             }
+        }
+
+        public static bool SocketRegistered()
+        {
+            try
+            {
+                if (SocketActivityInformation.AllSockets.ContainsKey(SocketIdLegacy))
+                {
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                DebugLogger.Log(nameof(PushClient), e);
+            }
+
+            return false;
         }
 
         public static bool TaskExists(string name)
@@ -167,7 +187,12 @@ namespace InstagramAPI.Push
         /// </summary>
         public async Task TransferPushSocket(bool ping = true)
         {
-            if (!_instaApi.IsUserAuthenticated || !Running) return;
+            lock (this)
+            {
+                // Only transfer once
+                if (!_instaApi.IsUserAuthenticated || !Running || _transferred) return;
+                _transferred = true;
+            }
 
             // Hand over MQTT socket to socket broker
             this.Log("Transferring sockets");
@@ -193,26 +218,14 @@ namespace InstagramAPI.Push
             Socket.Dispose();
         }
 
-        public async void Start()
+        public async Task StartFromForeground()
         {
-            if (!_instaApi.IsUserAuthenticated || Running) return;
-            try
+            if (!_instaApi.IsUserAuthenticated || Running || _transferred || SocketRegistered())
             {
-                if (SocketActivityInformation.AllSockets.TryGetValue(SocketIdLegacy, out var socketInformation))
-                {
-                    var socket = socketInformation.StreamSocket;
-                    StartWithExistingSocket(socket);
-                }
-                else
-                {
-                    await StartFresh().ConfigureAwait(false);
-                }
+                return;
             }
-            catch (Exception e)
-            {
-                this.Log(e);
-                await StartFresh().ConfigureAwait(false);
-            }
+
+            await StartFresh().ConfigureAwait(false);
         }
 
         public void StartWithExistingSocket(StreamSocket socket)
@@ -230,7 +243,7 @@ namespace InstagramAPI.Push
                 _runningTokenSource = new CancellationTokenSource();
                 
                 StartPollingLoop();
-                StartKeepAliveLoop();
+                //StartKeepAliveLoop();
             }
             catch (Exception e)
             {
@@ -241,11 +254,6 @@ namespace InstagramAPI.Push
         public async Task StartFresh()
         {
             this.Log("Starting fresh");
-            if (!Instagram.InternetAvailable())
-            {
-                this.Log("Internet not available. Exiting.");
-                return;
-            }
 
             if (Running) throw new Exception("Push client is already running");
 
@@ -274,23 +282,14 @@ namespace InstagramAPI.Push
                 return;
             }
 
-            try
-            {
-                await Socket.ConnectAsync(new HostName(HostName), "443", SocketProtectionLevel.Tls12);
-                _inboundReader = new DataReader(Socket.InputStream);
-                _outboundWriter = new DataWriter(Socket.OutputStream);
-                _inboundReader.ByteOrder = ByteOrder.BigEndian;
-                _inboundReader.InputStreamOptions = InputStreamOptions.Partial;
-                _outboundWriter.ByteOrder = ByteOrder.BigEndian;
-                _runningTokenSource = new CancellationTokenSource();
-                await FbnsPacketEncoder.EncodePacket(connectPacket, _outboundWriter);
-            }
-            catch (Exception e)
-            {
-                DebugLogger.LogException(e);
-                Restart();
-                return;
-            }
+            await Socket.ConnectAsync(new HostName(HostName), "443", SocketProtectionLevel.Tls12);
+            _inboundReader = new DataReader(Socket.InputStream);
+            _outboundWriter = new DataWriter(Socket.OutputStream);
+            _inboundReader.ByteOrder = ByteOrder.BigEndian;
+            _inboundReader.InputStreamOptions = InputStreamOptions.Partial;
+            _outboundWriter.ByteOrder = ByteOrder.BigEndian;
+            _runningTokenSource = new CancellationTokenSource();
+            await FbnsPacketEncoder.EncodePacket(connectPacket, _outboundWriter);
             StartPollingLoop();
         }
 
@@ -334,15 +333,6 @@ namespace InstagramAPI.Push
             _runningTokenSource?.Cancel();
         }
 
-        private async void Restart()
-        {
-            this.Log("Restarting push server");
-            _runningTokenSource?.Cancel();
-            await Task.Delay(TimeSpan.FromSeconds(3));
-            if (Running) return;
-            await StartFresh();
-        }
-
         private async void StartPollingLoop()
         {
             while (Running)
@@ -359,10 +349,11 @@ namespace InstagramAPI.Push
                     if (Running)
                     {
                         DebugLogger.LogException(e, false);
-                        Restart();
                     }
+
                     return;
                 }
+
                 await OnPacketReceived(packet);
             }
         }
@@ -387,6 +378,41 @@ namespace InstagramAPI.Push
             Message = 76,   // "/fbns_msg"
             RegReq = 79,    // "/fbns_reg_req"
             RegResp = 80    // "/fbns_reg_resp"
+        }
+
+        private async void DelayTransferAsync()
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(8), _runningTokenSource.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+
+            if (Running)
+            {
+                await TransferPushSocket(false);
+            }
+        }
+
+        private async void OnNetworkChanged(object sender)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+            if (Running && Instagram.InternetAvailable())
+            {
+                _runningTokenSource?.Cancel();
+                try
+                {
+                    this.Log("Restarting due to network change.");
+                    await StartFresh().ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    DebugLogger.LogException(e);
+                }
+            }
         }
 
         private async Task OnPacketReceived(Packet msg)
@@ -435,7 +461,8 @@ namespace InstagramAPI.Push
                             case TopicIds.RegResp:
                                 this.Log("Received token to register");
                                 await OnRegisterResponse(json);
-                                StartKeepAliveLoop();
+                                DelayTransferAsync();
+                                //StartKeepAliveLoop();
                                 break;
                             default:
                                 this.Log($"Unknown topic received: {publishPacket.TopicName}");

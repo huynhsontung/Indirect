@@ -8,12 +8,9 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Utils;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BackgroundPushClient
 {
@@ -33,7 +30,7 @@ namespace BackgroundPushClient
             var queryParams = HttpUtility.ParseQueryString(igAction.Substring(querySeparatorIndex));
             var threadId = queryParams["id"];
             var itemId = queryParams["x"];
-            if (threadId == null || itemId == null || notificationContent.Message == null)
+            if (threadId == null || itemId == null || notificationContent.Message == null || !await TryAcquireSyncLock())
             {
                 return;
             }

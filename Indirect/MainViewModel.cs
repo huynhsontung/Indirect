@@ -94,9 +94,17 @@ namespace Indirect
             if (!IsUserAuthenticated) throw new Exception("User is not logged in.");
             await Inbox.ClearInbox();
             GetUserPresence();
-            PushClient.Start();
             await ReelsFeed.UpdateReelsFeed();
             ReelsFeed.StartReelsFeedUpdateLoop();
+
+            try
+            {
+                await PushClient.StartFromForeground();
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+            }
 
             // Disabled due to store certification failed
             //await Task.Delay(10000).ConfigureAwait(false);

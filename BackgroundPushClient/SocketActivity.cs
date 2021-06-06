@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking.Sockets;
+using Windows.Storage;
 using InstagramAPI;
 using InstagramAPI.Push;
 using InstagramAPI.Utils;
@@ -14,6 +16,8 @@ namespace BackgroundPushClient
 {
     public sealed class SocketActivity : IBackgroundTask
     {
+        private FileStream _lockFile;
+
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
 #if !DEBUG
@@ -25,9 +29,8 @@ namespace BackgroundPushClient
             this.Log($"{details.Reason}");
             try
             {
-                if (!await Utils.TryAcquireSyncLock())
+                if (!Instagram.InternetAvailable())
                 {
-                    this.Log("Failed to open SyncLock file. Main application might be running. Exit background task.");
                     return;
                 }
 
@@ -49,38 +52,34 @@ namespace BackgroundPushClient
                 {
                     case SocketActivityTriggerReason.KeepAliveTimerExpired:
                     case SocketActivityTriggerReason.SocketActivity:
-                        StreamSocket socket = null;
+                    {
+                        var socket = details.SocketInformation.StreamSocket;
+                        instagram.PushClient.StartWithExistingSocket(socket);
+                        break;
+                    }
+                    case SocketActivityTriggerReason.SocketClosed:
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(3));
+                        if (!await Utils.TryAcquireSyncLock())
+                        {
+                            this.Log(
+                                "Failed to open SyncLock file after extended wait. Main application might be running. Exit background task.");
+                            return;
+                        }
+
                         try
                         {
-                            socket = details.SocketInformation.StreamSocket;
+                            var socket = details.SocketInformation.StreamSocket;
+                            socket?.Dispose();
                         }
                         catch (Exception)
                         {
                             // pass
                         }
 
-                        if (socket != null)
-                        {
-                            instagram.PushClient.StartWithExistingSocket(socket);
-                        }
-                        else
-                        {
-                            await instagram.PushClient.StartFresh();
-                        }
-
-                        break;
-
-                    case SocketActivityTriggerReason.SocketClosed:
-                        await Task.Delay(TimeSpan.FromSeconds(3));
-                        if (!await Utils.TryAcquireSyncLock())
-                        {
-                            this.Log("Failed to open SyncLock file after extended wait. Main application might be running. Exit background task.");
-                            return;
-                        }
-
                         await instagram.PushClient.StartFresh();
                         break;
-
+                    }
                     default:
                         return;
                 }
@@ -102,9 +101,31 @@ namespace BackgroundPushClient
             }
             finally
             {
+                ReleaseLock();
                 this.Log("-------------- End of background task --------------");
                 deferral.Complete();
             }
+        }
+
+        private async Task<bool> TryAcquireLock()
+        {
+            var storageFolder = ApplicationData.Current.LocalFolder;
+            var storageItem = await storageFolder.CreateFileAsync("SocketActivity.mutex", CreationCollisionOption.OpenIfExists);
+            try
+            {
+                _lockFile = new FileStream(storageItem.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private void ReleaseLock()
+        {
+            _lockFile?.Dispose();
         }
     }
 }
