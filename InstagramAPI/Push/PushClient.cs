@@ -41,6 +41,7 @@ namespace InstagramAPI.Push
         private const string SocketIdPrefix = "mqtt_fbns_";
         public const string SocketIdLegacy = "mqtt_fbns";    // TODO: handle multiple socket IDs for multiple profiles
         public const int KeepAlive = 900;    // seconds
+        public const int WaitTime = 5;      // seconds
 
         private bool _transferred;
         private CancellationTokenSource _runningTokenSource;
@@ -393,7 +394,7 @@ namespace InstagramAPI.Push
         {
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(8), _runningTokenSource.Token);
+                await Task.Delay(TimeSpan.FromSeconds(WaitTime + 1), _runningTokenSource.Token);
             }
             catch (TaskCanceledException)
             {

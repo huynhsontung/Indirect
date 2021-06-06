@@ -85,7 +85,7 @@ namespace BackgroundPushClient
                         return;
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(5));  // Wait 5s to complete all outstanding IOs (hopefully)
+                await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));  // Wait 5s to complete all outstanding IOs (hopefully)
                 await instagram.PushClient.TransferPushSocket(false);
                 await SessionManager.SaveSessionAsync(instagram);
             }
