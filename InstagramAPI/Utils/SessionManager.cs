@@ -136,6 +136,22 @@ namespace InstagramAPI.Utils
             }).ToArray();
         }
 
+        public static async Task RemoveAllSessions()
+        {
+            var files = await LocalFolder.GetFilesAsync();
+            foreach (var sessionFile in files.Where(x => x.FileType == SESSION_EXT))
+            {
+                try
+                {
+                    await sessionFile.DeleteAsync();
+                }
+                catch (Exception)
+                {
+                    // pass
+                }
+            }
+        }
+
         public static async Task<bool> TryRemoveSessionAsync(UserSessionData session)
         {
             if (session.LoggedInUser?.Pk == default)

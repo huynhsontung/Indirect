@@ -26,8 +26,6 @@ namespace InstagramAPI
     {
         private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
 
-        public static Instagram Current { get; private set; }
-
         // TODO: Remove IsUserAuthenticatedPersistent after migration
         public static bool IsUserAuthenticatedPersistent => (bool?)LocalSettings.Values["_isUserAuthenticated"] ?? false;
 
@@ -47,7 +45,6 @@ namespace InstagramAPI
 #if DEBUG
             DebugLogger.LogLevel = LogLevel.All;
 #endif
-            Current = this;
             if (session == null)
             {
                 session = new UserSessionData();
@@ -368,8 +365,10 @@ namespace InstagramAPI
         public async Task Logout()
         {
             await SessionManager.TryRemoveSessionAsync(Session);
+            await SessionManager.RemoveAllSessions();   // TODO: remove when multiple profile support is in
             SyncClient.Shutdown();
             PushClient.Shutdown();
+            PushClient.UnregisterTasks();
             CookieHelper.ClearCookies();
             Session = new UserSessionData(Device);
         }

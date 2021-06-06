@@ -135,10 +135,12 @@ namespace Indirect
 
         public async Task Logout()
         {
+            ReelsFeed.StopReelsFeedUpdateLoop(true);
             await InstaApi.Logout();
             //await ContactsService.DeleteAllAppContacts();
             await CacheManager.RemoveCacheAsync(nameof(ThreadInfoDictionary));
-            // _settings.Values.Clear();
+
+            InstaApi = new Instagram(InstaApi.Session);
         }
 
         public async Task UpdateLoggedInUser()

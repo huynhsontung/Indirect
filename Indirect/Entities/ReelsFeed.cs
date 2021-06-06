@@ -118,14 +118,22 @@ namespace Indirect.Entities
             }
         }
 
-        public void StopReelsFeedUpdateLoop()
+        public void StopReelsFeedUpdateLoop(bool clear = false)
         {
             _reelsUpdateLoop?.Cancel();
+            if (clear)
+            {
+                lock (Reels)
+                {
+                    Reels.Clear();
+                }
+            }
         }
 
         public void Dispose()
         {
             _reelsUpdateLoop?.Dispose();
+            Reels.Clear();
         }
     }
 }
