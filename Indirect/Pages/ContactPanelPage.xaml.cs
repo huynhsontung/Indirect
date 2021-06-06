@@ -43,7 +43,7 @@ namespace Indirect.Pages
             Bindings.Update();
             if (_thread != null)
             {
-                ViewModel.SecondaryThreadViews.Add(_thread);
+                ViewModel.SecondaryThreads.Add(_thread);
                 await OptionallyStartSyncClient().ConfigureAwait(false);
             }
         }
@@ -71,7 +71,7 @@ namespace Indirect.Pages
 
         private void ContactPanelOnClosing(ContactPanel sender, ContactPanelClosingEventArgs args)
         {
-            ViewModel.SecondaryThreadViews.Remove(_thread);
+            ViewModel.SecondaryThreads.Remove(_thread);
             MainView.UnsubscribeHandlers();
         }
 

@@ -54,7 +54,7 @@ namespace Indirect.Pages
         private void ViewConsolidated(ApplicationView sender, ApplicationViewConsolidatedEventArgs args)
         {
             ApplicationView.GetForCurrentView().Consolidated -= ViewConsolidated;
-            ((App) Application.Current).ViewModel.SecondaryThreadViews.Remove(_thread);
+            ((App) Application.Current).ViewModel.SecondaryThreads.Remove(_thread);
         }
     }
 }

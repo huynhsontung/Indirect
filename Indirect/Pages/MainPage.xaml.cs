@@ -74,7 +74,12 @@ namespace Indirect.Pages
                 DefaultButton = ContentDialogButton.Close
             };
             var confirmation = await confirmDialog.ShowAsync();
-            if (confirmation != ContentDialogResult.Primary) return;
+            if (confirmation != ContentDialogResult.Primary)
+            {
+                return;
+            }
+
+            await ((App) App.Current).CloseAllSecondaryViews();
             await ViewModel.Logout();
             Frame.Navigate(typeof(LoginPage));
         }

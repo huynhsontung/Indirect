@@ -77,7 +77,7 @@ namespace Indirect
                     }
 
                     // Update thread in main view as well as in secondary views
-                    var threadsToUpdate = SecondaryThreadViews.Where(x => x.ThreadId == threadId).ToList();
+                    var threadsToUpdate = SecondaryThreads.Where(x => x.ThreadId == threadId).ToList();
                     if (mainThread != null) threadsToUpdate.Add(mainThread);
 
                     foreach (var thread in threadsToUpdate)

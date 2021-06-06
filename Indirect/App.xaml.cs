@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web;
 using Windows.ApplicationModel;
@@ -12,8 +13,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Pages;
 using Indirect.Utilities;
-using InstagramAPI;
-using InstagramAPI.Classes.Core;
 using InstagramAPI.Utils;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
@@ -31,6 +30,8 @@ namespace Indirect
 
         internal MainViewModel ViewModel { get; } = new MainViewModel();
 
+        private List<int> SecondaryViewIds { get; } = new List<int>();
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -46,6 +47,41 @@ namespace Indirect
             this.Resuming += OnResuming;
             this.EnteredBackground += OnEnteredBackground;
             ImageCache.Instance.CacheDuration = TimeSpan.FromDays(7);
+        }
+
+        public async Task CloseAllSecondaryViews()
+        {
+            foreach (var secondaryViewId in SecondaryViewIds.ToArray())
+            {
+                await ApplicationViewSwitcher.SwitchAsync(ApplicationView.GetForCurrentView().Id, secondaryViewId,
+                    ApplicationViewSwitchingOptions.ConsolidateViews);
+            }
+        }
+
+        public async Task CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)
+        {
+            var newView = view ?? CoreApplication.CreateNewView();
+            await newView.Dispatcher.QuickRunAsync(async () =>
+            {
+                var frame = new Frame();
+                frame.Navigate(targetPage, parameter);
+                Window.Current.Content = frame;
+                // You have to activate the window in order to show it later.
+                Window.Current.Activate();
+
+                var newAppView = ApplicationView.GetForCurrentView();
+                newAppView.SetPreferredMinSize(new Size(380, 300));
+                var titleBar = newAppView.TitleBar;
+                titleBar.ButtonBackgroundColor = Windows.UI.Colors.Transparent;
+                titleBar.ButtonInactiveBackgroundColor = Windows.UI.Colors.Transparent;
+                CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
+
+                var newViewId = newAppView.Id;
+                SecondaryViewIds.Add(newViewId);
+                await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
+                newAppView.TryResizeView(new Size(380, 640));
+                newAppView.Consolidated += SecondaryView_OnConsolidated;
+            });
         }
 
         private void SetTheme()
@@ -139,7 +175,7 @@ namespace Indirect
         /// </summary>
         /// <param name="sender">The Frame which failed navigation</param>
         /// <param name="e">Details about the navigation failure</param>
-        void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
+        private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
         {
             throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
         }
@@ -213,28 +249,10 @@ namespace Indirect
             coreTitleBar.ExtendViewIntoTitleBar = true;
         }
 
-        public static async Task CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)
+        private void SecondaryView_OnConsolidated(ApplicationView sender, ApplicationViewConsolidatedEventArgs args)
         {
-            var newView = view ?? CoreApplication.CreateNewView();
-            await newView.Dispatcher.QuickRunAsync(async () =>
-            {
-                var newAppView = ApplicationView.GetForCurrentView();
-                newAppView.SetPreferredMinSize(new Size(380, 300));
-                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
-                titleBar.ButtonBackgroundColor = Windows.UI.Colors.Transparent;
-                titleBar.ButtonInactiveBackgroundColor = Windows.UI.Colors.Transparent;
-                CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
-
-                var frame = new Frame();
-                frame.Navigate(targetPage, parameter);
-                Window.Current.Content = frame;
-                // You have to activate the window in order to show it later.
-                Window.Current.Activate();
-
-                var newViewId = ApplicationView.GetForCurrentView().Id;
-                await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
-                newAppView.TryResizeView(new Size(380, 640));
-            });
+            sender.Consolidated -= SecondaryView_OnConsolidated;
+            SecondaryViewIds.Remove(sender.Id);
         }
     }
 }

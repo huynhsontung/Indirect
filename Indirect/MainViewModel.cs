@@ -45,7 +45,7 @@ namespace Indirect
         public Dictionary<long, UserPresenceValue> UserPresenceDictionary { get; } = new Dictionary<long, UserPresenceValue>();
         public InboxWrapper PendingInbox { get; }
         public InboxWrapper Inbox { get; }
-        public List<DirectThreadWrapper> SecondaryThreadViews { get; } = new List<DirectThreadWrapper>();
+        public List<DirectThreadWrapper> SecondaryThreads { get; } = new List<DirectThreadWrapper>();
         public BaseUser LoggedInUser => InstaApi.Session.LoggedInUser;
         public PersistentDictionary<string> ThreadInfoPersistentDictionary { get; } = new PersistentDictionary<string>("ThreadInfoPersistentDictionary");
         public Dictionary<long, BaseUser> CentralUserRegistry { get; } = new Dictionary<long, BaseUser>();
@@ -222,8 +222,8 @@ namespace Indirect
             var newView = CoreApplication.CreateNewView();
             var cloneThread = await thread.CloneThreadForSecondaryView(newView.Dispatcher);
             if (cloneThread == null) return;
-            SecondaryThreadViews.Add(cloneThread);
-            await App.CreateAndShowNewView(typeof(ThreadPage), cloneThread, newView);
+            SecondaryThreads.Add(cloneThread);
+            await ((App) App.Current).CreateAndShowNewView(typeof(ThreadPage), cloneThread, newView);
         }
 
         public async Task CreateAndOpenThread(IEnumerable<long> userIds)
