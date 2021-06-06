@@ -29,7 +29,9 @@ namespace InstagramAPI.Classes.Direct
         
         [JsonProperty("show_forward_attribution")] public bool ShowForwardAttribution { get; set; }
         
-        [JsonProperty("is_shh_mode")] public bool IsShhMode { get; set; }
+        [JsonProperty("is_shh_mode")]
+        [JsonConverter(typeof(BoolConverter))]
+        public bool IsShhMode { get; set; }
 
         [JsonProperty("replied_to_message", NullValueHandling = NullValueHandling.Ignore)]
         public DirectItem RepliedToMessage { get; set; }
