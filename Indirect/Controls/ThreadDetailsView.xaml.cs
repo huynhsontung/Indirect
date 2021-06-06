@@ -142,7 +142,7 @@ namespace Indirect.Controls
         {
             if (Thread == null) return;
             var message = MessageTextBox.Text;
-            Thread.DraftMessage = string.Empty;
+            MessageTextBox.Text = string.Empty;
             if(string.IsNullOrEmpty(message))
             {
                 await ViewModel.ChatService.SendLike(Thread);

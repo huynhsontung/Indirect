@@ -23,44 +23,15 @@ namespace Indirect.Entities.Wrappers
         public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly MainViewModel _viewModel;
-        private CoreDispatcher _dispatcher;
-        private bool _isSomeoneTyping;
-        private string _draftMessage;
         private DirectItemWrapper _replyingItem;
 
         public DirectThread Source { get; private set; }
 
-        public CoreDispatcher Dispatcher
-        {
-            get => _dispatcher ?? (_dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher);
-            private set => _dispatcher = value;
-        }
+        public CoreDispatcher Dispatcher { get; }
 
-        public bool IsSomeoneTyping
-        {
-            get => _isSomeoneTyping;
-            private set
-            {
-                _isSomeoneTyping = value;
-                _ = Dispatcher.QuickRunAsync(() =>
-                {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSomeoneTyping)));
-                });
-            }
-        }
+        public bool IsSomeoneTyping { get; private set; }   // UI property
 
-        public string DraftMessage
-        {
-            get => _draftMessage;
-            set
-            {
-                _draftMessage = value;
-                _ = Dispatcher.QuickRunAsync(() =>
-                {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DraftMessage)));
-                });
-            }
-        }
+        public string DraftMessage { get; set; }    // UI property
 
         public DirectItemWrapper ReplyingItem
         {
@@ -103,12 +74,12 @@ namespace Indirect.Entities.Wrappers
 
         public DirectThreadWrapper(MainViewModel viewModel, DirectThread source, CoreDispatcher dispatcher = null)
         {
+            _viewModel = viewModel;
             Users = new ObservableCollection<BaseUser>();
             ObservableItems = new ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper>(this);
             DetailedUserInfoDictionary = new Dictionary<long, UserInfo>();
+            Dispatcher = dispatcher ?? CoreApplication.MainView.CoreWindow.Dispatcher;
 
-            _viewModel = viewModel;
-            Dispatcher = dispatcher;
             if (source != null)
             {
                 Source = source;
@@ -148,7 +119,10 @@ namespace Indirect.Entities.Wrappers
                 return;
             }
 
-            await UpdateItemListAsync(DecorateItems(items));
+            await Dispatcher.QuickRunAsync(() =>
+            {
+                UpdateItemList(DecorateItems(items));
+            });
 
             var latestItem = ObservableItems.Last();    // Assuming order of item is maintained. Last item after update should be the latest.
             var source = Source;
@@ -199,8 +173,16 @@ namespace Indirect.Entities.Wrappers
         public async void Update(DirectThread source, bool fromInbox = false)
         {
             await UpdateExcludeItemList(source);
-            if (fromInbox) return;  // Items from GetInbox request will interfere with GetPagedItemsAsync
-            await UpdateItemListAsync(DecorateItems(source.Items));
+            // Items from GetInbox request will interfere with GetPagedItemsAsync
+            if (fromInbox)
+            {
+                return;
+            }
+
+            await Dispatcher.QuickRunAsync(() =>
+            {
+                UpdateItemList(DecorateItems(source.Items));
+            });
         }
 
         private async Task UpdateExcludeItemList(DirectThread target)
@@ -236,14 +218,6 @@ namespace Indirect.Entities.Wrappers
             await Dispatcher.QuickRunAsync(() =>
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Source)));
-            });
-        }
-
-        private Task UpdateItemListAsync(ICollection<DirectItemWrapper> source)
-        {
-            return Dispatcher.QuickRunAsync(() =>
-            {
-                UpdateItemList(source);
             });
         }
 
@@ -284,6 +258,8 @@ namespace Indirect.Entities.Wrappers
                         }
                     }
                 }
+
+                Source.Items = ObservableItems.Select(x => x.Item).ToList();
             }
         }
 
@@ -477,6 +453,8 @@ namespace Indirect.Entities.Wrappers
                 {
                     IsSomeoneTyping = false;
                 }
+
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSomeoneTyping)));
             });
         }
 
