@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using InstagramAPI.Utils;
@@ -8,22 +9,8 @@ using InstagramAPI.Utils;
 
 namespace Indirect.Controls
 {
-    public sealed partial class TwoFactorAuthDialog : ContentDialog, INotifyPropertyChanged
+    public sealed partial class TwoFactorAuthDialog : ContentDialog
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private string _errorMessage = string.Empty;
-
-        private string ErrorMessage
-        {
-            get => _errorMessage;
-            set
-            {
-                _errorMessage = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ErrorMessage)));
-            }
-        }
-
         public TwoFactorAuthDialog()
         {
             this.InitializeComponent();
@@ -34,7 +21,7 @@ namespace Indirect.Controls
             if (CodeBox.Text.Length < 6)
             {
                 args.Cancel = true;
-                ErrorMessage = "Please enter a valid security code";
+                ErrorMessage.Text = "Please enter a valid security code";
                 return;
             }
             var deferral = args.GetDeferral();
@@ -43,7 +30,7 @@ namespace Indirect.Controls
             if (!result.IsSucceeded)
             {
                 args.Cancel = true;
-                ErrorMessage = result.Message;
+                ErrorMessage.Text = result.Message;
 
                 if (result.Exception != null)
                 {
@@ -55,9 +42,10 @@ namespace Indirect.Controls
             deferral.Complete();
         }
 
-        private void TwoFactorAuthDialog_OnOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
+        private async void TwoFactorAuthDialog_OnOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
         {
-            ErrorMessage = string.Empty;
+            ErrorMessage.Text = string.Empty;
+            await Task.Delay(200);
             CodeBox.Focus(FocusState.Programmatic);
         }
 
