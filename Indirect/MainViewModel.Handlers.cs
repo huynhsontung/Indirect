@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Sync;
@@ -27,7 +26,7 @@ namespace Indirect
             client.FailedToStart += OnSyncClientFailedToStart;
         }
 
-        private async void OnInboxFirstUpdated(int seqId, DateTimeOffset snapshotAt)
+        private async void OnInboxFirstUpdated(long seqId, DateTimeOffset snapshotAt)
         {
             await SyncClient.Start(seqId, snapshotAt, true).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(_threadToBeOpened) && Inbox.Threads.Count > 0)
@@ -60,10 +59,10 @@ namespace Indirect
                     var itemData = syncEvent.Data[0];
                     if (syncEvent.SeqId > Inbox.SeqId)
                     {
-                        Inbox.SeqId = syncEvent.SeqId;
+                        Inbox.Container.SeqId = syncEvent.SeqId;
                         if (itemData.Item != null)
                         {
-                            Inbox.SnapshotAt = itemData.Item.Timestamp;
+                            Inbox.Container.SnapshotAt = itemData.Item.Timestamp;
                         }
                     }
                     var segments = itemData.Path.Trim('/').Split('/');

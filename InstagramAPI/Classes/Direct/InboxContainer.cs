@@ -11,7 +11,7 @@ namespace InstagramAPI.Classes.Direct
     {
         [JsonProperty("pending_requests_total")] public int PendingRequestsCount { get; set; }
 
-        [JsonProperty("seq_id")] public int SeqId { get; set; }
+        [JsonProperty("seq_id")] public long SeqId { get; set; }
 
         // TODO: Investigate what this property does
         // public InstaDirectInboxSubscription Subscription { get; set; } = new InstaDirectInboxSubscription();

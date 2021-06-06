@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
@@ -17,18 +16,21 @@ using InstagramAPI.Classes.Core;
 
 namespace Indirect.Entities.Wrappers
 {
-    class InboxWrapper: Inbox, IIncrementalSource<DirectThreadWrapper>, INotifyPropertyChanged
+    internal class InboxWrapper: IIncrementalSource<DirectThreadWrapper>
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-        public event Action<int, DateTimeOffset> FirstUpdated;    // callback to start SyncClient
+        public event Action<long, DateTimeOffset> FirstUpdated;    // callback to start SyncClient
 
-        public int PendingRequestsCount { get; private set; }
+        public InboxContainer Container { get; private set; }
 
-        public long SeqId { get; set; }
-        public DateTimeOffset SnapshotAt { get; set; }
+        public long SeqId => Container.SeqId;
+
+        public DateTimeOffset SnapshotAt => Container.SnapshotAt;
+
         public bool PendingInbox { get; }
 
-        public new IncrementalLoadingCollection<InboxWrapper, DirectThreadWrapper> Threads { get; }
+        public IncrementalLoadingCollection<InboxWrapper, DirectThreadWrapper> Threads { get; }
+
+        private string OldestCursor { get; set; }
 
         private readonly MainViewModel _viewModel;
         private bool _firstTime = true;
@@ -36,37 +38,30 @@ namespace Indirect.Entities.Wrappers
         {
             _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             PendingInbox = pending;
+            Container = new InboxContainer();
             Threads =
                 new IncrementalLoadingCollection<InboxWrapper, DirectThreadWrapper>(this);
         }
 
         private void UpdateExcludeThreads(InboxContainer source)
         {
-            PendingRequestsCount = source.PendingRequestsCount;
-            SeqId = source.SeqId;
-            SnapshotAt = source.SnapshotAt;
-            var inbox = source.Inbox;
-            UnseenCount = inbox.UnseenCount;
-            UnseenCountTs = inbox.UnseenCountTs;
-            BlendedInboxEnabled = inbox.BlendedInboxEnabled;
+            Container = source;
             if (string.IsNullOrEmpty(OldestCursor) ||
-                string.Compare(OldestCursor, inbox.OldestCursor, StringComparison.Ordinal) > 0)
+                string.Compare(OldestCursor, source.Inbox.OldestCursor, StringComparison.Ordinal) > 0)
             {
-                OldestCursor = inbox.OldestCursor;
-                HasOlder = inbox.HasOlder;
+                OldestCursor = Container.Inbox.OldestCursor;
             }
-
-            _ = CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PendingRequestsCount))); });
         }
 
         public async Task UpdateInbox()
         {
             var result = await _viewModel.InstaApi.GetInboxAsync(PaginationParameters.MaxPagesToLoad(1));
-            InboxContainer container;
-            if (result.Status == ResultStatus.Succeeded)
-                container = result.Value;
-            else return;
+            if (!result.IsSucceeded)
+            {
+                return;
+            }
+
+            var container = result.Value;
             UpdateExcludeThreads(container);
             await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
             {
@@ -95,7 +90,7 @@ namespace Indirect.Entities.Wrappers
 
         public async Task<IEnumerable<DirectThreadWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
         {
-            if (!_firstTime && !HasOlder) return Array.Empty<DirectThreadWrapper>();
+            if (!_firstTime && !Container.Inbox.HasOlder) return Array.Empty<DirectThreadWrapper>();
             var pagesToLoad = pageSize / 20;
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
@@ -136,7 +131,6 @@ namespace Indirect.Entities.Wrappers
         public async Task ClearInbox()
         {
             _firstTime = true;
-            OldestCursor = null;
             if (!Threads.HasMoreItems)
             {
                 await Threads.RefreshAsync();

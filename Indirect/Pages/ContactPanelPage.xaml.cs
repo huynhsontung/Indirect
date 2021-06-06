@@ -58,8 +58,6 @@ namespace Indirect.Pages
                 var result = await ViewModel.InstaApi.GetInboxInfoAsync();
                 if (result.IsSucceeded)
                 {
-                    ViewModel.Inbox.SeqId = result.Value.SeqId;
-                    ViewModel.Inbox.SnapshotAt = result.Value.SnapshotAt;
                     await ViewModel.SyncClient.Start(result.Value.SeqId, result.Value.SnapshotAt);
                 }
             }
