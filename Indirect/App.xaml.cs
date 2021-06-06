@@ -15,9 +15,6 @@ using Indirect.Pages;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Utils;
-using Microsoft.AppCenter;
-using Microsoft.AppCenter.Analytics;
-using Microsoft.AppCenter.Crashes;
 using Microsoft.Toolkit.Uwp.UI;
 
 namespace Indirect
@@ -39,9 +36,7 @@ namespace Indirect
         /// </summary>
         public App()
         {
-#if !DEBUG
-            AppCenter.Start(Secrets.APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
-#endif
+            Instagram.StartAppCenter();
             this.InitializeComponent();
             SetTheme();
             this.Suspending += OnSuspending;

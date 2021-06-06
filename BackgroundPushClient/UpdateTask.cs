@@ -6,9 +6,6 @@ using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Push;
 using InstagramAPI.Utils;
-using Microsoft.AppCenter;
-using Microsoft.AppCenter.Analytics;
-using Microsoft.AppCenter.Crashes;
 
 namespace BackgroundPushClient
 {
@@ -16,9 +13,7 @@ namespace BackgroundPushClient
     {
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
-#if !DEBUG
-            AppCenter.Start(Secrets.APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
-#endif
+            Instagram.StartAppCenter();
             var deferral = taskInstance.GetDeferral();
             try
             {
@@ -55,19 +50,21 @@ namespace BackgroundPushClient
                     UserSessionData.RemoveFromAppSettings();
                     AndroidDevice.RemoveFromAppSettings();
                     FbnsConnectionData.RemoveFromAppSettings();
+
+                    await Task.Delay(PushClient.WaitTime + 1);
+                    if (!PushClient.SocketRegistered() && await Utils.TryAcquireSyncLock())
+                    {
+                        instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
+                        instagram.PushClient.ExceptionsCaught += Utils.PushClientOnExceptionsCaught;
+                        await instagram.PushClient.StartFresh();
+                        await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));  // Wait 5s to complete all outstanding IOs (hopefully)
+                        await instagram.PushClient.TransferPushSocket(false);
+#if DEBUG
+                        Utils.PopMessageToast("Finished background tasks update.");
+#endif
+                    }
                 }
 
-                if (instagram.IsUserAuthenticated && !PushClient.TasksRegistered())
-                {
-                    instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
-                    instagram.PushClient.ExceptionsCaught += Utils.PushClientOnExceptionsCaught;
-                    await instagram.PushClient.StartFresh();
-                    await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));  // Wait 5s to complete all outstanding IOs (hopefully)
-                    await instagram.PushClient.TransferPushSocket(false);
-#if DEBUG
-                    Utils.PopMessageToast("Finished background tasks update.");
-#endif
-                }
             }
             catch (Exception e)
             {

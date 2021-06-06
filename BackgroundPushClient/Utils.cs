@@ -16,7 +16,6 @@ namespace BackgroundPushClient
 {
     internal sealed class Utils
     {
-        private static readonly ApplicationDataContainer LocalSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         private static CancellationTokenSource _rapidToast = new CancellationTokenSource();
 
         private static Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; set; }

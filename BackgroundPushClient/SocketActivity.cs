@@ -8,9 +8,6 @@ using Windows.Storage;
 using InstagramAPI;
 using InstagramAPI.Push;
 using InstagramAPI.Utils;
-using Microsoft.AppCenter;
-using Microsoft.AppCenter.Analytics;
-using Microsoft.AppCenter.Crashes;
 
 namespace BackgroundPushClient
 {
@@ -20,9 +17,7 @@ namespace BackgroundPushClient
 
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
-#if !DEBUG
-            AppCenter.Start(Secrets.APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
-#endif
+            Instagram.StartAppCenter();
             var deferral = taskInstance.GetDeferral();
             this.Log("-------------- Start of background task --------------");
             var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;

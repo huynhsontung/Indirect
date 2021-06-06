@@ -3,11 +3,7 @@ using System.Web;
 using Windows.ApplicationModel.Background;
 using Windows.UI.Notifications;
 using InstagramAPI;
-using InstagramAPI.Classes.Core;
 using InstagramAPI.Utils;
-using Microsoft.AppCenter;
-using Microsoft.AppCenter.Analytics;
-using Microsoft.AppCenter.Crashes;
 
 namespace BackgroundPushClient
 {
@@ -15,9 +11,7 @@ namespace BackgroundPushClient
     {
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
-#if !DEBUG
-            AppCenter.Start(Secrets.APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
-#endif
+            Instagram.StartAppCenter();
             var session = await SessionManager.TryLoadLastSessionAsync();
             if (session == null)
             {

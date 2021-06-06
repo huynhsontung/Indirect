@@ -1,6 +1,8 @@
 ﻿using System;
 using Windows.Networking.Connectivity;
-using Windows.Web.Http.Filters;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -8,7 +10,6 @@ namespace InstagramAPI
 {
     public partial class Instagram
     {
-
         private void ValidateLoggedIn()
         {
             if (!IsUserAuthenticated)
@@ -50,6 +51,13 @@ namespace InstagramAPI
         {
             var internetProfile = NetworkInformation.GetInternetConnectionProfile();
             return internetProfile != null;
+        }
+
+        public static void StartAppCenter()
+        {
+#if !DEBUG
+            AppCenter.Start(Secrets.APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
+#endif
         }
     }
 }
