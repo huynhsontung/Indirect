@@ -57,8 +57,8 @@ namespace InstagramAPI
             if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/inbox/", out var instaUri))
                 throw new Exception("Cant create URI for get inbox");
             return !string.IsNullOrEmpty(nextId)
-                ? new UriBuilder(instaUri) { Query = $"persistentBadging=true&use_unified_inbox=true&cursor={nextId}&direction=older&limit=20&thread_message_limit=10" }.Uri
-                 : new UriBuilder(instaUri) { Query = "persistentBadging=true&use_unified_inbox=true&limit=20&thread_message_limit=10" }.Uri;
+                ? new UriBuilder(instaUri) { Query = $"persistentBadging=true&use_unified_inbox=true&cursor={nextId}&direction=older&limit=10&thread_message_limit=10" }.Uri
+                 : new UriBuilder(instaUri) { Query = "persistentBadging=true&use_unified_inbox=true&limit=10&thread_message_limit=10" }.Uri;
         }
 
         public static Uri GetDirectInboxInfoUri()
