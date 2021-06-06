@@ -98,7 +98,7 @@ namespace InstagramAPI
         {
             var idString = string.Join(",", userIds);
             if (!Uri.TryCreate(BaseInstagramUri,
-                API_SUFFIX + $"/direct_v2/threads/get_by_participants/?recipient_users=[{idString}]", out var instaUri))
+                API_SUFFIX + $"/direct_v2/threads/get_by_participants/?recipient_users=[{idString}]&limit=20", out var instaUri))
                 throw new Exception("Cant create URI for get participants recipient user");
             return instaUri;
         }

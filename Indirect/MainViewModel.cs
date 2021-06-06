@@ -250,9 +250,15 @@ namespace Indirect
             {
                 var userIds = placeholderThread.Users.Select(x => x.Pk);
                 var result = await InstaApi.GetThreadByParticipantsAsync(userIds);
-                if (!result.IsSucceeded) return;
-                thread = result.Value != null && result.Value.Users.Count > 0 ? 
-                    new DirectThreadWrapper(this, result.Value) : new DirectThreadWrapper(this, placeholderThread.Users?[0]);
+                if (result.IsSucceeded)
+                {
+                    thread = result.Value != null && result.Value.Users.Count > 0 ? 
+                        new DirectThreadWrapper(this, result.Value) : new DirectThreadWrapper(this, placeholderThread.Users?[0]);
+                }
+                else
+                {
+                    thread = placeholderThread;
+                }
             }
             else
             {
