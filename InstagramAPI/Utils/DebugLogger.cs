@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -71,17 +72,34 @@ namespace InstagramAPI.Utils
             }
         }
 
-        public static void LogException(Exception ex, bool track = true, Dictionary<string, string> properties = null)
+        public static void LogException(Exception ex, bool track = true, IDictionary properties = null)
         {
 #if !DEBUG
-            if (track) Crashes.TrackError(ex, properties);
+            if (track)
+            {
+                if (properties is IDictionary<string, string> strDict)
+                {
+                    Crashes.TrackError(ex, strDict);
+                }
+
+                if (properties is IDictionary<string, object> objDict)
+                {
+                    strDict = new Dictionary<string, string>(objDict.Select(x =>
+                        new KeyValuePair<string, string>(x.Key, x.Value?.ToString())));
+                    Crashes.TrackError(ex, strDict);
+                }
+            }
 #endif
             if (LogLevel < LogLevel.Exceptions) return;
 #if NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NETSTANDARD1_0 || NETSTANDARD1_1 || NETSTANDARD1_2 || NETSTANDARD1_3 || NETSTANDARD1_4 || NETSTANDARD1_5 || NETSTANDARD1_6 || NETSTANDARD2_0 || NETSTANDARD2_1 || NETSTANDARD2_2 || NETSTANDARD2_3
             Console.WriteLine($"Exception: {ex}");
             Console.WriteLine($"Stacktrace: {ex.StackTrace}");
 #else
-            Log("Exception", ex);
+            Log($"Exception{(track ? "(tracked)" : string.Empty)}", ex);
+            if (track)
+            {
+                Log("Stacktrace", ex.StackTrace);
+            }
 #endif
         }
 

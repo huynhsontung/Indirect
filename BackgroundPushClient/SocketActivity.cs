@@ -48,6 +48,7 @@ namespace BackgroundPushClient
 
                 var instagram = new Instagram(session);
                 instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
+                instagram.PushClient.ExceptionsCaught += PushClientOnExceptionsCaught;
                 switch (details.Reason)
                 {
                     case SocketActivityTriggerReason.KeepAliveTimerExpired:
@@ -105,6 +106,14 @@ namespace BackgroundPushClient
                 this.Log("-------------- End of background task --------------");
                 deferral.Complete();
             }
+        }
+
+        private static void PushClientOnExceptionsCaught(object sender, UnhandledExceptionEventArgs e)
+        {
+            var exception = (Exception) e.ExceptionObject;
+#if DEBUG
+            Utils.PopMessageToast(exception.ToString());
+#endif
         }
 
         private async Task<bool> TryAcquireLock()

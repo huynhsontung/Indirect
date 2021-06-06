@@ -26,6 +26,8 @@ namespace InstagramAPI.Push
     public class PushClient
     {
         public event EventHandler<PushReceivedEventArgs> MessageReceived;
+        public event EventHandler<UnhandledExceptionEventArgs> ExceptionsCaught; 
+
         public FbnsConnectionData ConnectionData => _instaApi.Session.PushData;
         public StreamSocket Socket { get; private set; }
         public bool Running => !(_runningTokenSource?.IsCancellationRequested ?? true);
@@ -342,7 +344,6 @@ namespace InstagramAPI.Push
                 try
                 {
                     await reader.LoadAsync(FbnsPacketDecoder.PACKET_HEADER_LENGTH);
-                    packet = await FbnsPacketDecoder.DecodePacket(reader);
                 }
                 catch (Exception e)
                 {
@@ -354,7 +355,15 @@ namespace InstagramAPI.Push
                     return;
                 }
 
-                await OnPacketReceived(packet);
+                try
+                {
+                    packet = await FbnsPacketDecoder.DecodePacket(reader);
+                    await OnPacketReceived(packet);
+                }
+                catch (Exception e)
+                {
+                    ExceptionsCaught?.Invoke(this, new UnhandledExceptionEventArgs(e, false));
+                }
             }
         }
 
@@ -425,7 +434,8 @@ namespace InstagramAPI.Push
                 {
                     case PacketType.CONNACK:
                         this.Log("Received CONNACK");
-                        ConnectionData.UpdateAuth(((FbnsConnAckPacket) msg).Authentication);
+                        var auth = ((FbnsConnAckPacket) msg).Authentication;
+                        ConnectionData.UpdateAuth(auth);
                         await RegisterMqttClient();
                         break;
 
@@ -485,7 +495,8 @@ namespace InstagramAPI.Push
             }
             catch (Exception e)
             {
-                DebugLogger.LogException(e);
+                e.Data["PacketType"] = msg.PacketType.ToString();
+                ExceptionsCaught?.Invoke(this, new UnhandledExceptionEventArgs(e, false));
             }
         }
 

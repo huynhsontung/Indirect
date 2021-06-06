@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Storage;
@@ -59,6 +60,12 @@ namespace InstagramAPI
             _httpClient = new HttpClient(CookieHelper.SetCookies(session.Cookies));
             _apiRequestMessage = new ApiRequestMessage(this);
             SetDefaultRequestHeaders();
+
+            PushClient.ExceptionsCaught += (sender, args) =>
+            {
+                var e = (Exception) args.ExceptionObject;
+                DebugLogger.LogException(e, properties: e.Data);
+            };
         }
 
         /// <summary>
