@@ -29,9 +29,9 @@ namespace InstagramAPI.Classes.JsonConverters
                 return false;
             }
 
-            if (reader.ValueType == typeof(bool) && !(bool) value)
+            if (reader.ValueType == typeof(bool))
             {
-                return false;
+                return (bool)value;
             }
 
             return !string.IsNullOrEmpty(value.ToString());
