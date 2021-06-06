@@ -121,6 +121,8 @@ namespace Indirect.Entities.Wrappers
         public async Task ClearInbox()
         {
             _firstTime = true;
+            Container = new InboxContainer();
+            OldestCursor = null;
             if (!Threads.HasMoreItems)
             {
                 await Threads.RefreshAsync();
