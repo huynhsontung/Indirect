@@ -60,7 +60,7 @@ namespace Indirect
         }
 
         public AndroidDevice Device => InstaApi?.Device;
-        public bool IsUserAuthenticated => InstaApi.IsUserAuthenticated;
+        public bool IsUserAuthenticated => InstaApi?.IsUserAuthenticated ?? false;
         public ReelsFeed ReelsFeed { get; } = new ReelsFeed();
         public ChatService ChatService { get; }
 
