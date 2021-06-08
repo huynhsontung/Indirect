@@ -129,6 +129,7 @@ namespace BackgroundPushClient
 
         public static void PopMessageToast(string message)
         {
+#if DEBUG
             var toastContent = new ToastContent
             {
                 Header = new ToastHeader("message_toast", "Message toast", string.Empty),
@@ -149,14 +150,13 @@ namespace BackgroundPushClient
 
             var toast = new ToastNotification(toastContent.GetXml());
             ToastNotificationManager.CreateToastNotifier().Show(toast);
+#endif
         }
 
         public static void PushClientOnExceptionsCaught(object sender, UnhandledExceptionEventArgs e)
         {
             var exception = (Exception)e.ExceptionObject;
-#if DEBUG
             PopMessageToast(exception.ToString());
-#endif
         }
 
         /// <summary>

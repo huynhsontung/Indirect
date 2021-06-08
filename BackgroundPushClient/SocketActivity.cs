@@ -21,6 +21,7 @@ namespace BackgroundPushClient
             var deferral = taskInstance.GetDeferral();
             this.Log("-------------- Start of background task --------------");
             var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
+            Utils.PopMessageToast($"{details.Reason}");
             this.Log($"{details.Reason}");
             try
             {
@@ -59,9 +60,7 @@ namespace BackgroundPushClient
                             await Task.Delay(TimeSpan.FromSeconds(1));
                             if (PushClient.SocketRegistered())
                             {
-#if DEBUG
                                 Utils.PopMessageToast($"[{details.Reason}] {e}");
-#endif
                                 return;
                             }
                             else
@@ -104,9 +103,7 @@ namespace BackgroundPushClient
             }
             catch (Exception e)
             {
-#if DEBUG
                 Utils.PopMessageToast($"[{details.Reason}] {e}");
-#endif
                 DebugLogger.LogException(e, properties: new Dictionary<string, string>
                 {
                     {"SocketActivityTriggerReason", details.Reason.ToString()}

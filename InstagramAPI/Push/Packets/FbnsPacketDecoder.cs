@@ -85,9 +85,7 @@ namespace InstagramAPI.Push.Packets
                     DecodeSubscribePayload(reader, subscribePacket, ref remainingLength);
                     return subscribePacket;
                 case Signatures.Connect:
-                    var connectPacket = new FbnsConnectPacket();
-                    DecodeConnectPacket(reader, connectPacket, ref remainingLength);
-                    return connectPacket;
+                    throw new DecoderException("Fbns Connect packet is not expected");
                 case Signatures.PubAck:
                     var pubAckPacket = new PubAckPacket();
                     DecodePacketIdVariableHeader(reader, pubAckPacket, ref remainingLength);
@@ -174,84 +172,6 @@ namespace InstagramAPI.Push.Packets
             packet.TopicFilters = unsubscribeTopics;
 
             remainingLength = 0;
-        }
-
-        static void DecodeConnectPacket(DataReader reader, FbnsConnectPacket packet, ref uint remainingLength)
-        {
-            string protocolName = DecodeString(reader, ref remainingLength);
-            // if (!PROTOCOL_NAME.Equals(protocolName, StringComparison.Ordinal))
-            // {
-            //     throw new DecoderException($"Unexpected protocol name. Expected: {PROTOCOL_NAME}. Actual: {protocolName}");
-            // }
-            packet.ProtocolName = protocolName;
-
-            DecreaseRemainingLength(ref remainingLength, 1);
-            packet.ProtocolLevel = reader.ReadByte();
-
-            // if (packet.ProtocolLevel != Util.ProtocolLevel)
-            // {
-            //     var connAckPacket = new ConnAckPacket();
-            //     connAckPacket.ReturnCode = ConnectReturnCode.RefusedUnacceptableProtocolVersion;
-            //     context.WriteAndFlushAsync(connAckPacket);
-            //     throw new DecoderException($"Unexpected protocol level. Expected: {Util.ProtocolLevel}. Actual: {packet.ProtocolLevel}");
-            // }
-
-            DecreaseRemainingLength(ref remainingLength, 1);
-            int connectFlags = reader.ReadByte();
-
-            packet.CleanSession = (connectFlags & 0x02) == 0x02;
-
-            bool hasWill = (connectFlags & 0x04) == 0x04;
-            if (hasWill)
-            {
-                packet.HasWill = true;
-                packet.WillRetain = (connectFlags & 0x20) == 0x20;
-                packet.WillQualityOfService = (QualityOfService)((connectFlags & 0x18) >> 3);
-                if (packet.WillQualityOfService == QualityOfService.Reserved)
-                {
-                    throw new DecoderException($"[MQTT-3.1.2-14] Unexpected Will QoS value of {(int)packet.WillQualityOfService}.");
-                }
-                packet.WillTopicName = string.Empty;
-            }
-            else if ((connectFlags & 0x38) != 0) // bits 3,4,5 [MQTT-3.1.2-11]
-            {
-                throw new DecoderException("[MQTT-3.1.2-11]");
-            }
-
-            packet.HasUsername = (connectFlags & 0x80) == 0x80;
-            packet.HasPassword = (connectFlags & 0x40) == 0x40;
-            if (packet.HasPassword && !packet.HasUsername)
-            {
-                throw new DecoderException("[MQTT-3.1.2-22]");
-            }
-            if ((connectFlags & 0x1) != 0) // [MQTT-3.1.2-3]
-            {
-                throw new DecoderException("[MQTT-3.1.2-3]");
-            }
-
-            packet.KeepAliveInSeconds = DecodeUnsignedShort(reader, ref remainingLength);
-
-            string clientId = DecodeString(reader, ref remainingLength);
-            if (string.IsNullOrEmpty(clientId)) throw new DecoderException("Client identifier is required.");
-            packet.ClientId = clientId;
-
-            if (hasWill)
-            {
-                packet.WillTopicName = DecodeString(reader, ref remainingLength);
-                var willMessageLength = DecodeUnsignedShort(reader, ref remainingLength);
-                DecreaseRemainingLength(ref remainingLength, willMessageLength);
-                packet.WillMessage = reader.ReadBuffer(willMessageLength);
-            }
-
-            if (packet.HasUsername)
-            {
-                packet.Username = DecodeString(reader, ref remainingLength);
-            }
-
-            if (packet.HasPassword)
-            {
-                packet.Password = DecodeString(reader, ref remainingLength);
-            }
         }
 
         static void DecodeConnAckPacket(DataReader reader, FbnsConnAckPacket packet, ref uint remainingLength)

@@ -5,20 +5,15 @@ namespace InstagramAPI.Push.Packets
 {
     public sealed class FbnsConnectPacket : Packet
     {
-        public override PacketType PacketType { get; } = PacketType.CONNECT;
+        public override PacketType PacketType => PacketType.CONNECT;
 
-        /// <summary>
-        ///     Following flags are marked: User Name Flag, Password Flag, Clean Session
-        /// </summary>
-        public byte ConnectFlags { get; set; } = 194;
+        public string ProtocolName => "MQTToT";
 
-        public string ProtocolName { get; set; } = "MQTToT";
+        public byte ProtocolLevel => 3;
 
-        public byte ProtocolLevel { get; set; } = 3;
+        public ushort KeepAliveInSeconds => 900;
 
-        public ushort KeepAliveInSeconds { get; set; } = 900;
-
-        public bool CleanSession { get; set; }
+        public bool CleanSession => true;
 
         public bool HasWill { get; set; }
 
@@ -28,9 +23,9 @@ namespace InstagramAPI.Push.Packets
 
         public bool WillRetain { get; set; }
 
-        public bool HasPassword { get; set; }
+        public bool HasPassword => true;
 
-        public bool HasUsername { get; set; }
+        public bool HasUsername => true;
 
         public string Username { get; set; }
 

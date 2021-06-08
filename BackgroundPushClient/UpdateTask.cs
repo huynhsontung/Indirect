@@ -59,18 +59,14 @@ namespace BackgroundPushClient
                         await instagram.PushClient.StartFresh();
                         await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));  // Wait 5s to complete all outstanding IOs (hopefully)
                         await instagram.PushClient.TransferPushSocket(false);
-#if DEBUG
                         Utils.PopMessageToast("Finished background tasks update.");
-#endif
                     }
                 }
 
             }
             catch (Exception e)
             {
-#if DEBUG
                 Utils.PopMessageToast(e.ToString());
-#endif
                 DebugLogger.LogException(e);
             }
             finally
