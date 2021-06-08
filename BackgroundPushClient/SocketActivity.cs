@@ -49,8 +49,27 @@ namespace BackgroundPushClient
                     case SocketActivityTriggerReason.KeepAliveTimerExpired:
                     case SocketActivityTriggerReason.SocketActivity:
                     {
-                        var socket = details.SocketInformation.StreamSocket;
-                        instagram.PushClient.StartWithExistingSocket(socket);
+                        try
+                        {
+                            var socket = details.SocketInformation.StreamSocket;
+                            instagram.PushClient.StartWithExistingSocket(socket);
+                        }
+                        catch (Exception e)
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(1));
+                            if (PushClient.SocketRegistered())
+                            {
+#if DEBUG
+                                Utils.PopMessageToast($"[{details.Reason}] {e}");
+#endif
+                                return;
+                            }
+                            else
+                            {
+                                await instagram.PushClient.StartFresh();
+                            }
+                        }
+
                         break;
                     }
                     case SocketActivityTriggerReason.SocketClosed:
@@ -58,11 +77,11 @@ namespace BackgroundPushClient
                         await Task.Delay(TimeSpan.FromSeconds(3));
                         if (!await Utils.TryAcquireSyncLock())
                         {
-                            this.Log(
-                                "Failed to open SyncLock file after extended wait. Main application might be running. Exit background task.");
+                            this.Log("Failed to open SyncLock file after extended wait. Main application might be running. Exit background task.");
                             return;
                         }
 
+                        await instagram.PushClient.StartFresh();
                         try
                         {
                             var socket = details.SocketInformation.StreamSocket;
@@ -73,7 +92,6 @@ namespace BackgroundPushClient
                             // pass
                         }
 
-                        await instagram.PushClient.StartFresh();
                         break;
                     }
                     default:

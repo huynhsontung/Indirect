@@ -264,53 +264,46 @@ namespace InstagramAPI.Push
             if (string.IsNullOrEmpty(ConnectionData.UserAgent))
                 ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(_instaApi.Device);
 
-            var connectPacket = new FbnsConnectPacket();
-            try
+            var tokenSource = new CancellationTokenSource();
+            var connectPacket = new FbnsConnectPacket
             {
-                var tokenSource = new CancellationTokenSource();
-                connectPacket.Payload = await PayloadProcessor.BuildPayload(ConnectionData, tokenSource.Token);
-            }
-            catch (Exception e)
-            {
-                DebugLogger.LogException(e);
-                return;
-            }
+                Payload = await PayloadProcessor.BuildPayload(ConnectionData, tokenSource.Token)
+            };
 
-            Socket = new StreamSocket();
-            Socket.Control.KeepAlive = true;
-            Socket.Control.NoDelay = true;
-            if (!await TryEnableTransferOwnershipOnSocket())
+            var socket = new StreamSocket();
+            if (!await TryEnableTransferOwnershipOnSocket(socket))
             {
                 // if cannot get background access then there is no point of running push client
                 return;
             }
 
-            await Socket.ConnectAsync(new HostName(HostName), "443", SocketProtectionLevel.Tls12);
-            _inboundReader = new DataReader(Socket.InputStream);
-            _outboundWriter = new DataWriter(Socket.OutputStream);
+            await socket.ConnectAsync(new HostName(HostName), "443", SocketProtectionLevel.Tls12);
+            _inboundReader = new DataReader(socket.InputStream);
+            _outboundWriter = new DataWriter(socket.OutputStream);
             _inboundReader.ByteOrder = ByteOrder.BigEndian;
             _inboundReader.InputStreamOptions = InputStreamOptions.Partial;
             _outboundWriter.ByteOrder = ByteOrder.BigEndian;
-            _runningTokenSource = new CancellationTokenSource();
+            _runningTokenSource = tokenSource;
+            Socket = socket;
             await FbnsPacketEncoder.EncodePacket(connectPacket, _outboundWriter);
             StartPollingLoop();
         }
 
-        private async Task<bool> TryEnableTransferOwnershipOnSocket()
+        private static async Task<bool> TryEnableTransferOwnershipOnSocket(StreamSocket socket)
         {
             var socketActivityTask = await RequestBackgroundAccess();
             if (socketActivityTask == null) return false;
             try
             {
-                Socket.EnableTransferOwnership(socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
+                socket.EnableTransferOwnership(socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
             }
             catch (Exception connectedStandby)
             {
-                this.Log(connectedStandby);
-                this.Log("Connected standby not available");
+                DebugLogger.Log(nameof(PushClient), connectedStandby);
+                DebugLogger.Log(nameof(PushClient), "Connected standby not available");
                 try
                 {
-                    Socket.EnableTransferOwnership(socketActivityTask.TaskId,
+                    socket.EnableTransferOwnership(socketActivityTask.TaskId,
                         SocketActivityConnectedStandbyAction.DoNotWake);
                 }
                 catch (InvalidOperationException e)
