@@ -223,6 +223,8 @@ namespace Indirect
         private async void OnResuming(object sender, object e)
         {
             if (!ViewModel.IsUserAuthenticated) return;
+            var seqId = ViewModel.Inbox.SeqId;
+            var snapshotAt = ViewModel.Inbox.SnapshotAt;
             if (ViewModel.StartedFromMainView)
             {
                 SyncLock.Acquire();
@@ -230,9 +232,9 @@ namespace Indirect
                 ViewModel.ReelsFeed.StartReelsFeedUpdateLoop();
             }
 
-            if (ViewModel.Inbox.SeqId > 0)
+            if (seqId > 0)
             {
-                await ViewModel.SyncClient.Start(ViewModel.Inbox.SeqId, ViewModel.Inbox.SnapshotAt, true);
+                await ViewModel.SyncClient.Start(seqId, snapshotAt, true);
             }
         }
 
