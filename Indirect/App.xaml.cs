@@ -42,7 +42,6 @@ namespace Indirect
             this.Suspending += OnSuspending;
             this.Resuming += OnResuming;
             this.EnteredBackground += OnEnteredBackground;
-            ImageCache.Instance.CacheDuration = TimeSpan.FromDays(7);
         }
 
         public async Task CloseAllSecondaryViews()
