@@ -202,19 +202,10 @@ namespace InstagramAPI.Push
             this.Log("Transferring sockets");
             Shutdown();
             await socket.CancelIOAsync();
-            try
-            {
-                socket.TransferOwnership(
-                    SocketIdLegacy,
-                    null,
-                    TimeSpan.FromSeconds(KeepAlive - 60));
-            }
-            catch (Exception e)
-            {
-                // System.Exception: Cannot create a file when that file already exists.
-                DebugLogger.LogException(e, false);
-            }
-
+            socket.TransferOwnership(
+                SocketIdLegacy,
+                null,
+                TimeSpan.FromSeconds(KeepAlive - 60));
             socket.Dispose();
         }
 
@@ -379,7 +370,14 @@ namespace InstagramAPI.Push
 
             if (Running)
             {
-                await TransferPushSocket();
+                try
+                {
+                    await TransferPushSocket();
+                }
+                catch (Exception e)
+                {
+                    ExceptionsCaught?.Invoke(this, new UnhandledExceptionEventArgs(e, false));
+                }
             }
         }
 
