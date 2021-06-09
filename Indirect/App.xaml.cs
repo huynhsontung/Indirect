@@ -95,6 +95,11 @@ namespace Indirect
             }
         }
 
+        private void TryEnablePrelaunch()
+        {
+            Windows.ApplicationModel.Core.CoreApplication.EnablePrelaunch(true);
+        }
+
         protected override void OnActivated(IActivatedEventArgs args)
         {
             OnLaunchedOrActivated(args);
@@ -112,57 +117,69 @@ namespace Indirect
 
         private async void OnLaunchedOrActivated(IActivatedEventArgs e)
         {
+            bool canEnablePrelaunch = Windows.Foundation.Metadata.ApiInformation.IsMethodPresent("Windows.ApplicationModel.Core.CoreApplication", "EnablePrelaunch");
             await ViewModel.Initialize();
 
-            if (e is ContactPanelActivatedEventArgs cpEventArgs)
+            switch (e)
             {
-                // Contact Panel flow
-                var rootFrame = new Frame();
-                Window.Current.Content = rootFrame;
-                rootFrame.Navigate(typeof(ContactPanelPage), cpEventArgs);
-            }
-            else
-            {
-                // Normal launch or activated flow
-                await ViewModel.TryAcquireSyncLock();
-                ViewModel.StartedFromMainView = true;
-                Frame rootFrame = Window.Current.Content as Frame;
+                case ContactPanelActivatedEventArgs cpEventArgs:
+                    var contactFrame = new Frame();
+                    Window.Current.Content = contactFrame;
+                    contactFrame.Navigate(typeof(ContactPanelPage), cpEventArgs);
+                    Window.Current.Activate();
+                    break;
 
-                // Do not repeat app initialization when the Window already has content,
-                // just ensure that the window is active
-                if (rootFrame == null)
-                {
-                    ConfigureMainView();
-
-                    // Create a Frame to act as the navigation context and navigate to the first page
-                    rootFrame = new Frame();
-
-                    rootFrame.NavigationFailed += OnNavigationFailed;
-
-                    if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
-                    {
-                        // Handle different ExecutionStates
-                    }
-
-                    // Place the frame in the current Window
-                    Window.Current.Content = rootFrame;
-                }
-
-                if (rootFrame.Content == null)
-                {
-                    rootFrame.Navigate(ViewModel.IsUserAuthenticated ? typeof(MainPage) : typeof(LoginPage));
-                }
-
-                if (e is ToastNotificationActivatedEventArgs toastActivationArgs)
-                {
-                    var launchArgs = HttpUtility.ParseQueryString(toastActivationArgs.Argument);
+                case ToastNotificationActivatedEventArgs toastActivated:
+                    var launchArgs = HttpUtility.ParseQueryString(toastActivated.Argument);
                     var threadId = launchArgs["threadId"];
                     ViewModel.OpenThreadWhenReady(threadId);
-                }
-            }
+                    break;
 
-            // Ensure the current window is active
-            Window.Current.Activate();
+                case LaunchActivatedEventArgs launchActivatedArgs:
+                    var rootFrame = Window.Current.Content as Frame;
+
+                    // Do not repeat app initialization when the Window already has content,
+                    // just ensure that the window is active
+                    if (rootFrame == null)
+                    {
+                        ConfigureMainView();
+
+                        // Create a Frame to act as the navigation context and navigate to the first page
+                        rootFrame = new Frame();
+
+                        rootFrame.NavigationFailed += OnNavigationFailed;
+
+                        if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+                        {
+                            // Handle different ExecutionStates
+                        }
+
+                        // Place the frame in the current Window
+                        Window.Current.Content = rootFrame;
+                    }
+
+                    if (launchActivatedArgs.PrelaunchActivated == false)
+                    {
+                        if (canEnablePrelaunch)
+                        {
+                            TryEnablePrelaunch();
+                        }
+
+                        await ViewModel.TryAcquireSyncLock();
+                        ViewModel.StartedFromMainView = true;
+                        if (rootFrame.Content == null)
+                        {
+                            rootFrame.Navigate(ViewModel.IsUserAuthenticated ? typeof(MainPage) : typeof(LoginPage));
+                        }
+
+                        Window.Current.Activate();
+                    }
+
+                    break;
+
+                default:
+                    break;
+            }
         }
 
         /// <summary>

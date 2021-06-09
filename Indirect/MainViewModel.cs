@@ -76,6 +76,11 @@ namespace Indirect
 
         public async Task Initialize()
         {
+            if (InstaApi != null)
+            {
+                return;
+            }
+
             var session = await SessionManager.TryLoadLastSessionAsync() ?? new UserSessionData();
             InstaApi = new Instagram(session);
             RegisterSyncClientHandlers(InstaApi.SyncClient);
