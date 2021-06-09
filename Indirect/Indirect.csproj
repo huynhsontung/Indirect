@@ -232,6 +232,7 @@
     <Compile Include="Entities\FlatReelsContainer.cs" />
     <Compile Include="Entities\Wrappers\ReelItemWrapper.cs" />
     <Compile Include="Entities\Wrappers\ReelWrapper.cs" />
+    <Compile Include="Utilities\SyncLock.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

@@ -28,17 +28,15 @@ using InstagramAPI.Classes.Core;
 
 namespace Indirect
 {
-    internal partial class MainViewModel : INotifyPropertyChanged, IDisposable
+    internal partial class MainViewModel : INotifyPropertyChanged
     {
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
         private DirectThreadWrapper _selectedThread;
-        private FileStream _lockFile;
         private string _threadToBeOpened;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public Instagram InstaApi { get; private set; }
-        public bool BackgroundSyncLocked => _lockFile != null;
         public bool StartedFromMainView { get; set; }
         public PushClient PushClient => InstaApi.PushClient;
         public SyncClient SyncClient => InstaApi.SyncClient;
@@ -353,44 +351,10 @@ namespace Indirect
             });
         }
 
-        public void Dispose()
-        {
-            ReleaseSyncLock();
-        }
-
         public async Task SaveDataAsync()
         {
             await SessionManager.SaveSessionAsync(InstaApi);
             await CacheManager.WriteCacheAsync(nameof(ThreadInfoDictionary), ThreadInfoDictionary);
-        }
-
-        internal async Task<bool> TryAcquireSyncLock()
-        {
-            if (BackgroundSyncLocked) return true;
-            var storageFolder = ApplicationData.Current.LocalFolder;
-            var storageItem = await storageFolder.CreateFileAsync("SyncLock.mutex", CreationCollisionOption.OpenIfExists);
-            try
-            {
-                _lockFile = new FileStream(storageItem.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        internal void ReleaseSyncLock()
-        {
-            try
-            {
-                _lockFile?.Dispose();
-                _lockFile = null;
-            }
-            catch (Exception)
-            {
-                // pass
-            }
         }
     }
 }

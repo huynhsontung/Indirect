@@ -165,7 +165,7 @@ namespace Indirect
                             TryEnablePrelaunch();
                         }
 
-                        await ViewModel.TryAcquireSyncLock();
+                        SyncLock.Acquire();
                         ViewModel.StartedFromMainView = true;
                         if (rootFrame.Content == null)
                         {
@@ -208,7 +208,6 @@ namespace Indirect
                 ViewModel.ReelsFeed.StopReelsFeedUpdateLoop();
                 ViewModel.SyncClient.Shutdown();    // Shutdown cleanly is not important here.
                 await ViewModel.PushClient.TransferPushSocket();
-                ViewModel.ReleaseSyncLock();
             }
             catch (Exception exception)
             {
@@ -216,6 +215,7 @@ namespace Indirect
             }
             finally
             {
+                SyncLock.Release();
                 deferral.Complete();
             }
         }
@@ -225,7 +225,7 @@ namespace Indirect
             if (!ViewModel.IsUserAuthenticated) return;
             if (ViewModel.StartedFromMainView)
             {
-                await ViewModel.TryAcquireSyncLock();
+                SyncLock.Acquire();
                 await ViewModel.UpdateInboxAndSelectedThread();
                 ViewModel.ReelsFeed.StartReelsFeedUpdateLoop();
             }
