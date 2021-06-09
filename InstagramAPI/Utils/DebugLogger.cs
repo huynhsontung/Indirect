@@ -96,10 +96,6 @@ namespace InstagramAPI.Utils
             Console.WriteLine($"Stacktrace: {ex.StackTrace}");
 #else
             Log($"Exception{(track ? "(tracked)" : string.Empty)}", ex);
-            if (track)
-            {
-                Log("Stacktrace", ex.StackTrace);
-            }
 #endif
         }
 
