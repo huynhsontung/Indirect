@@ -158,7 +158,7 @@ namespace Indirect
                         Window.Current.Content = rootFrame;
                     }
 
-                    if (launchActivatedArgs.PrelaunchActivated == false)
+                    if (!launchActivatedArgs.PrelaunchActivated)
                     {
                         if (canEnablePrelaunch)
                         {

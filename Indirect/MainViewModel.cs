@@ -152,7 +152,7 @@ namespace Indirect
         {
             var succeeded = await InstaApi.UpdateLoggedInUser();
             if (!succeeded) return;
-            await DispatcherHelper.ExecuteOnUIThreadAsync(() =>
+            await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
             });
