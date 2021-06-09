@@ -11,7 +11,7 @@ namespace InstagramAPI.Classes.Direct
 
         public string Title { get; set; }
 
-        public List<UserWithFriendship> Users { get; set; }
+        //public List<UserWithFriendship> Users { get; set; }
 
         public DirectThreadInfo(DirectThread thread)
         {
@@ -22,7 +22,7 @@ namespace InstagramAPI.Classes.Direct
 
             ThreadId = thread.ThreadId;
             Title = thread.Title;
-            Users = thread.Users;
+            //Users = thread.Users;
         }
     }
 }

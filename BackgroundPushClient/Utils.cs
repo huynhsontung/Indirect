@@ -36,20 +36,14 @@ namespace BackgroundPushClient
 
             var threadInfo = await GetThreadInfoAsync(threadId);
             var threadTitle = string.Empty;
-            long? threadUserId = null;
             if (threadInfo != null)
             {
                 threadTitle = threadInfo.Title;
-                var users = threadInfo.Users;
-                if (users.Count == 1)
-                {
-                    threadUserId = users[0].Pk;
-                }
             }
 
-            if (string.IsNullOrEmpty(threadTitle))
+            if (string.IsNullOrEmpty(threadTitle) && notificationContent.Message.Contains(":"))
             {
-                threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(' '));
+                threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(':'));
             }
 
             var toastContent = new ToastContent
@@ -101,13 +95,7 @@ namespace BackgroundPushClient
                         }
                     }
                 },
-                Launch = $"action=open&threadId={threadId}",
-                HintPeople = threadUserId != null
-                    ? new ToastPeople
-                    {
-                        RemoteId = $"{threadUserId}@Indirect"
-                    }
-                    : null
+                Launch = $"action=open&threadId={threadId}"
             };
 
             // Create the toast notification
@@ -157,36 +145,6 @@ namespace BackgroundPushClient
         {
             var exception = (Exception)e.ExceptionObject;
             PopMessageToast(exception.ToString());
-        }
-
-        /// <summary>
-        /// Hide previous toast early if another toast is ready to show up
-        /// </summary>
-        /// <param name="toast"></param>
-        private static async void QueueRapidToast(ToastNotification toast)
-        {
-            _rapidToast?.Cancel();
-            _rapidToast = new CancellationTokenSource();
-            var notifier = ToastNotificationManager.CreateToastNotifier();
-            notifier.Show(toast);
-            try
-            {
-                await Task.Delay(5000, _rapidToast.Token);  // 5 seconds is default toast duration
-            }
-            catch (TaskCanceledException)
-            {
-                notifier.Hide(toast);   // Hide here will also remove toast from Action Center. We don't want that.
-                // Create a replicate toast and send it straight to AC.
-                // Cannot reuse the toast above because Show() doesn't allow a toast instance to be shown twice.
-                var replicateToast = new ToastNotification(toast.Content)
-                {
-                    Group = toast.Group,
-                    Tag = toast.Tag,
-                    ExpiresOnReboot = toast.ExpiresOnReboot,
-                    SuppressPopup = true
-                };
-                notifier.Show(replicateToast);
-            }
         }
 
         private static async Task<DirectThreadInfo> GetThreadInfoAsync(string threadId)
