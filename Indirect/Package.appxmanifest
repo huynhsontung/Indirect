@@ -10,7 +10,7 @@
   <Identity
     Name="18496Starpine.Indirect"
     Publisher="CN=ABCDF790-DBE4-48F7-8204-32FCB69ADF9C"
-    Version="1.7.0.0" />
+    Version="1.7.1.0" />
 
   <mp:PhoneIdentity PhoneProductId="9e065600-b6ac-45a5-9ec4-71d4b54ce3fe" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
