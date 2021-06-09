@@ -25,7 +25,7 @@ namespace BackgroundPushClient
             this.Log($"{details.Reason}");
             try
             {
-                if (!Instagram.InternetAvailable())
+                if (!Instagram.InternetAvailable() || !await TryAcquireLock())
                 {
                     return;
                 }
