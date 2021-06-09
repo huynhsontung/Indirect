@@ -188,7 +188,7 @@ namespace InstagramAPI.Push
         /// Transfer socket as well as necessary context for background push notification client. 
         /// Transfer only happens if user is logged in.
         /// </summary>
-        public async Task TransferPushSocket(bool ping = true)
+        public async Task TransferPushSocket()
         {
             lock (this)
             {
@@ -198,17 +198,13 @@ namespace InstagramAPI.Push
             }
 
             // Hand over MQTT socket to socket broker
+            var socket = Socket;
             this.Log("Transferring sockets");
-            if (ping)
-            {
-                await SendPing().ConfigureAwait(false);
-                await Task.Delay(TimeSpan.FromSeconds(2));  // grace period
-            }
             Shutdown();
-            await Socket.CancelIOAsync();
+            await socket.CancelIOAsync();
             try
             {
-                Socket.TransferOwnership(
+                socket.TransferOwnership(
                     SocketIdLegacy,
                     null,
                     TimeSpan.FromSeconds(KeepAlive - 60));
@@ -218,7 +214,8 @@ namespace InstagramAPI.Push
                 // System.Exception: Cannot create a file when that file already exists.
                 DebugLogger.LogException(e, false);
             }
-            Socket.Dispose();
+
+            socket.Dispose();
         }
 
         public async Task StartFromForeground()
@@ -231,27 +228,20 @@ namespace InstagramAPI.Push
             await StartFresh().ConfigureAwait(false);
         }
 
-        public void StartWithExistingSocket(StreamSocket socket)
+        public async Task StartWithExistingSocket(StreamSocket socket)
         {
-            try
-            {
-                this.Log("Starting with existing socket");
-                if (Running) throw new Exception("Push client is already running");
-                Socket = socket;
-                _inboundReader = new DataReader(socket.InputStream);
-                _outboundWriter = new DataWriter(socket.OutputStream);
-                _inboundReader.ByteOrder = ByteOrder.BigEndian;
-                _inboundReader.InputStreamOptions = InputStreamOptions.Partial;
-                _outboundWriter.ByteOrder = ByteOrder.BigEndian;
-                _runningTokenSource = new CancellationTokenSource();
-                
-                StartPollingLoop();
-                //StartKeepAliveLoop();
-            }
-            catch (Exception e)
-            {
-                DebugLogger.LogException(e);
-            }
+            this.Log("Starting with existing socket");
+            if (Running) throw new Exception("Push client is already running");
+            Socket = socket;
+            _inboundReader = new DataReader(socket.InputStream);
+            _outboundWriter = new DataWriter(socket.OutputStream);
+            _inboundReader.ByteOrder = ByteOrder.BigEndian;
+            _inboundReader.InputStreamOptions = InputStreamOptions.Partial;
+            _outboundWriter.ByteOrder = ByteOrder.BigEndian;
+            _runningTokenSource = new CancellationTokenSource();
+
+            StartPollingLoop();
+            await SendPing();
         }
 
         public async Task StartFresh()
@@ -396,7 +386,7 @@ namespace InstagramAPI.Push
 
             if (Running)
             {
-                await TransferPushSocket(false);
+                await TransferPushSocket();
             }
         }
 

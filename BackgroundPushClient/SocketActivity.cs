@@ -53,7 +53,7 @@ namespace BackgroundPushClient
                         try
                         {
                             var socket = details.SocketInformation.StreamSocket;
-                            instagram.PushClient.StartWithExistingSocket(socket);
+                            await instagram.PushClient.StartWithExistingSocket(socket);
                         }
                         catch (Exception e)
                         {
@@ -98,7 +98,7 @@ namespace BackgroundPushClient
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));  // Wait 5s to complete all outstanding IOs (hopefully)
-                await instagram.PushClient.TransferPushSocket(false);
+                await instagram.PushClient.TransferPushSocket();
                 await SessionManager.SaveSessionAsync(instagram);
             }
             catch (Exception e)
