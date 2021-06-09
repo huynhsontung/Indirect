@@ -104,7 +104,7 @@ namespace Indirect
 
             try
             {
-                await PushClient.StartFromForeground();
+                await PushClient.StartFresh();
             }
             catch (Exception e)
             {

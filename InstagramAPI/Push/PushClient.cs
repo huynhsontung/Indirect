@@ -218,16 +218,6 @@ namespace InstagramAPI.Push
             socket.Dispose();
         }
 
-        public async Task StartFromForeground()
-        {
-            if (!_instaApi.IsUserAuthenticated || Running || _transferred || SocketRegistered())
-            {
-                return;
-            }
-
-            await StartFresh().ConfigureAwait(false);
-        }
-
         public async Task StartWithExistingSocket(StreamSocket socket)
         {
             this.Log("Starting with existing socket");
@@ -246,9 +236,12 @@ namespace InstagramAPI.Push
 
         public async Task StartFresh()
         {
-            this.Log("Starting fresh");
+            if (!_instaApi.IsUserAuthenticated || Running || _transferred || SocketRegistered())
+            {
+                return;
+            }
 
-            if (Running) throw new Exception("Push client is already running");
+            this.Log("Starting fresh");
 
             // Build user agent for first time setup
             if (string.IsNullOrEmpty(ConnectionData.UserAgent))
