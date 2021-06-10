@@ -189,6 +189,11 @@ namespace Indirect
         /// <param name="e">Details about the navigation failure</param>
         private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
         {
+            if (e.SourcePageType == typeof(ReelPage))
+            {
+                return;
+            }
+
             throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
         }
 
