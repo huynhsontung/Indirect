@@ -208,6 +208,22 @@ namespace InstagramAPI.Push
             socket.Dispose();
         }
 
+        public async Task StartFromMainView()
+        {
+            try
+            {
+                if (!SocketRegistered() || !TasksRegistered())
+                {
+                    UnregisterTasks();
+                    await StartFresh();
+                }
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+            }
+        }
+
         public async Task StartWithExistingSocket(StreamSocket socket)
         {
             this.Log("Starting with existing socket");

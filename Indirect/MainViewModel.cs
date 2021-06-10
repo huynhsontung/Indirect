@@ -95,24 +95,16 @@ namespace Indirect
         public async Task OnLoggedIn()
         {
             if (!IsUserAuthenticated) throw new Exception("User is not logged in.");
-            await Inbox.ClearInbox();
-            GetUserPresence();
-            await ReelsFeed.UpdateReelsFeed();
+            var tasks = new List<Task>
+            {
+                Inbox.ClearInbox(),
+                GetUserPresence(),
+                ReelsFeed.UpdateReelsFeed(),
+                PushClient.StartFromMainView()
+            };
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
             ReelsFeed.StartReelsFeedUpdateLoop();
-
-            try
-            {
-                if (!PushClient.SocketRegistered() || !PushClient.TasksRegistered())
-                {
-                    PushClient.UnregisterTasks();
-                    await PushClient.StartFresh();
-                }
-            }
-            catch (Exception e)
-            {
-                DebugLogger.LogException(e);
-            }
-
             // Disabled due to store certification failed
             //await Task.Delay(10000).ConfigureAwait(false);
             //await ContactsService.SaveUsersAsContact(CentralUserRegistry.Values).ConfigureAwait(false);
@@ -295,7 +287,7 @@ namespace Indirect
             SelectedThread = thread;
         }
 
-        private async void GetUserPresence()
+        private async Task GetUserPresence()
         {
             try
             {
