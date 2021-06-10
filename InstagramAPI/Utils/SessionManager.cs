@@ -105,18 +105,18 @@ namespace InstagramAPI.Utils
                 return null;
             }
 
-            try
+            return await TryLoadSessionAsync(data);
+        }
+
+        public static async Task<UserSessionData> TryLoadSessionAsync(StorageFile file)
+        {
+            var data = await TryReadFromFileAsync(file);
+            if (data == null)
             {
-                var encoded = await UnprotectAsync(data);
-                var json = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, encoded);
-                var session = JsonConvert.DeserializeObject<UserSessionData>(json);
-                return session;
-            }
-            catch (Exception e)
-            {
-                DebugLogger.LogException(e);
                 return null;
             }
+
+            return await TryLoadSessionAsync(data);
         }
 
         public static async Task<UserSessionData> TryLoadFirstSessionAsync()
@@ -125,15 +125,15 @@ namespace InstagramAPI.Utils
             return await TryLoadSessionAsync(files.FirstOrDefault(x => x.FileType == SESSION_EXT)?.DisplayName);
         }
 
-        public static async Task<UserSessionMetadata[]> GetAvailableSessionsAsync()
+        public static async Task<UserSessionContainer[]> GetAvailableSessionsAsync()
         {
-            throw new NotImplementedException();
             var files = await LocalFolder.GetFilesAsync();
-            return files.Where(x => x.FileType == SESSION_EXT).Select(x => new UserSessionMetadata
+            var tasks = files.Where(x => x.FileType == SESSION_EXT).Select(async x => new UserSessionContainer
             {
-                Username = x.DisplayName,
+                Session = await TryLoadSessionAsync(x),
                 ProfilePicture = new Uri($"{LocalFolder.Path}\\{x.DisplayName}{SESSION_PFP_EXT}")
             }).ToArray();
+            return await Task.WhenAll(tasks);
         }
 
         public static async Task RemoveAllSessions()
@@ -191,6 +191,22 @@ namespace InstagramAPI.Utils
             return true;
         }
 
+        private static async Task<UserSessionData> TryLoadSessionAsync(IBuffer data)
+        {
+            try
+            {
+                var encoded = await UnprotectAsync(data);
+                var json = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, encoded);
+                var session = JsonConvert.DeserializeObject<UserSessionData>(json);
+                return session;
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+                return null;
+            }
+        }
+
         private static IAsyncOperation<IBuffer> ProtectAsync(IBuffer data)
         {
             var provider = new DataProtectionProvider("LOCAL=user");
@@ -218,6 +234,16 @@ namespace InstagramAPI.Utils
         {
             fileName = SanitizeFileName(fileName);
             var file = await LocalFolder.TryGetItemAsync(fileName) as StorageFile;
+            if (file == null)
+            {
+                return null;
+            }
+
+            return await TryReadFromFileAsync(file);
+        }
+
+        private static async Task<IBuffer> TryReadFromFileAsync(StorageFile file)
+        {
             if (file == null)
             {
                 return null;

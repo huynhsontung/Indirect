@@ -126,7 +126,7 @@
     <Compile Include="Classes\Core\ApiVersion.cs" />
     <Compile Include="Classes\Challenge\ChallengeLoginInfo.cs" />
     <Compile Include="Classes\Challenge\ChallengeSelectMethodStep.cs" />
-    <Compile Include="Classes\Core\UserSessionMetadata.cs" />
+    <Compile Include="Classes\Core\UserSessionContainer.cs" />
     <Compile Include="Classes\Direct\DirectItem.cs" />
     <Compile Include="Classes\Direct\DirectItemType.cs" />
     <Compile Include="Classes\Direct\DirectThreadInfo.cs" />
