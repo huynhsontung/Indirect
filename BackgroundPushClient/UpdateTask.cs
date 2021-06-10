@@ -19,12 +19,6 @@ namespace BackgroundPushClient
             {
                 PushClient.UnregisterTasks();
                 BackgroundExecutionManager.RemoveAccess();
-                //await Task.Delay(TimeSpan.FromSeconds(15));  // Quota exception if there is no wait
-                if (!await Utils.TryAcquireSyncLock())
-                {
-                    return;
-                }
-
                 var session = await SessionManager.TryLoadLastSessionAsync();
                 if (session == null && Instagram.IsUserAuthenticatedPersistent)
                 {
