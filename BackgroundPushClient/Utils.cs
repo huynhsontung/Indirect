@@ -8,7 +8,6 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Utils;
 
@@ -16,8 +15,6 @@ namespace BackgroundPushClient
 {
     internal sealed class Utils
     {
-        private static CancellationTokenSource _rapidToast = new CancellationTokenSource();
-
         private static Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; set; }
 
         public static async void OnMessageReceived(object sender, PushReceivedEventArgs args)

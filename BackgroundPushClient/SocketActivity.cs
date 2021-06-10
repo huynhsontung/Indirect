@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking.Sockets;
@@ -13,11 +14,14 @@ namespace BackgroundPushClient
 {
     public sealed class SocketActivity : IBackgroundTask
     {
+        private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
+        private BackgroundTaskCancellationReason _reason;
         private FileStream _lockFile;
 
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
             Instagram.StartAppCenter();
+            taskInstance.Canceled += TaskInstanceOnCanceled;
             var deferral = taskInstance.GetDeferral();
             this.Log("-------------- Start of background task --------------");
             var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
@@ -25,7 +29,7 @@ namespace BackgroundPushClient
             this.Log($"{details.Reason}");
             try
             {
-                if (!Instagram.InternetAvailable() || !await TryAcquireLock())
+                if (_cancellation.IsCancellationRequested || !await TryAcquireSocketActivityLock())
                 {
                     return;
                 }
@@ -57,7 +61,7 @@ namespace BackgroundPushClient
                         }
                         catch (Exception e)
                         {
-                            await Task.Delay(TimeSpan.FromSeconds(1));
+                            await Task.Delay(TimeSpan.FromSeconds(1), _cancellation.Token);
                             if (PushClient.SocketRegistered())
                             {
                                 Utils.PopMessageToast($"[{details.Reason}] {e}");
@@ -65,7 +69,7 @@ namespace BackgroundPushClient
                             }
                             else
                             {
-                                await instagram.PushClient.StartFresh();
+                                await instagram.PushClient.StartFresh(taskInstance);
                             }
                         }
 
@@ -73,14 +77,13 @@ namespace BackgroundPushClient
                     }
                     case SocketActivityTriggerReason.SocketClosed:
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(3));
+                        await Task.Delay(TimeSpan.FromSeconds(3), _cancellation.Token);
                         if (!await Utils.TryAcquireSyncLock())
                         {
-                            this.Log("Failed to open SyncLock file after extended wait. Main application might be running. Exit background task.");
+                            this.Log("Main application is running.");
                             return;
                         }
 
-                        await instagram.PushClient.StartFresh();
                         try
                         {
                             var socket = details.SocketInformation.StreamSocket;
@@ -91,15 +94,20 @@ namespace BackgroundPushClient
                             // pass
                         }
 
+                        await instagram.PushClient.StartFresh(taskInstance);
                         break;
                     }
                     default:
                         return;
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));  // Wait 5s to complete all outstanding IOs (hopefully)
+                await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));
                 await instagram.PushClient.TransferPushSocket();
                 await SessionManager.SaveSessionAsync(instagram);
+            }
+            catch (TaskCanceledException)
+            {
+                Utils.PopMessageToast($"{nameof(SocketActivity)} cancelled: {_reason}");
             }
             catch (Exception e)
             {
@@ -112,13 +120,19 @@ namespace BackgroundPushClient
             }
             finally
             {
-                ReleaseLock();
+                ReleaseSocketActivityLock();
                 this.Log("-------------- End of background task --------------");
                 deferral.Complete();
             }
         }
 
-        private async Task<bool> TryAcquireLock()
+        private void TaskInstanceOnCanceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
+        {
+            _reason = reason;
+            _cancellation?.Cancel();
+        }
+
+        private async Task<bool> TryAcquireSocketActivityLock()
         {
             var storageFolder = ApplicationData.Current.LocalFolder;
             var storageItem = await storageFolder.CreateFileAsync("SocketActivity.mutex", CreationCollisionOption.OpenIfExists);
@@ -134,7 +148,7 @@ namespace BackgroundPushClient
             return true;
         }
 
-        private void ReleaseLock()
+        private void ReleaseSocketActivityLock()
         {
             _lockFile?.Dispose();
         }

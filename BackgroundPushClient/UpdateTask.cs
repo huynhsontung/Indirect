@@ -17,8 +17,8 @@ namespace BackgroundPushClient
             var deferral = taskInstance.GetDeferral();
             try
             {
-                //PushClient.UnregisterTasks();
-                //BackgroundExecutionManager.RemoveAccess();
+                PushClient.UnregisterTasks();
+                BackgroundExecutionManager.RemoveAccess();
                 //await Task.Delay(TimeSpan.FromSeconds(15));  // Quota exception if there is no wait
                 if (!await Utils.TryAcquireSyncLock())
                 {
@@ -51,7 +51,7 @@ namespace BackgroundPushClient
                     AndroidDevice.RemoveFromAppSettings();
                     FbnsConnectionData.RemoveFromAppSettings();
 
-                    await Task.Delay(PushClient.WaitTime + 1);
+                    await Task.Delay(TimeSpan.FromSeconds(3));
                     if (!PushClient.SocketRegistered() && await Utils.TryAcquireSyncLock())
                     {
                         instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
@@ -59,7 +59,7 @@ namespace BackgroundPushClient
                         await instagram.PushClient.StartFresh();
                         await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));  // Wait 5s to complete all outstanding IOs (hopefully)
                         await instagram.PushClient.TransferPushSocket();
-                        Utils.PopMessageToast("Finished background tasks update.");
+                        Utils.PopMessageToast("Push client started.");
                     }
                 }
 

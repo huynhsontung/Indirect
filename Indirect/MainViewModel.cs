@@ -102,7 +102,11 @@ namespace Indirect
 
             try
             {
-                await PushClient.StartFresh();
+                if (!PushClient.SocketRegistered() || !PushClient.TasksRegistered())
+                {
+                    PushClient.UnregisterTasks();
+                    await PushClient.StartFresh();
+                }
             }
             catch (Exception e)
             {

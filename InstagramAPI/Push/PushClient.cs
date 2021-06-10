@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Foundation.Metadata;
 using Windows.Networking;
-using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage.Streams;
@@ -225,9 +224,9 @@ namespace InstagramAPI.Push
             await SendPing();
         }
 
-        public async Task StartFresh()
+        public async Task StartFresh(IBackgroundTaskInstance taskInstance = null)
         {
-            if (!_instaApi.IsUserAuthenticated || Running || _transferred || SocketRegistered())
+            if (!_instaApi.IsUserAuthenticated || Running || _transferred)
             {
                 return;
             }
@@ -245,11 +244,8 @@ namespace InstagramAPI.Push
             };
 
             var socket = new StreamSocket();
-            if (!await TryEnableTransferOwnershipOnSocket(socket))
-            {
-                // if cannot get background access then there is no point of running push client
-                return;
-            }
+            var socketActivityTask = taskInstance?.Task ?? await RequestBackgroundAccess();
+            EnableTransferOwnershipOnSocket(socket, socketActivityTask);
 
             await socket.ConnectAsync(new HostName(HostName), "443", SocketProtectionLevel.Tls12);
             _inboundReader = new DataReader(socket.InputStream);
@@ -263,38 +259,18 @@ namespace InstagramAPI.Push
             StartPollingLoop();
         }
 
-        private static async Task<bool> TryEnableTransferOwnershipOnSocket(StreamSocket socket)
+        private static void EnableTransferOwnershipOnSocket(StreamSocket socket, IBackgroundTaskRegistration task)
         {
-            var socketActivityTask = await RequestBackgroundAccess();
-            if (socketActivityTask == null) return false;
             try
             {
-                socket.EnableTransferOwnership(socketActivityTask.TaskId, SocketActivityConnectedStandbyAction.Wake);
+                socket.EnableTransferOwnership(task.TaskId, SocketActivityConnectedStandbyAction.Wake);
             }
             catch (Exception connectedStandby)
             {
                 DebugLogger.Log(nameof(PushClient), connectedStandby);
                 DebugLogger.Log(nameof(PushClient), "Connected standby not available");
-                try
-                {
-                    socket.EnableTransferOwnership(socketActivityTask.TaskId,
-                        SocketActivityConnectedStandbyAction.DoNotWake);
-                }
-                catch (InvalidOperationException e)
-                {
-                    // System.InvalidOperationException: A method was called at an unexpected time. (Exception from HRESULT: 0x8000000E)
-                    // Apparently this is very common. Restart the machine will resolve this.
-                    DebugLogger.LogException(e, false);
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    DebugLogger.LogException(e);
-                    return false;
-                }
+                socket.EnableTransferOwnership(task.TaskId, SocketActivityConnectedStandbyAction.DoNotWake);
             }
-
-            return true;
         }
 
         public void Shutdown()
