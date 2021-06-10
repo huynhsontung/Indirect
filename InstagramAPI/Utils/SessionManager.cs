@@ -125,14 +125,16 @@ namespace InstagramAPI.Utils
             return await TryLoadSessionAsync(files.FirstOrDefault(x => x.FileType == SESSION_EXT)?.DisplayName);
         }
 
-        public static async Task<UserSessionContainer[]> GetAvailableSessionsAsync()
+        public static async Task<UserSessionContainer[]> GetAvailableSessionsAsync(UserSessionData exclude = null)
         {
+            var excludeName = exclude?.LoggedInUser?.Pk.ToString();
             var files = await LocalFolder.GetFilesAsync();
-            var tasks = files.Where(x => x.FileType == SESSION_EXT).Select(async x => new UserSessionContainer
-            {
-                Session = await TryLoadSessionAsync(x),
-                ProfilePicture = new Uri($"{LocalFolder.Path}\\{x.DisplayName}{SESSION_PFP_EXT}")
-            }).ToArray();
+            var tasks = files.Where(x => x.FileType == SESSION_EXT && x.DisplayName != excludeName)
+                .Select(async x => new UserSessionContainer
+                {
+                    Session = await TryLoadSessionAsync(x),
+                    ProfilePicture = new Uri($"{LocalFolder.Path}\\{x.DisplayName}{SESSION_PFP_EXT}")
+                }).ToArray();
             return await Task.WhenAll(tasks);
         }
 
@@ -182,7 +184,7 @@ namespace InstagramAPI.Utils
                 {
                     await pfp.DeleteAsync(StorageDeleteOption.PermanentDelete);
                 }
-                catch (Exception )
+                catch (Exception)
                 {
                     // pass
                 }
