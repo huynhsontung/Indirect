@@ -19,97 +19,105 @@ namespace BackgroundPushClient
 
         public static async void OnMessageReceived(object sender, PushReceivedEventArgs args)
         {
-            var notificationContent = args.NotificationContent;
-            var igAction = notificationContent.IgAction;
-            var querySeparatorIndex = igAction.IndexOf('?');
-            var targetType = igAction.Substring(0, querySeparatorIndex);
-            var queryParams = HttpUtility.ParseQueryString(igAction.Substring(querySeparatorIndex));
-            var threadId = queryParams["id"];
-            var itemId = queryParams["x"];
-            if (threadId == null || itemId == null || notificationContent.Message == null || !await TryAcquireSyncLock())
+            try
             {
-                return;
-            }
-
-            var threadInfo = await GetThreadInfoAsync(threadId);
-            var threadTitle = string.Empty;
-            if (threadInfo != null)
-            {
-                threadTitle = threadInfo.Title;
-            }
-
-            if (string.IsNullOrEmpty(threadTitle) && notificationContent.Message.Contains(":"))
-            {
-                threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(':'));
-            }
-
-            var toastContent = new ToastContent
-            {
-                Header = new ToastHeader(threadId, threadTitle, string.Empty),
-                Visual = new ToastVisual
+                var notificationContent = args.NotificationContent;
+                var igAction = notificationContent.IgAction;
+                var querySeparatorIndex = igAction.IndexOf('?');
+                var targetType = igAction.Substring(0, querySeparatorIndex);
+                var queryParams = HttpUtility.ParseQueryString(igAction.Substring(querySeparatorIndex));
+                var threadId = queryParams["id"];
+                var itemId = queryParams["x"];
+                if (threadId == null || itemId == null || notificationContent.Message == null || !await TryAcquireSyncLock())
                 {
-                    BindingGeneric = new ToastBindingGeneric
+                    return;
+                }
+
+                var threadInfo = await GetThreadInfoAsync(threadId);
+                var threadTitle = string.Empty;
+                if (threadInfo != null)
+                {
+                    threadTitle = threadInfo.Title;
+                }
+
+                if (string.IsNullOrEmpty(threadTitle) && notificationContent.Message.Contains(":"))
+                {
+                    threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(':'));
+                }
+
+                var toastContent = new ToastContent
+                {
+                    Header = new ToastHeader(threadId, threadTitle, string.Empty),
+                    Visual = new ToastVisual
                     {
-                        Children =
+                        BindingGeneric = new ToastBindingGeneric
                         {
-                            new AdaptiveText
+                            Children =
                             {
-                                Text = notificationContent.Message
-                            }
-                        },
-                        HeroImage = string.IsNullOrEmpty(notificationContent.OptionalImage)
-                            ? null
-                            : new ToastGenericHeroImage
-                            {
-                                Source = notificationContent.OptionalImage
+                                new AdaptiveText
+                                {
+                                    Text = notificationContent.Message
+                                }
                             },
-                        AppLogoOverride = string.IsNullOrEmpty(args.NotificationContent.OptionalAvatarUrl)
-                            ? null
-                            : new ToastGenericAppLogo
-                            {
-                                Source = args.NotificationContent.OptionalAvatarUrl,
-                                HintCrop = ToastGenericAppLogoCrop.Circle,
-                                AlternateText = "Profile picture"
-                            }
-                    }
-                },
-                Actions = new ToastActionsCustom
-                {
-                    Inputs =
-                    {
-                        new ToastTextBox("text")
-                        {
-                            PlaceholderContent = "Type a reply"
+                            HeroImage = string.IsNullOrEmpty(notificationContent.OptionalImage)
+                                ? null
+                                : new ToastGenericHeroImage
+                                {
+                                    Source = notificationContent.OptionalImage
+                                },
+                            AppLogoOverride = string.IsNullOrEmpty(args.NotificationContent.OptionalAvatarUrl)
+                                ? null
+                                : new ToastGenericAppLogo
+                                {
+                                    Source = args.NotificationContent.OptionalAvatarUrl,
+                                    HintCrop = ToastGenericAppLogoCrop.Circle,
+                                    AlternateText = "Profile picture"
+                                }
                         }
                     },
-                    Buttons =
+                    Actions = new ToastActionsCustom
                     {
-                        new ToastButton("Reply", $"action=reply&threadId={threadId}")
+                        Inputs =
                         {
-                            ActivationType = ToastActivationType.Background,
-                            TextBoxId = "text",
-                            ImageUri = "Assets/SendIcon.png"
+                            new ToastTextBox("text")
+                            {
+                                PlaceholderContent = "Type a reply"
+                            }
+                        },
+                        Buttons =
+                        {
+                            new ToastButton("Reply", $"action=reply&threadId={threadId}")
+                            {
+                                ActivationType = ToastActivationType.Background,
+                                TextBoxId = "text",
+                                ImageUri = "Assets/SendIcon.png"
+                            }
                         }
-                    }
-                },
-                Launch = $"action=open&threadId={threadId}"
-            };
+                    },
+                    Launch = $"action=open&threadId={threadId}"
+                };
 
-            // Create the toast notification
-            var toast = new ToastNotification(toastContent.GetXml())
-            {
-                Group = threadId,
-                Tag = itemId,
-                ExpiresOnReboot = false
-            };
-            if (ApiInformation.IsPropertyPresent("Windows.UI.Notifications.ToastNotification", "RemoteId") &&
-                !string.IsNullOrEmpty(notificationContent.PushId))
-            {
-                toast.RemoteId = notificationContent.PushId;
+                // Create the toast notification
+                var toast = new ToastNotification(toastContent.GetXml())
+                {
+                    Group = threadId,
+                    Tag = itemId,
+                    ExpiresOnReboot = false
+                };
+                if (ApiInformation.IsPropertyPresent("Windows.UI.Notifications.ToastNotification", "RemoteId") &&
+                    !string.IsNullOrEmpty(notificationContent.PushId))
+                {
+                    toast.RemoteId = notificationContent.PushId;
+                }
+
+                // And send the notification	
+                ToastNotificationManager.CreateToastNotifier().Show(toast);
             }
-
-            // And send the notification	
-            ToastNotificationManager.CreateToastNotifier().Show(toast);
+            catch (Exception e)
+            {
+                PopMessageToast(e.ToString());
+                DebugLogger.LogException(e);
+            }
         }
 
         public static void PopMessageToast(string message)
