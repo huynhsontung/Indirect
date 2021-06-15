@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
+using Windows.Networking.Sockets;
 using InstagramAPI;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Core;
@@ -19,6 +20,7 @@ namespace BackgroundPushClient
             {
                 PushClient.UnregisterTasks();
                 BackgroundExecutionManager.RemoveAccess();
+                UnregisterLegacySocket();
                 var session = await SessionManager.TryLoadLastSessionAsync();
                 if (session == null && Instagram.IsUserAuthenticatedPersistent)
                 {
@@ -46,7 +48,7 @@ namespace BackgroundPushClient
                     FbnsConnectionData.RemoveFromAppSettings();
 
                     await Task.Delay(TimeSpan.FromSeconds(3));
-                    if (!PushClient.SocketRegistered() && await Utils.TryAcquireSyncLock())
+                    if (!instagram.PushClient.SocketRegistered() && await Utils.TryAcquireSyncLock())
                     {
                         instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
                         instagram.PushClient.ExceptionsCaught += Utils.PushClientOnExceptionsCaught;
@@ -66,6 +68,21 @@ namespace BackgroundPushClient
             finally
             {
                 deferral.Complete();
+            }
+        }
+
+        private void UnregisterLegacySocket()
+        {
+            if (SocketActivityInformation.AllSockets.ContainsKey(PushClient.SocketIdLegacy))
+            {
+                try
+                {
+                    SocketActivityInformation.AllSockets[PushClient.SocketIdLegacy].StreamSocket.Dispose();
+                }
+                catch (Exception e)
+                {
+                    Utils.PopMessageToast(e.ToString());
+                }
             }
         }
     }

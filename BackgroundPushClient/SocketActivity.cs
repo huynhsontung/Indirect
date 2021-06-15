@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking.Sockets;
+using Windows.Security.Cryptography;
 using Windows.Storage;
 using InstagramAPI;
 using InstagramAPI.Push;
@@ -15,7 +16,7 @@ namespace BackgroundPushClient
     public sealed class SocketActivity : IBackgroundTask
     {
         private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
-        private BackgroundTaskCancellationReason _reason;
+        private BackgroundTaskCancellationReason _cancellationReason;
         private FileStream _lockFile;
 
         public async void Run(IBackgroundTaskInstance taskInstance)
@@ -29,13 +30,15 @@ namespace BackgroundPushClient
             this.Log($"{details.Reason}");
             try
             {
-                if (_cancellation.IsCancellationRequested || !await TryAcquireSocketActivityLock())
+                var context = details.SocketInformation.Context;
+                if (_cancellation.IsCancellationRequested || !await TryAcquireSocketActivityLock() ||
+                    context?.Data?.Length == default)
                 {
                     return;
                 }
 
-                // TODO: Load specific session based on context data
-                var session = await SessionManager.TryLoadLastSessionAsync();
+                var sessionName = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, context.Data);
+                var session = await SessionManager.TryLoadSessionAsync(sessionName);
                 if (session == null)
                 {
                     if (details.Reason == SocketActivityTriggerReason.SocketClosed)
@@ -62,7 +65,7 @@ namespace BackgroundPushClient
                         catch (Exception e)
                         {
                             await Task.Delay(TimeSpan.FromSeconds(1), _cancellation.Token);
-                            if (PushClient.SocketRegistered())
+                            if (instagram.PushClient.SocketRegistered())
                             {
                                 Utils.PopMessageToast($"[{details.Reason}] {e}");
                                 return;
@@ -107,14 +110,15 @@ namespace BackgroundPushClient
             }
             catch (TaskCanceledException)
             {
-                Utils.PopMessageToast($"{nameof(SocketActivity)} cancelled: {_reason}");
+                Utils.PopMessageToast($"{nameof(SocketActivity)} cancelled: {_cancellationReason}");
             }
             catch (Exception e)
             {
                 Utils.PopMessageToast($"[{details.Reason}] {e}");
                 DebugLogger.LogException(e, properties: new Dictionary<string, string>
                 {
-                    {"SocketActivityTriggerReason", details.Reason.ToString()}
+                    {"SocketActivityTriggerReason", details.Reason.ToString()},
+                    {"Cancelled", _cancellation.IsCancellationRequested ? _cancellationReason.ToString() : string.Empty}
                 });
                 this.Log($"{typeof(SocketActivity).FullName}: Can't finish push cycle. Abort.");
             }
@@ -128,7 +132,7 @@ namespace BackgroundPushClient
 
         private void TaskInstanceOnCanceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
         {
-            _reason = reason;
+            _cancellationReason = reason;
             _cancellation?.Cancel();
         }
 

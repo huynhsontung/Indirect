@@ -30,7 +30,7 @@ namespace InstagramAPI.Push
         public FbnsConnectionData ConnectionData => _instaApi.Session.PushData;
         public StreamSocket Socket { get; private set; }
         public bool Running => !(_runningTokenSource?.IsCancellationRequested ?? true);
-        public string SocketId => SocketIdPrefix + _instaApi.Session?.LoggedInUser?.Pk;
+        private string SocketId => SocketIdPrefix + _instaApi.Session.SessionName;
 
         private const string HostName = "mqtt-mini.facebook.com";
         private const string BackgroundSocketActivityName = "BackgroundPushClient.SocketActivity";
@@ -77,11 +77,11 @@ namespace InstagramAPI.Push
             }
         }
 
-        public static bool SocketRegistered()
+        public bool SocketRegistered()
         {
             try
             {
-                if (SocketActivityInformation.AllSockets.ContainsKey(SocketIdLegacy))
+                if (SocketActivityInformation.AllSockets.ContainsKey(SocketId))
                 {
                     return true;
                 }
@@ -197,13 +197,16 @@ namespace InstagramAPI.Push
             }
 
             // Hand over MQTT socket to socket broker
+            var socketId = SocketId;
+            var sessionName = _instaApi.Session.SessionName;
+            var sessionNameBuffer = CryptographicBuffer.ConvertStringToBinary(sessionName, BinaryStringEncoding.Utf8);
             var socket = Socket;
             this.Log("Transferring sockets");
             Shutdown();
             await socket.CancelIOAsync();
             socket.TransferOwnership(
-                SocketIdLegacy,
-                null,
+                socketId,
+                new SocketActivityContext(sessionNameBuffer),
                 TimeSpan.FromSeconds(KeepAlive - 60));
             socket.Dispose();
         }
