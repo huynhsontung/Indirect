@@ -30,13 +30,12 @@ namespace BackgroundPushClient
             this.Log($"{details.Reason}");
             try
             {
-                var context = details.SocketInformation.Context;
-                if (_cancellation.IsCancellationRequested || !await TryAcquireSocketActivityLock() ||
-                    context?.Data?.Length == default)
+                if (_cancellation.IsCancellationRequested || !await TryAcquireSocketActivityLock())
                 {
                     return;
                 }
 
+                var context = details.SocketInformation.Context;
                 var sessionName = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, context.Data);
                 var session = await SessionManager.TryLoadSessionAsync(sessionName);
                 if (session == null)
