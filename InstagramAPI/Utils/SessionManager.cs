@@ -35,13 +35,8 @@ namespace InstagramAPI.Utils
                 return;
             }
 
-            if (session.LoggedInUser?.Pk == default)
-            {
-                throw new Exception("Session is authenticated but has no user data.");
-            }
-
             session.Cookies = CookieHelper.GetCookies();
-            var sessionName = session.LoggedInUser.Pk.ToString();
+            var sessionName = session.SessionName;
             var json = JsonConvert.SerializeObject(session, Formatting.None);
             var encoded = CryptographicBuffer.ConvertStringToBinary(json, BinaryStringEncoding.Utf8);
             var secured = await ProtectAsync(encoded);

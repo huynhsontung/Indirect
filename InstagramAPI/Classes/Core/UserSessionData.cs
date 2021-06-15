@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
-using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Windows.Web.Http;
 using InstagramAPI.Classes.Android;
@@ -15,6 +14,8 @@ namespace InstagramAPI.Classes.Core
         [JsonIgnore] public string CsrfToken => Instagram.GetCsrfToken();
 
         [JsonIgnore] public bool IsAuthenticated => LoggedInUser?.Pk > 0;
+
+        [JsonIgnore] public string SessionName => IsAuthenticated ? LoggedInUser.Pk.ToString() : string.Empty;
 
         [JsonProperty]
         public string Username { get; internal set; }
