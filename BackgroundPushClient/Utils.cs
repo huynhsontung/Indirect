@@ -34,15 +34,10 @@ namespace BackgroundPushClient
                 }
 
                 var threadInfo = await GetThreadInfoAsync(threadId);
-                var threadTitle = string.Empty;
-                if (threadInfo != null)
+                var threadTitle = "Unknown Thread";
+                if (!string.IsNullOrEmpty(threadInfo?.Title))
                 {
                     threadTitle = threadInfo.Title;
-                }
-
-                if (string.IsNullOrEmpty(threadTitle) && notificationContent.Message.Contains(":"))
-                {
-                    threadTitle = notificationContent.Message.Substring(0, notificationContent.Message.IndexOf(':'));
                 }
 
                 var toastContent = new ToastContent
