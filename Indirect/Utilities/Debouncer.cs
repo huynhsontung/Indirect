@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,27 +30,43 @@ namespace Indirect.Utilities
         public static async Task<bool> Delay(string key, TimeSpan delay)
         {
             Contract.Requires(!string.IsNullOrEmpty(key), nameof(key));
-            if (TokenSources.ContainsKey(key))
+            CancellationTokenSource tokenSource;
+            lock (TokenSources)
             {
-                TokenSources[key].Cancel();
-                TokenSources[key].Dispose();
-                TokenSources[key] = new CancellationTokenSource();
-            }
-            else
-            {
-                TokenSources.Add(key, new CancellationTokenSource());
+                if (TokenSources.ContainsKey(key))
+                {
+                    TokenSources[key]?.Cancel();
+                    TokenSources[key] = new CancellationTokenSource();
+                }
+                else
+                {
+                    TokenSources.Add(key, new CancellationTokenSource());
+                }
+
+                tokenSource = TokenSources[key];
             }
 
-            var cancellationToken = TokenSources[key].Token;
             try
             {
+                var cancellationToken = tokenSource.Token;
                 await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                return !cancellationToken.IsCancellationRequested;
             }
             catch (TaskCanceledException)
             {
                 return false;
             }
-            return !cancellationToken.IsCancellationRequested;
+            finally
+            {
+                lock (TokenSources)
+                {
+                    tokenSource.Dispose();
+                    if (TokenSources[key] == tokenSource)
+                    {
+                        TokenSources[key] = null;
+                    }
+                }
+            }
         }
 
         public static Task<bool> Delay(string key, int delayInMilliseconds) =>

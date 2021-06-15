@@ -13,7 +13,7 @@ using InstagramAPI.Utils;
 
 namespace Indirect.Entities
 {
-    class ReelsFeed : IDisposable
+    class ReelsFeed
     {
         public readonly ObservableCollection<ReelWrapper> Reels = new ObservableCollection<ReelWrapper>();
 
@@ -103,18 +103,27 @@ namespace Indirect.Entities
         public async void StartReelsFeedUpdateLoop()
         {
             _reelsUpdateLoop?.Cancel();
-            _reelsUpdateLoop = new CancellationTokenSource();
-            while (!_reelsUpdateLoop.IsCancellationRequested)
+            try
             {
-                try
+                _reelsUpdateLoop = new CancellationTokenSource();
+                while (!_reelsUpdateLoop.IsCancellationRequested)
                 {
-                    await Task.Delay(TimeSpan.FromMinutes(5), _reelsUpdateLoop.Token);
-                    await UpdateReelsFeed();
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromMinutes(5), _reelsUpdateLoop.Token);
+                        await UpdateReelsFeed();
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        return;
+                    }
                 }
-                catch (TaskCanceledException)
-                {
-                    return;
-                }
+            }
+            finally
+            {
+                var tokenSource = _reelsUpdateLoop;
+                _reelsUpdateLoop = null;
+                tokenSource?.Dispose();
             }
         }
 
@@ -128,12 +137,6 @@ namespace Indirect.Entities
                     Reels.Clear();
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            _reelsUpdateLoop?.Dispose();
-            Reels.Clear();
         }
     }
 }

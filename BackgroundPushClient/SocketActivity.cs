@@ -30,13 +30,14 @@ namespace BackgroundPushClient
             this.Log($"{details.Reason}");
             try
             {
-                if (_cancellation.IsCancellationRequested || !await TryAcquireSocketActivityLock())
+                var socketId = details.SocketInformation.Id;
+                if (_cancellation.IsCancellationRequested || !await TryAcquireSocketActivityLock() ||
+                    socketId.Length <= PushClient.SocketIdPrefix.Length)
                 {
                     return;
                 }
 
-                var context = details.SocketInformation.Context;
-                var sessionName = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, context.Data);
+                var sessionName = socketId.Substring(PushClient.SocketIdPrefix.Length);
                 var session = await SessionManager.TryLoadSessionAsync(sessionName);
                 if (session == null)
                 {
@@ -124,6 +125,8 @@ namespace BackgroundPushClient
             finally
             {
                 ReleaseSocketActivityLock();
+                taskInstance.Canceled -= TaskInstanceOnCanceled;
+                _cancellation.Dispose();
                 this.Log("-------------- End of background task --------------");
                 deferral.Complete();
             }

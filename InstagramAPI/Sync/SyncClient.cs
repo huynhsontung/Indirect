@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
-using Windows.Web.Http;
-using Windows.Web.Http.Filters;
 using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
@@ -405,9 +403,9 @@ namespace InstagramAPI.Sync
 
         private async void StartPingingLoop(MessageWebSocket ws)
         {
-            while (!_pinging.IsCancellationRequested)
+            try
             {
-                try
+                while (!_pinging.IsCancellationRequested)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(8), _pinging.Token).ConfigureAwait(false);
                     var pingPacket = PingReqPacket.Instance;
@@ -415,16 +413,20 @@ namespace InstagramAPI.Sync
                     await ws.OutputStream.WriteAsync(pingBuffer);
                     await ws.OutputStream.FlushAsync();
                 }
-                catch (TaskCanceledException)
-                {
-                    this.Log("Stopped pinging sync server");
-                    return;
-                }
-                catch (Exception e)
-                {
-                    DebugLogger.LogException(e, false);
-                    return;
-                }
+            }
+            catch (TaskCanceledException)
+            {
+                this.Log("Stopped pinging sync server");
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e, false);
+            }
+            finally
+            {
+                var tokenSource = _pinging;
+                _pinging = null;
+                tokenSource?.Dispose();
             }
         }
 

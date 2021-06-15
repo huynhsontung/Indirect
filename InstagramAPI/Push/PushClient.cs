@@ -37,7 +37,7 @@ namespace InstagramAPI.Push
         private const string SocketActivityEntryPoint = "BackgroundPushClient.SocketActivity";
         private const string BackgroundReplyName = "BackgroundPushClient.ReplyAction";
         private const string BackgroundReplyEntryPoint = "BackgroundPushClient.ReplyAction";
-        private const string SocketIdPrefix = "mqtt_fbns_";
+        public const string SocketIdPrefix = "mqtt_fbns_";
         public const string SocketIdLegacy = "mqtt_fbns";    // TODO: handle multiple socket IDs for multiple profiles
         public const int KeepAlive = 900;    // seconds
         public const int WaitTime = 5;      // seconds
@@ -51,22 +51,6 @@ namespace InstagramAPI.Push
         public PushClient(Instagram api)
         {
             _instaApi = api ?? throw new ArgumentException("Api can't be null", nameof(api));
-            //NetworkInformation.NetworkStatusChanged += OnNetworkChanged;
-        }
-
-        public void DisposeBackgroundSocket()
-        {
-            if (SocketActivityInformation.AllSockets.TryGetValue(SocketId, out var socketInformation))
-            {
-                try
-                {
-                    socketInformation.StreamSocket.Dispose();
-                }
-                catch (Exception)
-                {
-                    // pass
-                }
-            }
         }
 
         public static void UnregisterTasks()
@@ -198,15 +182,13 @@ namespace InstagramAPI.Push
 
             // Hand over MQTT socket to socket broker
             var socketId = SocketId;
-            var sessionName = _instaApi.Session.SessionName;
-            var sessionNameBuffer = CryptographicBuffer.ConvertStringToBinary(sessionName, BinaryStringEncoding.Utf8);
             var socket = Socket;
             this.Log("Transferring sockets");
             Shutdown();
             await socket.CancelIOAsync();
             socket.TransferOwnership(
                 socketId,
-                new SocketActivityContext(sessionNameBuffer),
+                null,
                 TimeSpan.FromSeconds(KeepAlive - 60));
             socket.Dispose();
         }
@@ -362,6 +344,12 @@ namespace InstagramAPI.Push
             {
                 return;
             }
+            finally
+            {
+                var tokenSource = _runningTokenSource;
+                _runningTokenSource = null;
+                tokenSource?.Dispose();
+            }
 
             if (Running)
             {
@@ -372,24 +360,6 @@ namespace InstagramAPI.Push
                 catch (Exception e)
                 {
                     ExceptionsCaught?.Invoke(this, new UnhandledExceptionEventArgs(e, false));
-                }
-            }
-        }
-
-        private async void OnNetworkChanged(object sender)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
-            if (Running && Instagram.InternetAvailable())
-            {
-                _runningTokenSource?.Cancel();
-                try
-                {
-                    this.Log("Restarting due to network change.");
-                    await StartFresh().ConfigureAwait(false);
-                }
-                catch (Exception e)
-                {
-                    DebugLogger.LogException(e);
                 }
             }
         }
@@ -551,22 +521,6 @@ namespace InstagramAPI.Push
             };
 
             await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
-        }
-
-        private async void StartKeepAliveLoop()
-        {
-            try
-            {
-                while (Running)
-                {
-                    await SendPing();
-                    await Task.Delay(TimeSpan.FromSeconds(KeepAlive - 60), _runningTokenSource.Token);
-                }
-            }
-            catch (TaskCanceledException)
-            {
-                // pass
-            }
         }
 
         private byte[] DecompressPayload(IBuffer payload)

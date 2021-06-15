@@ -16,7 +16,7 @@ namespace Indirect.Utilities
         internal static async void Acquire()
         {
             if (Acquired) return;
-            _tokenSource = new CancellationTokenSource();
+            var tokenSource = _tokenSource = new CancellationTokenSource();
             var storageFolder = ApplicationData.Current.LocalFolder;
             var storageItem = await storageFolder.CreateFileAsync("SyncLock.mutex", CreationCollisionOption.OpenIfExists);
             for (int i = 0; i < 5; i++)
@@ -30,7 +30,7 @@ namespace Indirect.Utilities
                 {
                     try
                     {
-                        await Task.Delay(200, _tokenSource.Token);
+                        await Task.Delay(200, tokenSource.Token);
                     }
                     catch (TaskCanceledException)
                     {
@@ -44,7 +44,9 @@ namespace Indirect.Utilities
         {
             try
             {
-                _tokenSource?.Cancel();
+                var tokenSource = _tokenSource;
+                tokenSource?.Cancel();
+                tokenSource?.Dispose();
                 _lockFile?.Dispose();
                 _lockFile = null;
             }
