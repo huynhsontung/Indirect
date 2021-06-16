@@ -11,6 +11,7 @@ using InstagramAPI.Classes.Direct;
 using Microsoft.Toolkit.Collections;
 using Microsoft.Toolkit.Uwp;
 using InstagramAPI.Classes.Core;
+using InstagramAPI.Utils;
 
 namespace Indirect.Entities.Wrappers
 {
@@ -32,6 +33,7 @@ namespace Indirect.Entities.Wrappers
 
         private readonly MainViewModel _viewModel;
         private bool _firstTime = true;
+        private int _pageCounter;
 
         public InboxWrapper(MainViewModel viewModel, bool pending = false)
         {
@@ -42,11 +44,10 @@ namespace Indirect.Entities.Wrappers
                 new IncrementalLoadingCollection<InboxWrapper, DirectThreadWrapper>(this);
         }
 
-        private void UpdateExcludeThreads(InboxContainer source)
+        private void UpdateExcludeThreads(InboxContainer source, bool updateCursor)
         {
             Container = source;
-            if (string.IsNullOrEmpty(OldestCursor) ||
-                string.Compare(OldestCursor, source.Inbox.OldestCursor, StringComparison.Ordinal) > 0)
+            if (updateCursor)
             {
                 OldestCursor = Container.Inbox.OldestCursor;
             }
@@ -61,7 +62,7 @@ namespace Indirect.Entities.Wrappers
             }
 
             var container = result.Value;
-            UpdateExcludeThreads(container);
+            UpdateExcludeThreads(container, false);
             await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
             {
                 foreach (var thread in container.Inbox.Threads)
@@ -89,48 +90,67 @@ namespace Indirect.Entities.Wrappers
 
         public async Task<IEnumerable<DirectThreadWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
         {
-            if (!_firstTime && !Container.Inbox.HasOlder) return Array.Empty<DirectThreadWrapper>();
-            var pagesToLoad = pageSize / 20;
-            if (pagesToLoad < 1) pagesToLoad = 1;
-            var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
-            pagination.StartFromMaxId(OldestCursor);
-            var result = await _viewModel.InstaApi.GetInboxAsync(pagination, PendingInbox);
-            if (!result.IsSucceeded)
+            this.Log($"Getting page: {pageIndex}");
+            try
             {
-                return new List<DirectThreadWrapper>(0);
-            }
-            var container = result.Value;
-            if (_firstTime)
-            {
-                _firstTime = false;
-                FirstUpdated?.Invoke(container.SeqId, container.SnapshotAt);
-            }
-            UpdateExcludeThreads(container);
+                while (pageIndex > _pageCounter)
+                {
+                    try
+                    {
+                        await Task.Delay(100, cancellationToken);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        return Array.Empty<DirectThreadWrapper>();
+                    }
+                }
 
-            var wrappedThreadList = new List<DirectThreadWrapper>(container.Inbox.Threads.Count);
-            foreach (var directThread in container.Inbox.Threads)
-            {
-                var wrappedThread = new DirectThreadWrapper(_viewModel, directThread);
-                wrappedThread.PropertyChanged += OnThreadChanged;
-                wrappedThreadList.Add(wrappedThread);
-            }
+                if (!_firstTime && !Container.Inbox.HasOlder || cancellationToken.IsCancellationRequested)
+                {
+                    return Array.Empty<DirectThreadWrapper>();
+                }
 
-            return wrappedThreadList;
+                var pagesToLoad = pageSize / 20;
+                if (pagesToLoad < 1) pagesToLoad = 1;
+                var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
+                pagination.StartFromMaxId(OldestCursor);
+                var result = await _viewModel.InstaApi.GetInboxAsync(pagination, PendingInbox);
+                if (!result.IsSucceeded || cancellationToken.IsCancellationRequested)
+                {
+                    return Array.Empty<DirectThreadWrapper>();
+                }
+
+                var container = result.Value;
+                if (_firstTime)
+                {
+                    _firstTime = false;
+                    FirstUpdated?.Invoke(container.SeqId, container.SnapshotAt);
+                }
+
+                UpdateExcludeThreads(container, true);
+                var wrappedThreadList = new List<DirectThreadWrapper>(container.Inbox.Threads.Count);
+                foreach (var directThread in container.Inbox.Threads)
+                {
+                    var wrappedThread = new DirectThreadWrapper(_viewModel, directThread);
+                    wrappedThread.PropertyChanged += OnThreadChanged;
+                    wrappedThreadList.Add(wrappedThread);
+                }
+
+                return wrappedThreadList;
+            }
+            finally
+            {
+                _pageCounter++;
+            }
         }
 
         public async Task ClearInbox()
         {
             _firstTime = true;
+            _pageCounter = 0;
             Container = new InboxContainer();
             OldestCursor = null;
-            if (!Threads.HasMoreItems)
-            {
-                await Threads.RefreshAsync();
-            }
-            else
-            {
-                Threads.Clear();
-            }
+            await Threads.RefreshAsync();
         }
 
         private void SortInboxThread()
