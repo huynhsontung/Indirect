@@ -8,7 +8,7 @@ namespace InstagramAPI.Classes
 {
     internal class ApiRequestChallengeMessage : ApiRequestMessage
     {
-        public ApiRequestChallengeMessage(Instagram instaApi) : base(instaApi) {}
+        public ApiRequestChallengeMessage(UserSessionData session) : base(session) {}
 
         [JsonProperty("_csrftoken")]
         public string CsrtToken { get; set; }
@@ -16,21 +16,21 @@ namespace InstagramAPI.Classes
 
     internal class ApiRequestMessage
     {
-        private readonly Instagram _instaApi;
+        private readonly UserSessionData _session;
 
         [JsonProperty("country_codes")] public JRaw CountryCodes { get; set; } = new JRaw("[{\"country_code\":\"1\",\"source\":[\"default\",\"sim\"]}]");
-        [JsonProperty("phone_id")] public string PhoneId => _instaApi.Device.PhoneId.ToString();
-        [JsonProperty("username")] public string Username => _instaApi.Session.Username;
-        [JsonProperty("adid")] public string AdId => _instaApi.Device.AdId.ToString();
-        [JsonProperty("guid")] public Guid Guid => _instaApi.Device.Uuid;
+        [JsonProperty("phone_id")] public string PhoneId => _session.Device.PhoneId.ToString();
+        [JsonProperty("username")] public string Username => _session.Username;
+        [JsonProperty("adid")] public string AdId => _session.Device.AdId.ToString();
+        [JsonProperty("guid")] public Guid Guid => _session.Device.Uuid;
         [JsonProperty("_uuid")] public string Uuid => Guid.ToString();
-        [JsonProperty("device_id")] public string DeviceId => _instaApi.Device.DeviceId;
-        [JsonProperty("enc_password")] public string Password => $"#PWD_INSTAGRAM:0:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:{_instaApi.Session.Password}";
+        [JsonProperty("device_id")] public string DeviceId => _session.Device.DeviceId;
+        [JsonProperty("enc_password")] public string Password => $"#PWD_INSTAGRAM:0:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:{_session.Password}";
         [JsonProperty("login_attempt_count")] public string LoginAttemptCount { get; set; } = "0";
 
-        public ApiRequestMessage(Instagram instaApi)
+        public ApiRequestMessage(UserSessionData session)
         {
-            _instaApi = instaApi;
+            _session = session;
         }
 
         internal string GetMessageString()
@@ -39,11 +39,11 @@ namespace InstagramAPI.Classes
             return json;
         }
 
-        internal string GetChallengeMessageString(string csrfToken)
+        internal static string GetChallengeMessageString(UserSessionData session)
         {
-            var api = new ApiRequestChallengeMessage(_instaApi)
+            var api = new ApiRequestChallengeMessage(session)
             {
-                CsrtToken = csrfToken,
+                CsrtToken = session.CsrfToken,
                 LoginAttemptCount = "1"
             };
             var json = JsonConvert.SerializeObject(api);
@@ -74,7 +74,7 @@ namespace InstagramAPI.Classes
         {
             if (string.IsNullOrEmpty(signatureKey))
                 signatureKey = apiVersion.SignatureKey;
-            var api = new ApiRequestChallengeMessage(_instaApi)
+            var api = new ApiRequestChallengeMessage(_session)
             {
                 CsrtToken = csrfToken,
                 LoginAttemptCount = "1"

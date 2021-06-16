@@ -338,9 +338,15 @@
                         <Button.Flyout>
                             <MenuFlyout Placement="Bottom">
                                 <!--<MenuFlyoutItem Text="Test" Click="TestButton_OnClick" />-->
-                                <MenuFlyoutItem Click="Profile_Click" Text="Profile" />
+                                <MenuFlyoutItem Click="Profile_Click" Text="{x:Bind ViewModel.LoggedInUser.Username}" />
                                 <!--<ToggleMenuFlyoutItem Text="Pending inbox" IsChecked="False" Click="TogglePendingInbox_OnClick"
                                                       IsEnabled="{x:Bind _viewModel.Inbox.PendingRequestsCount, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"/>-->
+                                <MenuFlyoutSubItem x:Name="SwitchAccountMenu" Text="Switch Account">
+                                    <MenuFlyoutItem
+                                        Click="AddAccountButton_OnClick"
+                                        Icon="Add"
+                                        Text="Add Account" />
+                                </MenuFlyoutSubItem>
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutSubItem Text="Theme">
                                     <MenuFlyoutItem Click="ThemeItem_Click" Text="System" />
@@ -349,7 +355,7 @@
                                 </MenuFlyoutSubItem>
                                 <MenuFlyoutItem Click="About_Click" Text="About" />
                                 <MenuFlyoutSeparator />
-                                <MenuFlyoutItem Click="LogoutButton_Click" Text="Logout" />
+                                <MenuFlyoutItem Click="LogoutButton_Click" Text="Log Out" />
                             </MenuFlyout>
                         </Button.Flyout>
                     </Button>

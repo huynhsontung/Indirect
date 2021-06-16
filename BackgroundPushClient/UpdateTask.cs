@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking.Sockets;
@@ -21,44 +22,30 @@ namespace BackgroundPushClient
                 PushClient.UnregisterTasks();
                 BackgroundExecutionManager.RemoveAccess();
                 UnregisterLegacySocket();
-                var session = await SessionManager.TryLoadLastSessionAsync();
-                if (session == null && Instagram.IsUserAuthenticatedPersistent)
+
+                var sessions = await SessionManager.GetAvailableSessionsAsync();
+                var tasks = sessions.Select(async s =>
                 {
-                    var device = AndroidDevice.CreateFromAppSettings();
-                    var pushData = new FbnsConnectionData();
-                    pushData.LoadFromAppSettings();
-                    session = new UserSessionData(device, pushData);
-                    session.LoadFromAppSettings();
-                }
+                    var session = s.Session;
+                    var instagram = new Instagram(session);
 
-                if (session == null)
-                {
-                    return;
-                }
-
-                var instagram = new Instagram(session);
-
-                if (instagram.IsUserAuthenticated)
-                {
-                    // Switch to file based session
-                    await SessionManager.SaveSessionAsync(instagram);
-
-                    UserSessionData.RemoveFromAppSettings();
-                    AndroidDevice.RemoveFromAppSettings();
-                    FbnsConnectionData.RemoveFromAppSettings();
-
-                    await Task.Delay(TimeSpan.FromSeconds(3));
-                    if (!instagram.PushClient.SocketRegistered() && await Utils.TryAcquireSyncLock())
+                    if (instagram.IsUserAuthenticated)
                     {
-                        instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
-                        instagram.PushClient.ExceptionsCaught += Utils.PushClientOnExceptionsCaught;
-                        await instagram.PushClient.StartFresh();
-                        await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));  // Wait 5s to complete all outstanding IOs (hopefully)
-                        await instagram.PushClient.TransferPushSocket();
-                        Utils.PopMessageToast("Push client started.");
+                        await Task.Delay(TimeSpan.FromSeconds(3));
+                        if (!instagram.PushClient.SocketRegistered() && await Utils.TryAcquireSyncLock())
+                        {
+                            instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
+                            instagram.PushClient.ExceptionsCaught += Utils.PushClientOnExceptionsCaught;
+                            await instagram.PushClient.StartFresh();
+                            await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));
+                            await instagram.PushClient.TransferPushSocket();
+                            await SessionManager.SaveSessionAsync(instagram);
+                            Utils.PopMessageToast($"Push client for {session.LoggedInUser.Username} started.");
+                        }
                     }
-                }
+                });
 
+                await Task.WhenAll(tasks);
             }
             catch (Exception e)
             {

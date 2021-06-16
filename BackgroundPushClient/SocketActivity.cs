@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking.Sockets;
-using Windows.Security.Cryptography;
 using Windows.Storage;
 using InstagramAPI;
 using InstagramAPI.Push;
@@ -31,8 +30,9 @@ namespace BackgroundPushClient
             try
             {
                 var socketId = details.SocketInformation.Id;
-                if (_cancellation.IsCancellationRequested || !await TryAcquireSocketActivityLock() ||
-                    socketId.Length <= PushClient.SocketIdPrefix.Length)
+                if (_cancellation.IsCancellationRequested || string.IsNullOrEmpty(socketId) ||
+                    socketId.Length <= PushClient.SocketIdPrefix.Length ||
+                    !await TryAcquireSocketActivityLock(socketId))
                 {
                     return;
                 }
@@ -138,10 +138,10 @@ namespace BackgroundPushClient
             _cancellation?.Cancel();
         }
 
-        private async Task<bool> TryAcquireSocketActivityLock()
+        private async Task<bool> TryAcquireSocketActivityLock(string socketId)
         {
             var storageFolder = ApplicationData.Current.LocalFolder;
-            var storageItem = await storageFolder.CreateFileAsync("SocketActivity.mutex", CreationCollisionOption.OpenIfExists);
+            var storageItem = await storageFolder.CreateFileAsync(socketId + ".mutex", CreationCollisionOption.OpenIfExists);
             try
             {
                 _lockFile = new FileStream(storageItem.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);

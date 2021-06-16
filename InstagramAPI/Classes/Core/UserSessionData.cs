@@ -6,6 +6,7 @@ using InstagramAPI.Push;
 using Newtonsoft.Json;
 using Windows.Web.Http;
 using InstagramAPI.Classes.Android;
+using InstagramAPI.Classes.Challenge;
 
 namespace InstagramAPI.Classes.Core
 {
@@ -17,11 +18,15 @@ namespace InstagramAPI.Classes.Core
 
         [JsonIgnore] public string SessionName => IsAuthenticated ? LoggedInUser.Pk.ToString() : string.Empty;
 
-        [JsonProperty]
-        public string Username { get; internal set; }
+        [JsonIgnore] public TwoFactorLoginInfo TwoFactorInfo { get; internal set; }
+
+        [JsonIgnore] public ChallengeLoginInfo ChallengeInfo { get; internal set; }
 
         [JsonProperty]
-        public string Password { get; internal set; }
+        public string Username { get; set; }
+
+        [JsonProperty]
+        public string Password { get; set; }
 
         [JsonProperty]
         public BaseUser LoggedInUser { get; internal set; }

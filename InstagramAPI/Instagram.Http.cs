@@ -17,14 +17,14 @@ namespace InstagramAPI
 {
     public partial class Instagram
     {
-        private void SetDefaultRequestHeaders()
+        private static void SetDefaultRequestHeaders(HttpClient httpClient, UserSessionData session)
         {
-            var defaultHeaders = _httpClient.DefaultRequestHeaders;
+            var defaultHeaders = httpClient.DefaultRequestHeaders;
             defaultHeaders.Clear();
-            defaultHeaders.UserAgent.TryParseAdd(Device.UserAgent);
+            defaultHeaders.UserAgent.TryParseAdd(session.Device.UserAgent);
             defaultHeaders.AcceptEncoding.TryParseAdd("gzip, deflate");
             defaultHeaders.AcceptLanguage.TryParseAdd("en-US");
-            defaultHeaders.TryAdd("X-Ig-Android-Id", Device.DeviceId);
+            defaultHeaders.TryAdd("X-Ig-Android-Id", session.Device.DeviceId);
             defaultHeaders.TryAdd("X-Ig-App-Locale", "en_US");
             defaultHeaders.TryAdd("X-Ig-Timezone-Offset", ((int) DateTimeOffset.Now.Offset.TotalSeconds).ToString());
             defaultHeaders.TryAdd("X-Ig-Capabilities", ApiVersion.Current.Capabilities);
@@ -32,18 +32,18 @@ namespace InstagramAPI
             defaultHeaders.TryAdd("X-Ig-App-ID", ApiVersion.AppId);
             defaultHeaders.TryAdd("X-Fb-Http-Engine", "Liger");
 
-            var loggedInUser = Session.LoggedInUser;
+            var loggedInUser = session.LoggedInUser;
             if (loggedInUser != null && loggedInUser.Pk != default)
             {
                 defaultHeaders.TryAdd("Ig-Intended-User-Id", loggedInUser.Pk.ToString());
                 defaultHeaders.TryAdd("Ig-U-Ds-User-Id", loggedInUser.Pk.ToString());
             }
 
-            var authorizationToken = Session.AuthorizationToken;
+            var authorizationToken = session.AuthorizationToken;
             if (!string.IsNullOrEmpty(authorizationToken))
             {
                 defaultHeaders.Authorization =
-                    new HttpCredentialsHeaderValue("Bearer", Session.AuthorizationToken.Substring(7));
+                    new HttpCredentialsHeaderValue("Bearer", session.AuthorizationToken.Substring(7));
             }
         }
 

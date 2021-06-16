@@ -28,12 +28,13 @@ namespace BackgroundPushClient
                 var queryParams = HttpUtility.ParseQueryString(igAction.Substring(querySeparatorIndex));
                 var threadId = queryParams["id"];
                 var itemId = queryParams["x"];
+                var viewerId = notificationContent.IntendedRecipientUserId;
                 if (threadId == null || itemId == null || notificationContent.Message == null || !await TryAcquireSyncLock())
                 {
                     return;
                 }
 
-                var threadInfo = await GetThreadInfoAsync(threadId);
+                var threadInfo = await GetThreadInfoAsync(threadId, viewerId);
                 var threadTitle = "Unknown Thread";
                 if (!string.IsNullOrEmpty(threadInfo?.Title))
                 {
@@ -81,7 +82,7 @@ namespace BackgroundPushClient
                         },
                         Buttons =
                         {
-                            new ToastButton("Reply", $"action=reply&threadId={threadId}")
+                            new ToastButton("Reply", $"action=reply&threadId={threadId}&viewerId={viewerId}")
                             {
                                 ActivationType = ToastActivationType.Background,
                                 TextBoxId = "text",
@@ -147,7 +148,7 @@ namespace BackgroundPushClient
             PopMessageToast(exception.ToString());
         }
 
-        private static async Task<DirectThreadInfo> GetThreadInfoAsync(string threadId)
+        private static async Task<DirectThreadInfo> GetThreadInfoAsync(string threadId, long viewerId)
         {
             if (ThreadInfoDictionary != null)
             {
@@ -155,7 +156,8 @@ namespace BackgroundPushClient
                 return info;
             }
 
-            var dict = await CacheManager.ReadCacheAsync<Dictionary<string, DirectThreadInfo>>(nameof(ThreadInfoDictionary));
+            var dict = await CacheManager.ReadCacheAsync<Dictionary<string, DirectThreadInfo>>(
+                $"{nameof(ThreadInfoDictionary)}_{viewerId}");
             if (dict == null || !dict.ContainsKey(threadId))
             {
                 return null;

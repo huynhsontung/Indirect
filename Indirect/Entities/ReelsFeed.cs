@@ -18,11 +18,18 @@ namespace Indirect.Entities
         public readonly ObservableCollection<ReelWrapper> Reels = new ObservableCollection<ReelWrapper>();
 
         private CancellationTokenSource _reelsUpdateLoop;
-        private bool _justUpdated;
 
-        public async Task UpdateReelsFeed(ReelsTrayFetchReason fetchReason = ReelsTrayFetchReason.ColdStart)
+        public async Task UpdateReelsFeedAsync(ReelsTrayFetchReason fetchReason = ReelsTrayFetchReason.ColdStart)
         {
-            if (_justUpdated) return;
+            if (Debouncer.Throttle(nameof(UpdateReelsFeed), TimeSpan.FromSeconds(10)) ||
+                fetchReason == ReelsTrayFetchReason.ColdStart)
+            {
+                await UpdateReelsFeed(fetchReason);
+            }
+        }
+
+        private async Task UpdateReelsFeed(ReelsTrayFetchReason fetchReason)
+        {
             var result = await ((App)App.Current).ViewModel.InstaApi.GetReelsTrayFeed(fetchReason);
             if (!result.IsSucceeded) return;
             await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
@@ -37,8 +44,6 @@ namespace Indirect.Entities
                     DebugLogger.LogException(e);
                 }
             }, fetchReason == ReelsTrayFetchReason.PullToRefresh ? CoreDispatcherPriority.Normal : CoreDispatcherPriority.Low);
-            _justUpdated = true;
-            _ = Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(x => { _justUpdated = false; });
         }
 
         private void SyncReels(Reel[] target)
@@ -111,7 +116,7 @@ namespace Indirect.Entities
                     try
                     {
                         await Task.Delay(TimeSpan.FromMinutes(5), _reelsUpdateLoop.Token);
-                        await UpdateReelsFeed();
+                        await UpdateReelsFeedAsync();
                     }
                     catch (TaskCanceledException)
                     {

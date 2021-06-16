@@ -197,9 +197,9 @@ namespace InstagramAPI.Push
         {
             try
             {
-                if (!SocketRegistered() || !TasksRegistered())
+                if (!SocketRegistered())
                 {
-                    UnregisterTasks();
+                    //UnregisterTasks();
                     await StartFresh();
                 }
             }

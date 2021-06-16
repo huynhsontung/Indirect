@@ -18,12 +18,6 @@ namespace InstagramAPI
             }
         }
 
-        private void ValidateRequestMessage()
-        {
-            if (_apiRequestMessage == null || _apiRequestMessage.IsEmpty())
-                throw new ArgumentException("API request message null or empty");
-        }
-
         private static string GenerateRandomString(int length)
         {
             var rand = new Random();

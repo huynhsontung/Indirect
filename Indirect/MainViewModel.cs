@@ -34,6 +34,8 @@ namespace Indirect
         private DirectThreadWrapper _selectedThread;
         private string _threadToBeOpened;
 
+        private string ThreadInfoKey => $"{nameof(ThreadInfoDictionary)}_{LoggedInUser?.Pk}";
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public Instagram InstaApi { get; private set; }
@@ -44,6 +46,7 @@ namespace Indirect
         public InboxWrapper PendingInbox { get; }
         public InboxWrapper Inbox { get; }
         public List<DirectThreadWrapper> SecondaryThreads { get; } = new List<DirectThreadWrapper>();
+        public UserSessionContainer[] AvailableSessions { get; private set; } = new UserSessionContainer[0];
         public BaseUser LoggedInUser => InstaApi.Session.LoggedInUser;
         public Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; private set; }
         public Dictionary<long, BaseUser> CentralUserRegistry { get; } = new Dictionary<long, BaseUser>();
@@ -80,26 +83,23 @@ namespace Indirect
             }
 
             var session = await SessionManager.TryLoadLastSessionAsync() ?? new UserSessionData();
-            InstaApi = new Instagram(session);
-            RegisterSyncClientHandlers(InstaApi.SyncClient);
-            InstaApi.PushClient.MessageReceived += (sender, args) =>
-            {
-                this.Log("Background notification: " + args.Json);
-            };
+            InitializeInstaApi(session);
 
+            AvailableSessions = await SessionManager.GetAvailableSessionsAsync(InstaApi.Session);
             ThreadInfoDictionary =
-                await CacheManager.ReadCacheAsync<Dictionary<string, DirectThreadInfo>>(nameof(ThreadInfoDictionary)) ??
+                await CacheManager.ReadCacheAsync<Dictionary<string, DirectThreadInfo>>(ThreadInfoKey) ??
                 new Dictionary<string, DirectThreadInfo>();
         }
 
         public async Task OnLoggedIn()
         {
             if (!IsUserAuthenticated) throw new Exception("User is not logged in.");
+            ReelsFeed.StopReelsFeedUpdateLoop(true);
             var tasks = new List<Task>
             {
                 Inbox.ClearInbox(),
                 GetUserPresence(),
-                ReelsFeed.UpdateReelsFeed(),
+                ReelsFeed.UpdateReelsFeedAsync(),
                 PushClient.StartFromMainView()
             };
 
@@ -108,6 +108,17 @@ namespace Indirect
             // Disabled due to store certification failed
             //await Task.Delay(10000).ConfigureAwait(false);
             //await ContactsService.SaveUsersAsContact(CentralUserRegistry.Values).ConfigureAwait(false);
+        }
+
+        public async Task SwitchAccountAsync(UserSessionData session)
+        {
+            await SaveDataAsync();
+            ReelsFeed.StopReelsFeedUpdateLoop();
+            SyncClient.Shutdown();
+            await PushClient.TransferPushSocket();
+
+            InitializeInstaApi(session);
+            AvailableSessions = await SessionManager.GetAvailableSessionsAsync(InstaApi.Session);
         }
 
         public void SetSelectedThreadNull()
@@ -127,19 +138,23 @@ namespace Indirect
             }
         }
 
-        public Task<Result<LoginResult>> Login(string username, string password) => InstaApi.LoginAsync(username, password);
-
-        public Task<Result<LoginResult>> LoginWithFacebook(string fbAccessToken) =>
-            InstaApi.LoginWithFacebookAsync(fbAccessToken);
-
-        public async Task Logout()
+        public async Task<bool> Logout()
         {
             ReelsFeed.StopReelsFeedUpdateLoop(true);
+            await CacheManager.RemoveCacheAsync(ThreadInfoKey);
             await InstaApi.Logout();
-            //await ContactsService.DeleteAllAppContacts();
-            await CacheManager.RemoveCacheAsync(nameof(ThreadInfoDictionary));
 
-            InstaApi = new Instagram(InstaApi.Session);
+            if (AvailableSessions.Length > 0)
+            {
+                await SwitchAccountAsync(AvailableSessions[0].Session);
+                return false;
+            }
+            else
+            {
+                //await ContactsService.DeleteAllAppContacts();
+                InstaApi = new Instagram(InstaApi.Session);
+                return true;
+            }
         }
 
         public async Task UpdateLoggedInUser()
@@ -304,6 +319,16 @@ namespace Indirect
             }
         }
 
+        private void InitializeInstaApi(UserSessionData session)
+        {
+            InstaApi = new Instagram(session);
+            RegisterSyncClientHandlers(InstaApi.SyncClient);
+            InstaApi.PushClient.MessageReceived += (sender, args) =>
+            {
+                this.Log("Background notification: " + args.Json);
+            };
+        }
+
         public static Task HandleException(string message = null, Exception e = null)
         {
             if (string.IsNullOrEmpty(message))
@@ -350,7 +375,7 @@ namespace Indirect
         public async Task SaveDataAsync()
         {
             await SessionManager.SaveSessionAsync(InstaApi);
-            await CacheManager.WriteCacheAsync(nameof(ThreadInfoDictionary), ThreadInfoDictionary);
+            await CacheManager.WriteCacheAsync(ThreadInfoKey, ThreadInfoDictionary);
         }
     }
 }

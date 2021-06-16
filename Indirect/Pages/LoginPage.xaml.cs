@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI.Core;
@@ -25,6 +26,7 @@ namespace Indirect.Pages
         private MainViewModel ViewModel => ((App)Application.Current).ViewModel;
         private bool _loading;
         private int _challengeRepeatCount;
+        private UserSessionData _session;
 
         public LoginPage()
         {
@@ -41,6 +43,10 @@ namespace Indirect.Pages
         {
             base.OnNavigatedTo(e);
             _challengeRepeatCount = 0;
+            _session = new UserSessionData(ViewModel.Device);
+
+            BackButton.Visibility = BackButtonPlaceholder.Visibility =
+                Frame.CanGoBack ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void DisableButtons()
@@ -83,7 +89,7 @@ namespace Indirect.Pages
                     if (query.Contains("access_token="))
                     {
                         var fbToken = urlParams.GetFirstValueByName("access_token");
-                        var result = await ViewModel.LoginWithFacebook(fbToken).ConfigureAwait(true);
+                        var result = await Instagram.LoginWithFacebookAsync(fbToken, _session).ConfigureAwait(true);
                         if (result.IsSucceeded)
                         {
                             await TryNavigateToMainPage();
@@ -135,7 +141,7 @@ namespace Indirect.Pages
 
         private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            if (ViewModel.InstaApi.TwoFactorInfo != null)
+            if (_session.TwoFactorInfo != null)
             {
                 await TwoFactorAuthAsync();
                 return;
@@ -157,15 +163,23 @@ namespace Indirect.Pages
                     return;
                 }
 
-                var result = await ViewModel.Login(username, password);
+                _session.Username = username;
+                _session.Password = password;
+                if (IsSessionDuplicated(_session))
+                {
+                    await ShowLoginErrorDialog("This account is already logged in.");
+                    return;
+                }
+
+                var result = await Instagram.LoginAsync(_session);
                 if (result.Status != ResultStatus.Succeeded || result.Value != LoginResult.Success)
                 {
                     switch (result.Value)
                     {
                         case LoginResult.ChallengeRequired:
-                            if (ViewModel.InstaApi.ChallengeInfo != null && !WebviewPopup.IsOpen)
+                            if (_session.ChallengeInfo != null && !WebviewPopup.IsOpen)
                             {
-                                LoginWebview.Navigate(ViewModel.InstaApi.ChallengeInfo.Url);
+                                LoginWebview.Navigate(_session.ChallengeInfo.Url);
                                 WebviewPopup.IsOpen = true;
                             }
 
@@ -187,6 +201,23 @@ namespace Indirect.Pages
             {
                 EnableButtons();
             }
+        }
+
+        private bool IsSessionDuplicated(UserSessionData session)
+        {
+            var usernameCheck = session.Username == ViewModel.LoggedInUser?.Username ||
+                                ViewModel.AvailableSessions.Any(
+                                    x => x.Session.LoggedInUser.Username == session.Username);
+
+            if (usernameCheck) return true;
+
+            if (session.IsAuthenticated)
+            {
+                return session.LoggedInUser.Pk == ViewModel.LoggedInUser?.Pk ||
+                       ViewModel.AvailableSessions.Any(x => x.Session.LoggedInUser.Pk == session.LoggedInUser.Pk);
+            }
+
+            return false;
         }
 
         private async Task<bool> TryClearingChallenge(WebView challengeWebView)
@@ -230,7 +261,7 @@ namespace Indirect.Pages
 
         private async Task TwoFactorAuthAsync()
         {
-            var tfaDialog = new TwoFactorAuthDialog();
+            var tfaDialog = new TwoFactorAuthDialog(_session);
             var dialogResult = await tfaDialog.ShowAsync();
             if (dialogResult == ContentDialogResult.Primary)
                 await TryNavigateToMainPage();
@@ -238,15 +269,19 @@ namespace Indirect.Pages
 
         private async Task TryNavigateToMainPage()
         {
-            if (!ViewModel.IsUserAuthenticated)
+            if (!_session.IsAuthenticated)
             {
                 await ShowLoginErrorDialog("Something went wrong. Please try again later.");
                 DebugLogger.LogException(new Exception("Try to navigate to MainPage but user validation failed"));
             }
             else
             {
+                if (!IsSessionDuplicated(_session))
+                {
+                    await ViewModel.SwitchAccountAsync(_session);
+                }
+
                 Frame.Navigate(typeof(MainPage));
-                await ViewModel.SaveDataAsync().ConfigureAwait(false);
             }
         }
 
@@ -289,7 +324,7 @@ namespace Indirect.Pages
 
         private async void FbLoginButton_OnClick(object sender, RoutedEventArgs e)
         {
-            if (ViewModel.InstaApi.TwoFactorInfo != null)
+            if (_session.TwoFactorInfo != null)
             {
                 await TwoFactorAuthAsync();
                 return;
@@ -299,6 +334,14 @@ namespace Indirect.Pages
             // Potentially upgrade to new WebAuthenticationBroker whenever it gets updated.
             // Tracking: https://github.com/MicrosoftEdge/WebView2Feedback/issues/171
             LoginWebview.Navigate(new Uri("https://m.facebook.com/v6.0/dialog/oauth?client_id=124024574287414&scope=email&response_type=token&redirect_uri=https%3A%2F%2Fwww.instagram.com%2Faccounts%2Fsignup%2F"));
+        }
+
+        private void BackButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (Frame.CanGoBack)
+            {
+                Frame.GoBack();
+            }
         }
     }
 }

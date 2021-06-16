@@ -13,19 +13,7 @@ namespace Indirect.Utilities
         private static readonly Dictionary<string, CancellationTokenSource> TokenSources =
             new Dictionary<string, CancellationTokenSource>();
 
-        public static void DelayExecute(string key, TimeSpan delay, DelayedAction action)
-        {
-            var _ = DelayExecuteAsync(key, delay, action);
-        }
-
-        public static void DelayExecute(string key, int delayInMilliseconds, DelayedAction action) =>
-            DelayExecute(key, TimeSpan.FromMilliseconds(delayInMilliseconds), action);
-
-        public static async Task DelayExecuteAsync(string key, TimeSpan delay, DelayedAction action)
-        {
-            var doneDelay = await Delay(key, delay).ConfigureAwait(true);
-            action?.Invoke(!doneDelay);
-        }
+        private static readonly Dictionary<string, Task> ThrottleTasks = new Dictionary<string, Task>();
 
         public static async Task<bool> Delay(string key, TimeSpan delay)
         {
@@ -71,5 +59,29 @@ namespace Indirect.Utilities
 
         public static Task<bool> Delay(string key, int delayInMilliseconds) =>
             Delay(key, TimeSpan.FromMilliseconds(delayInMilliseconds));
+
+        public static bool Throttle(string key, TimeSpan delay)
+        {
+            lock (ThrottleTasks)
+            {
+                if (ThrottleTasks.ContainsKey(key))
+                {
+                    if (ThrottleTasks[key].IsCompleted)
+                    {
+                        ThrottleTasks[key].Dispose();
+                        ThrottleTasks[key] = Task.Delay(delay);
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                ThrottleTasks.Add(key, Task.Delay(delay));
+                return true;
+            }
+        }
+
+        public static bool Throttle(string key, int delayInMilliseconds) =>
+            Throttle(key, TimeSpan.FromMilliseconds(delayInMilliseconds));
     }
 }

@@ -58,7 +58,7 @@ namespace InstagramAPI.Sync
             }
             finally
             {
-                _socket.Dispose();
+                _socket?.Dispose();
             }
         }
 

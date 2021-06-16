@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using InstagramAPI;
+using InstagramAPI.Classes.Core;
 using InstagramAPI.Utils;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
@@ -11,9 +13,12 @@ namespace Indirect.Controls
 {
     public sealed partial class TwoFactorAuthDialog : ContentDialog
     {
-        public TwoFactorAuthDialog()
+        private readonly UserSessionData _session;
+
+        public TwoFactorAuthDialog(UserSessionData session)
         {
             this.InitializeComponent();
+            _session = session;
         }
 
         private async void ConfirmSecurityCode(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -26,7 +31,7 @@ namespace Indirect.Controls
             }
             var deferral = args.GetDeferral();
             this.IsPrimaryButtonEnabled = false;
-            var result = await ((App)App.Current).ViewModel.InstaApi.LoginWithTwoFactorAsync(CodeBox.Text);
+            var result = await Instagram.LoginWithTwoFactorAsync(CodeBox.Text, _session);
             if (!result.IsSucceeded)
             {
                 args.Cancel = true;

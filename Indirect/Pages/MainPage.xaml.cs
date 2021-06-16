@@ -12,6 +12,7 @@ using Indirect.Controls;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI;
+using InstagramAPI.Classes.Core;
 using InstagramAPI.Classes.User;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
@@ -57,21 +58,24 @@ namespace Indirect.Pages
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            Frame.BackStack.Clear();
             if (e?.NavigationMode != NavigationMode.Back)
             {
                 await ViewModel.OnLoggedIn();
             }
+
+            UpdateSwitchAccountMenu();
         }
 
         private async void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
             var confirmDialog = new ContentDialog()
             {
-                Title = "Are you sure?",
-                Content = "Logging out will delete all session data. You will stop receive push notifications.",
+                Title = "Log out of Indirect?",
+                Content = "Logging out will delete all session data of this profile.",
                 CloseButtonText = "Close",
-                PrimaryButtonText = "Logout", 
-                DefaultButton = ContentDialogButton.Close
+                PrimaryButtonText = "Log Out",
+                DefaultButton = ContentDialogButton.Primary
             };
             var confirmation = await confirmDialog.ShowAsync();
             if (confirmation != ContentDialogResult.Primary)
@@ -80,8 +84,14 @@ namespace Indirect.Pages
             }
 
             await ((App) App.Current).CloseAllSecondaryViews();
-            await ViewModel.Logout();
-            Frame.Navigate(typeof(LoginPage));
+            if (await ViewModel.Logout())
+            {
+                Frame.Navigate(typeof(LoginPage));
+            }
+            else
+            {
+                Frame.Navigate(typeof(MainPage));
+            }
         }
         
         private void DetailsBackButton_OnClick(object sender, RoutedEventArgs e) => ViewModel.SetSelectedThreadNull();
@@ -107,7 +117,7 @@ namespace Indirect.Pages
             BackButtonPlaceholder.Visibility = BackButton.Visibility;
         }
 
-        private void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count == 0 || e.AddedItems[0] == null)
             {
@@ -119,13 +129,13 @@ namespace Indirect.Pages
 
             var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
             details?.Focus(FocusState.Programmatic); // Focus to chat box after selecting a thread
-            Debouncer.DelayExecute("OnThreadChanged", e.RemovedItems[0] == null ? 600 : 200, async cancelled =>
+            if (await Debouncer.Delay("OnThreadChanged", e.RemovedItems[0] == null ? 600 : 200).ConfigureAwait(false))
             {
-                if (cancelled) return;
                 await inboxThread.MarkLatestItemSeen().ConfigureAwait(false);
-            });
+            }
         }
 
+        #region Search
         private void SearchBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
             if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
@@ -163,48 +173,7 @@ namespace Indirect.Pages
             sender.ItemsSource = null;
         }
 
-        private void About_Click(object sender, RoutedEventArgs e)
-        {
-            var about = new AboutDialog();
-            _ = about.ShowAsync();
-        }
-
-        private void ThemeItem_Click(object sender, RoutedEventArgs e)
-        {
-            var item = (MenuFlyoutItem) sender;
-            switch (item.Text)
-            {
-                case "System":
-                    _localSettings.Values["Theme"] = "System";
-                    break;
-
-                case "Dark":
-                    _localSettings.Values["Theme"] = "Dark";
-                    break;
-                
-                case "Light":
-                    _localSettings.Values["Theme"] = "Light";
-                    break;
-            }
-
-            var dialog = new ContentDialog
-            {
-                Title = "Saved",
-                Content = "Please relaunch the app to see the result.",
-                CloseButtonText = "Done",
-                DefaultButton = ContentDialogButton.Close
-            };
-
-            _ = dialog.ShowAsync();
-        }
-
-        private async void Profile_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrEmpty(ViewModel?.LoggedInUser?.Username)) return;
-            var username = ViewModel.LoggedInUser.Username;
-            var uri = new Uri("https://www.instagram.com/" + username);
-            await Windows.System.Launcher.LaunchUriAsync(uri);
-        }
+        #endregion
 
         #region NewMessage
 
@@ -317,7 +286,50 @@ namespace Indirect.Pages
 
         private async void StoriesSectionTitle_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            await ViewModel.ReelsFeed.UpdateReelsFeed(ReelsTrayFetchReason.PullToRefresh);
+            await ViewModel.ReelsFeed.UpdateReelsFeedAsync(ReelsTrayFetchReason.PullToRefresh);
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            var about = new AboutDialog();
+            _ = about.ShowAsync();
+        }
+
+        private void ThemeItem_Click(object sender, RoutedEventArgs e)
+        {
+            var item = (MenuFlyoutItem)sender;
+            switch (item.Text)
+            {
+                case "System":
+                    _localSettings.Values["Theme"] = "System";
+                    break;
+
+                case "Dark":
+                    _localSettings.Values["Theme"] = "Dark";
+                    break;
+
+                case "Light":
+                    _localSettings.Values["Theme"] = "Light";
+                    break;
+            }
+
+            var dialog = new ContentDialog
+            {
+                Title = "Saved",
+                Content = "Please relaunch the app to see the result.",
+                CloseButtonText = "Done",
+                DefaultButton = ContentDialogButton.Close
+            };
+
+            _ = dialog.ShowAsync();
+        }
+
+        private async void Profile_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(ViewModel?.LoggedInUser?.Username)) return;
+            var username = ViewModel.LoggedInUser.Username;
+            var uri = new Uri("https://www.instagram.com/" + username);
+            await Windows.System.Launcher.LaunchUriAsync(uri);
         }
 
         private void TestButton_OnClick(object sender, RoutedEventArgs e)
@@ -328,6 +340,48 @@ namespace Indirect.Pages
         private async void MasterMenuButton_OnImageExFailed(object sender, ImageExFailedEventArgs e)
         {
             await ViewModel.UpdateLoggedInUser();
+        }
+
+        private async void AddAccountButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            await ((App)App.Current).CloseAllSecondaryViews();
+            Frame.Navigate(typeof(LoginPage));
+        }
+
+        private void UpdateSwitchAccountMenu()
+        {
+            var menuItems = SwitchAccountMenu.Items;
+            while (menuItems?.Count > 1)
+            {
+                menuItems.RemoveAt(0);
+            }
+
+            if (ViewModel.AvailableSessions.Length == 0 || menuItems == null)
+            {
+                return;
+            }
+
+            menuItems.Insert(0, new MenuFlyoutSeparator());
+            foreach (var sessionContainer in ViewModel.AvailableSessions)
+            {
+                var item = new MenuFlyoutItem
+                {
+                    Icon = new BitmapIcon {UriSource = sessionContainer.ProfilePicture, ShowAsMonochrome = false},
+                    Text = sessionContainer.Session.LoggedInUser.Username,
+                    DataContext = sessionContainer.Session
+                };
+                item.Click += SwitchAccountItem_OnClick;
+                menuItems.Insert(0, item);
+            }
+        }
+
+        private async void SwitchAccountItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (((FrameworkElement)sender).DataContext is UserSessionData session)
+            {
+                await ViewModel.SwitchAccountAsync(session);
+                Frame.Navigate(typeof(MainPage));
+            }
         }
     }
 }

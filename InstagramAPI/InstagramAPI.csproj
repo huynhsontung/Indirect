@@ -217,10 +217,10 @@
     <Compile Include="Classes\User\UserInfo.cs" />
     <Compile Include="Classes\User\UserWithFriendship.cs" />
     <Compile Include="Enums.cs" />
-    <Compile Include="Instagram.Challenge.cs" />
     <Compile Include="Instagram.cs" />
     <Compile Include="Instagram.Direct.cs" />
     <Compile Include="Instagram.Http.cs" />
+    <Compile Include="Instagram.Login.cs" />
     <Compile Include="Instagram.MediaUpload.cs" />
     <Compile Include="Instagram.Story.cs" />
     <Compile Include="Instagram.Utils.cs" />

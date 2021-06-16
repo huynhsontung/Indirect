@@ -54,7 +54,7 @@ namespace InstagramAPI.Push
         [JsonProperty("sound")] public string Sound { get; set; }
         [JsonProperty("pi")] public string PushId { get; set; }
         [JsonProperty("c")] public string PushCategory { get; set; }
-        [JsonProperty("u")] public string IntendedRecipientUserId { get; set; }
+        [JsonProperty("u")] public long IntendedRecipientUserId { get; set; }
         [JsonProperty("s")] public string SourceUserId { get; set; }
         [JsonProperty("igo")] public string IgActionOverride { get; set; }
         [JsonProperty("bc")]
