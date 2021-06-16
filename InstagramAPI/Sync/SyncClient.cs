@@ -41,7 +41,10 @@ namespace InstagramAPI.Sync
         public async void Shutdown()
         {
             if (!IsRunning) return;
-            _pinging.Cancel();
+            var tokenSource = _pinging;
+            tokenSource.Cancel();
+            _pinging = null;
+            tokenSource?.Dispose();
             var disconnectPacket = DisconnectPacket.Instance;
             var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
             try
@@ -52,6 +55,10 @@ namespace InstagramAPI.Sync
             catch (Exception e)
             {
                 this.Log(e);
+            }
+            finally
+            {
+                _socket.Dispose();
             }
         }
 
@@ -421,12 +428,6 @@ namespace InstagramAPI.Sync
             catch (Exception e)
             {
                 DebugLogger.LogException(e, false);
-            }
-            finally
-            {
-                var tokenSource = _pinging;
-                _pinging = null;
-                tokenSource?.Dispose();
             }
         }
 

@@ -277,7 +277,10 @@ namespace InstagramAPI.Push
         public void Shutdown()
         {
             this.Log("Stopping push server");
-            _runningTokenSource?.Cancel();
+            var tokenSource = _runningTokenSource;
+            tokenSource?.Cancel();
+            _runningTokenSource = null;
+            tokenSource?.Dispose();
         }
 
         private async void StartPollingLoop()
@@ -343,12 +346,6 @@ namespace InstagramAPI.Push
             catch (TaskCanceledException)
             {
                 return;
-            }
-            finally
-            {
-                var tokenSource = _runningTokenSource;
-                _runningTokenSource = null;
-                tokenSource?.Dispose();
             }
 
             if (Running)
