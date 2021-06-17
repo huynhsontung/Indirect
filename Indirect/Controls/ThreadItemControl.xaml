@@ -180,7 +180,7 @@
                 <Border
                     x:Name="HyperlinkContent"
                     MaxWidth="250"
-                    Padding="6,6,6,8"
+                    Padding="6"
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
                     CornerRadius="2,2,2,2">
@@ -199,16 +199,23 @@
                     CornerRadius="2"
                     Orientation="Vertical">
                     <TextBlock
-                        Margin="6,6,6,8"
+                        Margin="6"
                         Style="{ThemeResource FluentBodyTextStyle}"
                         TextWrapping="Wrap">
-                        <Hyperlink Foreground="{StaticResource SystemControlForegroundBaseHighBrush}" NavigateUri="{x:Bind NavigateUri}">
-                            <Run Text="{x:Bind Text}" />
-                        </Hyperlink>
+                        <Run Text="{x:Bind LinkText.Before}" /><Hyperlink Foreground="{StaticResource SystemControlForegroundBaseHighBrush}" NavigateUri="{x:Bind NavigateUri}">
+                            <Run Text="{x:Bind LinkText.LinkText}" />
+                        </Hyperlink><Run Text="{x:Bind LinkText.After}" />
                     </TextBlock>
 
-                    <controls:ImageEx IsCacheEnabled="False" Source="{x:Bind Link.LinkContext.LinkImageUrl}" />
-                    <StackPanel Margin="6,6,6,8" Orientation="Vertical">
+                    <controls:ImageEx
+                        Margin="0,2,0,0"
+                        IsCacheEnabled="False"
+                        Source="{x:Bind Link.LinkContext.LinkImageUrl}"
+                        Visibility="{x:Bind Link.LinkContext.LinkImageUrl, Converter={StaticResource NullVisibilityConverter}}" />
+                    <StackPanel
+                        Margin="6,6,6,8"
+                        Orientation="Vertical"
+                        Visibility="{x:Bind Link.LinkContext.LinkTitle, Converter={StaticResource NullVisibilityConverter}}">
                         <TextBlock
                             FontWeight="Medium"
                             Text="{x:Bind Link.LinkContext.LinkTitle}"

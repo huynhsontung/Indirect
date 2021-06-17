@@ -6,6 +6,7 @@ using System.Linq;
 using Windows.UI.Xaml;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.Direct.ItemContent;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.User;
 
@@ -48,6 +49,8 @@ namespace Indirect.Entities.Wrappers
 
         public bool FromMe { get; set; }
 
+        public LinkTextForDisplay LinkText { get; }
+
         public bool IsReplyable => GetItemReplyable();
 
         public HorizontalAlignment HorizontalAlignment => GetHorizontalAlignment();
@@ -83,6 +86,7 @@ namespace Indirect.Entities.Wrappers
             ObservableReactions = source.Reactions != null ? new ReactionsWrapper(viewModel, source.Reactions, parent.Users) : new ReactionsWrapper(viewModel);
             FromMe = viewModel.LoggedInUser?.Pk == source.UserId;
             SetDescriptionText();
+            LinkText = DeconstructLinkShare(Link);
 
             if (source.RepliedToMessage != null)
             {
@@ -117,7 +121,7 @@ namespace Indirect.Entities.Wrappers
                     return new Uri("https://www.instagram.com/explore/tags/" + Text.Substring(1));
 
                 case DirectItemType.Link:
-                    return Uri.TryCreate(Link.LinkContext.LinkUrl, UriKind.Absolute, out var uri) ? uri : null;
+                    return new UriBuilder(Link.LinkContext.LinkUrl).Uri;
 
                 case DirectItemType.MediaShare:
                     return new Uri("https://www.instagram.com/p/" + MediaShare.Code);
@@ -428,6 +432,30 @@ namespace Indirect.Entities.Wrappers
             {
                 // pass
             }
+        }
+
+        private LinkTextForDisplay DeconstructLinkShare(LinkShare link)
+        {
+            if (link?.LinkContext == null)
+            {
+                return default;
+            }
+
+            var text = link.Text;
+            var startIndex = text.IndexOf(link.LinkContext.LinkUrl, StringComparison.Ordinal);
+            if (startIndex < 0)
+            {
+                return default;
+            }
+
+            var urlLength = link.LinkContext.LinkUrl.Length;
+            return new LinkTextForDisplay
+            {
+                Before = text.Substring(0, startIndex),
+                LinkText = text.Substring(startIndex, urlLength),
+                After = text.Substring(startIndex + urlLength),
+            };
+
         }
     }
 }
