@@ -12,7 +12,7 @@ using InstagramAPI.Classes.User;
 
 namespace Indirect.Entities.Wrappers
 {
-    class DirectItemWrapper : INotifyPropertyChanged
+    class DirectItemWrapper : INotifyPropertyChanged, IEquatable<DirectItemWrapper>
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -110,6 +110,11 @@ namespace Indirect.Entities.Wrappers
                     FullName = "UNKNOWN_USER"
                 };
             }
+        }
+
+        public bool Equals(DirectItemWrapper other)
+        {
+            return !string.IsNullOrEmpty(Source.ItemId) && Source.ItemId == other?.Source.ItemId;
         }
 
         private Uri GetNavigateUri()
