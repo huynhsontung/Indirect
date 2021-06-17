@@ -23,6 +23,12 @@ namespace BackgroundPushClient
                 BackgroundExecutionManager.RemoveAccess();
                 UnregisterLegacySocket();
 
+                await Task.Delay(TimeSpan.FromSeconds(3));
+                if (!await Utils.TryAcquireSyncLock())
+                {
+                    return;
+                }
+
                 var sessions = await SessionManager.GetAvailableSessionsAsync();
                 var tasks = sessions.Select(async s =>
                 {
@@ -31,8 +37,7 @@ namespace BackgroundPushClient
 
                     if (instagram.IsUserAuthenticated)
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(3));
-                        if (!instagram.PushClient.SocketRegistered() && await Utils.TryAcquireSyncLock())
+                        if (!instagram.PushClient.SocketRegistered())
                         {
                             instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
                             instagram.PushClient.ExceptionsCaught += Utils.PushClientOnExceptionsCaught;
