@@ -35,6 +35,7 @@ namespace Indirect
         private string _threadToBeOpened;
 
         private string ThreadInfoKey => $"{nameof(ThreadInfoDictionary)}_{LoggedInUser?.Pk}";
+        private Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -48,8 +49,6 @@ namespace Indirect
         public List<DirectThreadWrapper> SecondaryThreads { get; } = new List<DirectThreadWrapper>();
         public UserSessionContainer[] AvailableSessions { get; private set; } = new UserSessionContainer[0];
         public BaseUser LoggedInUser => InstaApi.Session.LoggedInUser;
-        public Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; private set; }
-        public Dictionary<long, BaseUser> CentralUserRegistry { get; } = new Dictionary<long, BaseUser>();
         public DirectThreadWrapper SelectedThread
         {
             get => _selectedThread;
@@ -112,10 +111,10 @@ namespace Indirect
 
         public async Task SwitchAccountAsync(UserSessionData session)
         {
-            await SaveDataAsync();
             ReelsFeed.StopReelsFeedUpdateLoop();
             SyncClient.Shutdown();
             await PushClient.TransferPushSocket();
+            ThreadInfoDictionary.Clear();
 
             InitializeInstaApi(session);
             AvailableSessions = await SessionManager.GetAvailableSessionsAsync(InstaApi.Session);
@@ -143,6 +142,8 @@ namespace Indirect
             ReelsFeed.StopReelsFeedUpdateLoop(true);
             await CacheManager.RemoveCacheAsync(ThreadInfoKey);
             await InstaApi.Logout();
+            ThreadInfoDictionary.Clear();
+            CookieHelper.ClearCookies();
 
             if (AvailableSessions.Length > 0)
             {
@@ -374,8 +375,25 @@ namespace Indirect
 
         public async Task SaveDataAsync()
         {
+            if (!IsUserAuthenticated)
+            {
+                return;
+            }
+
             await SessionManager.SaveSessionAsync(InstaApi);
             await CacheManager.WriteCacheAsync(ThreadInfoKey, ThreadInfoDictionary);
+
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var composite = new Windows.Storage.ApplicationDataCompositeValue();
+            composite[LoggedInUser.Pk.ToString()] = LoggedInUser.Username;
+
+            foreach (var sessionContainer in AvailableSessions)
+            {
+                var user = sessionContainer.Session.LoggedInUser;
+                composite[user.Pk.ToString()] = user.Username;
+            }
+
+            localSettings.Values["LoggedInUsers"] = composite;
         }
     }
 }

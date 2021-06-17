@@ -44,11 +44,6 @@ namespace Indirect
                 }
 
                 ThreadInfoDictionary[thread.ThreadId] = new DirectThreadInfo(thread.Source);
-
-                foreach (var user in thread.Users)
-                {
-                    CentralUserRegistry[user.Pk] = user;
-                }
             }
         }
 

@@ -8,6 +8,7 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Utils;
 
@@ -39,6 +40,13 @@ namespace BackgroundPushClient
                 if (!string.IsNullOrEmpty(threadInfo?.Title))
                 {
                     threadTitle = threadInfo.Title;
+                }
+
+                var loggedInUsers = GetLoggedInUsers();
+                if (loggedInUsers.Count > 1 && loggedInUsers.ContainsKey(viewerId.ToString()))
+                {
+
+                    threadTitle = $"({loggedInUsers[viewerId.ToString()]}) {threadTitle}";
                 }
 
                 var toastContent = new ToastContent
@@ -90,7 +98,7 @@ namespace BackgroundPushClient
                             }
                         }
                     },
-                    Launch = $"action=open&threadId={threadId}"
+                    Launch = $"action=open&threadId={threadId}&viewerId={viewerId}"
                 };
 
                 // Create the toast notification
@@ -185,6 +193,20 @@ namespace BackgroundPushClient
             }
 
             return true;
+        }
+
+        public static Dictionary<string, string> GetLoggedInUsers()
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            if (localSettings.Values["LoggedInUsers"] is ApplicationDataCompositeValue dict)
+            {
+                var dictionary = new Dictionary<string, string>(dict.Select(x =>
+                    new KeyValuePair<string, string>(x.Key, (string) x.Value)));
+
+                return dictionary;
+            }
+
+            return new Dictionary<string, string>(0);
         }
     }
 }

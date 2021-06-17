@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using Windows.ApplicationModel;
@@ -157,6 +158,22 @@ namespace Indirect
                     return;
                 }
 
+                if (e is ToastNotificationActivatedEventArgs toastActivated)
+                {
+                    var launchArgs = HttpUtility.ParseQueryString(toastActivated.Argument);
+                    var threadId = launchArgs["threadId"];
+                    var viewerId = toastActivated.Argument.Contains("viewerId") ? launchArgs["viewerId"] : null;
+                    var targetSession =
+                        ViewModel.AvailableSessions.Select(x => x.Session)
+                            .FirstOrDefault(x => x.LoggedInUser.Pk.ToString() == viewerId);
+                    if (!string.IsNullOrEmpty(viewerId) && targetSession != null)
+                    {
+                        await ViewModel.SwitchAccountAsync(targetSession);
+                    }
+
+                    ViewModel.OpenThreadWhenReady(threadId);
+                }
+
                 if (canEnablePrelaunch)
                 {
                     TryEnablePrelaunch();
@@ -167,13 +184,6 @@ namespace Indirect
                 if (rootFrame.Content == null)
                 {
                     rootFrame.Navigate(ViewModel.IsUserAuthenticated ? typeof(MainPage) : typeof(LoginPage));
-                }
-
-                if (e is ToastNotificationActivatedEventArgs toastActivated)
-                {
-                    var launchArgs = HttpUtility.ParseQueryString(toastActivated.Argument);
-                    var threadId = launchArgs["threadId"];
-                    ViewModel.OpenThreadWhenReady(threadId);
                 }
             }
 
