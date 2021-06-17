@@ -120,7 +120,7 @@
                 Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                 TextAlignment="Center">
                 <Paragraph>
-                    Current identity:<Run FontWeight="Bold" Text="{x:Bind ViewModel.Device.DeviceName}" />
+                    <Run Text="Current identity: " /><Run FontWeight="Bold" Text="{x:Bind _session.Device.DeviceName}" />
                 </Paragraph>
             </RichTextBlock>
         </StackPanel>

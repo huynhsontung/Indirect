@@ -43,7 +43,7 @@ namespace Indirect.Pages
         {
             base.OnNavigatedTo(e);
             _challengeRepeatCount = 0;
-            _session = new UserSessionData(ViewModel.Device);
+            _session = new UserSessionData();
 
             BackButton.Visibility = BackButtonPlaceholder.Visibility =
                 Frame.CanGoBack ? Visibility.Visible : Visibility.Collapsed;

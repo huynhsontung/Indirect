@@ -53,6 +53,21 @@ namespace InstagramAPI.Push
             _instaApi = api ?? throw new ArgumentException("Api can't be null", nameof(api));
         }
 
+        public void DisposeBackgroundSocket()
+        {
+            if (SocketActivityInformation.AllSockets.TryGetValue(SocketId, out var socketInformation))
+            {
+                try
+                {
+                    socketInformation.StreamSocket.Dispose();
+                }
+                catch (Exception)
+                {
+                    // pass
+                }
+            }
+        }
+
         public static void UnregisterTasks()
         {
             foreach (var task in BackgroundTaskRegistration.AllTasks)

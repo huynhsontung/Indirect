@@ -117,28 +117,6 @@ namespace InstagramAPI.Classes.Android
             var randomDeviceIndex = random.Next(0, DEVICES.Length);
             return BuildDeviceFromString(DEVICES[randomDeviceIndex]);
         }
-
-        public static void RemoveFromAppSettings()
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values.Remove("_androidDevice");
-        }
-
-        public static AndroidDevice CreateFromAppSettings()
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var composite =
-                (Windows.Storage.ApplicationDataCompositeValue) localSettings.Values["_androidDevice"];
-            if (composite == null) return null;
-            var device = BuildDeviceFromString((string) composite["_deviceString"]);
-            device.DeviceId = (string) composite["DeviceId"];
-            device.PhoneId = (Guid) composite["PhoneId"];
-            device.Uuid = (Guid) composite["Uuid"];
-            device.GoogleAdId = (Guid) composite["GoogleAdId"];
-            device.RankToken = (Guid) composite["RankToken"];
-            device.AdId = (Guid) composite["AdId"];
-            return device;
-        }
     }
 
     [Serializable]

@@ -346,6 +346,7 @@ namespace Indirect.Pages
         {
             await ((App)App.Current).CloseAllSecondaryViews();
             Frame.Navigate(typeof(LoginPage));
+            await ViewModel.SaveDataAsync().ConfigureAwait(false);
         }
 
         private void UpdateSwitchAccountMenu()
@@ -379,6 +380,7 @@ namespace Indirect.Pages
         {
             if (((FrameworkElement)sender).DataContext is UserSessionData session)
             {
+                await ViewModel.SaveDataAsync();
                 await ViewModel.SwitchAccountAsync(session);
                 Frame.Navigate(typeof(MainPage));
             }

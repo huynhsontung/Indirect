@@ -143,7 +143,6 @@ namespace Indirect
             await CacheManager.RemoveCacheAsync(ThreadInfoKey);
             await InstaApi.Logout();
             ThreadInfoDictionary.Clear();
-            CookieHelper.ClearCookies();
 
             if (AvailableSessions.Length > 0)
             {

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
@@ -50,52 +49,12 @@ namespace InstagramAPI.Classes.Core
         internal FbnsConnectionData PushData { get; }
 
         [JsonProperty]
-        internal AndroidDevice Device { get; }
+        public AndroidDevice Device { get; }
 
-        public UserSessionData(AndroidDevice device = null, FbnsConnectionData pushData = null)
+        public UserSessionData()
         {
-            if (device == null)
-            {
-                device = AndroidDevice.GetRandomAndroidDevice();
-            }
-
-            if (pushData == null)
-            {
-                pushData = new FbnsConnectionData();
-            }
-
-            Device = device;
-            PushData = pushData;
-        }
-
-        public void LoadFromAppSettings()
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var composite = (Windows.Storage.ApplicationDataCompositeValue)localSettings.Values["_userSessionData"];
-            if (composite == null) return;
-            Username = (string)composite["Username"];
-            Password = (string)composite["Password"];
-            FacebookUserId = (string)composite["FacebookUserId"];
-            FacebookAccessToken = (string)composite["FacebookAccessToken"];
-            AuthorizationToken = (string) composite["AuthorizationToken"];
-            LoggedInUser = new BaseUser
-            {
-                IsVerified = (bool)composite["LoggedInUser.IsVerified"],
-                IsPrivate = (bool)composite["LoggedInUser.IsPrivate"],
-                Pk = (long)composite["LoggedInUser.Pk"],
-                ProfilePictureUrl = new Uri((string)composite["LoggedInUser.ProfilePictureUrl"]),
-                ProfilePictureId = (string)composite["LoggedInUser.ProfilePictureId"],
-                Username = (string)composite["LoggedInUser.Username"],
-                FullName = (string)composite["LoggedInUser.FullName"]
-            };
-
-            //var test = SessionManager.TryLoadLastSessionAsync();
-        }
-
-        public static void RemoveFromAppSettings()
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values.Remove("_userSessionData");
+            Device = AndroidDevice.GetRandomAndroidDevice();
+            PushData = new FbnsConnectionData();
         }
     }
 }

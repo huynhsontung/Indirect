@@ -19,11 +19,6 @@ namespace InstagramAPI
 {
     public partial class Instagram
     {
-        private static readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
-
-        // TODO: Remove IsUserAuthenticatedPersistent after migration
-        public static bool IsUserAuthenticatedPersistent => (bool?)LocalSettings.Values["_isUserAuthenticated"] ?? false;
-
         public bool IsUserAuthenticated => Session?.IsAuthenticated ?? false;
         public UserSessionData Session { get; private set; }
         public AndroidDevice Device => Session.Device;
@@ -56,17 +51,14 @@ namespace InstagramAPI
             };
         }
 
-        /// <summary>
-        /// No need to clear data. If IsUserAuthenticated is false, next time when constructor is called,
-        /// data will not be loaded.
-        /// </summary>
         public async Task Logout()
         {
             await SessionManager.TryRemoveSessionAsync(Session);
             SyncClient.Shutdown();
             PushClient.Shutdown();
+            PushClient.DisposeBackgroundSocket();
             CookieHelper.ClearCookies();
-            Session = new UserSessionData(Device);
+            Session = new UserSessionData();
         }
 
         public async Task<bool> UpdateLoggedInUser()
