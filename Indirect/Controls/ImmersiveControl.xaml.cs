@@ -39,29 +39,29 @@ namespace Indirect.Controls
 
             var item = e.NewValue as DirectItemWrapper;
             if (item == null) return;
-            switch (item.ItemType)
+            switch (item.Source.ItemType)
             {
-                case DirectItemType.Media when item.Media.MediaType == InstaMediaType.Image:
+                case DirectItemType.Media when item.Source.Media.MediaType == InstaMediaType.Image:
                 case DirectItemType.RavenMedia when 
-                    item.RavenMedia?.MediaType == InstaMediaType.Image || item.VisualMedia?.Media.MediaType == InstaMediaType.Image:
+                    item.Source.RavenMedia?.MediaType == InstaMediaType.Image || item.Source.VisualMedia?.Media.MediaType == InstaMediaType.Image:
                     view.PrepareImageView();
                     break;
 
-                case DirectItemType.Media when item.Media.MediaType == InstaMediaType.Video:
+                case DirectItemType.Media when item.Source.Media.MediaType == InstaMediaType.Video:
                 case DirectItemType.RavenMedia when
-                    item.RavenMedia?.MediaType == InstaMediaType.Video || item.VisualMedia?.Media.MediaType == InstaMediaType.Video:
+                    item.Source.RavenMedia?.MediaType == InstaMediaType.Video || item.Source.VisualMedia?.Media.MediaType == InstaMediaType.Video:
                     view.PrepareVideoView();
                     break;
 
                 case DirectItemType.ReelShare:
-                    if (item.ReelShareMedia.Media.MediaType == InstaMediaType.Image)
+                    if (item.Source.ReelShareMedia.Media.MediaType == InstaMediaType.Image)
                         view.PrepareImageView();
                     else
                         view.PrepareVideoView();
                     break;
 
-                case DirectItemType.StoryShare when item.StoryShareMedia.Media != null:
-                    if (item.StoryShareMedia.Media.MediaType == InstaMediaType.Image)
+                case DirectItemType.StoryShare when item.Source.StoryShareMedia.Media != null:
+                    if (item.Source.StoryShareMedia.Media.MediaType == InstaMediaType.Image)
                         view.PrepareImageView();
                     else
                         view.PrepareVideoView();

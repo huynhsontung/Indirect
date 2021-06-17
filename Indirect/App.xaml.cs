@@ -17,6 +17,7 @@ using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.UI;
+using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 
 namespace Indirect
 {

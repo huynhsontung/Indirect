@@ -32,7 +32,7 @@ namespace Indirect.Controls.Selectors
         {
             if (container is FrameworkElement && item is DirectItemWrapper inboxItem)
             {
-                switch (inboxItem.ItemType)
+                switch (inboxItem.Source.ItemType)
                 {
                     case DirectItemType.Like:
                         return LikeTemplate;
@@ -53,18 +53,18 @@ namespace Indirect.Controls.Selectors
                     case DirectItemType.MediaShare:
                         return MediaShareTemplate;
 
-                    case DirectItemType.RavenMedia when inboxItem.VisualMedia.ViewMode != VisualMediaViewMode.Permanent:
+                    case DirectItemType.RavenMedia when inboxItem.Source.VisualMedia.ViewMode != VisualMediaViewMode.Permanent:
                         return HiddenMediaTemplate;
 
                     case DirectItemType.AnimatedMedia:
-                    case DirectItemType.Media when inboxItem.Media.MediaType == InstaMediaType.Image:
+                    case DirectItemType.Media when inboxItem.Source.Media.MediaType == InstaMediaType.Image:
                     case DirectItemType.RavenMedia when
-                        inboxItem.RavenMedia?.MediaType == InstaMediaType.Image || inboxItem.VisualMedia?.Media.MediaType == InstaMediaType.Image:
+                        inboxItem.Source.RavenMedia?.MediaType == InstaMediaType.Image || inboxItem.Source.VisualMedia?.Media.MediaType == InstaMediaType.Image:
                         return ImageTemplate;
 
-                    case DirectItemType.Media when inboxItem.Media.MediaType == InstaMediaType.Video:
+                    case DirectItemType.Media when inboxItem.Source.Media.MediaType == InstaMediaType.Video:
                     case DirectItemType.RavenMedia when
-                        inboxItem.RavenMedia?.MediaType == InstaMediaType.Video || inboxItem.VisualMedia.Media.MediaType == InstaMediaType.Video:
+                        inboxItem.Source.RavenMedia?.MediaType == InstaMediaType.Video || inboxItem.Source.VisualMedia.Media.MediaType == InstaMediaType.Video:
                         return VideoTemplate;
 
                     case DirectItemType.ReelShare:

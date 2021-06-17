@@ -12,14 +12,14 @@ using InstagramAPI.Classes.User;
 
 namespace Indirect.Entities.Wrappers
 {
-    class DirectItemWrapper : DirectItem, INotifyPropertyChanged
+    class DirectItemWrapper : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private bool _showTimestampHeader;
         private bool _showNameHeader;
 
-        public DirectItem Item { get; }
+        public DirectItem Source { get; }
         public DirectThreadWrapper Parent { get; }
         public ReactionsWrapper ObservableReactions { get; }
         public BaseUser Sender { get; }
@@ -80,13 +80,12 @@ namespace Indirect.Entities.Wrappers
             Contract.Requires(source != null);
             Contract.Requires(parent != null);
 
-            Item = source;
+            Source = source;
             Parent = parent;
-            PropertyCopier<DirectItem, DirectItemWrapper>.Copy(source, this);
             ObservableReactions = source.Reactions != null ? new ReactionsWrapper(viewModel, source.Reactions, parent.Users) : new ReactionsWrapper(viewModel);
             FromMe = viewModel.LoggedInUser?.Pk == source.UserId;
             SetDescriptionText();
-            LinkText = DeconstructLinkShare(Link);
+            LinkText = DeconstructLinkShare(Source.Link);
 
             if (source.RepliedToMessage != null)
             {
@@ -94,7 +93,7 @@ namespace Indirect.Entities.Wrappers
             }
 
             // Lookup BaseUser from user id
-            if (UserId == parent.Source.ViewerId)
+            if (Source.UserId == parent.Source.ViewerId)
             {
                 Sender = parent.Viewer ?? new BaseUser
                 {
@@ -105,7 +104,7 @@ namespace Indirect.Entities.Wrappers
             }
             else
             {
-                Sender = parent.Users.FirstOrDefault(u => u.Pk == UserId) ?? new BaseUser
+                Sender = parent.Users.FirstOrDefault(u => u.Pk == Source.UserId) ?? new BaseUser
                 {
                     Username = "UNKNOWN_USER",
                     FullName = "UNKNOWN_USER"
@@ -115,25 +114,25 @@ namespace Indirect.Entities.Wrappers
 
         private Uri GetNavigateUri()
         {
-            switch (ItemType)
+            switch (Source.ItemType)
             {
-                case DirectItemType.Text when !string.IsNullOrEmpty(Text) && Text[0] == '#' && !Text.Contains(' '):
-                    return new Uri("https://www.instagram.com/explore/tags/" + Text.Substring(1));
+                case DirectItemType.Text when !string.IsNullOrEmpty(Source.Text) && Source.Text[0] == '#' && !Source.Text.Contains(' '):
+                    return new Uri("https://www.instagram.com/explore/tags/" + Source.Text.Substring(1));
 
                 case DirectItemType.Link:
-                    return new UriBuilder(Link.LinkContext.LinkUrl).Uri;
+                    return new UriBuilder(Source.Link.LinkContext.LinkUrl).Uri;
 
                 case DirectItemType.MediaShare:
-                    return new Uri("https://www.instagram.com/p/" + MediaShare.Code);
+                    return new Uri("https://www.instagram.com/p/" + Source.MediaShare.Code);
 
                 case DirectItemType.Hashtag:
-                    return new Uri("https://www.instagram.com/explore/tags/" + HashtagMedia.Name.ToLower(CultureInfo.CurrentCulture));
+                    return new Uri("https://www.instagram.com/explore/tags/" + Source.HashtagMedia.Name.ToLower(CultureInfo.CurrentCulture));
 
                 case DirectItemType.Profile:
-                    return Profile.ProfileUrl;
+                    return Source.Profile.ProfileUrl;
 
-                case DirectItemType.Clip when !string.IsNullOrEmpty(Clip?.Clip?.Code):
-                    return new Uri("https://www.instagram.com/p/" + Clip.Clip.Code);
+                case DirectItemType.Clip when !string.IsNullOrEmpty(Source.Clip?.Clip?.Code):
+                    return new Uri("https://www.instagram.com/p/" + Source.Clip.Clip.Code);
 
                 default:
                     return null;
@@ -142,25 +141,25 @@ namespace Indirect.Entities.Wrappers
         
         private InstaImage GetFullImage()
         {
-            switch (ItemType)
+            switch (Source.ItemType)
             {
                 case DirectItemType.Media:
-                    return Media.Images.GetFullImage();
+                    return Source.Media.Images.GetFullImage();
 
-                case DirectItemType.RavenMedia when RavenMedia != null:
-                    return RavenMedia.Images.GetFullImage();
+                case DirectItemType.RavenMedia when Source.RavenMedia != null:
+                    return Source.RavenMedia.Images.GetFullImage();
 
-                case DirectItemType.RavenMedia when VisualMedia != null:
-                    return VisualMedia.Media.Images.GetFullImage();
+                case DirectItemType.RavenMedia when Source.VisualMedia != null:
+                    return Source.VisualMedia.Media.Images.GetFullImage();
 
                 case DirectItemType.ReelShare:
-                    return ReelShareMedia.Media.Images.GetFullImage();
+                    return Source.ReelShareMedia.Media.Images.GetFullImage();
 
                 case DirectItemType.StoryShare:
-                    return StoryShareMedia.Media?.Images.GetFullImage();
+                    return Source.StoryShareMedia.Media?.Images.GetFullImage();
 
                 case DirectItemType.AnimatedMedia:
-                    return AnimatedMedia.Image;
+                    return Source.AnimatedMedia.Image;
 
                 default:
                     return null;
@@ -169,28 +168,28 @@ namespace Indirect.Entities.Wrappers
 
         private Uri GetFullImageUri()
         {
-            switch (ItemType)
+            switch (Source.ItemType)
             {
-                case DirectItemType.Media when Media?.Images?.Length > 0:
-                    return Media.Images.GetFullImageUri();
+                case DirectItemType.Media when Source.Media?.Images?.Length > 0:
+                    return Source.Media.Images.GetFullImageUri();
 
-                case DirectItemType.MediaShare when MediaShare?.CarouselMedia?.Length > 0:
-                    return MediaShare.CarouselMedia[0].Images.GetFullImageUri();
+                case DirectItemType.MediaShare when Source.MediaShare?.CarouselMedia?.Length > 0:
+                    return Source.MediaShare.CarouselMedia[0].Images.GetFullImageUri();
 
-                case DirectItemType.MediaShare when MediaShare?.Images?.Length > 0:
-                    return MediaShare.Images.GetFullImageUri();
+                case DirectItemType.MediaShare when Source.MediaShare?.Images?.Length > 0:
+                    return Source.MediaShare.Images.GetFullImageUri();
 
-                case DirectItemType.RavenMedia when RavenMedia?.Images?.Length > 0:
-                    return RavenMedia.Images.GetFullImageUri();
+                case DirectItemType.RavenMedia when Source.RavenMedia?.Images?.Length > 0:
+                    return Source.RavenMedia.Images.GetFullImageUri();
 
-                case DirectItemType.RavenMedia when VisualMedia?.Media?.Images?.Length > 0:
-                    return VisualMedia.Media.Images.GetFullImageUri();
+                case DirectItemType.RavenMedia when Source.VisualMedia?.Media?.Images?.Length > 0:
+                    return Source.VisualMedia.Media.Images.GetFullImageUri();
 
-                case DirectItemType.ReelShare when ReelShareMedia?.Media?.Images?.Length > 0:
-                    return ReelShareMedia.Media.Images.GetFullImageUri();
+                case DirectItemType.ReelShare when Source.ReelShareMedia?.Media?.Images?.Length > 0:
+                    return Source.ReelShareMedia.Media.Images.GetFullImageUri();
 
-                case DirectItemType.StoryShare when StoryShareMedia?.Media?.Images?.Length > 0:
-                    return StoryShareMedia.Media.Images.GetFullImageUri();
+                case DirectItemType.StoryShare when Source.StoryShareMedia?.Media?.Images?.Length > 0:
+                    return Source.StoryShareMedia.Media.Images.GetFullImageUri();
 
                 case DirectItemType.AnimatedMedia:
                     return PreviewImageUri;
@@ -202,34 +201,34 @@ namespace Indirect.Entities.Wrappers
 
         private Uri GetPreviewImageUri()
         {
-            switch (ItemType)
+            switch (Source.ItemType)
             {
-                case DirectItemType.Media when Media?.Images?.Length > 0:
-                    return Media.Images.GetPreviewImageUri();
+                case DirectItemType.Media when Source.Media?.Images?.Length > 0:
+                    return Source.Media.Images.GetPreviewImageUri();
 
-                case DirectItemType.MediaShare when MediaShare?.CarouselMedia?.Length > 0:
-                    return MediaShare.CarouselMedia[0].Images.GetPreviewImageUri();
+                case DirectItemType.MediaShare when Source.MediaShare?.CarouselMedia?.Length > 0:
+                    return Source.MediaShare.CarouselMedia[0].Images.GetPreviewImageUri();
 
-                case DirectItemType.MediaShare when MediaShare?.Images?.Length > 0:
-                    return MediaShare.Images.GetPreviewImageUri();
+                case DirectItemType.MediaShare when Source.MediaShare?.Images?.Length > 0:
+                    return Source.MediaShare.Images.GetPreviewImageUri();
 
-                case DirectItemType.RavenMedia when RavenMedia?.Images?.Length > 0:
-                    return RavenMedia.Images.GetPreviewImageUri();
+                case DirectItemType.RavenMedia when Source.RavenMedia?.Images?.Length > 0:
+                    return Source.RavenMedia.Images.GetPreviewImageUri();
 
-                case DirectItemType.RavenMedia when VisualMedia?.Media?.Images?.Length > 0:
-                    return VisualMedia.Media.Images.GetPreviewImageUri();
+                case DirectItemType.RavenMedia when Source.VisualMedia?.Media?.Images?.Length > 0:
+                    return Source.VisualMedia.Media.Images.GetPreviewImageUri();
 
-                case DirectItemType.ReelShare when ReelShareMedia?.Media?.Images?.Length > 0:
-                    return ReelShareMedia.Media.Images.GetPreviewImageUri();
+                case DirectItemType.ReelShare when Source.ReelShareMedia?.Media?.Images?.Length > 0:
+                    return Source.ReelShareMedia.Media.Images.GetPreviewImageUri();
 
-                case DirectItemType.StoryShare when StoryShareMedia?.Media?.Images?.Length > 0:
-                    return StoryShareMedia.Media.Images.GetPreviewImageUri();
+                case DirectItemType.StoryShare when Source.StoryShareMedia?.Media?.Images?.Length > 0:
+                    return Source.StoryShareMedia.Media.Images.GetPreviewImageUri();
 
                 case DirectItemType.AnimatedMedia:
-                    return AnimatedMedia.Image.Url;
+                    return Source.AnimatedMedia.Image.Url;
 
                 case DirectItemType.Clip:
-                    return Clip?.Clip?.Images.GetPreviewImageUri();
+                    return Source.Clip?.Clip?.Images.GetPreviewImageUri();
 
                 default:
                     return null;
@@ -238,22 +237,22 @@ namespace Indirect.Entities.Wrappers
 
         private InstaMedia GetVideo()
         {
-            switch (ItemType)
+            switch (Source.ItemType)
             {
-                case DirectItemType.RavenMedia when RavenMedia != null:
-                    return RavenMedia;
+                case DirectItemType.RavenMedia when Source.RavenMedia != null:
+                    return Source.RavenMedia;
 
-                case DirectItemType.RavenMedia when VisualMedia != null:
-                    return VisualMedia.Media;
+                case DirectItemType.RavenMedia when Source.VisualMedia != null:
+                    return Source.VisualMedia.Media;
 
-                case DirectItemType.Media when Media != null:
-                    return Media;
+                case DirectItemType.Media when Source.Media != null:
+                    return Source.Media;
 
-                case DirectItemType.ReelShare when ReelShareMedia != null:
-                    return ReelShareMedia.Media;
+                case DirectItemType.ReelShare when Source.ReelShareMedia != null:
+                    return Source.ReelShareMedia.Media;
 
-                case DirectItemType.StoryShare when StoryShareMedia != null:
-                    return StoryShareMedia.Media;
+                case DirectItemType.StoryShare when Source.StoryShareMedia != null:
+                    return Source.StoryShareMedia.Media;
 
                 default:
                     return null;
@@ -262,28 +261,28 @@ namespace Indirect.Entities.Wrappers
 
         private Uri GetVideoUri()
         {
-            switch (ItemType)
+            switch (Source.ItemType)
             {
-                case DirectItemType.Media when Media?.Videos?.Length > 0:
-                    return Media.Videos[0].Url;
+                case DirectItemType.Media when Source.Media?.Videos?.Length > 0:
+                    return Source.Media.Videos[0].Url;
 
-                case DirectItemType.MediaShare when MediaShare?.Videos?.Length > 0:
-                    return MediaShare.Videos[0].Url;
+                case DirectItemType.MediaShare when Source.MediaShare?.Videos?.Length > 0:
+                    return Source.MediaShare.Videos[0].Url;
 
-                case DirectItemType.RavenMedia when RavenMedia?.Videos?.Length > 0:
-                    return RavenMedia.Videos[0].Url;
+                case DirectItemType.RavenMedia when Source.RavenMedia?.Videos?.Length > 0:
+                    return Source.RavenMedia.Videos[0].Url;
 
-                case DirectItemType.RavenMedia when VisualMedia?.Media?.Videos?.Length > 0:
-                    return VisualMedia.Media.Videos[0].Url;
+                case DirectItemType.RavenMedia when Source.VisualMedia?.Media?.Videos?.Length > 0:
+                    return Source.VisualMedia.Media.Videos[0].Url;
 
-                case DirectItemType.ReelShare when ReelShareMedia?.Media?.Videos?.Length > 0:
-                    return ReelShareMedia.Media.Videos[0].Url;
+                case DirectItemType.ReelShare when Source.ReelShareMedia?.Media?.Videos?.Length > 0:
+                    return Source.ReelShareMedia.Media.Videos[0].Url;
 
-                case DirectItemType.StoryShare when StoryShareMedia?.Media?.Videos?.Length > 0:
-                    return StoryShareMedia.Media.Videos[0].Url;
+                case DirectItemType.StoryShare when Source.StoryShareMedia?.Media?.Videos?.Length > 0:
+                    return Source.StoryShareMedia.Media.Videos[0].Url;
 
-                case DirectItemType.VoiceMedia when VoiceMedia?.Media?.Audio?.AudioSrc != null:
-                    return VoiceMedia.Media.Audio.AudioSrc;
+                case DirectItemType.VoiceMedia when Source.VoiceMedia?.Media?.Audio?.AudioSrc != null:
+                    return Source.VoiceMedia.Media.Audio.AudioSrc;
 
                 default:
                     return null;
@@ -292,7 +291,7 @@ namespace Indirect.Entities.Wrappers
 
         private HorizontalAlignment GetHorizontalAlignment()
         {
-            if (ItemType == DirectItemType.ActionLog)
+            if (Source.ItemType == DirectItemType.ActionLog)
             {
                 return HorizontalAlignment.Center;
             }
@@ -302,7 +301,7 @@ namespace Indirect.Entities.Wrappers
 
         private bool GetItemReplyable()
         {
-            switch (ItemType)
+            switch (Source.ItemType)
             {
                 case DirectItemType.Text:
                 case DirectItemType.MediaShare:
@@ -334,10 +333,10 @@ namespace Indirect.Entities.Wrappers
         {
             try
             {
-                switch (ItemType)
+                switch (Source.ItemType)
                 {
                     case DirectItemType.ActionLog:
-                        Description = ActionLog.Description;
+                        Description = Source.ActionLog.Description;
                         break;
 
                     case DirectItemType.AnimatedMedia:
@@ -345,19 +344,19 @@ namespace Indirect.Entities.Wrappers
                         break;
 
                     case DirectItemType.Hashtag:
-                        Description = "#" + HashtagMedia.Name;
+                        Description = "#" + Source.HashtagMedia.Name;
                         break;
 
                     case DirectItemType.Like:
-                        Description = Like;
+                        Description = Source.Like;
                         break;
 
                     case DirectItemType.Link:
-                        Description = Link.Text;
+                        Description = Source.Link.Text;
                         break;
 
                     case DirectItemType.Media:
-                        if (Media.MediaType == InstaMediaType.Image)
+                        if (Source.Media.MediaType == InstaMediaType.Image)
                             Description = FromMe ? "You sent a photo" : "Sent you a photo";
                         else
                             Description = FromMe ? "You sent a video" : "Sent you a video";
@@ -368,8 +367,7 @@ namespace Indirect.Entities.Wrappers
                         break;
 
                     case DirectItemType.RavenMedia:
-                        var mediaType = RavenMedia?.MediaType ??
-                                        VisualMedia.Media.MediaType;
+                        var mediaType = Source.RavenMedia?.MediaType ?? Source.VisualMedia.Media.MediaType;
                         if (mediaType == InstaMediaType.Image)
                             Description = FromMe ? "You sent a photo" : "Sent you a photo";
                         else
@@ -377,12 +375,12 @@ namespace Indirect.Entities.Wrappers
                         break;
 
                     case DirectItemType.ReelShare:
-                        switch (ReelShareMedia.Type)
+                        switch (Source.ReelShareMedia.Type)
                         {
                             case "reaction":
                                 Description = FromMe
-                                    ? $"You reacted to their story {ReelShareMedia.Text}"
-                                    : $"Reacted to your story {ReelShareMedia.Text}";
+                                    ? $"You reacted to their story {Source.ReelShareMedia.Text}"
+                                    : $"Reacted to your story {Source.ReelShareMedia.Text}";
                                 break;
                             case "reply":
                                 Description = FromMe ? "You replied to their story" : "Replied to your story";
@@ -401,7 +399,7 @@ namespace Indirect.Entities.Wrappers
                         break;
 
                     case DirectItemType.Text:
-                        Description = Text;
+                        Description = Source.Text;
                         break;
 
                     case DirectItemType.VoiceMedia:
@@ -409,7 +407,7 @@ namespace Indirect.Entities.Wrappers
                         break;
 
                     case DirectItemType.VideoCallEvent:
-                        if (VideoCallEvent?.Action == "video_call_started")
+                        if (Source.VideoCallEvent?.Action == "video_call_started")
                         {
                             Description = FromMe ? "You started a video chat" : "Video chat started";
                         }
@@ -424,7 +422,7 @@ namespace Indirect.Entities.Wrappers
                         break;
 
                     default:
-                        Description = ItemType.ToString();
+                        Description = Source.ItemType.ToString();
                         break;
                 }
             }
@@ -434,7 +432,7 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
-        private LinkTextForDisplay DeconstructLinkShare(LinkShare link)
+        private static LinkTextForDisplay DeconstructLinkShare(LinkShare link)
         {
             if (link?.LinkContext == null)
             {

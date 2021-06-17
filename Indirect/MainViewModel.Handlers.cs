@@ -128,7 +128,7 @@ namespace Indirect
                                     }
                                     else
                                     {
-                                        var item = thread.ObservableItems.LastOrDefault(x => x.ItemId == itemData.Item.ItemId);
+                                        var item = thread.ObservableItems.LastOrDefault(x => x.Source.ItemId == itemData.Item.ItemId);
                                         if (item != null)
                                         {
                                             await thread.Dispatcher.QuickRunAsync(() =>

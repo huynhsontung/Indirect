@@ -52,20 +52,20 @@ namespace Indirect.Controls
 
         private void ProcessItem()
         {
-            Item.Timestamp = Item.Timestamp.ToLocalTime();
-            if (Item.ItemType == DirectItemType.Link)
-                Item.Text = Item.Link.Text;
+            Item.Source.Timestamp = Item.Source.Timestamp.ToLocalTime();
+            if (Item.Source.ItemType == DirectItemType.Link)
+                Item.Source.Text = Item.Source.Link.Text;
         }
 
         private void UpdateContextMenu()
         {
-            if (Item.ItemType == DirectItemType.ActionLog)
+            if (Item.Source.ItemType == DirectItemType.ActionLog)
             {
-                ItemContainer.Visibility = Item.HideInThread ? Visibility.Collapsed : Visibility.Visible;
+                ItemContainer.Visibility = Item.Source.HideInThread ? Visibility.Collapsed : Visibility.Visible;
                 MainContentControl.ContextFlyout = null;
             }
 
-            if (Item.ItemType == DirectItemType.Text)
+            if (Item.Source.ItemType == DirectItemType.Text)
             {
                 MenuCopyOption.Visibility = Visibility.Visible;
             }
@@ -85,7 +85,7 @@ namespace Indirect.Controls
 
             var seenList = lastSeenAt.Where(x =>
                     x.Value != null &&
-                    x.Value.ItemId == Item.ItemId &&    // Match item id
+                    x.Value.ItemId == Item.Source.ItemId &&    // Match item id
                     x.Key != Item.Parent.Source.ViewerId &&    // Not from viewer
                     x.Key != Item.Sender.Pk             // Not from sender
                 ).Select(y => y.Key).ToArray();
@@ -96,7 +96,7 @@ namespace Indirect.Controls
 
             if (Item.Parent.Users.Count == 1)
             {
-                return Item.FromMe && Item.Parent.Source.LastPermanentItem.ItemId != Item.ItemId ? string.Empty : "Seen";
+                return Item.FromMe && Item.Parent.Source.LastPermanentItem.ItemId != Item.Source.ItemId ? string.Empty : "Seen";
             }
 
             if (Item.Parent.Users.Count <= seenList.Length)
@@ -115,7 +115,7 @@ namespace Indirect.Controls
 
         private void ImageFrame_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (Item.ItemType == DirectItemType.AnimatedMedia) return;
+            if (Item.Source.ItemType == DirectItemType.AnimatedMedia) return;
             var uri = Item.FullImageUri;
             if (uri == null) return;
             var frame = Window.Current.Content as Frame;
@@ -147,8 +147,8 @@ namespace Indirect.Controls
 
         private void ReelShareImage_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (Item.ReelShareMedia?.Media.MediaType == InstaMediaType.Image ||
-                Item.StoryShareMedia?.Media.MediaType == InstaMediaType.Image)
+            if (Item.Source.ReelShareMedia?.Media.MediaType == InstaMediaType.Image ||
+                Item.Source.StoryShareMedia?.Media.MediaType == InstaMediaType.Image)
             {
                 ImageFrame_Tapped(sender, e);
             }
@@ -178,7 +178,7 @@ namespace Indirect.Controls
         private void ConfigTooltip_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             var tooltip = new ToolTip();
-            tooltip.Content = $"{Item.Timestamp:f}";
+            tooltip.Content = $"{Item.Source.Timestamp:f}";
             tooltip.PlacementRect = new Rect(0, 12, e.NewSize.Width, e.NewSize.Height);
             ToolTipService.SetToolTip((DependencyObject)sender, tooltip);
         }
@@ -202,7 +202,7 @@ namespace Indirect.Controls
 
         private async void StoryShareOwnerLink_OnClick(Hyperlink sender, HyperlinkClickEventArgs args)
         {
-            var uri = new Uri($"https://www.instagram.com/{Item.StoryShareMedia.OwnerUsername}/");
+            var uri = new Uri($"https://www.instagram.com/{Item.Source.StoryShareMedia.OwnerUsername}/");
             await Launcher.LaunchUriAsync(uri);
         }
 

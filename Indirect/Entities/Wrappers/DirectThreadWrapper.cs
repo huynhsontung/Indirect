@@ -128,15 +128,15 @@ namespace Indirect.Entities.Wrappers
 
             var latestItem = ObservableItems.Last();    // Assuming order of item is maintained. Last item after update should be the latest.
             var source = Source;
-            if (source.LastPermanentItem == null || latestItem.Timestamp > source.LastPermanentItem.Timestamp)
+            if (source.LastPermanentItem == null || latestItem.Source.Timestamp > source.LastPermanentItem.Timestamp)
             {
                 // This does not update thread data like users in the thread or is thread muted or not
-                source.LastPermanentItem = latestItem;
-                source.LastActivity = latestItem.Timestamp;
-                source.NewestCursor = latestItem.ItemId;
+                source.LastPermanentItem = latestItem.Source;
+                source.LastActivity = latestItem.Source.Timestamp;
+                source.NewestCursor = latestItem.Source.ItemId;
                 if (!latestItem.FromMe)
                 {
-                    source.LastNonSenderItemAt = latestItem.Timestamp;
+                    source.LastNonSenderItemAt = latestItem.Source.Timestamp;
                 }
 
                 await Dispatcher.QuickRunAsync(() =>
@@ -157,7 +157,7 @@ namespace Indirect.Entities.Wrappers
                 {
                     for (int i = ObservableItems.Count - 1; i >= 0; i--)
                     {
-                        if (ObservableItems[i].ItemId == itemId)
+                        if (ObservableItems[i].Source.ItemId == itemId)
                         {
                             ObservableItems.RemoveAt(i);
                             break;
@@ -250,7 +250,7 @@ namespace Indirect.Entities.Wrappers
                         }
                         for (var i = ObservableItems.Count - 1; i >= 0; i--)
                         {
-                            if (item.Timestamp > ObservableItems[i].Timestamp)
+                            if (item.Source.Timestamp > ObservableItems[i].Source.Timestamp)
                             {
                                 ObservableItems.Insert(i + 1, item);
                                 break;
@@ -263,7 +263,7 @@ namespace Indirect.Entities.Wrappers
                         }
                     }
 
-                    Source.Items = ObservableItems.Select(x => x.Item).ToList();
+                    Source.Items = ObservableItems.Select(x => x.Source).ToList();
                 }
             }
             finally
@@ -332,8 +332,8 @@ namespace Indirect.Entities.Wrappers
         {
             for (int i = ObservableItems.Count - 1; i >= 1; i--)
             {
-                var showTimestamp = !IsCloseEnough(ObservableItems[i].Timestamp, ObservableItems[i - 1].Timestamp);
-                var showName = ObservableItems[i].UserId != ObservableItems[i - 1].UserId &&
+                var showTimestamp = !IsCloseEnough(ObservableItems[i].Source.Timestamp, ObservableItems[i - 1].Source.Timestamp);
+                var showName = ObservableItems[i].Source.UserId != ObservableItems[i - 1].Source.UserId &&
                                !ObservableItems[i].FromMe && Users.Count > 1;
                 if (ObservableItems[i].ShowTimestampHeader != showTimestamp ||
                     ObservableItems[i].ShowNameHeader != showName)
@@ -359,25 +359,25 @@ namespace Indirect.Entities.Wrappers
             var refItem = itemList.Last();
             if (lastItem != null)
             {
-                if (refItem.Timestamp <= lastItem.Timestamp)
+                if (refItem.Source.Timestamp <= lastItem.Source.Timestamp)
                 {
-                    lastItem.ShowTimestampHeader = !IsCloseEnough(lastItem.Timestamp, refItem.Timestamp);
-                    lastItem.ShowNameHeader = lastItem.UserId != refItem.UserId && !lastItem.FromMe && Users.Count > 1;
+                    lastItem.ShowTimestampHeader = !IsCloseEnough(lastItem.Source.Timestamp, refItem.Source.Timestamp);
+                    lastItem.ShowNameHeader = lastItem.Source.UserId != refItem.Source.UserId && !lastItem.FromMe && Users.Count > 1;
                 }
                 else
                 {
                     // New item to be added to the top
                     refItem = itemList.First();
                     var latestItem = ObservableItems.Last();
-                    refItem.ShowTimestampHeader = !IsCloseEnough(latestItem.Timestamp, refItem.Timestamp);
-                    refItem.ShowNameHeader = latestItem.UserId != refItem.UserId && !refItem.FromMe && Users.Count > 1;
+                    refItem.ShowTimestampHeader = !IsCloseEnough(latestItem.Source.Timestamp, refItem.Source.Timestamp);
+                    refItem.ShowNameHeader = latestItem.Source.UserId != refItem.Source.UserId && !refItem.FromMe && Users.Count > 1;
                 }
             }
 
             for (int i = itemList.Count - 1; i >= 1; i--)
             {
-                itemList[i].ShowTimestampHeader = !IsCloseEnough(itemList[i].Timestamp, itemList[i - 1].Timestamp);
-                itemList[i].ShowNameHeader = itemList[i].UserId != itemList[i - 1].UserId && !itemList[i].FromMe && Users.Count > 1;
+                itemList[i].ShowTimestampHeader = !IsCloseEnough(itemList[i].Source.Timestamp, itemList[i - 1].Source.Timestamp);
+                itemList[i].ShowNameHeader = itemList[i].Source.UserId != itemList[i - 1].Source.UserId && !itemList[i].FromMe && Users.Count > 1;
             }
 
             return wrappedItems;

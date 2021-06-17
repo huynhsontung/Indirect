@@ -89,7 +89,7 @@ namespace Indirect.Services
                 {
                     return;
                 } 
-                await Api.ReplyToItemAsync(item.Item, item.Parent.ThreadId, message);
+                await Api.ReplyToItemAsync(item.Source, item.Parent.ThreadId, message);
             }
             catch (Exception)
             {
@@ -132,11 +132,11 @@ namespace Indirect.Services
         {
             Contract.Requires(item != null);
 
-            if (item.ItemType == DirectItemType.ActionLog) return;
+            if (item.Source.ItemType == DirectItemType.ActionLog) return;
             
             try
             {
-                await Api.LikeItemAsync(item.Parent.ThreadId, item.ItemId, emoji);
+                await Api.LikeItemAsync(item.Parent.ThreadId, item.Source.ItemId, emoji);
             }
             catch (Exception)
             {
@@ -150,7 +150,7 @@ namespace Indirect.Services
 
             try
             {
-                await Api.UnlikeItemAsync(item.Parent.ThreadId, item.ItemId);
+                await Api.UnlikeItemAsync(item.Parent.ThreadId, item.Source.ItemId);
             }
             catch (Exception)
             {
@@ -160,10 +160,10 @@ namespace Indirect.Services
 
         public async Task Unsend(DirectItemWrapper item)
         {
-            var result = await Api.UnsendMessageAsync(item.Parent.ThreadId, item.ItemId);
+            var result = await Api.UnsendMessageAsync(item.Parent.ThreadId, item.Source.ItemId);
             if (result.IsSucceeded)
             {
-                await item.Parent.RemoveItem(item.ItemId);
+                await item.Parent.RemoveItem(item.Source.ItemId);
             }
         }
 
