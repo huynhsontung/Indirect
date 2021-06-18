@@ -491,7 +491,8 @@ namespace Indirect.Controls
         private async void SendButton_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
         {
             args.Handled = true;
-            var emoji = await EmojiPicker.ShowAsync((FrameworkElement) sender, new FlyoutShowOptions());
+            var emoji = await EmojiPicker.ShowAsync((FrameworkElement) sender,
+                new FlyoutShowOptions() {Placement = FlyoutPlacementMode.TopEdgeAlignedRight});
             if (string.IsNullOrEmpty(emoji))
             {
                 return;
