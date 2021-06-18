@@ -10,6 +10,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Controls;
 using Indirect.Entities.Wrappers;
+using Indirect.Services;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes.Core;
@@ -41,9 +42,6 @@ namespace Indirect.Pages
 
         private MainViewModel ViewModel => ((App) Application.Current).ViewModel;
         private ObservableCollection<BaseUser> NewMessageCandidates { get; } = new ObservableCollection<BaseUser>();
-
-        private readonly Windows.Storage.ApplicationDataContainer _localSettings =
-            Windows.Storage.ApplicationData.Current.LocalSettings;
 
 
         public MainPage()
@@ -301,15 +299,15 @@ namespace Indirect.Pages
             switch (item.Text)
             {
                 case "System":
-                    _localSettings.Values["Theme"] = "System";
+                    SettingsService.SetGlobal("Theme", "System");
                     break;
 
                 case "Dark":
-                    _localSettings.Values["Theme"] = "Dark";
+                    SettingsService.SetGlobal("Theme", "Dark");
                     break;
 
                 case "Light":
-                    _localSettings.Values["Theme"] = "Light";
+                    SettingsService.SetGlobal("Theme", "Light");
                     break;
             }
 

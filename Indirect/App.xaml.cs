@@ -7,17 +7,15 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
-using Windows.Storage;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Pages;
+using Indirect.Services;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Utils;
-using Microsoft.Toolkit.Uwp.UI;
-using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 
 namespace Indirect
 {
@@ -26,8 +24,6 @@ namespace Indirect
     /// </summary>
     sealed partial class App : Application
     {
-        private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
-
         internal MainViewModel ViewModel { get; } = new MainViewModel();
 
         private List<int> SecondaryViewIds { get; } = new List<int>();
@@ -83,8 +79,7 @@ namespace Indirect
 
         private void SetTheme()
         {
-            var requestedTheme = _localSettings.Values["Theme"] as string;
-            if (requestedTheme == null) return;
+            if (!SettingsService.TryGetGlobal("Theme", out string requestedTheme)) return;
             switch (requestedTheme)
             {
                 case "Dark":

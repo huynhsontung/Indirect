@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -48,6 +46,7 @@ namespace Indirect
         public InboxWrapper Inbox { get; }
         public List<DirectThreadWrapper> SecondaryThreads { get; } = new List<DirectThreadWrapper>();
         public UserSessionContainer[] AvailableSessions { get; private set; } = new UserSessionContainer[0];
+        public UserSessionData ActiveSession => InstaApi.Session;
         public BaseUser LoggedInUser => InstaApi.Session.LoggedInUser;
         public DirectThreadWrapper SelectedThread
         {
@@ -63,12 +62,14 @@ namespace Indirect
         public bool IsUserAuthenticated => InstaApi?.IsUserAuthenticated ?? false;
         public ReelsFeed ReelsFeed { get; } = new ReelsFeed();
         public ChatService ChatService { get; }
+        public SettingsService Settings { get; }
 
         public MainViewModel()
         {
             Inbox = new InboxWrapper(this);
             //PendingInbox = new InboxWrapper(this, true);
             ChatService = new ChatService(this);
+            Settings = new SettingsService(this);
 
             Inbox.FirstUpdated += OnInboxFirstUpdated;
             Inbox.Threads.CollectionChanged += InboxThreads_OnCollectionChanged;
@@ -383,7 +384,6 @@ namespace Indirect
             await SessionManager.SaveSessionAsync(InstaApi);
             await CacheManager.WriteCacheAsync(ThreadInfoKey, ThreadInfoDictionary);
 
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
             var composite = new Windows.Storage.ApplicationDataCompositeValue();
             composite[LoggedInUser.Pk.ToString()] = LoggedInUser.Username;
 
@@ -393,7 +393,7 @@ namespace Indirect
                 composite[user.Pk.ToString()] = user.Username;
             }
 
-            localSettings.Values["LoggedInUsers"] = composite;
+            SettingsService.SetGlobal("LoggedInUsers", composite);
         }
     }
 }
