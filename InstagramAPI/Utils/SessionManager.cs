@@ -95,29 +95,28 @@ namespace InstagramAPI.Utils
             }
 
             var data = await TryReadFromFileAsync(sessionName + SESSION_EXT);
-            if (data == null)
-            {
-                return null;
-            }
-
-            return await TryLoadSessionAsync(data);
+            return data == null || data.Length == 0 ? null : await TryLoadSessionAsync(data);
         }
 
         public static async Task<UserSessionData> TryLoadSessionAsync(StorageFile file)
         {
             var data = await TryReadFromFileAsync(file);
-            if (data == null)
-            {
-                return null;
-            }
-
-            return await TryLoadSessionAsync(data);
+            return data == null || data.Length == 0 ? null : await TryLoadSessionAsync(data);
         }
 
         public static async Task<UserSessionData> TryLoadFirstSessionAsync()
         {
             var files = await LocalFolder.GetFilesAsync();
-            return await TryLoadSessionAsync(files.FirstOrDefault(x => x.FileType == SESSION_EXT)?.DisplayName);
+            foreach (var sessionFile in files.Where(x => x.FileType == SESSION_EXT))
+            {
+                var session = await TryLoadSessionAsync(sessionFile);
+                if (session != null)
+                {
+                    return session;
+                }
+            }
+
+            return null;
         }
 
         public static async Task<UserSessionContainer[]> GetAvailableSessionsAsync(UserSessionData exclude = null)
@@ -130,7 +129,7 @@ namespace InstagramAPI.Utils
                     Session = await TryLoadSessionAsync(x),
                     ProfilePicture = new Uri($"{LocalFolder.Path}\\{x.DisplayName}{SESSION_PFP_EXT}")
                 }).ToArray();
-            return await Task.WhenAll(tasks);
+            return (await Task.WhenAll(tasks)).Where(x => x.Session != null).ToArray();
         }
 
         public static async Task RemoveAllSessions()
