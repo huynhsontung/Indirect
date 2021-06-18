@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.UI.Core;
 using Windows.UI.ViewManagement.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 using Indirect.Converters;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
@@ -68,16 +70,18 @@ namespace Indirect.Controls
             var thread = e.NewValue as DirectThreadWrapper;
             if (e.OldValue is DirectThreadWrapper oldThread) oldThread.PropertyChanged -= view.OnThreadPropertyChanged;
             if (thread == null) return;
-            thread.PropertyChanged -= view.OnThreadPropertyChanged;   // Redundant. Just making sure it already unregistered.
+            thread.PropertyChanged -= view.OnThreadPropertyChanged;
             thread.PropertyChanged += view.OnThreadPropertyChanged;
 
             view.ViewProfileAppBarButton.Visibility = thread.Users?.Count == 1 ? Visibility.Visible : Visibility.Collapsed;
             view.MessageInputGrid.Visibility = thread.Source.Pending ? Visibility.Collapsed : Visibility.Visible;
             view._needUpdateCaret = true;
             view.OnUserPresenceChanged();
+            view.UpdateSendButtonIcon();
         }
 
         private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
+        private static FontFamily SegoeMDL2Assets = new FontFamily("Segoe MDL2 Assets");
 
         public ThreadDetailsView()
         {
@@ -90,6 +94,31 @@ namespace Indirect.Controls
         {
             ViewModel.PropertyChanged -= OnUserPresenceChanged;
             ProfilePictureView.UnsubscribeHandlers();
+        }
+
+        private void UpdateSendButtonIcon()
+        {
+            if (string.IsNullOrEmpty(MessageTextBox.Text))
+            {
+                if (string.IsNullOrEmpty(Thread?.QuickReplyEmoji))
+                {
+                    SendButtonIcon.FontFamily = SegoeMDL2Assets;
+                    SendButtonIcon.Margin = default;
+                    SendButtonIcon.Glyph = "\xEB51";
+                }
+                else
+                {
+                    SendButtonIcon.FontFamily = FontFamily.XamlAutoFontFamily;
+                    SendButtonIcon.Margin = new Thickness(0, -4, 0, -3);
+                    SendButtonIcon.Glyph = Thread.QuickReplyEmoji;
+                }
+            }
+            else
+            {
+                SendButtonIcon.FontFamily = SegoeMDL2Assets;
+                SendButtonIcon.Margin = default;
+                SendButtonIcon.Glyph = "\xE724";
+            }
         }
 
         private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs args)
@@ -145,36 +174,40 @@ namespace Indirect.Controls
             MessageTextBox.Text = string.Empty;
             if(string.IsNullOrEmpty(message))
             {
-                await ViewModel.ChatService.SendLike(Thread);
-            }
-            else
-            {
-                message = message.Trim(' ', '\n', '\r');
-                if (string.IsNullOrEmpty(message))
+                if (string.IsNullOrEmpty(Thread.QuickReplyEmoji) || Thread.QuickReplyEmoji == "♥")
                 {
+                    await ViewModel.ChatService.SendLike(Thread);
                     return;
                 }
 
-                if (Thread.ReplyingItem != null)
+                message = Thread.QuickReplyEmoji;
+            }
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return;
+            }
+
+            message = message.Trim(' ', '\n', '\r');
+            if (Thread.ReplyingItem != null)
+            {
+                var replyingItem = Thread.ReplyingItem;
+                Thread.ReplyingItem = null;
+                await ViewModel.ChatService.ReplyToItem(replyingItem, message);
+            } 
+            else
+            {
+                var links = Helpers.ExtractLinks(message);
+                if (links.Count > 0)
                 {
-                    var replyingItem = Thread.ReplyingItem;
-                    Thread.ReplyingItem = null;
-                    await ViewModel.ChatService.ReplyToItem(replyingItem, message);
-                } 
+                    await ViewModel.ChatService.SendLink(Thread, message, links);
+                }
                 else
                 {
-                    var links = Helpers.ExtractLinks(message);
-                    if (links.Count > 0)
+                    var responseThread = await ViewModel.ChatService.SendTextMessage(Thread, message);
+                    if (responseThread != null)
                     {
-                        await ViewModel.ChatService.SendLink(Thread, message, links);
-                    }
-                    else
-                    {
-                        var responseThread = await ViewModel.ChatService.SendTextMessage(Thread, message);
-                        if (responseThread != null)
-                        {
-                            Thread.Update(responseThread);
-                        }
+                        Thread.Update(responseThread);
                     }
                 }
             }
@@ -299,6 +332,12 @@ namespace Indirect.Controls
                 MessageTextBox.Focus(FocusState.Programmatic);
             }
 
+            if (args.PropertyName == nameof(Thread.QuickReplyEmoji))
+            {
+                await Dispatcher.QuickRunAsync(UpdateSendButtonIcon, CoreDispatcherPriority.Low);
+                return;
+            }
+
             if (args.PropertyName != nameof(Thread.IsSomeoneTyping) &&
                 !string.IsNullOrEmpty(args.PropertyName))
             {
@@ -360,6 +399,7 @@ namespace Indirect.Controls
 
         private void MessageTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
         {
+            UpdateSendButtonIcon();
             if (!_needUpdateCaret) return;
             var tb = (TextBox) sender;
             tb.SelectionStart = tb.Text.Length;
@@ -446,6 +486,20 @@ namespace Indirect.Controls
         private void ClearReplyButton_OnClick(object sender, RoutedEventArgs e)
         {
             Thread.ReplyingItem = null;
+        }
+
+        private async void SendButton_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
+        {
+            args.Handled = true;
+            var emoji = await EmojiPicker.ShowAsync((FrameworkElement) sender, new FlyoutShowOptions());
+            if (string.IsNullOrEmpty(emoji))
+            {
+                return;
+            }
+
+            Thread.QuickReplyEmoji = emoji;
+            Thread.UpdateQuickReplyEmoji();
+            MessageTextBox.Text = MessageTextBox.Text;
         }
     }
 }

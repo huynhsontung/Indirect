@@ -29,6 +29,19 @@ namespace Indirect.Services
             return result;
         }
 
+        public bool TryGetForThread<T>(string threadId, string key, out T value)
+        {
+            if (TryGetForUser(threadId, out ApplicationDataCompositeValue composite))
+            {
+                var result = composite.TryGetValue(key, out var obj);
+                value = (T) obj;
+                return result;
+            }
+
+            value = default;
+            return false;
+        }
+
         public static void SetGlobal(string key, object value)
         {
             LocalSettings.Values[key] = value;
@@ -39,6 +52,17 @@ namespace Indirect.Services
             var userContainer = LocalSettings.CreateContainer(_viewModel.ActiveSession.SessionName,
                 ApplicationDataCreateDisposition.Always);
             userContainer.Values[key] = value;
+        }
+
+        public void SetForThread(string threadId, string key, object value)
+        {
+            if (!TryGetForUser(threadId, out ApplicationDataCompositeValue composite))
+            {
+                composite = new ApplicationDataCompositeValue();
+            }
+
+            composite[key] = value;
+            SetForUser(threadId, composite);
         }
 
         public Dictionary<string, object> GetGlobalSettings()

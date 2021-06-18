@@ -422,8 +422,9 @@
                 HorizontalAlignment="Stretch"
                 AutomationProperties.Name="Send"
                 Click="SendButton_Click"
+                ContextRequested="SendButton_OnContextRequested"
                 ToolTipService.ToolTip="Send">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{x:Bind MessageTextBox.Text, Mode=OneWay, Converter={StaticResource SendButtonGlyphConverter}}" />
+                <FontIcon x:Name="SendButtonIcon" />
             </Button>
         </Grid>
     </Grid>

@@ -35,6 +35,8 @@ namespace Indirect.Entities.Wrappers
 
         public string DraftMessage { get; set; }    // UI property
 
+        public string QuickReplyEmoji { get; set; } // UI property
+
         public DirectItemWrapper ReplyingItem
         {
             get => _replyingItem;
@@ -102,6 +104,9 @@ namespace Indirect.Entities.Wrappers
                 Users.Add(new BaseUser());
             }
 
+            QuickReplyEmoji = viewModel.Settings.TryGetForThread(ThreadId, nameof(QuickReplyEmoji), out string emoji)
+                ? emoji
+                : null;
             ObservableItems.CollectionChanged += DecorateOnItemDeleted;
             ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
         }
@@ -465,6 +470,27 @@ namespace Indirect.Entities.Wrappers
                 }
 
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSomeoneTyping)));
+            });
+        }
+
+        public async void UpdateQuickReplyEmoji()
+        {
+            var exists = _viewModel.Settings.TryGetForThread(ThreadId, nameof(QuickReplyEmoji), out string emoji);
+            if (string.IsNullOrEmpty(QuickReplyEmoji))
+            {
+                if (exists)
+                {
+                    QuickReplyEmoji = emoji;
+                }
+            }
+            else
+            {
+                _viewModel.Settings.SetForThread(ThreadId, nameof(QuickReplyEmoji), QuickReplyEmoji);
+            }
+
+            await Dispatcher.QuickRunAsync(() =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(QuickReplyEmoji)));
             });
         }
 
