@@ -86,6 +86,7 @@ namespace Indirect.Entities.Wrappers
             FromMe = viewModel.LoggedInUser?.Pk == source.UserId;
             SetDescriptionText();
             LinkText = DeconstructLinkShare(Source.Link);
+            CheckItemTextForEmoji(source);
 
             if (source.RepliedToMessage != null)
             {
@@ -458,7 +459,24 @@ namespace Indirect.Entities.Wrappers
                 LinkText = text.Substring(startIndex, urlLength),
                 After = text.Substring(startIndex + urlLength),
             };
+        }
 
+        private static void CheckItemTextForEmoji(DirectItem item)
+        {
+            if (item.ItemType != DirectItemType.Text)
+            {
+                return;
+            }
+
+            if (item.Text.Length > 1 && item.Text.All(c =>
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+                return unicodeCategory == UnicodeCategory.Surrogate || unicodeCategory == UnicodeCategory.Format;
+            }))
+            {
+                item.Like = item.Text;
+                item.ItemType = DirectItemType.Like;
+            }
         }
     }
 }
