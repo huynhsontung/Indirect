@@ -14,6 +14,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Indirect.Converters;
 using Indirect.Entities.Wrappers;
+using Indirect.Services;
 using Indirect.Utilities;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.User;
@@ -78,6 +79,7 @@ namespace Indirect.Controls
             view._needUpdateCaret = true;
             view.OnUserPresenceChanged();
             view.UpdateSendButtonIcon();
+            view.ConditionallyShowTeachingTips();
         }
 
         private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
@@ -132,6 +134,16 @@ namespace Indirect.Controls
             {
                 // This happens when ContactPanel is closed but this view still listens to event from viewmodel
                 DebugLogger.LogException(exception, false);
+            }
+        }
+
+        private async void ConditionallyShowTeachingTips()
+        {
+            if (!SettingsService.TryGetGlobal("ShowTeachingTips", out bool? value) || (value ?? true))
+            {
+                await Task.Delay(500);
+                SendButtonTeachingTip.IsOpen = true;
+                SettingsService.SetGlobal("ShowTeachingTips", false);
             }
         }
 

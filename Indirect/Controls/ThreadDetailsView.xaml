@@ -9,6 +9,7 @@
     xmlns:extensions="using:Microsoft.Toolkit.Uwp.UI.Extensions"
     xmlns:local="using:Indirect"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:user="using:InstagramAPI.Classes.User"
     xmlns:wrappers="using:Indirect.Entities.Wrappers"
     d:DesignHeight="300"
@@ -427,5 +428,16 @@
                 <FontIcon x:Name="SendButtonIcon" />
             </Button>
         </Grid>
+
+        <muxc:TeachingTip
+            x:Name="SendButtonTeachingTip"
+            Title="Customize your quick reply"
+            Grid.Row="0"
+            Subtitle="Right click the send button to choose an emoji for your quick reply."
+            Target="{x:Bind SendButton}">
+            <muxc:TeachingTip.IconSource>
+                <muxc:SymbolIconSource Symbol="Emoji" />
+            </muxc:TeachingTip.IconSource>
+        </muxc:TeachingTip>
     </Grid>
 </UserControl>
