@@ -22,14 +22,14 @@ namespace BackgroundPushClient
         {
             Instagram.StartAppCenter();
             taskInstance.Canceled += TaskInstanceOnCanceled;
-            var deferral = taskInstance.GetDeferral();
             this.Log("-------------- Start of background task --------------");
             var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
-            Utils.PopMessageToast($"{details.Reason}");
-            this.Log($"{details.Reason}");
+            var socketId = details.SocketInformation.Id;
+            Utils.PopMessageToast($"{details.Reason} - {socketId}");
+            this.Log($"{details.Reason} - {socketId}");
+            var deferral = taskInstance.GetDeferral();
             try
             {
-                var socketId = details.SocketInformation.Id;
                 if (_cancellation.IsCancellationRequested || string.IsNullOrEmpty(socketId) ||
                     socketId.Length <= PushClient.SocketIdPrefix.Length ||
                     !await TryAcquireSocketActivityLock(socketId))
