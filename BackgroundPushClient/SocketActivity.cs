@@ -81,7 +81,7 @@ namespace BackgroundPushClient
                     case SocketActivityTriggerReason.SocketClosed:
                     {
                         await Task.Delay(TimeSpan.FromSeconds(3), _cancellation.Token);
-                        if (!await Utils.TryAcquireSyncLock())
+                        if (!await Utils.TryAcquireSyncLock(session.SessionName))
                         {
                             this.Log("Main application is running.");
                             return;

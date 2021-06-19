@@ -30,7 +30,8 @@ namespace BackgroundPushClient
                 var threadId = queryParams["id"];
                 var itemId = queryParams["x"];
                 var viewerId = notificationContent.IntendedRecipientUserId;
-                if (threadId == null || itemId == null || notificationContent.Message == null || !await TryAcquireSyncLock())
+                if (threadId == null || itemId == null || notificationContent.Message == null ||
+                    !await TryAcquireSyncLock(viewerId.ToString()))
                 {
                     return;
                 }
@@ -175,10 +176,15 @@ namespace BackgroundPushClient
             return dict[threadId];
         }
 
-        public static async Task<bool> TryAcquireSyncLock()
+        public static async Task<bool> TryAcquireSyncLock(string sessionName)
         {
+            if (string.IsNullOrEmpty(sessionName))
+            {
+                return true;
+            }
+
             var storageFolder = ApplicationData.Current.LocalFolder;
-            var storageItem = await storageFolder.TryGetItemAsync("SyncLock.mutex");
+            var storageItem = await storageFolder.TryGetItemAsync($"SyncLock_{sessionName}.mutex");
             if (storageItem is StorageFile)
             {
                 try

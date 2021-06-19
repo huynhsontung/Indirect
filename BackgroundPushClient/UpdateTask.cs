@@ -21,15 +21,15 @@ namespace BackgroundPushClient
                 UnregisterLegacySocket();
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
-                if (!await Utils.TryAcquireSyncLock())
-                {
-                    return;
-                }
-
                 var sessions = await SessionManager.GetAvailableSessionsAsync();
                 foreach (var container in sessions)
                 {
                     var session = container.Session;
+                    if (!await Utils.TryAcquireSyncLock(session.SessionName))
+                    {
+                        continue;
+                    }
+
                     var instagram = new Instagram(session);
 
                     if (instagram.IsUserAuthenticated)

@@ -175,7 +175,6 @@ namespace Indirect
                     TryEnablePrelaunch();
                 }
 
-                SyncLock.Acquire();
                 ViewModel.StartedFromMainView = true;
                 if (rootFrame.Content == null)
                 {
@@ -236,7 +235,11 @@ namespace Indirect
             var snapshotAt = ViewModel.Inbox.SnapshotAt;
             if (ViewModel.StartedFromMainView)
             {
-                SyncLock.Acquire();
+                if (ViewModel.IsUserAuthenticated)
+                {
+                    SyncLock.Acquire(ViewModel.ActiveSession.SessionName);
+                }
+
                 await ViewModel.UpdateInboxAndSelectedThread();
                 ViewModel.ReelsFeed.StartReelsFeedUpdateLoop();
             }

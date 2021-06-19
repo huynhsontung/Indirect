@@ -94,6 +94,7 @@ namespace Indirect
         public async Task OnLoggedIn()
         {
             if (!IsUserAuthenticated) throw new Exception("User is not logged in.");
+            SyncLock.Acquire(ActiveSession.SessionName);
             ReelsFeed.StopReelsFeedUpdateLoop(true);
             var tasks = new List<Task>
             {
@@ -120,6 +121,7 @@ namespace Indirect
 
             InitializeInstaApi(session);
             AvailableSessions = await SessionManager.GetAvailableSessionsAsync(InstaApi.Session);
+            SyncLock.Acquire(session.SessionName);
         }
 
         public void SetSelectedThreadNull()
@@ -145,6 +147,7 @@ namespace Indirect
             await CacheManager.RemoveCacheAsync(ThreadInfoKey);
             await InstaApi.Logout();
             ThreadInfoDictionary.Clear();
+            SyncLock.Release();
 
             if (AvailableSessions.Length > 0)
             {

@@ -13,12 +13,21 @@ namespace Indirect.Utilities
         private static FileStream _lockFile;
         private static CancellationTokenSource _tokenSource;
 
-        internal static async void Acquire()
+        internal static async void Acquire(string sessionName)
         {
-            if (Acquired) return;
+            if (string.IsNullOrEmpty(sessionName))
+            {
+                return;
+            }
+
+            if (Acquired)
+            {
+                Release();
+            }
+
             var tokenSource = _tokenSource = new CancellationTokenSource();
             var storageFolder = ApplicationData.Current.LocalFolder;
-            var storageItem = await storageFolder.CreateFileAsync("SyncLock.mutex", CreationCollisionOption.OpenIfExists);
+            var storageItem = await storageFolder.CreateFileAsync($"SyncLock_{sessionName}.mutex", CreationCollisionOption.OpenIfExists);
             for (int i = 0; i < 5; i++)
             {
                 try
