@@ -104,9 +104,11 @@ namespace Indirect.Entities.Wrappers
                 Users.Add(new BaseUser());
             }
 
-            QuickReplyEmoji = viewModel.Settings.TryGetForThread(ThreadId, nameof(QuickReplyEmoji), out string emoji)
-                ? emoji
-                : null;
+            QuickReplyEmoji =
+                !string.IsNullOrEmpty(ThreadId) &&
+                viewModel.Settings.TryGetForThread(ThreadId, nameof(QuickReplyEmoji), out string emoji)
+                    ? emoji
+                    : null;
             ObservableItems.CollectionChanged += DecorateOnItemDeleted;
             ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
         }
