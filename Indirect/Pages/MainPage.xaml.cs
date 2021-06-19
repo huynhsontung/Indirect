@@ -378,6 +378,7 @@ namespace Indirect.Pages
         {
             if (((FrameworkElement)sender).DataContext is UserSessionData session)
             {
+                await ((App)App.Current).CloseAllSecondaryViews();
                 await ViewModel.SaveDataAsync();
                 await ViewModel.SwitchAccountAsync(session);
                 Frame.Navigate(typeof(MainPage));

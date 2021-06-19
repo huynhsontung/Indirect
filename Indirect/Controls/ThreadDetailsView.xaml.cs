@@ -83,11 +83,12 @@ namespace Indirect.Controls
         }
 
         private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
-        private static FontFamily SegoeMDL2Assets = new FontFamily("Segoe MDL2 Assets");
+        private FontFamily SegoeMDL2Assets { get; }
 
         public ThreadDetailsView()
         {
             this.InitializeComponent();
+            SegoeMDL2Assets = new FontFamily("Segoe MDL2 Assets");
             ViewModel.PropertyChanged += OnUserPresenceChanged;
             GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
         }
