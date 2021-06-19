@@ -251,6 +251,9 @@ namespace BackgroundPushClient
                     PopMessageToast(e.ToString());
                     DebugLogger.LogException(e);
                 }
+
+                instagram.PushClient.MessageReceived -= OnMessageReceived;
+                instagram.PushClient.ExceptionsCaught -= PushClientOnExceptionsCaught;
             }
         }
     }
