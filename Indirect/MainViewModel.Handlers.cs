@@ -20,12 +20,10 @@ namespace Indirect
             client.MessageReceived -= OnMessageSyncReceived;
             client.ActivityIndicatorChanged -= OnActivityIndicatorChanged;
             client.UserPresenceChanged -= OnUserPresenceChanged;
-            client.FailedToStart -= OnSyncClientFailedToStart;
 
             client.MessageReceived += OnMessageSyncReceived;
             client.ActivityIndicatorChanged += OnActivityIndicatorChanged;
             client.UserPresenceChanged += OnUserPresenceChanged;
-            client.FailedToStart += OnSyncClientFailedToStart;
         }
 
         private void InboxThreads_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -57,12 +55,6 @@ namespace Indirect
                     SelectedThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == _threadToBeOpened);
                 });
             }
-        }
-
-        private async void OnSyncClientFailedToStart(object sender, Exception exception)
-        {
-            DebugLogger.LogException(exception);
-            await HandleException();
         }
 
         private async void OnMessageSyncReceived(object sender, List<MessageSyncEventArgs> data)

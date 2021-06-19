@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
@@ -15,9 +16,13 @@ using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Classes.User;
+using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
+using Microsoft.UI.Xaml.Controls;
 using CoreWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
+using SwipeItem = Windows.UI.Xaml.Controls.SwipeItem;
+using SwipeItemInvokedEventArgs = Windows.UI.Xaml.Controls.SwipeItemInvokedEventArgs;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -53,6 +58,24 @@ namespace Indirect.Pages
             Inbox = ViewModel.Inbox;
         }
 
+        public async void ShowStatus(string title, string message,
+            InfoBarSeverity severity = InfoBarSeverity.Informational)
+        {
+            await Dispatcher.QuickRunAsync(async () =>
+            {
+                if (MainStatusBar.IsOpen)
+                {
+                    MainStatusBar.IsOpen = false;
+                    await Task.Delay(100);
+                }
+
+                MainStatusBar.Title = title;
+                MainStatusBar.Message = message;
+                MainStatusBar.Severity = severity;
+                MainStatusBar.IsOpen = true;
+            }, CoreDispatcherPriority.Low);
+        }
+
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -62,7 +85,17 @@ namespace Indirect.Pages
                 await ViewModel.OnLoggedIn();
             }
 
+            ViewModel.SyncClient.FailedToStart -= SyncClientOnFailedToStart;
+            ViewModel.SyncClient.FailedToStart += SyncClientOnFailedToStart;
+
             UpdateSwitchAccountMenu();
+        }
+
+        private void SyncClientOnFailedToStart(object sender, Exception e)
+        {
+            DebugLogger.LogException(e);
+            ShowStatus("Lost connection to the server",
+                "New messages will not be updated. Please restart Indirect to reconnect.", InfoBarSeverity.Error);
         }
 
         private async void LogoutButton_Click(object sender, RoutedEventArgs e)
@@ -330,9 +363,12 @@ namespace Indirect.Pages
             await Windows.System.Launcher.LaunchUriAsync(uri);
         }
 
-        private void TestButton_OnClick(object sender, RoutedEventArgs e)
+        private async void TestButton_OnClick(object sender, RoutedEventArgs e)
         {
             //await ContactsService.DeleteAllAppContacts();
+            await Task.Delay(2000).ConfigureAwait(false);
+            ShowStatus("Lost connection to the server",
+                "New messages will not be updated. Please restart Indirect to reconnect.", InfoBarSeverity.Error);
         }
 
         private async void MasterMenuButton_OnImageExFailed(object sender, ImageExFailedEventArgs e)

@@ -52,6 +52,8 @@ namespace Indirect.Pages
         private void DisableButtons()
         {
             _loading = true;
+            UsernameBox.IsEnabled = false;
+            PasswordBox.IsEnabled = false;
             LoginButton.IsEnabled = false;
             FbLoginButton.IsEnabled = false;
         }
@@ -59,6 +61,8 @@ namespace Indirect.Pages
         private void EnableButtons()
         {
             _loading = false;
+            UsernameBox.IsEnabled = true;
+            PasswordBox.IsEnabled = true;
             LoginButton.IsEnabled = true;
             FbLoginButton.IsEnabled = true;
         }

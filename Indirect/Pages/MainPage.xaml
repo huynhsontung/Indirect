@@ -8,6 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:Indirect"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:users="using:InstagramAPI.Classes.User"
     xmlns:wrappers="using:Indirect.Entities.Wrappers"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
@@ -337,7 +338,7 @@
                             Style="{ThemeResource ProfilePicturePlaceholderStyle}" />
                         <Button.Flyout>
                             <MenuFlyout Placement="Bottom">
-                                <!--<MenuFlyoutItem Text="Test" Click="TestButton_OnClick" />-->
+                                <!--<MenuFlyoutItem Click="TestButton_OnClick" Text="Test" />-->
                                 <MenuFlyoutItem Click="Profile_Click" Text="{x:Bind ViewModel.LoggedInUser.Username}" />
                                 <!--<ToggleMenuFlyoutItem Text="Pending inbox" IsChecked="False" Click="TogglePendingInbox_OnClick"
                                                       IsEnabled="{x:Bind _viewModel.Inbox.PendingRequestsCount, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"/>-->
@@ -573,6 +574,14 @@
             </controls1:ExtendedMasterDetailsView.MasterHeader>
 
         </controls1:ExtendedMasterDetailsView>
+
+        <muxc:InfoBar
+            x:Name="MainStatusBar"
+            Grid.Row="1"
+            MaxWidth="420"
+            Margin="12,44"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top" />
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
