@@ -34,6 +34,8 @@
             </ResourceDictionary.ThemeDictionaries>
             <converters:RelativeTimeConverter x:Key="RelativeTimeConverter" />
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter" />
+            <converters:NullVisibilityConverter x:Key="NullVisibilityConverter" />
+            <converters:NullVisibilityConverter x:Key="InvertNullVisibilityConverter" Invert="True" />
 
             <DataTemplate x:Key="ReplyControlTemplate" x:DataType="wrappers:ReelItemWrapper">
                 <StackPanel
@@ -41,16 +43,16 @@
                     Orientation="Horizontal"
                     Visibility="{x:Bind Parent.CanReply, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
                     <TextBox
+                        x:Name="ReplyTextBox"
                         Width="300"
                         Margin="4,0,4,0"
                         AcceptsReturn="True"
                         Background="Transparent"
                         KeyboardAcceleratorPlacementMode="Hidden"
                         MaxLength="2200"
-                        PlaceholderText="Type a message to reply or an emoji to react"
+                        PlaceholderText="Type a reply"
                         Text="{x:Bind DraftMessage, Mode=TwoWay}"
-                        TextWrapping="Wrap"
-                        ToolTipService.ToolTip="Press &quot;Windows key + period (.)&quot; to open Emoji picker">
+                        TextWrapping="Wrap">
                         <TextBox.KeyboardAccelerators>
                             <KeyboardAccelerator
                                 Key="Enter"
@@ -63,9 +65,24 @@
                         Width="60"
                         Margin="0,0,4,0"
                         VerticalAlignment="Bottom"
-                        AutomationProperties.Name="Send"
+                        AutomationProperties.Name="React with an Emoji"
+                        Click="ReactEmojiButton_OnClick"
+                        ToolTipService.ToolTip="React with an Emoji"
+                        Visibility="{Binding ElementName=ReplyTextBox, Path=Text, Converter={StaticResource InvertNullVisibilityConverter}}">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="E" Modifiers="Control" />
+                        </Button.KeyboardAccelerators>
+                        <SymbolIcon Symbol="Emoji2" />
+                    </Button>
+
+                    <Button
+                        Width="60"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Bottom"
+                        AutomationProperties.Name="Send reply"
                         Click="SendButton_Click"
-                        ToolTipService.ToolTip="Send">
+                        ToolTipService.ToolTip="Send reply"
+                        Visibility="{Binding ElementName=ReplyTextBox, Path=Text, Converter={StaticResource NullVisibilityConverter}}">
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE724;" />
                     </Button>
                 </StackPanel>
@@ -237,5 +254,14 @@
                 <selectors:StoryTemplateSelector ImageTemplate="{StaticResource ImageTemplate}" VideoTemplate="{StaticResource VideoTemplate}" />
             </FlipView.ItemTemplateSelector>
         </FlipView>
+
+        <muxc:InfoBar
+            x:Name="ReplyStatusInfoBar"
+            Title="Reply sent"
+            Grid.Row="2"
+            Margin="44"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            IsClosable="False" />
     </Grid>
 </UserControl>

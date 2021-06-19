@@ -6,11 +6,18 @@ namespace Indirect.Converters
 {
     class NullVisibilityConverter : IValueConverter
     {
+        public bool Invert { get; set; }
+
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is string s)
-                return string.IsNullOrEmpty(s) ? Visibility.Collapsed : Visibility.Visible;
-            return value != null ? Visibility.Visible : Visibility.Collapsed;
+            var result = value is string s ? !string.IsNullOrEmpty(s) : value != null;
+
+            if (Invert)
+            {
+                return !result ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            return result ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Indirect.Utilities;
+using InstagramAPI.Classes.Core;
 using InstagramAPI.Classes.Media;
 
 namespace Indirect.Entities.Wrappers
@@ -35,20 +36,23 @@ namespace Indirect.Entities.Wrappers
             ViewModel = ((App) Application.Current).ViewModel;
         }
 
-        public async Task Reply(string message)
+        public async Task<bool> Reply(string message)
         {
             var userId = User.Pk;
             var resultThread = await ViewModel.InstaApi.CreateGroupThreadAsync(new[] { userId });
-            if (!resultThread.IsSucceeded) return;
+            if (!resultThread.IsSucceeded) return false;
             var thread = resultThread.Value;
+            Result result;
             if (EmojiRegex.IsMatch(message))
             {
-                await ViewModel.InstaApi.SendReelReactAsync(Parent.Id, Id, thread.ThreadId, message);
+                result = await ViewModel.InstaApi.SendReelReactAsync(Parent.Id, Id, thread.ThreadId, message);
             }
             else
             {
-                await ViewModel.InstaApi.SendReelShareAsync(Parent.Id, Id, MediaType, thread.ThreadId, message);
+                result = await ViewModel.InstaApi.SendReelShareAsync(Parent.Id, Id, MediaType, thread.ThreadId, message);
             }
+
+            return result.IsSucceeded;
         }
 
         public async Task Download()

@@ -1,12 +1,14 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Indirect.Entities;
 using Indirect.Entities.Wrappers;
+using Indirect.Utilities;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
@@ -70,6 +72,15 @@ namespace Indirect.Controls
             autoVideo?.Pause();
         }
 
+        private async Task PopReplyDeliveryStatus()
+        {
+            ReplyStatusInfoBar.IsOpen = true;
+            if (await Debouncer.Delay(nameof(ReplyStatusInfoBar), 2000))
+            {
+                ReplyStatusInfoBar.IsOpen = false;
+            }
+        }
+
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
             var story = (ReelItemWrapper) StoryView.SelectedItem;
@@ -78,7 +89,10 @@ namespace Indirect.Controls
             if (string.IsNullOrEmpty(textBox?.Text) || story == null) return;
             var message = textBox.Text;
             textBox.Text = string.Empty;
-            await story.Reply(message);
+            if (await story.Reply(message))
+            {
+                await PopReplyDeliveryStatus();
+            }
         }
 
         private void StoryView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -225,6 +239,22 @@ namespace Indirect.Controls
             }
 
             await story.Download().ConfigureAwait(false);
+        }
+
+        private async void ReactEmojiButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var story = (ReelItemWrapper)StoryView.SelectedItem;
+            var emoji = await EmojiPicker.ShowAsync((FrameworkElement) sender,
+                new FlyoutShowOptions {Placement = FlyoutPlacementMode.TopEdgeAlignedRight});
+            if (string.IsNullOrEmpty(emoji) || story == null)
+            {
+                return;
+            }
+
+            if (await story.Reply(emoji))
+            {
+                await PopReplyDeliveryStatus();
+            }
         }
     }
 }
