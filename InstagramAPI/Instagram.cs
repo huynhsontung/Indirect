@@ -57,7 +57,6 @@ namespace InstagramAPI
             SyncClient.Shutdown();
             PushClient.Shutdown();
             PushClient.DisposeBackgroundSocket();
-            CookieHelper.ClearCookies();
             Session = new UserSessionData();
         }
 

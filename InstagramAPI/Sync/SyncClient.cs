@@ -165,23 +165,30 @@ namespace InstagramAPI.Sync
 
         private async void OnNetworkChanged(object sender)
         {
-            var internetProfile = NetworkInformation.GetInternetConnectionProfile();
-            if (internetProfile == null || _seqId == default || _snapshotAt == default ||
-                _pinging.IsCancellationRequested) return;
             try
             {
-                // Disconnect to make sure there is no duplicate 
-                var disconnectPacket = DisconnectPacket.Instance;
-                var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
-                await _socket.OutputStream.WriteAsync(buffer);
-                await _socket.OutputStream.FlushAsync();
+                var internetProfile = NetworkInformation.GetInternetConnectionProfile();
+                if (internetProfile == null || _seqId == default || _snapshotAt == default ||
+                    _pinging.IsCancellationRequested) return;
+                try
+                {
+                    // Disconnect to make sure there is no duplicate 
+                    var disconnectPacket = DisconnectPacket.Instance;
+                    var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
+                    await _socket.OutputStream.WriteAsync(buffer);
+                    await _socket.OutputStream.FlushAsync();
+                }
+                catch (Exception)
+                {
+                    // Ignore if fail
+                }
+                this.Log("Internet connection available. Reconnecting.");
+                await Start(_seqId, _snapshotAt, true);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // Ignore if fail
+                DebugLogger.LogException(e);
             }
-            this.Log("Internet connection available. Reconnecting.");
-            await Start(_seqId, _snapshotAt, true);
         }
 
         private async void OnMessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)

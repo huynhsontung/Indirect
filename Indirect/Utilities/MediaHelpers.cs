@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.Web.Http;
 using InstagramAPI.Classes.Media;
+using InstagramAPI.Utils;
 
 namespace Indirect.Utilities
 {
@@ -51,15 +51,22 @@ namespace Indirect.Utilities
             var saveFile = await savePicker.PickSaveFileAsync();
             if (saveFile != null)
             {
-                CachedFileManager.DeferUpdates(saveFile);
-                var response = await ((App) App.Current).ViewModel.InstaApi.GetAsync(url);
-                if (response.IsSuccessStatusCode)
+                try
                 {
-                    var content = await response.Content.ReadAsBufferAsync();
-                    await FileIO.WriteBufferAsync(saveFile, content);
-                }
+                    CachedFileManager.DeferUpdates(saveFile);
+                    var response = await ((App) App.Current).ViewModel.InstaApi.GetAsync(url);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var content = await response.Content.ReadAsBufferAsync();
+                        await FileIO.WriteBufferAsync(saveFile, content);
+                    }
 
-                await CachedFileManager.CompleteUpdatesAsync(saveFile);
+                    await CachedFileManager.CompleteUpdatesAsync(saveFile);
+                }
+                catch (FileLoadException e)
+                {
+                    DebugLogger.LogException(e, false);
+                }
             }
         }
     }
