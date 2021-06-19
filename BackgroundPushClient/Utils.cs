@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using InstagramAPI;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Utils;
 
@@ -213,6 +214,44 @@ namespace BackgroundPushClient
             }
 
             return new Dictionary<string, string>(0);
+        }
+
+        internal static async Task RefreshAllPushSockets()
+        {
+            var sessions = await SessionManager.GetAvailableSessionsAsync();
+            foreach (var container in sessions)
+            {
+                var session = container.Session;
+                if (!await TryAcquireSyncLock(session.SessionName) || !session.IsAuthenticated)
+                {
+                    continue;
+                }
+
+                var instagram = new Instagram(session);
+                await RefreshPushSocket(instagram);
+            }
+        }
+
+        internal static async Task RefreshPushSocket(Instagram instagram)
+        {
+            if (!instagram.PushClient.SocketRegistered())
+            {
+                instagram.PushClient.MessageReceived += OnMessageReceived;
+                instagram.PushClient.ExceptionsCaught += PushClientOnExceptionsCaught;
+                try
+                {
+                    await instagram.PushClient.StartFresh();
+                    await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));
+                    await instagram.PushClient.TransferPushSocket();
+                    await SessionManager.SaveSessionAsync(instagram);
+                    PopMessageToast($"Push client for {instagram.Session.LoggedInUser.Username} started.");
+                }
+                catch (Exception e)
+                {
+                    PopMessageToast(e.ToString());
+                    DebugLogger.LogException(e);
+                }
+            }
         }
     }
 }

@@ -124,6 +124,7 @@
     <Compile Include="ReplyAction.cs" />
     <Compile Include="SocketActivity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SocketRefresh.cs" />
     <Compile Include="UpdateTask.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>

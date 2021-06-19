@@ -37,6 +37,8 @@ namespace InstagramAPI.Push
         private const string SocketActivityEntryPoint = "BackgroundPushClient.SocketActivity";
         private const string BackgroundReplyName = "BackgroundPushClient.ReplyAction";
         private const string BackgroundReplyEntryPoint = "BackgroundPushClient.ReplyAction";
+        private const string BackgroundSocketRefreshName = "BackgroundPushClient.SocketRefresh";
+        private const string BackgroundSocketRefreshEntryPoint = "BackgroundPushClient.SocketRefresh";
         public const string SocketIdPrefix = "mqtt_fbns_";
         public const string SocketIdLegacy = "mqtt_fbns";    // TODO: handle multiple socket IDs for multiple profiles
         public const int KeepAlive = 900;    // seconds
@@ -132,14 +134,11 @@ namespace InstagramAPI.Push
             return true;
         }
 
-        public static bool TasksRegistered()
-        {
-            return TaskExists(BackgroundSocketActivityName) && TaskExists(BackgroundReplyName);
-        }
-
         public static async Task<IBackgroundTaskRegistration> RequestBackgroundAccess()
         {
-            if (!TaskExists(BackgroundSocketActivityName) || !TaskExists(BackgroundReplyName))
+            if (!TaskExists(BackgroundSocketActivityName) ||
+                !TaskExists(BackgroundReplyName) ||
+                !TaskExists(BackgroundSocketRefreshName))
             {
                 try
                 {
@@ -177,6 +176,16 @@ namespace InstagramAPI.Push
                 {
                     // ToastNotificationActionTrigger is present but cannot instantiate
                 }
+            }
+
+            try
+            {
+                TryRegisterBackgroundTaskOnce(BackgroundSocketRefreshName, BackgroundSocketRefreshEntryPoint,
+                    new TimeTrigger(60, false), out _);
+            }
+            catch (Exception)
+            {
+                // pass
             }
 
             return socketActivityTask;

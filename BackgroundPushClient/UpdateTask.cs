@@ -21,39 +21,7 @@ namespace BackgroundPushClient
                 UnregisterLegacySocket();
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
-                var sessions = await SessionManager.GetAvailableSessionsAsync();
-                foreach (var container in sessions)
-                {
-                    var session = container.Session;
-                    if (!await Utils.TryAcquireSyncLock(session.SessionName))
-                    {
-                        continue;
-                    }
-
-                    var instagram = new Instagram(session);
-
-                    if (instagram.IsUserAuthenticated)
-                    {
-                        if (!instagram.PushClient.SocketRegistered())
-                        {
-                            instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
-                            instagram.PushClient.ExceptionsCaught += Utils.PushClientOnExceptionsCaught;
-                            try
-                            {
-                                await instagram.PushClient.StartFresh();
-                                await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));
-                                await instagram.PushClient.TransferPushSocket();
-                                await SessionManager.SaveSessionAsync(instagram);
-                                Utils.PopMessageToast($"Push client for {session.LoggedInUser.Username} started.");
-                            }
-                            catch (Exception e)
-                            {
-                                Utils.PopMessageToast(e.ToString());
-                                DebugLogger.LogException(e);
-                            }
-                        }
-                    }
-                }
+                await Utils.RefreshAllPushSockets();
             }
             catch (Exception e)
             {
