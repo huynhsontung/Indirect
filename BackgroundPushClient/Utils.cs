@@ -216,7 +216,7 @@ namespace BackgroundPushClient
             return new Dictionary<string, string>(0);
         }
 
-        internal static async Task RefreshAllPushSockets()
+        public static async Task RefreshAllPushSockets()
         {
             var sessions = await SessionManager.GetAvailableSessionsAsync();
             foreach (var container in sessions)
@@ -228,11 +228,24 @@ namespace BackgroundPushClient
                 }
 
                 var instagram = new Instagram(session);
-                await RefreshPushSocket(instagram);
+                var lockFile = await TryAcquireSocketActivityLock(instagram.PushClient.SocketId);
+                if (lockFile == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    await RefreshPushSocket(instagram);
+                }
+                finally
+                {
+                    lockFile.Dispose();
+                }
             }
         }
 
-        internal static async Task RefreshPushSocket(Instagram instagram)
+        public static async Task RefreshPushSocket(Instagram instagram)
         {
             if (!instagram.PushClient.SocketRegistered())
             {
@@ -254,6 +267,20 @@ namespace BackgroundPushClient
 
                 instagram.PushClient.MessageReceived -= OnMessageReceived;
                 instagram.PushClient.ExceptionsCaught -= PushClientOnExceptionsCaught;
+            }
+        }
+
+        public static async Task<FileStream> TryAcquireSocketActivityLock(string socketId)
+        {
+            try
+            {
+                var storageFolder = ApplicationData.Current.LocalFolder;
+                var storageItem = await storageFolder.CreateFileAsync(socketId + ".mutex", CreationCollisionOption.OpenIfExists);
+                return new FileStream(storageItem.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (Exception)
+            {
+                return null;
             }
         }
     }

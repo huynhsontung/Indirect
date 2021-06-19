@@ -30,7 +30,7 @@ namespace InstagramAPI.Push
         public FbnsConnectionData ConnectionData => _instaApi.Session.PushData;
         public StreamSocket Socket { get; private set; }
         public bool Running => !(_runningTokenSource?.IsCancellationRequested ?? true);
-        private string SocketId => SocketIdPrefix + _instaApi.Session.SessionName;
+        public string SocketId => SocketIdPrefix + _instaApi.Session.SessionName;
 
         private const string HostName = "mqtt-mini.facebook.com";
         private const string BackgroundSocketActivityName = "BackgroundPushClient.SocketActivity";

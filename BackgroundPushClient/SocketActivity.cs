@@ -16,7 +16,6 @@ namespace BackgroundPushClient
     {
         private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
         private BackgroundTaskCancellationReason _cancellationReason;
-        private FileStream _lockFile;
 
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
@@ -27,12 +26,18 @@ namespace BackgroundPushClient
             var socketId = details.SocketInformation.Id;
             Utils.PopMessageToast($"{details.Reason} - {socketId}");
             this.Log($"{details.Reason} - {socketId}");
+            FileStream lockFile = null;
             var deferral = taskInstance.GetDeferral();
             try
             {
                 if (_cancellation.IsCancellationRequested || string.IsNullOrEmpty(socketId) ||
-                    socketId.Length <= PushClient.SocketIdPrefix.Length ||
-                    !await TryAcquireSocketActivityLock(socketId))
+                    socketId.Length <= PushClient.SocketIdPrefix.Length)
+                {
+                    return;
+                }
+
+                lockFile = await Utils.TryAcquireSocketActivityLock(socketId);
+                if (lockFile == null)
                 {
                     return;
                 }
@@ -126,8 +131,8 @@ namespace BackgroundPushClient
             }
             finally
             {
-                ReleaseSocketActivityLock();
                 taskInstance.Canceled -= TaskInstanceOnCanceled;
+                lockFile?.Dispose();
                 _cancellation.Dispose();
                 this.Log("-------------- End of background task --------------");
                 deferral.Complete();
@@ -138,27 +143,6 @@ namespace BackgroundPushClient
         {
             _cancellationReason = reason;
             _cancellation?.Cancel();
-        }
-
-        private async Task<bool> TryAcquireSocketActivityLock(string socketId)
-        {
-            var storageFolder = ApplicationData.Current.LocalFolder;
-            var storageItem = await storageFolder.CreateFileAsync(socketId + ".mutex", CreationCollisionOption.OpenIfExists);
-            try
-            {
-                _lockFile = new FileStream(storageItem.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private void ReleaseSocketActivityLock()
-        {
-            _lockFile?.Dispose();
         }
     }
 }
