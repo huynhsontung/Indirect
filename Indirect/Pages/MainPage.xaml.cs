@@ -48,13 +48,13 @@ namespace Indirect.Pages
         private MainViewModel ViewModel => ((App) Application.Current).ViewModel;
         private ObservableCollection<BaseUser> NewMessageCandidates { get; } = new ObservableCollection<BaseUser>();
 
-
         public MainPage()
         {
             this.InitializeComponent();
             Window.Current.SetTitleBar(TitleBarElement);
             MainLayout.ViewStateChanged += OnViewStateChange;
             Window.Current.Activated += OnWindowFocusChange;
+            AdaptiveLayoutStateGroup.CurrentStateChanged += AdaptiveLayoutStateGroupOnCurrentStateChanged;
             Inbox = ViewModel.Inbox;
         }
 
@@ -89,6 +89,21 @@ namespace Indirect.Pages
             ViewModel.SyncClient.FailedToStart += SyncClientOnFailedToStart;
 
             UpdateSwitchAccountMenu();
+        }
+
+        private Visibility GetReelsTrayVisibility(int reelsCount)
+        {
+            if (AdaptiveLayoutStateGroup.CurrentState == Intermediate)
+            {
+                return Visibility.Collapsed;
+            }
+
+            return reelsCount > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void AdaptiveLayoutStateGroupOnCurrentStateChanged(object sender, VisualStateChangedEventArgs e)
+        {
+            ReelsTray.Visibility = GetReelsTrayVisibility(ViewModel.ReelsFeed.Reels.Count);
         }
 
         private void SyncClientOnFailedToStart(object sender, Exception e)

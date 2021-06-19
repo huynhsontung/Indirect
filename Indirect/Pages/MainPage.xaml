@@ -122,7 +122,7 @@
                 <Grid
                     x:Name="ReelsTray"
                     Margin="0,0,0,8"
-                    Visibility="{x:Bind ViewModel.ReelsFeed.Reels.Count, Converter={StaticResource VisibleWhenNotZeroConverter}, Mode=OneWay}">
+                    Visibility="{x:Bind GetReelsTrayVisibility(ViewModel.ReelsFeed.Reels.Count), Mode=OneWay}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -584,7 +584,7 @@
             VerticalAlignment="Top" />
 
         <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
+            <VisualStateGroup x:Name="AdaptiveLayoutStateGroup">
                 <VisualState x:Name="Compact">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="{StaticResource CompactWindowWidth}" />
@@ -603,7 +603,6 @@
                         <Setter Target="MasterHeading.Visibility" Value="Collapsed" />
                         <Setter Target="MasterMenuButton.Visibility" Value="Collapsed" />
                         <Setter Target="SearchBox.Visibility" Value="Collapsed" />
-                        <Setter Target="ReelsTray.Visibility" Value="Collapsed" />
                     </VisualState.Setters>
                 </VisualState>
 
