@@ -52,6 +52,7 @@ namespace Indirect.Pages
         private void DisableButtons()
         {
             _loading = true;
+            BackButton.IsEnabled = false;
             UsernameBox.IsEnabled = false;
             PasswordBox.IsEnabled = false;
             LoginButton.IsEnabled = false;
@@ -61,6 +62,7 @@ namespace Indirect.Pages
         private void EnableButtons()
         {
             _loading = false;
+            BackButton.IsEnabled = true;
             UsernameBox.IsEnabled = true;
             PasswordBox.IsEnabled = true;
             LoginButton.IsEnabled = true;
