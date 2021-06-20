@@ -4,7 +4,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
@@ -50,9 +49,9 @@ namespace Indirect
             await SyncClient.Start(seqId, snapshotAt, true).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(_threadToBeOpened) && Inbox.Threads.Count > 0)
             {
-                await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
+                await Inbox.Dispatcher.QuickRunAsync(() =>
                 {
-                    SelectedThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == _threadToBeOpened);
+                    Inbox.SelectedThread = Inbox.Threads.FirstOrDefault(x => x.ThreadId == _threadToBeOpened);
                 });
             }
         }

@@ -116,8 +116,7 @@
             IntermediateModeThresholdWidth="{StaticResource FullWindowWidth}"
             ItemsSource="{x:Bind Inbox.Threads, Mode=OneWay}"
             MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
-            SelectedItem="{x:Bind ViewModel.SelectedThread, Mode=TwoWay}"
-            SelectionChanged="MainLayout_OnSelectionChanged">
+            SelectedItem="{x:Bind ViewModel.Inbox.SelectedThread, Mode=TwoWay}">
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
                 <Grid
                     x:Name="ReelsTray"

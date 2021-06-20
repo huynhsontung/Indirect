@@ -29,7 +29,6 @@ namespace Indirect
     internal partial class MainViewModel : INotifyPropertyChanged
     {
         private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
-        private DirectThreadWrapper _selectedThread;
         private string _threadToBeOpened;
 
         private string ThreadInfoKey => $"{nameof(ThreadInfoDictionary)}_{LoggedInUser?.Pk}";
@@ -48,16 +47,6 @@ namespace Indirect
         public UserSessionContainer[] AvailableSessions { get; private set; } = new UserSessionContainer[0];
         public UserSessionData ActiveSession => InstaApi.Session;
         public BaseUser LoggedInUser => InstaApi.Session.LoggedInUser;
-        public DirectThreadWrapper SelectedThread
-        {
-            get => _selectedThread;
-            set
-            {
-                _selectedThread = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedThread)));
-            }
-        }
-
         public AndroidDevice Device => InstaApi?.Device;
         public bool IsUserAuthenticated => InstaApi?.IsUserAuthenticated ?? false;
         public ReelsFeed ReelsFeed { get; } = new ReelsFeed();
@@ -126,14 +115,14 @@ namespace Indirect
 
         public void SetSelectedThreadNull()
         {
-            SelectedThread = null;
+            Inbox.SelectedThread = null;
         }
 
         public void OpenThreadWhenReady(string threadId)
         {
             if (Inbox.Threads.Count > 0)
             {
-                SelectedThread = Inbox.Threads.FirstOrDefault(x => x.Source.ThreadId == threadId);
+                Inbox.SelectedThread = Inbox.Threads.FirstOrDefault(x => x.Source.ThreadId == threadId);
             }
             else
             {
@@ -190,8 +179,8 @@ namespace Indirect
         {
             _lastUpdated = DateTime.Now;
             await Inbox.UpdateInbox();
-            if (SelectedThread == null) return;
-            var selectedThread = SelectedThread;
+            if (Inbox.SelectedThread == null) return;
+            var selectedThread = Inbox.SelectedThread;
             if (Inbox.Threads.Contains(selectedThread))
             {
                 await UpdateThread(selectedThread);
@@ -203,7 +192,7 @@ namespace Indirect
                     x != null && x.Source.ThreadId == selectedThread.Source.ThreadId);
                 if (preferSelectedThread != null)
                 {
-                    SelectedThread = preferSelectedThread;
+                    Inbox.SelectedThread = preferSelectedThread;
                 }
             }
         }
@@ -264,7 +253,7 @@ namespace Indirect
             if (!result.IsSucceeded) return;
             var thread = result.Value;
             var existingThread = Inbox.Threads.FirstOrDefault(x => x.Source.ThreadId == thread.ThreadId);
-            SelectedThread = existingThread ?? new DirectThreadWrapper(this, thread);
+            Inbox.SelectedThread = existingThread ?? new DirectThreadWrapper(this, thread);
         }
 
         public async Task<DirectThreadWrapper> FetchThread(IEnumerable<long> userIds, CoreDispatcher dispatcher)
@@ -304,7 +293,7 @@ namespace Indirect
                 break;
             }
 
-            SelectedThread = thread;
+            Inbox.SelectedThread = thread;
         }
 
         private async Task GetUserPresence()

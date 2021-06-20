@@ -126,12 +126,6 @@ namespace Indirect.Controls
             // check if selection actually changed
             if (view.SelectedItem != newValue)
             {
-                if (newValue == null && view.SelectedItem != null && !view.Items.Contains(view.SelectedItem))
-                {
-                    newValue = view.SelectedItem;
-                    view.SetValue(SelectedItemProperty, null);
-                }
-
                 // sync SelectedItem
                 view.SetValue(SelectedItemProperty, newValue);
                 view.UpdateSelection(oldValue, newValue);
@@ -152,10 +146,14 @@ namespace Indirect.Controls
             var index = e.NewValue == null ? -1 : view.Items.IndexOf(e.NewValue);
 
             // check if selection actually changed
-            if (view.SelectedIndex != index || (e.NewValue != null && index == -1))
+            if (view.SelectedIndex != index || e.NewValue != null)
             {
-                // sync SelectedIndex
-                view.SetValue(SelectedIndexProperty, index);
+                if (view.SelectedIndex != index)
+                {
+                    // sync SelectedIndex
+                    view.SetValue(SelectedIndexProperty, index);
+                }
+
                 view.UpdateSelection(e.OldValue, e.NewValue);
             }
         }

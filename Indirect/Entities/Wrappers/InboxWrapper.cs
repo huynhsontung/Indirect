@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
 using Windows.UI.Xaml;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
@@ -15,9 +14,21 @@ using InstagramAPI.Utils;
 
 namespace Indirect.Entities.Wrappers
 {
-    internal class InboxWrapper: IIncrementalSource<DirectThreadWrapper>
+    internal class InboxWrapper: DependencyObject, IIncrementalSource<DirectThreadWrapper>
     {
         public event Action<long, DateTimeOffset> FirstUpdated;    // callback to start SyncClient
+
+        public static readonly DependencyProperty SelectedThreadProperty = DependencyProperty.Register(
+            nameof(SelectedThread),
+            typeof(DirectThreadWrapper),
+            typeof(InboxWrapper),
+            new PropertyMetadata(null, OnSelectedThreadPropertyChanged));
+
+        public DirectThreadWrapper SelectedThread
+        {
+            get => (DirectThreadWrapper)GetValue(SelectedThreadProperty);
+            set => SetValue(SelectedThreadProperty, value);
+        }
 
         public InboxContainer Container { get; private set; }
 
@@ -34,6 +45,7 @@ namespace Indirect.Entities.Wrappers
         private readonly MainViewModel _viewModel;
         private bool _firstTime = true;
         private int _pageCounter;
+        private DirectThreadWrapper _tempThread;
 
         public InboxWrapper(MainViewModel viewModel, bool pending = false)
         {
@@ -42,6 +54,27 @@ namespace Indirect.Entities.Wrappers
             Container = new InboxContainer();
             Threads =
                 new IncrementalLoadingCollection<InboxWrapper, DirectThreadWrapper>(this);
+        }
+
+        private static void OnSelectedThreadPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var inbox = (InboxWrapper)d;
+            lock (inbox)
+            {
+                var tempThread = inbox._tempThread;
+                if (tempThread != null && tempThread != e.NewValue)
+                {
+                    inbox._tempThread = null;
+                    inbox.Threads.Remove(tempThread);
+                }
+
+                if (e.NewValue is DirectThreadWrapper newThread && !inbox.Threads.Contains(newThread))
+                {
+                    inbox.Threads.Insert(0, newThread);
+                    inbox._tempThread = newThread;
+                    inbox.SelectedThread = newThread;
+                }
+            }
         }
 
         private void UpdateExcludeThreads(InboxContainer source, bool updateCursor)
@@ -63,7 +96,7 @@ namespace Indirect.Entities.Wrappers
 
             var container = result.Value;
             UpdateExcludeThreads(container, false);
-            await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
+            await Dispatcher.QuickRunAsync(() =>
             {
                 foreach (var thread in container.Inbox.Threads)
                 {
@@ -177,7 +210,7 @@ namespace Indirect.Entities.Wrappers
                 // If not satisfied, Threads[j] has to move to index i
                 // ObservableCollection.Move() calls RemoveItem() under the hood which refreshes all items in collection
                 // Removing Selected thread from collection will deselect the thread
-                if (((App)Application.Current).ViewModel.SelectedThread != Threads[j])
+                if (SelectedThread != Threads[j])
                 {
                     var tmp = Threads[j];
                     Threads.RemoveAt(j);

@@ -507,7 +507,9 @@ namespace Indirect.Entities.Wrappers
 
         public bool Equals(DirectThreadWrapper other)
         {
-            return !string.IsNullOrEmpty(Source.ThreadId) && Source.ThreadId == other?.Source?.ThreadId;
+            return string.IsNullOrEmpty(Source.ThreadId)
+                ? Source.Title == other?.Source?.Title
+                : Source.ThreadId == other?.Source?.ThreadId;
         }
     }
 }

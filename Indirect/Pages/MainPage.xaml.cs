@@ -54,9 +54,19 @@ namespace Indirect.Pages
             this.InitializeComponent();
             Window.Current.SetTitleBar(TitleBarElement);
             MainLayout.ViewStateChanged += OnViewStateChange;
+            MainLayout.SelectionChanged += MainLayout_OnSelectionChanged;
             Window.Current.Activated += OnWindowFocusChange;
             AdaptiveLayoutStateGroup.CurrentStateChanged += AdaptiveLayoutStateGroupOnCurrentStateChanged;
             Inbox = ViewModel.Inbox;
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            MainLayout.ViewStateChanged -= OnViewStateChange;
+            MainLayout.SelectionChanged -= MainLayout_OnSelectionChanged;
+            Window.Current.Activated -= OnWindowFocusChange;
+            AdaptiveLayoutStateGroup.CurrentStateChanged -= AdaptiveLayoutStateGroupOnCurrentStateChanged;
+            base.OnNavigatedFrom(e);
         }
 
         public async void ShowStatus(string title, string message,
@@ -178,17 +188,20 @@ namespace Indirect.Pages
 
         private async void MainLayout_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count == 0 || e.AddedItems[0] == null)
+            if (e.AddedItems == null || e.AddedItems.Count == 0 || e.AddedItems[0] == null)
             {
                 return;
             }
+
             var inboxThread = (DirectThreadWrapper) e.AddedItems[0];
-            if (!string.IsNullOrEmpty(inboxThread.ThreadId)) 
+            this.Log("Thread change invoked: " + inboxThread.Users[0].Username);
+            if (!string.IsNullOrEmpty(inboxThread.ThreadId))
                 ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
 
             var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
             details?.Focus(FocusState.Programmatic); // Focus to chat box after selecting a thread
-            if (await Debouncer.Delay("OnThreadChanged", e.RemovedItems[0] == null ? 600 : 200).ConfigureAwait(false))
+            if (await Debouncer.Delay("OnThreadChanged", e.RemovedItems[0] == null ? 600 : 200)
+                .ConfigureAwait(false))
             {
                 await inboxThread.MarkLatestItemSeen().ConfigureAwait(false);
             }
