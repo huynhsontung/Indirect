@@ -140,11 +140,11 @@ namespace Indirect.Controls
 
         private async void ConditionallyShowTeachingTips()
         {
-            if (!SettingsService.TryGetGlobal("ShowTeachingTips", out bool? value) || (value ?? true))
+            if (!SettingsService.TryGetGlobal(nameof(SendButtonTeachingTip), out bool? value) || (value ?? true))
             {
-                await Task.Delay(500);
+                await Task.Delay(600);
                 SendButtonTeachingTip.IsOpen = true;
-                SettingsService.SetGlobal("ShowTeachingTips", false);
+                SettingsService.SetGlobal(nameof(SendButtonTeachingTip), false);
             }
         }
 

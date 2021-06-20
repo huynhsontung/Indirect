@@ -23,6 +23,7 @@ using Microsoft.UI.Xaml.Controls;
 using CoreWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
 using SwipeItem = Windows.UI.Xaml.Controls.SwipeItem;
 using SwipeItemInvokedEventArgs = Windows.UI.Xaml.Controls.SwipeItemInvokedEventArgs;
+using TimeSpan = System.TimeSpan;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -59,7 +60,7 @@ namespace Indirect.Pages
         }
 
         public async void ShowStatus(string title, string message,
-            InfoBarSeverity severity = InfoBarSeverity.Informational)
+            InfoBarSeverity severity = InfoBarSeverity.Informational, int timeout = 0)
         {
             await Dispatcher.QuickRunAsync(async () =>
             {
@@ -73,6 +74,18 @@ namespace Indirect.Pages
                 MainStatusBar.Message = message;
                 MainStatusBar.Severity = severity;
                 MainStatusBar.IsOpen = true;
+
+                if (timeout > 0)
+                {
+                    if (await Debouncer.Delay(nameof(MainStatusBar), TimeSpan.FromSeconds(timeout)))
+                    {
+                        MainStatusBar.IsOpen = false;
+                    }
+                }
+                else
+                {
+                    Debouncer.CancelDelay(nameof(MainStatusBar));
+                }
             }, CoreDispatcherPriority.Low);
         }
 

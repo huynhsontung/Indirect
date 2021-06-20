@@ -60,6 +60,18 @@ namespace Indirect.Utilities
         public static Task<bool> Delay(string key, int delayInMilliseconds) =>
             Delay(key, TimeSpan.FromMilliseconds(delayInMilliseconds));
 
+        public static void CancelDelay(string key)
+        {
+            lock (TokenSources)
+            {
+                if (TokenSources.ContainsKey(key))
+                {
+                    TokenSources[key]?.Cancel();
+                    TokenSources[key] = null;
+                }
+            }
+        }
+
         public static bool Throttle(string key, TimeSpan delay)
         {
             lock (ThrottleTasks)
