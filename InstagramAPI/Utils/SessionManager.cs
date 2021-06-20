@@ -35,7 +35,7 @@ namespace InstagramAPI.Utils
                 return;
             }
 
-            session.Cookies = CookieHelper.GetCookies();
+            session.Cookies = instagram.HttpClient.Cookies;
             var sessionName = session.SessionName;
             var json = JsonConvert.SerializeObject(session, Formatting.None);
             var encoded = CryptographicBuffer.ConvertStringToBinary(json, BinaryStringEncoding.Utf8);
@@ -68,11 +68,11 @@ namespace InstagramAPI.Utils
                     return;
                 }
 
-                var response = await instagram.GetAsync(pfpUrl);
+                var response = await instagram.HttpClient.GetAsync(pfpUrl);
                 if (response.IsSuccessStatusCode)
                 {
-                    var pfpData = await response.Content.ReadAsBufferAsync();
-                    await WriteToFileAsync(sessionName + SESSION_PFP_EXT, pfpData);
+                    var pfpData = await response.Content.ReadAsByteArrayAsync();
+                    await WriteToFileAsync(sessionName + SESSION_PFP_EXT, pfpData.AsBuffer());
                 }
             }
             catch (Exception)

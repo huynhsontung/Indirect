@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
-using Windows.Networking;
-using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Classes.Responses;
@@ -36,26 +35,23 @@ namespace InstagramAPI
 
             try
             {
-                var httpClient = new HttpClient();
-                SetDefaultRequestHeaders(httpClient, session);
-                var firstResponse = await httpClient.GetAsync(UriCreator.BaseInstagramUri);
-                DebugLogger.LogResponse(firstResponse);
+                var httpClient = new HttpClientManager(session);
+                await httpClient.GetAsync(UriCreator.BaseInstagramUri);
 
                 var loginUri = UriCreator.GetLoginUri();
                 var signature =
-                    $"SIGNATURE.{ApiRequestMessage.GetChallengeMessageString(session)}";
+                    $"SIGNATURE.{ApiRequestMessage.GetChallengeMessageString(session, httpClient.GetCsrfToken())}";
                 var fields = new Dictionary<string, string>
                 {
                     {"signed_body", signature}
                 };
                 var request = new HttpRequestMessage(HttpMethod.Post, loginUri);
-                request.Headers.Host = new HostName("i.instagram.com");
-                request.Content = new HttpFormUrlEncodedContent(fields);
-                var response = await httpClient.SendRequestAsync(request);
+                request.Headers.Host = "i.instagram.com";
+                request.Content = new FormUrlEncodedContent(fields);
+                var response = await httpClient.SendAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                 {
                     var loginFailReason = JsonConvert.DeserializeObject<LoginFailedResponse>(json);
 
@@ -100,7 +96,8 @@ namespace InstagramAPI
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
 
-                session.AuthorizationToken = GetAuthToken(response.Headers);
+                session.Cookies = httpClient.Cookies;
+                session.AuthorizationToken = HttpClientManager.GetAuthToken(response.Headers);
                 session.Username = loginInfo.User.Username;
                 session.LoggedInUser = loginInfo.User;
                 return Result<LoginResult>.Success(LoginResult.Success, json: json);
@@ -134,14 +131,9 @@ namespace InstagramAPI
 
             try
             {
-                var httpClient = new HttpClient();
-                SetDefaultRequestHeaders(httpClient, session);
+                var httpClient = new HttpClientManager(session);
                 if (string.IsNullOrEmpty(fbAccessToken)) throw new ArgumentNullException(nameof(fbAccessToken));
-                if (GetCsrfToken() == string.Empty)
-                {
-                    var firstResponse = await httpClient.GetAsync(UriCreator.BaseInstagramUri);
-                    DebugLogger.LogResponse(firstResponse);
-                }
+                await httpClient.GetAsync(UriCreator.BaseInstagramUri);
 
                 var instaUri = UriCreator.GetFacebookSignUpUri();
 
@@ -149,7 +141,7 @@ namespace InstagramAPI
                 {
                     {"dryrun", "true"},
                     {"phone_id", session.Device.PhoneId.ToString()},
-                    {"_csrftoken", GetCsrfToken()},
+                    {"_csrftoken", httpClient.GetCsrfToken()},
                     {"adid", Guid.NewGuid().ToString()},
                     {"guid",  session.Device.Uuid.ToString()},
                     {"_uuid",  session.Device.Uuid.ToString()},
@@ -159,12 +151,11 @@ namespace InstagramAPI
                 };
 
                 session.FacebookAccessToken = fbAccessToken;
-                var request = GetSignedRequest(instaUri, data);
-                var response = await httpClient.SendRequestAsync(request);
+                var request = HttpClientManager.GetSignedRequest(instaUri, data);
+                var response = await httpClient.SendAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                 {
                     var loginFailReason = JsonConvert.DeserializeObject<LoginFailedResponse>(json);
 
@@ -228,7 +219,8 @@ namespace InstagramAPI
 
                 if (loginInfoUser == null) return Result<LoginResult>.Fail(LoginResult.Exception, json: json);
 
-                session.AuthorizationToken = GetAuthToken(response.Headers);
+                session.Cookies = httpClient.Cookies;
+                session.AuthorizationToken = HttpClientManager.GetAuthToken(response.Headers);
                 session.LoggedInUser = loginInfoUser;
                 session.FacebookUserId = fbUserId;
                 session.Username = loginInfoUser.Username;
@@ -250,8 +242,7 @@ namespace InstagramAPI
 
             try
             {
-                var httpClient = new HttpClient();
-                SetDefaultRequestHeaders(httpClient, session);
+                var httpClient = new HttpClientManager(session);
                 var twoFactorData = new JObject
                 {
                     {"verification_code", verificationCode},
@@ -267,11 +258,10 @@ namespace InstagramAPI
                     {"signed_body", signature}
                 };
                 var request = new HttpRequestMessage(HttpMethod.Post, loginUri);
-                request.Headers.Host = new HostName("i.instagram.com");
-                request.Content = new HttpFormUrlEncodedContent(fields);
-                var response = await httpClient.SendRequestAsync(request);
+                request.Headers.Host = "i.instagram.com";
+                request.Content = new FormUrlEncodedContent(fields);
+                var response = await httpClient.SendAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -294,7 +284,8 @@ namespace InstagramAPI
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
 
-                session.AuthorizationToken = GetAuthToken(response.Headers);
+                session.Cookies = httpClient.Cookies;
+                session.AuthorizationToken = HttpClientManager.GetAuthToken(response.Headers);
                 session.Username = loginInfo.User.Username;
                 session.LoggedInUser = loginInfo.User;
                 session.TwoFactorInfo = null;

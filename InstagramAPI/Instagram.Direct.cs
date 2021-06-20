@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
-using Windows.Web.Http;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
-using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
@@ -68,11 +67,10 @@ namespace InstagramAPI
             {
                 var directInboxUri =
                     pending ? UriCreator.GetPendingInboxUri(maxId) : UriCreator.GetDirectInboxUri(maxId);
-                var response = await _httpClient.GetAsync(directInboxUri);
+                var response = await HttpClient.GetAsync(directInboxUri);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                     return Result<InboxContainer>.Fail(json, response.ReasonPhrase);
                 var inbox = JsonConvert.DeserializeObject<InboxContainer>(json);
                 return Result<InboxContainer>.Success(inbox);
@@ -89,11 +87,11 @@ namespace InstagramAPI
             try
             {
                 var directInboxUri = UriCreator.GetDirectInboxInfoUri();
-                    var response = await _httpClient.GetAsync(directInboxUri);
+                    var response = await HttpClient.GetAsync(directInboxUri);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+
+                if (!response.IsSuccessStatusCode)
                     return Result<InboxContainer>.Fail(json, response.ReasonPhrase);
                 var inbox = JsonConvert.DeserializeObject<InboxContainer>(json);
                 return Result<InboxContainer>.Success(inbox);
@@ -116,10 +114,10 @@ namespace InstagramAPI
                     {"thread_ids", JsonConvert.SerializeObject(threadIds, Formatting.None)},
                     //{"folder", ""}
                 };
-                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(uri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
-                if (response.StatusCode != HttpStatusCode.Ok)
+
+                if (!response.IsSuccessStatusCode)
                     return Result<BaseStatusResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<BaseStatusResponse>(json);
                 return obj.IsOk() ? Result<BaseStatusResponse>.Success(obj, json) : Result<BaseStatusResponse>.Fail(json);
@@ -143,10 +141,10 @@ namespace InstagramAPI
                 {
                     {"recipient_users", userJson.ToString(Formatting.None)}
                 };
-                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(uri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
-                if (response.StatusCode != HttpStatusCode.Ok)
+
+                if (!response.IsSuccessStatusCode)
                     return Result<DirectThread>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<DirectThread>(json);
                 return obj.IsOk() ? Result<DirectThread>.Success(obj, json) : Result<DirectThread>.Fail(json);
@@ -236,11 +234,10 @@ namespace InstagramAPI
             try
             {
                 var directInboxUri = UriCreator.GetDirectInboxThreadUri(threadId, maxId);
-                var response = await _httpClient.GetAsync(directInboxUri);
+                var response = await HttpClient.GetAsync(directInboxUri);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                     return Result<DirectThread>.Fail(json, response.ReasonPhrase);
 
                 var statusResponse = JObject.Parse(json);
@@ -264,9 +261,8 @@ namespace InstagramAPI
             try
             {
                 var uri = UriCreator.GetDirectThreadItemsUri(threadId, itemIds);
-                var response = await _httpClient.GetAsync(uri);
+                var response = await HttpClient.GetAsync(uri);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
                 if (!response.IsSuccessStatusCode)
                     return Result<DirectThreadItemsOnly>.Fail(json, response.ReasonPhrase);
@@ -286,11 +282,10 @@ namespace InstagramAPI
             try
             {
                 var threadUri = UriCreator.GetThreadByRecipientsUri(userIds);
-                var response = await _httpClient.GetAsync(threadUri);
+                var response = await HttpClient.GetAsync(threadUri);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                     return Result<DirectThread>.Fail(json, response.ReasonPhrase);
 
                 if (string.IsNullOrEmpty(json)) return Result<DirectThread>.Success(null, json);
@@ -332,11 +327,10 @@ namespace InstagramAPI
                 else
                     instaUri = UriCreator.GetRankRecipientsByUserUri(username, includeThreads);
 
-                var response = await _httpClient.GetAsync(instaUri);
+                var response = await HttpClient.GetAsync(instaUri);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                     return Result<RankedRecipientsResponse>.Fail(json, response.ReasonPhrase);
                 var responseRecipients = JsonConvert.DeserializeObject<RankedRecipientsResponse>(json);
                 return Result<RankedRecipientsResponse>.Success(responseRecipients, json);
@@ -362,15 +356,15 @@ namespace InstagramAPI
                 var data = new Dictionary<string, string>
                 {
                     {"action", "send_item"},
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uuid", Device.Uuid.ToString()},
                     {"thread_id", $"{threadId}"},
                     {"client_context", DateTimeOffset.UtcNow.Ticks.ToString()}
                 };
-                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(uri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
-                if (response.StatusCode != HttpStatusCode.Ok)
+
+                if (!response.IsSuccessStatusCode)
                     return Result<ItemAckPayloadResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
                 return obj.IsOk()
@@ -409,11 +403,11 @@ namespace InstagramAPI
                     fields.Add("recipient_users", "[[" + recipientsString + "]]");
                 else throw new ArgumentException("You have to provide either a thread id or a list of users' PKs");
 
-                var response = await _httpClient.PostAsync(directSendMessageUri, new HttpFormUrlEncodedContent(fields));
+                var response = await HttpClient.PostAsync(directSendMessageUri, new FormUrlEncodedContent(fields));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+
+                if (!response.IsSuccessStatusCode)
                     return Result<DirectThread[]>.Fail(json);
                 var result = JsonConvert.DeserializeObject<ItemAddedResponse>(json);
                 return result.IsOk()
@@ -497,7 +491,7 @@ namespace InstagramAPI
                     {"link_urls", JsonConvert.SerializeObject(link, Formatting.None)},
                     {"action", "send_item"},
                     {"client_context", clientContext},
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uuid", Device.Uuid.ToString()}
                 };
                 if (threadIds?.Length > 0)
@@ -510,11 +504,10 @@ namespace InstagramAPI
                     data.Add("recipient_users", $"[[{recipientString}]]");
                 }
 
-                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(instaUri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                     return Result<ItemAckPayloadResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
                 return obj.IsOk()
@@ -548,14 +541,13 @@ namespace InstagramAPI
                     {"text", text},
                     {"entry", "reel"},
                     {"device_id", Device.DeviceId},
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uuid", Device.Uuid.ToString()},
                 };
-                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(uri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                     return Result<ItemAckPayloadResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
                 return obj.IsOk()
@@ -588,7 +580,7 @@ namespace InstagramAPI
                     {"reaction_emoji", text},
                     {"entry", "reel"},
                     {"device_id", Device.DeviceId},
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uuid", Device.Uuid.ToString()},
                     {"_uid", Session.LoggedInUser.Pk.ToString()}
                 };
@@ -597,11 +589,10 @@ namespace InstagramAPI
                 {
                     {"signed_body", signature}
                 };
-                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(uri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                     return Result<ItemAckPayloadResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
                 return obj.IsOk()
@@ -627,15 +618,14 @@ namespace InstagramAPI
                     {"thread_ids", $"[{threadId}]"},
                     {"client_context", clientContext},
                     {"is_sticker", isSticker.ToString().ToLower()},
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"id", mediaId},
                     {"device_id", Device.DeviceId},
                     {"mutation_token", clientContext},
                     {"_uuid", Device.Uuid.ToString()},
                 };
-                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(uri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
                 if (!response.IsSuccessStatusCode)
                     return Result<DirectThread[]>.Fail(json, response.ReasonPhrase);
@@ -667,16 +657,15 @@ namespace InstagramAPI
                 {
                     {"thread_id", threadId},
                     {"action", "mark_seen"},
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uuid", Device.Uuid.ToString()},
                     {"item_id", itemId},
                     {"use_unified_inbox", "true"},
                 };
-                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(instaUri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                     return Result<bool>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<DefaultResponse>(json);
                 return obj.IsOk()
@@ -708,7 +697,7 @@ namespace InstagramAPI
                     {"item_type", "reaction"},
                     {"reaction_type", "like"},
                     {"action", "send_item"},
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uuid", Device.Uuid.ToString()},
                     {"thread_ids", $"[{threadId}]"},
                     {"client_context", DateTimeOffset.UtcNow.Ticks.ToString()},
@@ -717,11 +706,10 @@ namespace InstagramAPI
                     {"item_id", itemId},
                     {"emoji", string.IsNullOrEmpty(emoji) ? string.Empty : emoji}
                 };
-                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(instaUri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                     return Result<ItemAckResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
                 return obj.IsOk() ? Result<ItemAckResponse>.Success(obj, json, obj.Message) : Result<ItemAckResponse>.Fail(json, obj.Message);
@@ -741,12 +729,11 @@ namespace InstagramAPI
                 var instaUri = UriCreator.GetUnsendMessageUri(threadId, itemId);
                 var data = new Dictionary<string, string>
                 {
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uuid", Device.Uuid.ToString()},
                 };
-                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(instaUri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
                 if (!response.IsSuccessStatusCode)
                     return Result<BaseStatusResponse>.Fail(json, response.ReasonPhrase);
@@ -779,7 +766,7 @@ namespace InstagramAPI
                     {"item_type", "reaction"},
                     {"reaction_type", "like"},
                     {"action", "send_item"},
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uuid", Device.Uuid.ToString()},
                     {"thread_ids", $"[{threadId}]"},
                     {"client_context", DateTimeOffset.UtcNow.Ticks.ToString()},
@@ -788,11 +775,10 @@ namespace InstagramAPI
                     {"item_id", itemId},
                     {"emoji", ""}
                 };
-                var response = await _httpClient.PostAsync(instaUri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(instaUri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
 
-                if (response.StatusCode != HttpStatusCode.Ok)
+                if (!response.IsSuccessStatusCode)
                     return Result<ItemAckResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<ItemAckResponse>(json);
                 return obj.IsOk() ? Result<ItemAckResponse>.Success(obj, json, obj.Message) : Result<ItemAckResponse>.Fail(json, obj.Message);
@@ -810,10 +796,10 @@ namespace InstagramAPI
             try
             {
                 var instaUri = UriCreator.GetDirectUserPresenceUri();
-                var response = await _httpClient.GetAsync(instaUri);
+                var response = await HttpClient.GetAsync(instaUri);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
-                if (response.StatusCode != HttpStatusCode.Ok)
+
+                if (!response.IsSuccessStatusCode)
                     return Result<UserPresenceResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<UserPresenceResponse>(json);
                 return obj.IsOk() ? Result<UserPresenceResponse>.Success(obj, json) : Result<UserPresenceResponse>.Fail(json);
@@ -844,9 +830,9 @@ namespace InstagramAPI
                         break;
                 }
                 var uri = UriCreator.GetAnimatedImageSearchUri(query, typeString);
-                var response = await _httpClient.GetAsync(uri);
+                var response = await HttpClient.GetAsync(uri);
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
+
                 if (!response.IsSuccessStatusCode)
                     return Result<GiphyMedia[]>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<JObject>(json);

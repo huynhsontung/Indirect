@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
-using Windows.Web.Http;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Utils;
@@ -41,13 +41,13 @@ namespace InstagramAPI
                     {"supported_capabilities_new", ReelsCapabilities},
                     {"reason", reason},    // this can be "cold_start", "warm_start_with_feed", or "pull_to_refresh"
                     {"timezone_offset", ((int) DateTimeOffset.Now.Offset.TotalSeconds).ToString()},
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uuid", Device.Uuid.ToString()}
                 };
-                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(uri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
-                if (response.StatusCode != HttpStatusCode.Ok)
+
+                if (!response.IsSuccessStatusCode)
                     return Result<Reel[]>.Fail(json, response.ReasonPhrase);
                 var payload = JsonConvert.DeserializeObject<JObject>(json);
                 if (payload["status"]?.ToString() != "ok") return Result<Reel[]>.Fail(json);
@@ -66,26 +66,26 @@ namespace InstagramAPI
             ValidateLoggedIn();
             try
             {
-                if (userIds == null || userIds.Count == 0) 
+                if (userIds == null || userIds.Count == 0)
                     throw new ArgumentException("user ids is empty", nameof(userIds));
                 var uri = UriCreator.GetReelsMediaUri();
                 var data = new JObject
                 {
                     {"supported_capabilities_new", ReelsCapabilities},
                     {"source", "reel_feed_timeline"},
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uid", Session.LoggedInUser.Pk.ToString()},
                     {"_uuid", Device.Uuid.ToString()},
-                    {"user_ids", new JArray(userIds.Select(x => x.ToString()).ToArray())}
+                    {"user_ids", new JArray(userIds.Select(x => x.ToString()))}
                 };
-                var body = new Dictionary<string,string>
+                var body = new Dictionary<string, string>
                 {
                     {"signed_body", $"SIGNATURE.{data.ToString(Formatting.None)}"}
                 };
-                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(body));
+                var response = await HttpClient.PostAsync(uri, new FormUrlEncodedContent(body));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
-                if (response.StatusCode != HttpStatusCode.Ok)
+
+                if (!response.IsSuccessStatusCode)
                     return Result<Dictionary<long, Reel>>.Fail(json, response.ReasonPhrase);
                 var payload = JsonConvert.DeserializeObject<JObject>(json);
                 if (payload["status"]?.ToString() != "ok") return Result<Dictionary<long, Reel>>.Fail(json);
@@ -109,7 +109,7 @@ namespace InstagramAPI
                 var uri = UriCreator.GetMarkStorySeenUri();
                 var payload = new JObject
                 {
-                    {"_csrftoken", Session.CsrfToken},
+                    {"_csrftoken", HttpClient.GetCsrfToken()},
                     {"_uid", Session.LoggedInUser.Pk.ToString()},
                     {"_uuid", Device.Uuid},
                     {"container_module", "feed_timeline"},
@@ -136,9 +136,9 @@ namespace InstagramAPI
                 {
                     {"signed_body", body}
                 };
-                var response = await _httpClient.PostAsync(uri, new HttpFormUrlEncodedContent(data));
+                var response = await HttpClient.PostAsync(uri, new FormUrlEncodedContent(data));
                 var json = await response.Content.ReadAsStringAsync();
-                DebugLogger.LogResponse(response);
+
                 if (!response.IsSuccessStatusCode)
                     return Result<BaseStatusResponse>.Fail(json, response.ReasonPhrase);
                 var obj = JsonConvert.DeserializeObject<BaseStatusResponse>(json);
@@ -152,6 +152,6 @@ namespace InstagramAPI
                 return Result<BaseStatusResponse>.Except(e);
             }
         }
-        
+
     }
 }

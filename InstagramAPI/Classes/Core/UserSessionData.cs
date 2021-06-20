@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
 using Newtonsoft.Json;
-using Windows.Web.Http;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Challenge;
 
@@ -11,8 +11,6 @@ namespace InstagramAPI.Classes.Core
 {
     public class UserSessionData
     {
-        [JsonIgnore] public string CsrfToken => Instagram.GetCsrfToken();
-
         [JsonIgnore] public bool IsAuthenticated => LoggedInUser?.Pk > 0;
 
         [JsonIgnore] public string SessionName => IsAuthenticated ? LoggedInUser.Pk.ToString() : string.Empty;
@@ -42,8 +40,9 @@ namespace InstagramAPI.Classes.Core
         [JsonProperty]
         public string AuthorizationToken { get; internal set; }
 
-        [JsonProperty(ItemConverterType = typeof(HttpCookieConverter))]
-        internal List<HttpCookie> Cookies { get; set; }
+        [JsonProperty]
+        [JsonConverter(typeof(CookieCollectionConverter))]
+        internal CookieCollection Cookies { get; set; }
 
         [JsonProperty]
         internal FbnsConnectionData PushData { get; }

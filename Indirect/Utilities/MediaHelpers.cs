@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
@@ -54,11 +55,11 @@ namespace Indirect.Utilities
                 try
                 {
                     CachedFileManager.DeferUpdates(saveFile);
-                    var response = await ((App) App.Current).ViewModel.InstaApi.GetAsync(url);
+                    var response = await ((App) App.Current).ViewModel.InstaApi.HttpClient.GetAsync(url);
                     if (response.IsSuccessStatusCode)
                     {
-                        var content = await response.Content.ReadAsBufferAsync();
-                        await FileIO.WriteBufferAsync(saveFile, content);
+                        var content = await response.Content.ReadAsByteArrayAsync();
+                        await FileIO.WriteBufferAsync(saveFile, content.AsBuffer());
                     }
 
                     await CachedFileManager.CompleteUpdatesAsync(saveFile);

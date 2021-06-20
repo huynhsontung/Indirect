@@ -5,9 +5,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
-using Windows.Web.Http;
-using Windows.Web.Http.Headers;
 using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 
@@ -115,7 +115,7 @@ namespace InstagramAPI.Utils
             return string.Join(string.Empty, target.Select(c => char.IsDigit(c) || char.IsUpper(c) ? '#' : c));
         }
 
-        private static void WriteHeaders(HttpRequestHeaderCollection headers)
+        private static void WriteHeaders(HttpRequestHeaders headers)
         {
             if (headers == null) return;
             if (!headers.Any()) return;
@@ -131,7 +131,7 @@ namespace InstagramAPI.Utils
             Write($"Properties:\n{JsonConvert.SerializeObject(properties, Formatting.Indented)}");
         }
 
-        private static async void WriteContent(IHttpContent content, Formatting formatting, int maxLength = 0)
+        private static async void WriteContent(HttpContent content, Formatting formatting, int maxLength = 0)
         {
             Write("Content:");
             var raw = await content.ReadAsStringAsync();
@@ -141,7 +141,7 @@ namespace InstagramAPI.Utils
                 raw = raw.Substring(0, maxLength);
             Write(raw);
         }
-        private static async void WriteRequestContent(IHttpContent content, int maxLength = 0)
+        private static async void WriteRequestContent(HttpContent content, int maxLength = 0)
         {
             Write("Content:");
             var raw = await content.ReadAsStringAsync();

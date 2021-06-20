@@ -39,11 +39,11 @@ namespace InstagramAPI.Classes
             return json;
         }
 
-        internal static string GetChallengeMessageString(UserSessionData session)
+        internal static string GetChallengeMessageString(UserSessionData session, string csrtToken)
         {
             var api = new ApiRequestChallengeMessage(session)
             {
-                CsrtToken = session.CsrfToken,
+                CsrtToken = csrtToken,
                 LoginAttemptCount = "1"
             };
             var json = JsonConvert.SerializeObject(api);

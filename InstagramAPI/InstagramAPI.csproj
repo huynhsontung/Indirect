@@ -137,7 +137,8 @@
     <Compile Include="Classes\Direct\ItemContent\Clip\ItemClip.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectActionLog.cs" />
     <Compile Include="Classes\JsonConverters\BoolConverter.cs" />
-    <Compile Include="Classes\JsonConverters\HttpCookieConverter.cs" />
+    <Compile Include="Classes\JsonConverters\CookieCollectionConverter.cs" />
+    <Compile Include="Classes\JsonConverters\CookieConverter.cs" />
     <Compile Include="Classes\Media\InstaMedia.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectMediaShare.cs" />
     <Compile Include="Classes\Direct\Inbox.cs" />
@@ -219,7 +220,6 @@
     <Compile Include="Enums.cs" />
     <Compile Include="Instagram.cs" />
     <Compile Include="Instagram.Direct.cs" />
-    <Compile Include="Instagram.Http.cs" />
     <Compile Include="Instagram.Login.cs" />
     <Compile Include="Instagram.MediaUpload.cs" />
     <Compile Include="Instagram.Story.cs" />
@@ -243,10 +243,10 @@
     <Compile Include="Sync\SyncClient.cs" />
     <Compile Include="Sync\UserPresenceEventArgs.cs" />
     <Compile Include="Utils\CacheManager.cs" />
-    <Compile Include="Utils\CookieHelper.cs" />
     <Compile Include="Utils\CryptoHelper.cs" />
     <Compile Include="Utils\DebugLogger.cs" />
     <Compile Include="UriCreator.cs" />
+    <Compile Include="Utils\HttpClientManager.cs" />
     <Compile Include="Utils\SessionManager.cs" />
     <EmbeddedResource Include="Properties\InstagramAPI.rd.xml" />
   </ItemGroup>

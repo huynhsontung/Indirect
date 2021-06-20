@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
@@ -12,7 +13,6 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Security.Cryptography;
 using Windows.Storage.Streams;
-using Windows.Web.Http;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Push.Packets;
@@ -496,13 +496,13 @@ namespace InstagramAPI.Push
                 {"is_main_push_channel", "true"},
                 {"device_sub_type", "2" },
                 {"device_token", token},
-                {"_csrftoken", _instaApi.Session.CsrfToken },
+                {"_csrftoken", _instaApi.HttpClient.GetCsrfToken() },
                 {"guid", _instaApi.Device.Uuid.ToString() },
                 {"_uuid", _instaApi.Device.Uuid.ToString() },
                 {"users", _instaApi.Session.LoggedInUser.Pk.ToString() }
             };
 
-            var result = await _instaApi.PostAsync(uri, new HttpFormUrlEncodedContent(fields)).ConfigureAwait(false);
+            var result = await _instaApi.HttpClient.PostAsync(uri, new FormUrlEncodedContent(fields)).ConfigureAwait(false);
         }
 
 
