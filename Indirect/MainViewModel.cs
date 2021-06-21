@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 using Indirect.Entities;
 using Indirect.Entities.Wrappers;
 using Indirect.Pages;
@@ -321,49 +318,6 @@ namespace Indirect
             {
                 this.Log("Background notification: " + args.Json);
             };
-        }
-
-        public static Task HandleException(string message = null, Exception e = null)
-        {
-            if (string.IsNullOrEmpty(message))
-            {
-                message = "An unexpected error has occured. Indirect doesn't know how to proceed next and may crash. " +
-                          "If this happens frequently, please submit an issue on Indirect's Github page.\n\n" +
-                          "https://github.com/huynhsontung/Indirect";
-            }
-
-            return CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(async () =>
-            {
-                try
-                {
-                    var dialog = new ContentDialog()
-                    {
-                        Title = "An error occured",
-                        Content = new ScrollViewer()
-                        {
-                            Content = new TextBlock()
-                            {
-                                Text = message,
-                                TextWrapping = TextWrapping.Wrap,
-                                IsTextSelectionEnabled = true
-                            },
-                            HorizontalScrollMode = ScrollMode.Disabled,
-                            VerticalScrollMode = ScrollMode.Auto,
-                            MaxWidth = 400
-                        },
-                        CloseButtonText = "Close",
-                        DefaultButton = ContentDialogButton.Close
-                    };
-                    await dialog.ShowAsync();
-                }
-                catch (Exception innerException)
-                {
-                    Debug.WriteLine(innerException);
-                }
-
-                // Intentionally crash the app
-                if (e != null) throw e;
-            });
         }
 
         public async Task SaveDataAsync()
