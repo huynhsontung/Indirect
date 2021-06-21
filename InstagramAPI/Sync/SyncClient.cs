@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
@@ -8,6 +9,8 @@ using System.Threading.Tasks;
 using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
+using Windows.Web.Http;
+using Windows.Web.Http.Filters;
 using InstagramAPI.Classes.Mqtt.Packets;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
@@ -49,8 +52,8 @@ namespace InstagramAPI.Sync
             var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
             try
             {
-                await _socket.OutputStream.WriteAsync(buffer);
-                await _socket.OutputStream.FlushAsync();
+                await _socket.SendFinalFrameAsync(buffer);
+                _socket.Close(1000, string.Empty);
             }
             catch (Exception e)
             {
@@ -115,7 +118,7 @@ namespace InstagramAPI.Sync
                 );
                 var username = JsonConvert.SerializeObject(json, Formatting.None);
                 connectPacket.Username = username;
-                // var buffer = StandalonePacketEncoder.EncodePacket(connectPacket);
+                SetCookies(_instaApi.HttpClient.Cookies);
                 var messageWebsocket = new MessageWebSocket();
                 messageWebsocket.Control.MessageType = SocketMessageType.Binary;
                 messageWebsocket.SetRequestHeader("User-Agent", userAgent);
@@ -124,8 +127,7 @@ namespace InstagramAPI.Sync
                 // messageWebsocket.Closed += OnClosed;
                 var buffer = StandalonePacketEncoder.EncodePacket(connectPacket);
                 await messageWebsocket.ConnectAsync(new Uri("wss://edge-chat.instagram.com/chat"));
-                await messageWebsocket.OutputStream.WriteAsync(buffer);
-                await messageWebsocket.OutputStream.FlushAsync();
+                await messageWebsocket.SendFinalFrameAsync(buffer);
                 _socket = messageWebsocket;
             }
             catch (Exception e)
@@ -149,6 +151,29 @@ namespace InstagramAPI.Sync
             };
 
             await WriteAndFlushPacketAsync(publishPacket, _socket.OutputStream);
+        }
+
+        private static void SetCookies(CookieCollection cookies)
+        {
+            var filter = new HttpBaseProtocolFilter();
+            var cookieManager = filter.CookieManager;
+            
+            foreach (Cookie netCookie in cookies)
+            {
+                var cookie = new HttpCookie(netCookie.Name, netCookie.Domain, netCookie.Path)
+                {
+                    Value = netCookie.Value,
+                    HttpOnly = netCookie.HttpOnly,
+                    Secure = netCookie.Secure
+                };
+
+                if (netCookie.Expires != DateTime.MinValue)
+                {
+                    cookie.Expires = netCookie.Expires;
+                }
+
+                cookieManager.SetCookie(cookie);
+            }
         }
 
         private JObject MakeSendMessageJson(JObject content)
