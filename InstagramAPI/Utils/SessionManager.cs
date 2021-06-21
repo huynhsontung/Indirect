@@ -27,7 +27,7 @@ namespace InstagramAPI.Utils
             private set => LocalSettings.Values["LastSessionName"] = value;
         }
 
-        public static async Task SaveSessionAsync(Instagram instagram)
+        public static async Task SaveSessionAsync(Instagram instagram, bool minimal = false)
         {
             var session = instagram.Session;
             if (!session.IsAuthenticated)
@@ -48,6 +48,11 @@ namespace InstagramAPI.Utils
             {
                 DebugLogger.Log(nameof(SessionManager),
                     $"Session file {sessionName + SESSION_EXT} is being used. Cannot write session to file.");
+                return;
+            }
+
+            if (minimal)
+            {
                 return;
             }
 

@@ -111,7 +111,7 @@ namespace BackgroundPushClient
 
                 await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));
                 await instagram.PushClient.TransferPushSocket();
-                await SessionManager.SaveSessionAsync(instagram);
+                await SessionManager.SaveSessionAsync(instagram, true);
                 instagram.PushClient.MessageReceived -= Utils.OnMessageReceived;
                 instagram.PushClient.ExceptionsCaught -= Utils.PushClientOnExceptionsCaught;
             }
