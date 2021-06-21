@@ -22,8 +22,9 @@ namespace InstagramAPI.Sync
     {
         public event EventHandler<List<MessageSyncEventArgs>> MessageReceived;
         public event EventHandler<PubsubEventArgs> ActivityIndicatorChanged;
-        public event EventHandler<UserPresenceEventArgs> UserPresenceChanged; 
-        public event EventHandler<Exception> FailedToStart;
+        public event EventHandler<UserPresenceEventArgs> UserPresenceChanged;
+        public event EventHandler<Exception> ExceptionsCaught;
+        public event EventHandler<EventArgs> Connected;
 
         private ushort _packetId = 1;
         private CancellationTokenSource _pinging;
@@ -37,21 +38,22 @@ namespace InstagramAPI.Sync
         public SyncClient(Instagram api)
         {
             _instaApi = api;
-            NetworkInformation.NetworkStatusChanged += OnNetworkChanged;
         }
 
         // Shutdown the client by stop pinging the server
-        public async void Shutdown()
+        public async void Shutdown(bool disconnectGracefully = true)
         {
             if (!IsRunning) return;
+            NetworkInformation.NetworkStatusChanged -= OnNetworkChanged;
             var tokenSource = _pinging;
             tokenSource.Cancel();
             _pinging = null;
             tokenSource?.Dispose();
-            var disconnectPacket = DisconnectPacket.Instance;
-            var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
             try
             {
+                if (!disconnectGracefully) return;
+                var disconnectPacket = DisconnectPacket.Instance;
+                var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
                 await _socket.SendFinalFrameAsync(buffer);
                 _socket.Close(1000, string.Empty);
             }
@@ -124,17 +126,20 @@ namespace InstagramAPI.Sync
                 messageWebsocket.SetRequestHeader("User-Agent", userAgent);
                 messageWebsocket.SetRequestHeader("Origin", "https://www.instagram.com");
                 messageWebsocket.MessageReceived += OnMessageReceived;
+                NetworkInformation.NetworkStatusChanged -= OnNetworkChanged;
+                NetworkInformation.NetworkStatusChanged += OnNetworkChanged;
                 // messageWebsocket.Closed += OnClosed;
                 var buffer = StandalonePacketEncoder.EncodePacket(connectPacket);
                 await messageWebsocket.ConnectAsync(new Uri("wss://edge-chat.instagram.com/chat"));
                 await messageWebsocket.SendFinalFrameAsync(buffer);
                 _socket = messageWebsocket;
+                Connected?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception e)
             {
                 this.Log(e);
                 this.Log("Failed to start");
-                FailedToStart?.Invoke(this, e);
+                ExceptionsCaught?.Invoke(this, e);
             }
         }
 
@@ -193,20 +198,8 @@ namespace InstagramAPI.Sync
             try
             {
                 var internetProfile = NetworkInformation.GetInternetConnectionProfile();
-                if (internetProfile == null || _seqId == default || _snapshotAt == default ||
-                    _pinging.IsCancellationRequested) return;
-                try
-                {
-                    // Disconnect to make sure there is no duplicate 
-                    var disconnectPacket = DisconnectPacket.Instance;
-                    var buffer = StandalonePacketEncoder.EncodePacket(disconnectPacket);
-                    await _socket.OutputStream.WriteAsync(buffer);
-                    await _socket.OutputStream.FlushAsync();
-                }
-                catch (Exception)
-                {
-                    // Ignore if fail
-                }
+                if (internetProfile == null || _seqId == default || _snapshotAt == default || !IsRunning) return;
+                Shutdown(false);
                 this.Log("Internet connection available. Reconnecting.");
                 await Start(_seqId, _snapshotAt, true);
             }
@@ -449,8 +442,7 @@ namespace InstagramAPI.Sync
                     await Task.Delay(TimeSpan.FromSeconds(8), _pinging.Token).ConfigureAwait(false);
                     var pingPacket = PingReqPacket.Instance;
                     var pingBuffer = StandalonePacketEncoder.EncodePacket(pingPacket);
-                    await ws.OutputStream.WriteAsync(pingBuffer);
-                    await ws.OutputStream.FlushAsync();
+                    await ws.SendFinalFrameAsync(pingBuffer);
                 }
             }
             catch (TaskCanceledException)
@@ -459,7 +451,11 @@ namespace InstagramAPI.Sync
             }
             catch (Exception e)
             {
-                DebugLogger.LogException(e, false);
+                await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+                if (ws == _socket)
+                {
+                    ExceptionsCaught?.Invoke(this, e);
+                }
             }
         }
 

@@ -20,10 +20,8 @@ using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
 using Microsoft.UI.Xaml.Controls;
-using CoreWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
 using SwipeItem = Windows.UI.Xaml.Controls.SwipeItem;
 using SwipeItemInvokedEventArgs = Windows.UI.Xaml.Controls.SwipeItemInvokedEventArgs;
-using TimeSpan = System.TimeSpan;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -108,8 +106,10 @@ namespace Indirect.Pages
                 await ViewModel.OnLoggedIn();
             }
 
-            ViewModel.SyncClient.FailedToStart -= SyncClientOnFailedToStart;
-            ViewModel.SyncClient.FailedToStart += SyncClientOnFailedToStart;
+            ViewModel.SyncClient.ExceptionsCaught -= SyncClientOnExceptionsCaught;
+            ViewModel.SyncClient.Connected -= SyncClientOnConnected;
+            ViewModel.SyncClient.ExceptionsCaught += SyncClientOnExceptionsCaught;
+            ViewModel.SyncClient.Connected += SyncClientOnConnected;
 
             UpdateSwitchAccountMenu();
         }
@@ -129,11 +129,22 @@ namespace Indirect.Pages
             ReelsTray.Visibility = GetReelsTrayVisibility(ViewModel.ReelsFeed.Reels.Count);
         }
 
-        private void SyncClientOnFailedToStart(object sender, Exception e)
+        private async void SyncClientOnConnected(object sender, EventArgs e)
+        {
+            await Dispatcher.QuickRunAsync(() =>
+            {
+                if (MainStatusBar.Title == "Lost connection to the server")
+                {
+                    MainStatusBar.IsOpen = false;
+                }
+            }, CoreDispatcherPriority.Low);
+        }
+
+        private void SyncClientOnExceptionsCaught(object sender, Exception e)
         {
             DebugLogger.LogException(e);
             ShowStatus("Lost connection to the server",
-                "New messages will not be updated. Please restart Indirect to reconnect.", InfoBarSeverity.Error);
+                "New messages will not be updated. Please check your Internet connection or restart Indirect to try again.", InfoBarSeverity.Error);
         }
 
         private async void LogoutButton_Click(object sender, RoutedEventArgs e)
