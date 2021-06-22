@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Sync
@@ -10,8 +11,8 @@ namespace InstagramAPI.Sync
         [JsonProperty("event")]
         public string Event { get; set; }
 
-        [JsonProperty("data")]
-        public List<ItemSyncData> Data { get; set; }
+        [JsonProperty("data", ItemConverterType = typeof(SyncItemConverter))]
+        public List<SyncItem> Data { get; set; }
 
         [JsonProperty("message_type")]
         public long MessageType { get; set; }
@@ -24,32 +25,14 @@ namespace InstagramAPI.Sync
 
         [JsonProperty("realtime")]
         public bool Realtime { get; set; }
-
-        public static MessageSyncEventArgs FromJson(string json) =>
-            JsonConvert.DeserializeObject<MessageSyncEventArgs>(json);
     }
 
-    public class ItemSyncData : SyncBaseData
+    public class SyncItem : SyncBaseData
     {
-        private DirectItem _item;
+        [JsonIgnore]
+        public bool? ShhModeEnabled { get; set; }
 
         [JsonIgnore]
-        public DirectItem Item
-        {
-            get
-            {
-                if (_item != null)
-                {
-                    return _item;
-                }
-
-                if (string.IsNullOrEmpty(Value) || Op != "add" && Op != "replace")
-                {
-                    return null;
-                }
-
-                return _item = JsonConvert.DeserializeObject<DirectItem>(Value);
-            }
-        }
+        public DirectItem Item { get; set; }
     }
 }

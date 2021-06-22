@@ -72,11 +72,14 @@ namespace Indirect
                     if (syncEvent.SeqId > Inbox.SeqId)
                     {
                         Inbox.Container.SeqId = syncEvent.SeqId;
-                        if (itemData.Item != null)
-                        {
-                            Inbox.Container.SnapshotAt = itemData.Item.Timestamp;
-                        }
+                        Inbox.Container.SnapshotAt = DateTimeOffset.Now;
                     }
+
+                    if (itemData.Item == null)
+                    {
+                        continue;
+                    }
+
                     var segments = itemData.Path.Trim('/').Split('/');
                     var threadId = segments[2];
                     if (string.IsNullOrEmpty(threadId)) continue;
@@ -154,8 +157,6 @@ namespace Indirect
             catch (Exception e)
             {
                 DebugLogger.LogException(e);
-                if (DateTimeOffset.Now - _lastUpdated > TimeSpan.FromSeconds(0.5))
-                    await UpdateInboxAndSelectedThread();
             }
             this.Log("Sync(s) received.");
         }

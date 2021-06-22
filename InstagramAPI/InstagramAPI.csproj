@@ -139,6 +139,7 @@
     <Compile Include="Classes\JsonConverters\BoolConverter.cs" />
     <Compile Include="Classes\JsonConverters\CookieCollectionConverter.cs" />
     <Compile Include="Classes\JsonConverters\CookieConverter.cs" />
+    <Compile Include="Classes\JsonConverters\SyncItemConverter.cs" />
     <Compile Include="Classes\Media\InstaMedia.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectMediaShare.cs" />
     <Compile Include="Classes\Direct\Inbox.cs" />
