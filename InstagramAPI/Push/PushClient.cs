@@ -365,7 +365,14 @@ namespace InstagramAPI.Push
         {
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(WaitTime + 1), _runningTokenSource.Token);
+                if (Running)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(WaitTime + 1), _runningTokenSource.Token);
+                }
+                else
+                {
+                    return;
+                }
             }
             catch (TaskCanceledException)
             {
