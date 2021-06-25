@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Networking.Sockets;
-using Windows.Storage;
 using InstagramAPI;
 using InstagramAPI.Push;
 using InstagramAPI.Utils;
@@ -24,7 +23,6 @@ namespace BackgroundPushClient
             this.Log("-------------- Start of background task --------------");
             var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
             var socketId = details.SocketInformation.Id;
-            Utils.PopMessageToast($"{details.Reason} - {socketId}");
             this.Log($"{details.Reason} - {socketId}");
             FileStream lockFile = null;
             var deferral = taskInstance.GetDeferral();

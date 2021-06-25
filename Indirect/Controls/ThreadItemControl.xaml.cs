@@ -83,34 +83,41 @@ namespace Indirect.Controls
                 return string.Empty;
             }
 
-            var seenList = lastSeenAt.Where(x =>
-                    x.Value != null &&
-                    x.Value.ItemId == Item.Source.ItemId &&    // Match item id
-                    x.Key != Item.Parent.Source.ViewerId &&    // Not from viewer
-                    x.Key != Item.Sender.Pk             // Not from sender
-                ).Select(y => y.Key).ToArray();
-            if (seenList.Length == 0)
+            try
+            {
+                var seenList = lastSeenAt.Where(x =>
+                        x.Value != null &&
+                        x.Value.ItemId == Item.Source.ItemId &&    // Match item id
+                        x.Key != Item.Parent.Source.ViewerId &&    // Not from viewer
+                        x.Key != Item.Sender.Pk             // Not from sender
+                    ).Select(y => y.Key).ToArray();
+                if (seenList.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                if (Item.Parent.Users.Count == 1)
+                {
+                    return Item.FromMe && Item.Parent.Source.LastPermanentItem?.ItemId != Item.Source.ItemId ? string.Empty : "Seen";
+                }
+
+                if (Item.Parent.Users.Count <= seenList.Length)
+                {
+                    return "Seen by everyone";
+                }
+
+                var seenUsers = seenList.Select(x => Item.Parent.Users.FirstOrDefault(y => x == y.Pk)?.Username).ToArray();
+                if (seenUsers.Length <= 3)
+                {
+                    return "Seen by " + string.Join(", ", seenUsers);
+                }
+
+                return $"Seen by {seenUsers[0]}, {seenUsers[1]}, {seenUsers[2]} and {seenUsers.Length - 3} others";
+            }
+            catch (Exception)
             {
                 return string.Empty;
             }
-
-            if (Item.Parent.Users.Count == 1)
-            {
-                return Item.FromMe && Item.Parent.Source.LastPermanentItem.ItemId != Item.Source.ItemId ? string.Empty : "Seen";
-            }
-
-            if (Item.Parent.Users.Count <= seenList.Length)
-            {
-                return "Seen by everyone";
-            }
-
-            var seenUsers = seenList.Select(x => Item.Parent.Users.FirstOrDefault(y => x == y.Pk)?.Username).ToArray();
-            if (seenUsers.Length <= 3)
-            {
-                return "Seen by " + string.Join(", ", seenUsers);
-            }
-
-            return $"Seen by {seenUsers[0]}, {seenUsers[1]}, {seenUsers[2]} and {seenUsers.Length - 3} others";
         }
 
         private void ImageFrame_Tapped(object sender, TappedRoutedEventArgs e)

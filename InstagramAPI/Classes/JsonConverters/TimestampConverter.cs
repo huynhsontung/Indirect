@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.JsonConverters
@@ -37,6 +38,7 @@ namespace InstagramAPI.Classes.JsonConverters
 
         public static DateTimeOffset ReadTimestampJson(string unixTime)
         {
+            unixTime = string.Concat(unixTime.Where(char.IsDigit));
             var length = unixTime.Length;
             if (length >= 13)
             {

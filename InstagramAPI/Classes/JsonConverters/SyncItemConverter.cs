@@ -33,7 +33,7 @@ namespace InstagramAPI.Classes.JsonConverters
                     {
                         syncItem.ShhModeEnabled = JsonConvert.DeserializeObject<bool?>(syncItem.Value);
                     }
-                    else
+                    else if (syncItem.Op != "remove")
                     {
                         syncItem.Item = JsonConvert.DeserializeObject<DirectItem>(syncItem.Value);
                     }

@@ -27,7 +27,7 @@ namespace Indirect
 
         private void InboxThreads_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems == null)
+            if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems == null || ThreadInfoDictionary == null)
             {
                 return;
             }

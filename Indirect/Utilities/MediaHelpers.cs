@@ -68,6 +68,10 @@ namespace Indirect.Utilities
                 {
                     DebugLogger.LogException(e, false);
                 }
+                catch (Exception e)
+                {
+                    DebugLogger.LogException(e);
+                }
             }
         }
     }
