@@ -210,10 +210,15 @@ namespace InstagramAPI.Push
             this.Log("Transferring sockets");
             Shutdown();
             await socket.CancelIOAsync();
-            socket.TransferOwnership(
-                socketId,
-                null,
-                TimeSpan.FromSeconds(KeepAlive - 60));
+            try
+            {
+                socket.TransferOwnership(socketId, null, TimeSpan.FromSeconds(KeepAlive - 60));
+            }
+            catch (Exception)
+            {
+                // File already existed. Maybe another process has transferred the socket.
+                // pass
+            }
             socket.Dispose();
         }
 

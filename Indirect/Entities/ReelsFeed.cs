@@ -107,15 +107,20 @@ namespace Indirect.Entities
 
         public async void StartReelsFeedUpdateLoop()
         {
+            CancellationTokenSource tokenSource;
             _reelsUpdateLoop?.Cancel();
+            lock (this)
+            {
+                tokenSource = _reelsUpdateLoop = new CancellationTokenSource();
+            }
+
             try
             {
-                _reelsUpdateLoop = new CancellationTokenSource();
-                while (!_reelsUpdateLoop.IsCancellationRequested)
+                while (!tokenSource.IsCancellationRequested)
                 {
                     try
                     {
-                        await Task.Delay(TimeSpan.FromMinutes(5), _reelsUpdateLoop.Token);
+                        await Task.Delay(TimeSpan.FromMinutes(5), tokenSource.Token);
                         await UpdateReelsFeedAsync();
                     }
                     catch (TaskCanceledException)
@@ -126,9 +131,15 @@ namespace Indirect.Entities
             }
             finally
             {
-                var tokenSource = _reelsUpdateLoop;
-                _reelsUpdateLoop = null;
-                tokenSource?.Dispose();
+                lock (this)
+                {
+                    if (_reelsUpdateLoop == tokenSource)
+                    {
+                        _reelsUpdateLoop = null;
+                    }
+                }
+                
+                tokenSource.Dispose();
             }
         }
 
