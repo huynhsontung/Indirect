@@ -55,6 +55,7 @@ namespace Indirect.Pages
             MainLayout.SelectionChanged += MainLayout_OnSelectionChanged;
             MainLayout.ItemClick += MainLayout_OnItemClick;
             Window.Current.Activated += OnWindowFocusChange;
+            SystemNavigationManager.GetForCurrentView().BackRequested += SystemNavigationManager_BackRequested;
             AdaptiveLayoutStateGroup.CurrentStateChanged += AdaptiveLayoutStateGroupOnCurrentStateChanged;
             Inbox = ViewModel.Inbox;
         }
@@ -65,6 +66,7 @@ namespace Indirect.Pages
             MainLayout.SelectionChanged -= MainLayout_OnSelectionChanged;
             MainLayout.ItemClick -= MainLayout_OnItemClick;
             Window.Current.Activated -= OnWindowFocusChange;
+            SystemNavigationManager.GetForCurrentView().BackRequested -= SystemNavigationManager_BackRequested;
             AdaptiveLayoutStateGroup.CurrentStateChanged -= AdaptiveLayoutStateGroupOnCurrentStateChanged;
             base.OnNavigatedFrom(e);
         }
@@ -114,6 +116,15 @@ namespace Indirect.Pages
             ViewModel.SyncClient.Connected += SyncClientOnConnected;
 
             UpdateSwitchAccountMenu();
+        }
+
+        private void SystemNavigationManager_BackRequested(object sender, BackRequestedEventArgs e)
+        {
+            if (ImmersiveControl.IsOpen)
+            {
+                e.Handled = true;
+                ImmersiveControl.Close();
+            }
         }
 
         private Visibility GetReelsTrayVisibility(int reelsCount)

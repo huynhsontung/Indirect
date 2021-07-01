@@ -1,4 +1,5 @@
-﻿using Windows.UI.Core;
+﻿using System;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -27,6 +28,10 @@ namespace Indirect.Controls
             get => GetValue(ItemProperty);
             private set => SetValue(ItemProperty, value);
         }
+
+        public bool IsOpen => MediaPopup.IsOpen;
+
+        private Control _focusedElement;
 
         private static void OnItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -155,6 +160,7 @@ namespace Indirect.Controls
 
         public void Open(object item)
         {
+            _focusedElement = FocusManager.GetFocusedElement() as Control;
             MediaPopup.IsOpen = true;
             Item = item;
             MainControl.Focus(FocusState.Programmatic);
@@ -169,6 +175,15 @@ namespace Indirect.Controls
 
             var reelView = MainControl.ContentTemplateRoot as ReelsControl;
             reelView?.OnClose();
+
+            try
+            {
+                _focusedElement?.Focus(FocusState.Programmatic);
+            }
+            catch (Exception)
+            {
+                // pass
+            }
         }
     }
 }

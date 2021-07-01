@@ -23,6 +23,7 @@
                     DoubleTapped="ScrollViewer_OnDoubleTapped"
                     HorizontalScrollBarVisibility="Auto"
                     HorizontalScrollMode="Enabled"
+                    IsTabStop="True"
                     Loaded="ScrollViewer_OnLoaded"
                     MinZoomFactor="1"
                     SizeChanged="ScrollViewer_OnSizeChanged"
@@ -93,7 +94,7 @@
                 Content="{x:Bind Item, Mode=OneWay}">
                 <ContentControl.ContextFlyout>
                     <MenuFlyout>
-                        <MenuFlyoutItem Text="Download" Click="DownloadMenuItem_OnClick">
+                        <MenuFlyoutItem Click="DownloadMenuItem_OnClick" Text="Download">
                             <MenuFlyoutItem.Icon>
                                 <SymbolIcon Symbol="Download" />
                             </MenuFlyoutItem.Icon>

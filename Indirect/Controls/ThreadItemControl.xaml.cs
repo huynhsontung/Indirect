@@ -50,6 +50,19 @@ namespace Indirect.Controls
             this.InitializeComponent();
         }
 
+        public void OnItemClick()
+        {
+            if (Item.Source.ItemType != DirectItemType.AnimatedMedia && Item.FullImageUri != null ||
+                Item.VideoUri != null)
+            {
+                OpenItemInImmersiveControl();
+            }
+            else
+            {
+                OpenWebLink(this, null);
+            }
+        }
+
         private void ProcessItem()
         {
             Item.Source.Timestamp = Item.Source.Timestamp.ToLocalTime();
@@ -120,25 +133,27 @@ namespace Indirect.Controls
             }
         }
 
-        private void ImageFrame_Tapped(object sender, TappedRoutedEventArgs e)
+        private void OpenItemInImmersiveControl()
         {
-            if (Item.Source.ItemType == DirectItemType.AnimatedMedia) return;
-            var uri = Item.FullImageUri;
-            if (uri == null) return;
             var frame = Window.Current.Content as Frame;
             var page = frame?.Content as Page;
             var immersiveControl = page?.FindChild<ImmersiveControl>();
             immersiveControl?.Open(Item);
         }
 
+        private void ImageFrame_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (Item.Source.ItemType == DirectItemType.AnimatedMedia) return;
+            var uri = Item.FullImageUri;
+            if (uri == null) return;
+            OpenItemInImmersiveControl();
+        }
+
         private void VideoPopupButton_OnTapped(object sender, TappedRoutedEventArgs e)
         {
             var uri = Item.VideoUri;
             if (uri == null) return;
-            var frame = Window.Current.Content as Frame;
-            var page = frame?.Content as Page;
-            var immersiveControl = page?.FindChild<ImmersiveControl>();
-            immersiveControl?.Open(Item);
+            OpenItemInImmersiveControl();
         }
 
         private void OpenMediaButton_OnClick(object sender, RoutedEventArgs e)

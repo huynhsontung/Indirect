@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement.Core;
 using Windows.UI.Xaml;
@@ -527,6 +528,17 @@ namespace Indirect.Controls
                             ? FlyoutPlacementMode.BottomEdgeAlignedRight
                             : FlyoutPlacementMode.BottomEdgeAlignedLeft
                     });
+            }
+        }
+
+        private void ItemsHolder_OnPreviewKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Space &&
+                FocusManager.GetFocusedElement(ItemsHolder.XamlRoot) is ListViewItem item &&
+                item.ContentTemplateRoot is ThreadItemControl itemControl)
+            {
+                e.Handled = true;
+                itemControl.OnItemClick();
             }
         }
     }

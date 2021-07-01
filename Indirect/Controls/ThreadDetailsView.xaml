@@ -171,8 +171,10 @@
             Grid.RowSpan="3"
             extensions:ScrollViewerExtensions.VerticalScrollBarMargin="0,68,0,0"
             ContextRequested="ItemsHolder_OnContextRequested"
+            DataFetchSize="1"
             IncrementalLoadingThreshold="1"
             ItemsSource="{x:Bind Thread.ObservableItems, Mode=OneWay}"
+            PreviewKeyDown="ItemsHolder_OnPreviewKeyDown"
             SelectionMode="None"
             XYFocusKeyboardNavigation="Enabled">
 
