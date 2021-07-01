@@ -53,7 +53,8 @@ namespace BackgroundPushClient
                 }
 
                 var instagram = new Instagram(session);
-                instagram.PushClient.MessageReceived += Utils.OnMessageReceived;
+                var utils = new Utils(instagram);
+                instagram.PushClient.MessageReceived += utils.OnMessageReceived;
                 instagram.PushClient.ExceptionsCaught += Utils.PushClientOnExceptionsCaught;
                 switch (details.Reason)
                 {
@@ -110,7 +111,7 @@ namespace BackgroundPushClient
                 await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));
                 await instagram.PushClient.TransferPushSocket();
                 await SessionManager.SaveSessionAsync(instagram, true);
-                instagram.PushClient.MessageReceived -= Utils.OnMessageReceived;
+                instagram.PushClient.MessageReceived -= utils.OnMessageReceived;
                 instagram.PushClient.ExceptionsCaught -= Utils.PushClientOnExceptionsCaught;
             }
             catch (TaskCanceledException)

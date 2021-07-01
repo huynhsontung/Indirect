@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using InstagramAPI;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Utils;
@@ -18,8 +19,16 @@ namespace BackgroundPushClient
     internal sealed class Utils
     {
         private static Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; set; }
+        private static readonly StorageFolder CacheFolder = ApplicationData.Current.LocalCacheFolder;
 
-        public static async void OnMessageReceived(object sender, PushReceivedEventArgs args)
+        private Instagram Instagram { get; }
+
+        public Utils(Instagram instagram)
+        {
+            Instagram = instagram;
+        }
+
+        public async void OnMessageReceived(object sender, PushReceivedEventArgs args)
         {
             try
             {
@@ -51,6 +60,16 @@ namespace BackgroundPushClient
                     threadTitle = $"({loggedInUsers[viewerId.ToString()]}) {threadTitle}";
                 }
 
+                var avatarPath = args.NotificationContent.OptionalAvatarUrl;
+                if (!string.IsNullOrEmpty(avatarPath))
+                {
+                    var path = await TryCacheImageAsync(new Uri(avatarPath));
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        avatarPath = path;
+                    }
+                }
+
                 var toastContent = new ToastContent
                 {
                     Header = new ToastHeader(threadId, threadTitle, string.Empty),
@@ -71,11 +90,11 @@ namespace BackgroundPushClient
                                 {
                                     Source = notificationContent.OptionalImage
                                 },
-                            AppLogoOverride = string.IsNullOrEmpty(args.NotificationContent.OptionalAvatarUrl)
+                            AppLogoOverride = string.IsNullOrEmpty(avatarPath)
                                 ? null
                                 : new ToastGenericAppLogo
                                 {
-                                    Source = args.NotificationContent.OptionalAvatarUrl,
+                                    Source = avatarPath,
                                     HintCrop = ToastGenericAppLogoCrop.Circle,
                                     AlternateText = "Profile picture"
                                 }
@@ -177,6 +196,49 @@ namespace BackgroundPushClient
             return dict[threadId];
         }
 
+        private async Task<string> TryCacheImageAsync(Uri uri)
+        {
+            try
+            {
+                var filename = uri.Segments.LastOrDefault();
+                if (string.IsNullOrEmpty(filename))
+                {
+                    return string.Empty;
+                }
+
+                var image = await CacheFolder.TryGetItemAsync(filename);
+                if (image != null)
+                {
+                    return image.Path;
+                }
+
+                var response = await Instagram.HttpClient.GetAsync(uri);
+                if (response.IsSuccessStatusCode)
+                {
+                    var imageData = await response.Content.ReadAsByteArrayAsync();
+                    if (imageData.Length == 0)
+                    {
+                        return string.Empty;
+                    }
+
+                    var imageFile = await CacheFolder.CreateFileAsync(filename, CreationCollisionOption.OpenIfExists);
+                    using (var stream = await imageFile.OpenAsync(FileAccessMode.ReadWrite))
+                    {
+                        await stream.WriteAsync(imageData.AsBuffer());
+                        await stream.FlushAsync();
+                    }
+
+                    return imageFile.Path;
+                }
+
+                return string.Empty;
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+
         public static async Task<bool> TryAcquireSyncLock(string sessionName)
         {
             if (string.IsNullOrEmpty(sessionName))
@@ -249,7 +311,8 @@ namespace BackgroundPushClient
         {
             if (!instagram.PushClient.SocketRegistered())
             {
-                instagram.PushClient.MessageReceived += OnMessageReceived;
+                var utils = new Utils(instagram);
+                instagram.PushClient.MessageReceived += utils.OnMessageReceived;
                 instagram.PushClient.ExceptionsCaught += PushClientOnExceptionsCaught;
                 try
                 {
@@ -265,7 +328,7 @@ namespace BackgroundPushClient
                     DebugLogger.LogException(e);
                 }
 
-                instagram.PushClient.MessageReceived -= OnMessageReceived;
+                instagram.PushClient.MessageReceived -= utils.OnMessageReceived;
                 instagram.PushClient.ExceptionsCaught -= PushClientOnExceptionsCaught;
             }
         }
