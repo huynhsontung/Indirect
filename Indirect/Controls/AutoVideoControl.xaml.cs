@@ -59,6 +59,18 @@ namespace Indirect.Controls
             typeof(bool),
             typeof(AutoVideoControl),
             new PropertyMetadata(true));
+        public static readonly DependencyProperty IsLoopingEnabledProperty = DependencyProperty.Register(
+            nameof(IsLoopingEnabled),
+            typeof(bool),
+            typeof(AutoVideoControl),
+            new PropertyMetadata(false, OnIsLoopingEnabledChanged));
+
+        private static void OnIsLoopingEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var view = (AutoVideoControl) d;
+            var value = (bool) e.NewValue;
+            view.MediaPlayer.IsLoopingEnabled = value;
+        }
 
         private static void OnPosterSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -228,6 +240,11 @@ namespace Indirect.Controls
         {
             get => (bool) GetValue(AutoStopProperty);
             set => SetValue(AutoStopProperty, value);
+        }
+        public bool IsLoopingEnabled
+        {
+            get => (bool) GetValue(IsLoopingEnabledProperty);
+            set => SetValue(IsLoopingEnabledProperty, value);
         }
 
         public MediaPlayer MediaPlayer => VideoPlayer.MediaPlayer;

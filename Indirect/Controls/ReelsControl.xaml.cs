@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -9,6 +10,7 @@ using Windows.UI.Xaml.Input;
 using Indirect.Entities;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
+using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
@@ -195,9 +197,12 @@ namespace Indirect.Controls
             {
                 if (nextReelIndex == -1)
                 {
-                    if (userId == items[i].Parent.User.Pk) continue;
-                    nextReelIndex = i;
-                    userId = items[i].Parent.User.Pk;
+                    if (userId != items[i].Parent.User.Pk)
+                    {
+                        nextReelIndex = i;
+                        userId = items[i].Parent.User.Pk;
+                        if (items[i].TakenAt > items[i].Parent.Seen) break;
+                    }
                 }
                 else
                 {
@@ -254,6 +259,44 @@ namespace Indirect.Controls
             if (await story.Reply(emoji))
             {
                 await PopReplyDeliveryStatus();
+            }
+        }
+
+        private void StoryView_OnKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            var selected = (ReelItemWrapper)StoryView.SelectedItem;
+            this.Log(e.Key);
+            switch (e.Key)
+            {
+                case VirtualKey.GamepadRightTrigger when MoreNextReels:
+                    e.Handled = true;
+                    NextReelButtonClick(this, null);
+                    break;
+                case VirtualKey.GamepadLeftTrigger when MorePreviousReels:
+                    e.Handled = true;
+                    PreviousReelButtonClick(this, null);
+                    break;
+                case VirtualKey.Space:
+                    e.Handled = true;
+                    StoryView.ContainerFromItem(selected)?.FindDescendant<TextBox>()?.Focus(FocusState.Programmatic);
+                    break;
+                case VirtualKey.GamepadX:
+                    e.Handled = true;
+                    var button = StoryView.ContainerFromItem(selected)?.FindDescendantByName("ReactButton") as Control;
+                    if (button?.Visibility == Visibility.Visible)
+                    {
+                        button.Focus(FocusState.Programmatic);
+                    }
+                    else
+                    {
+                        (StoryView.ContainerFromItem(selected)?.FindDescendantByName("ReplyButton") as Control)?.Focus(
+                            FocusState.Programmatic);
+                    }
+                    break;
+                case VirtualKey.GamepadY:
+                    e.Handled = true;
+                    UserInfo_OnTapped(this, null);
+                    break;
             }
         }
     }

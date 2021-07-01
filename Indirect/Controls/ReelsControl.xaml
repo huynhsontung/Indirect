@@ -62,12 +62,13 @@
                     </TextBox>
 
                     <Button
+                        x:Name="ReactButton"
                         Width="60"
                         Margin="0,0,4,0"
                         VerticalAlignment="Bottom"
                         AutomationProperties.Name="React with an Emoji"
                         Click="ReactEmojiButton_OnClick"
-                        ToolTipService.ToolTip="React with an Emoji"
+                        ToolTipService.ToolTip="React with an Emoji (Ctrl+E)"
                         Visibility="{Binding ElementName=ReplyTextBox, Path=Text, Converter={StaticResource InvertNullVisibilityConverter}}">
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="E" Modifiers="Control" />
@@ -76,6 +77,7 @@
                     </Button>
 
                     <Button
+                        x:Name="ReplyButton"
                         Width="60"
                         Margin="0,0,4,0"
                         VerticalAlignment="Bottom"
@@ -101,6 +103,7 @@
                         VerticalAlignment="Stretch"
                         AutoPlay="True"
                         AutoStop="True"
+                        IsLoopingEnabled="True"
                         PosterSource="{x:Bind Images[0].Url}"
                         Source="{x:Bind Videos[0].Url}"
                         VideoHeight="1137"
@@ -238,6 +241,7 @@
             AutomationProperties.Name="Story view"
             Background="{ThemeResource SystemControlAcrylicWindowBrush}"
             ItemsSource="{x:Bind Source.Items, Mode=OneWay}"
+            KeyDown="StoryView_OnKeyDown"
             Loaded="StoryView_OnLoaded"
             SelectionChanged="StoryView_OnSelectionChanged">
             <FlipView.ContextFlyout>
