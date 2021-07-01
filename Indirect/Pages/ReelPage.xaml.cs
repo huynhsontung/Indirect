@@ -31,6 +31,8 @@ namespace Indirect.Pages
             this.InitializeComponent();
             Window.Current.SetTitleBar(TitleBarElement);
             Window.Current.Activated += OnWindowFocusChange;
+
+            SystemNavigationManager.GetForCurrentView().BackRequested += SystemNavigationManager_BackRequested;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -42,6 +44,7 @@ namespace Indirect.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
+            SystemNavigationManager.GetForCurrentView().BackRequested -= SystemNavigationManager_BackRequested;
             ReelsControl.OnClose();
         }
 
@@ -57,6 +60,12 @@ namespace Indirect.Pages
                 BackButton.IsEnabled = true;
                 AppTitleTextBlock.Opacity = 1;
             }
+        }
+
+        private void SystemNavigationManager_BackRequested(object sender, BackRequestedEventArgs e)
+        {
+            e.Handled = true;
+            BackButton_OnClick(this, null);
         }
 
         private void BackButton_OnClick(object sender, RoutedEventArgs e)

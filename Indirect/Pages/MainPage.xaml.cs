@@ -362,20 +362,6 @@ namespace Indirect.Pages
             Inbox = Inbox == ViewModel.Inbox ? ViewModel.PendingInbox : ViewModel.Inbox;
         }
 
-        private async void ReelsFeed_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            var reelsFeed = (ListView) sender;
-            int selected;
-            lock (sender)
-            {
-                if (reelsFeed.SelectedIndex == -1) return;
-                selected = reelsFeed.SelectedIndex;
-                reelsFeed.SelectedIndex = -1;
-            }
-            var reelsWrapper = await ViewModel.ReelsFeed.PrepareFlatReelsContainer(selected);
-            this.Frame.Navigate(typeof(ReelPage), reelsWrapper);
-        }
-
         private async void StoriesSectionTitle_OnTapped(object sender, TappedRoutedEventArgs e)
         {
             await ViewModel.ReelsFeed.UpdateReelsFeedAsync(ReelsTrayFetchReason.PullToRefresh);
@@ -479,6 +465,15 @@ namespace Indirect.Pages
                 await ViewModel.SaveDataAsync();
                 await ViewModel.SwitchAccountAsync(session);
                 Frame.Navigate(typeof(MainPage));
+            }
+        }
+
+        private async void ReelsFeed_OnItemClicked(object sender, ItemClickEventArgs e)
+        {
+            var reelsWrapper = await ViewModel.ReelsFeed.PrepareFlatReelsContainer((ReelWrapper)e.ClickedItem);
+            if (reelsWrapper != null)
+            {
+                this.Frame.Navigate(typeof(ReelPage), reelsWrapper);
             }
         }
     }

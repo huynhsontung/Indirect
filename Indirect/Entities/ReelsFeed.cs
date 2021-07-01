@@ -94,11 +94,14 @@ namespace Indirect.Entities
             }
         }
 
-        public async Task<FlatReelsContainer> PrepareFlatReelsContainer(int selectedIndex)
+        public async Task<FlatReelsContainer> PrepareFlatReelsContainer(ReelWrapper selected)
         {
             FlatReelsContainer flatReelsContainer;
+            int selectedIndex;
             lock (Reels)
             {
+                selectedIndex = Reels.IndexOf(selected);
+                if (selectedIndex == -1) return null;
                 flatReelsContainer = new FlatReelsContainer(Reels, selectedIndex);
             }
             await flatReelsContainer.UpdateUserIndex(selectedIndex);

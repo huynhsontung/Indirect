@@ -137,12 +137,14 @@
                         Grid.Row="1"
                         VerticalAlignment="Stretch"
                         Canvas.ZIndex="1"
+                        IsItemClickEnabled="True"
+                        ItemClick="ReelsFeed_OnItemClicked"
                         ItemsSource="{x:Bind ViewModel.ReelsFeed.Reels}"
                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
                         ScrollViewer.HorizontalScrollMode="Enabled"
                         ScrollViewer.VerticalScrollBarVisibility="Hidden"
                         ScrollViewer.VerticalScrollMode="Disabled"
-                        SelectionChanged="ReelsFeed_OnSelectionChanged">
+                        SelectionMode="None">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
                                 <Setter Property="MinHeight" Value="0" />
