@@ -412,7 +412,7 @@
                 Margin="0,0,2,0"
                 AutomationProperties.Name="Insert an Emoji"
                 Click="InsertEmojiButton_OnClick"
-                ToolTipService.ToolTip="Insert an Emoji">
+                ToolTipService.ToolTip="Insert an Emoji (Ctrl+E)">
                 <Button.KeyboardAccelerators>
                     <KeyboardAccelerator Key="E" Modifiers="Control" />
                 </Button.KeyboardAccelerators>

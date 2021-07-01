@@ -378,12 +378,15 @@
                         VerticalAlignment="Center"
                         AutomationProperties.Name="New message"
                         Background="Transparent"
-                        ToolTipService.ToolTip="New message">
+                        ToolTipService.ToolTip="New message (Ctrl+N)">
                         <FontIcon
                             Width="32"
                             Height="32"
                             FontFamily="{StaticResource SymbolThemeFontFamily}"
                             Glyph="&#xF716;" />
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="N" Modifiers="Control" />
+                        </Button.KeyboardAccelerators>
                         <Button.Flyout>
                             <Flyout x:Name="NewThreadFlyout" Placement="RightEdgeAlignedTop">
                                 <Grid Width="240">
@@ -393,26 +396,26 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
                                     <TextBlock
                                         Grid.Row="0"
+                                        Grid.Column="0"
                                         VerticalAlignment="Center"
                                         Style="{ThemeResource FluentBaseTextStyle}"
                                         Text="To:" />
-                                    <Button
-                                        Grid.Row="0"
-                                        HorizontalAlignment="Right"
-                                        AutomationProperties.Name="Create chat thread from selected recipients"
-                                        Click="ChatButton_OnClick"
-                                        Content="Chat"
-                                        IsEnabled="{x:Bind NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"
-                                        Style="{StaticResource AccentButtonStyle}" />
                                     <AutoSuggestBox
                                         x:Name="NewMessageSuggestBox"
                                         Grid.Row="1"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="3"
                                         Margin="0,8,0,0"
                                         AutomationProperties.Name="Recipient search box"
                                         IsEnabled="{x:Bind NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqual32}, Mode=OneWay}"
-                                        PlaceholderText="Search"
+                                        PlaceholderText="Search recipient"
                                         ProcessKeyboardAccelerators="NewMessageSuggestBox_OnProcessKeyboardAccelerators"
                                         QueryIcon="Find"
                                         QuerySubmitted="NewMessageSuggestBox_OnQuerySubmitted"
@@ -440,6 +443,8 @@
                                     <ListView
                                         x:Name="NewMessageCandidateList"
                                         Grid.Row="2"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="3"
                                         MaxHeight="400"
                                         Margin="0,8,0,4"
                                         ItemsSource="{x:Bind NewMessageCandidates}"
@@ -505,31 +510,33 @@
                                             </Style>
                                         </ListView.ItemContainerStyle>
                                     </ListView>
-                                    <StackPanel
+                                    <TextBlock
                                         Grid.Row="3"
+                                        Grid.Column="0"
                                         Margin="10,0,0,0"
                                         VerticalAlignment="Center"
-                                        Orientation="Horizontal">
-                                        <TextBlock
-                                            Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                                            Style="{ThemeResource FluentCaptionTextStyle}"
-                                            Text="{x:Bind NewMessageCandidates.Count, Mode=OneWay}" />
-                                        <TextBlock
-                                            Margin="4,0,0,0"
-                                            Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                                            Style="{ThemeResource FluentCaptionTextStyle}"
-                                            Text="recipient(s)" />
-                                    </StackPanel>
+                                        Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                                        Style="{ThemeResource FluentCaptionTextStyle}">
+                                        <Run Text="{x:Bind NewMessageCandidates.Count, Mode=OneWay}" /><Run Text=" recipient(s)" />
+                                    </TextBlock>
                                     <Button
                                         Grid.Row="3"
-                                        HorizontalAlignment="Right"
+                                        Grid.Column="1"
                                         AutomationProperties.Name="Clear selection"
                                         Background="Transparent"
                                         Click="NewMessageClearAll_OnClick"
-                                        Style="{x:Null}"
                                         ToolTipService.ToolTip="Clear selection">
                                         <SymbolIcon Symbol="ClearSelection" />
                                     </Button>
+                                    <Button
+                                        Grid.Row="3"
+                                        Grid.Column="2"
+                                        Margin="6,0,0,0"
+                                        AutomationProperties.Name="Create chat thread from selected recipients"
+                                        Click="ChatButton_OnClick"
+                                        Content="Chat"
+                                        IsEnabled="{x:Bind NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"
+                                        Style="{ThemeResource AccentButtonStyle}" />
                                 </Grid>
                             </Flyout>
                         </Button.Flyout>
@@ -548,6 +555,9 @@
                         SuggestionChosen="SearchBox_OnSuggestionChosen"
                         TextChanged="SearchBox_OnTextChanged"
                         UpdateTextOnSelect="False">
+                        <AutoSuggestBox.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="K" Modifiers="Control" />
+                        </AutoSuggestBox.KeyboardAccelerators>
                         <AutoSuggestBox.ItemTemplate>
                             <DataTemplate x:DataType="wrappers:DirectThreadWrapper">
                                 <StackPanel

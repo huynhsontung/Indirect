@@ -500,5 +500,11 @@ namespace Indirect.Pages
                 this.Frame.Navigate(typeof(ReelPage), reelsWrapper);
             }
         }
+
+        private void SearchBox_OnKeyboardAcceleratorInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            args.Handled = true;
+            SearchBox.Focus(FocusState.Programmatic);
+        }
     }
 }
