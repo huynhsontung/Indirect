@@ -46,53 +46,61 @@ namespace Indirect.Controls
 
         private async void OnSourceChanged()
         {
-            if (Source is IRandomAccessStreamWithContentType stream)   // screenshot
+            try
             {
-                var image = new BitmapImage();
-                await image.SetSourceAsync(stream);
-                _source = image;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(_source)));
-                return;
-            }
-
-            if (!(Source is IStorageFile storageFile))
-            {
-                var uri = Source as Uri;
-                if (uri == null)
+                if (Source is IRandomAccessStreamWithContentType stream) // screenshot
                 {
-                    var uriString = Source as string;
-                    if (!string.IsNullOrEmpty(uriString)) uri = new Uri(uriString);
-                    else
+                    var image = new BitmapImage();
+                    await image.SetSourceAsync(stream);
+                    _source = image;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(_source)));
+                    return;
+                }
+
+                if (!(Source is IStorageFile storageFile))
+                {
+                    var uri = Source as Uri;
+                    if (uri == null)
                     {
-                        _source = Source;
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(_source)));
-                        return;
+                        var uriString = Source as string;
+                        if (!string.IsNullOrEmpty(uriString)) uri = new Uri(uriString);
+                        else
+                        {
+                            _source = Source;
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(_source)));
+                            return;
+                        }
                     }
-                }
-                _source = uri;
 
-                if (uri.IsFile && uri.Segments.Last().Contains(".mp4", StringComparison.OrdinalIgnoreCase))
-                {
-                    _source = MediaSource.CreateFromUri(uri);
-                }
-            }
-            else
-            {
-                if (storageFile.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))
-                {
-                    _source = MediaSource.CreateFromStorageFile(storageFile);
+                    _source = uri;
+
+                    if (uri.IsFile && uri.Segments.Last().Contains(".mp4", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _source = MediaSource.CreateFromUri(uri);
+                    }
                 }
                 else
                 {
-                    _source = new BitmapImage();
-                    using (var fileStream = await storageFile.OpenAsync(FileAccessMode.Read))
+                    if (storageFile.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))
                     {
-                        await ((BitmapImage) _source).SetSourceAsync(fileStream);
+                        _source = MediaSource.CreateFromStorageFile(storageFile);
+                    }
+                    else
+                    {
+                        _source = new BitmapImage();
+                        using (var fileStream = await storageFile.OpenAsync(FileAccessMode.Read))
+                        {
+                            await ((BitmapImage) _source).SetSourceAsync(fileStream);
+                        }
                     }
                 }
-            }
 
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(_source)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(_source)));
+            }
+            catch (Exception)
+            {
+                // pass
+            }
         }
 
         private object _source;

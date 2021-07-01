@@ -46,7 +46,7 @@ namespace InstagramAPI.Sync
             if (!IsRunning) return;
             NetworkInformation.NetworkStatusChanged -= OnNetworkChanged;
             var tokenSource = _pinging;
-            tokenSource.Cancel();
+            tokenSource?.Cancel();
             _pinging = null;
             tokenSource?.Dispose();
             try

@@ -206,8 +206,17 @@ namespace Indirect.Pages
 
             var inboxThread = (DirectThreadWrapper) e.AddedItems[0];
             this.Log("Thread change invoked: " + inboxThread.Users[0].Username);
-            if (!string.IsNullOrEmpty(inboxThread.ThreadId))
-                ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
+            try
+            {
+                if (!string.IsNullOrEmpty(inboxThread.ThreadId))
+                {
+                    ToastNotificationManager.History.RemoveGroup(inboxThread.ThreadId);
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugLogger.LogException(ex);
+            }
 
             var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
             details?.Focus(FocusState.Programmatic); // Focus to chat box after selecting a thread
