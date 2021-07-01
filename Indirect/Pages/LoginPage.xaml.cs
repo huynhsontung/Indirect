@@ -37,6 +37,7 @@ namespace Indirect.Pages
             LoginWebview.Height = Window.Current.Bounds.Height * 0.8;
             WebviewPopup.VerticalOffset = -(LoginWebview.Height / 2);
             LoginWebview.NavigationStarting += LoginWebviewOnNavigationStarting;
+            SystemNavigationManager.GetForCurrentView().BackRequested += SystemNavigationManager_BackRequested;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -47,6 +48,15 @@ namespace Indirect.Pages
 
             BackButton.Visibility = BackButtonPlaceholder.Visibility =
                 Frame.CanGoBack ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+            Window.Current.Activated -= OnWindowFocusChange;
+            Window.Current.SizeChanged -= OnWindowSizeChanged;
+            LoginWebview.NavigationStarting -= LoginWebviewOnNavigationStarting;
+            SystemNavigationManager.GetForCurrentView().BackRequested -= SystemNavigationManager_BackRequested;
         }
 
         private void DisableButtons()
@@ -131,6 +141,12 @@ namespace Indirect.Pages
                     EnableButtons();
                 }
             }
+        }
+
+        private void SystemNavigationManager_BackRequested(object sender, BackRequestedEventArgs e)
+        {
+            e.Handled = true;
+            BackButton_OnClick(this, null);
         }
 
         private void OnWindowSizeChanged(object sender, WindowSizeChangedEventArgs e)
