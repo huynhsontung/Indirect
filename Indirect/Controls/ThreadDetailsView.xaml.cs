@@ -496,6 +496,7 @@ namespace Indirect.Controls
         private void ClearReplyButton_OnClick(object sender, RoutedEventArgs e)
         {
             Thread.ReplyingItem = null;
+            MessageTextBox.Focus(FocusState.Programmatic);
         }
 
         private async void SendButton_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
@@ -533,12 +534,28 @@ namespace Indirect.Controls
 
         private void ItemsHolder_OnPreviewKeyDown(object sender, KeyRoutedEventArgs e)
         {
-            if (e.Key == VirtualKey.Space &&
-                FocusManager.GetFocusedElement(ItemsHolder.XamlRoot) is ListViewItem item &&
-                item.ContentTemplateRoot is ThreadItemControl itemControl)
+            switch (e.Key)
             {
-                e.Handled = true;
-                itemControl.OnItemClick();
+                case VirtualKey.Space when FocusManager.GetFocusedElement(ItemsHolder.XamlRoot) is ListViewItem item &&
+                                           item.ContentTemplateRoot is ThreadItemControl itemControl:
+                    e.Handled = true;
+                    itemControl.OnItemClick();
+                    break;
+            }
+        }
+
+        private void ThreadDetailsView_OnKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case VirtualKey.GamepadX:
+                    e.Handled = true;
+                    MessageTextBox.Focus(FocusState.Programmatic);
+                    break;
+                case VirtualKey.GamepadY:
+                    e.Handled = true;
+                    ShowUsersInfoFlyout(ViewProfileAppBarButton, null);
+                    break;
             }
         }
     }

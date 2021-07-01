@@ -231,6 +231,10 @@ namespace Indirect.Controls
         private void ReplyToItem_OnClick(object sender, RoutedEventArgs e)
         {
             Item.Parent.ReplyingItem = Item;
+            if (Window.Current.Content.FindDescendantByName("MessageTextBox") is Control control)
+            {
+                control.Focus(FocusState.Programmatic);
+            }
         }
 
         private async void AddReactionMenuItem_OnClick(object sender, RoutedEventArgs e)
