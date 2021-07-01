@@ -549,14 +549,18 @@
                         Grid.ColumnSpan="3"
                         Margin="0,4,0,8"
                         AutomationProperties.Name="Search box"
-                        PlaceholderText="Search"
+                        KeyboardAcceleratorPlacementMode="Hidden"
+                        PlaceholderText="Search (Ctrl+K)"
                         QueryIcon="Find"
                         QuerySubmitted="SearchBox_OnQuerySubmitted"
                         SuggestionChosen="SearchBox_OnSuggestionChosen"
                         TextChanged="SearchBox_OnTextChanged"
                         UpdateTextOnSelect="False">
                         <AutoSuggestBox.KeyboardAccelerators>
-                            <KeyboardAccelerator Key="K" Modifiers="Control" />
+                            <KeyboardAccelerator
+                                Key="K"
+                                Invoked="SearchBox_OnKeyboardAcceleratorInvoked"
+                                Modifiers="Control" />
                         </AutoSuggestBox.KeyboardAccelerators>
                         <AutoSuggestBox.ItemTemplate>
                             <DataTemplate x:DataType="wrappers:DirectThreadWrapper">

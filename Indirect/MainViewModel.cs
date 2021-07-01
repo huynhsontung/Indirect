@@ -194,7 +194,7 @@ namespace Indirect
             }
         }
 
-        private static Task<bool> SearchReady() => Debouncer.Delay("ThreadSearch", 500);
+        private static Task<bool> SearchReady() => Debouncer.Delay("ThreadSearch", 150);
 
         public async void Search(string query, Action<List<DirectThreadWrapper>> updateAction)
         {
