@@ -626,7 +626,7 @@ namespace Indirect.Controls
             {
                 FocusItemList();
             }
-            else
+            else if (viewState != MasterDetailsViewState.Both)
             {
                 FocusFirstFocusableElementInDetails();
             }

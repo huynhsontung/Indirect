@@ -227,10 +227,16 @@ namespace Indirect.Pages
             }
         }
 
-        private void MainLayout_OnItemClick(object sender, ItemClickEventArgs e)
+        private async void MainLayout_OnItemClick(object sender, ItemClickEventArgs e)
         {
             var details = (TextBox)MainLayout.FindDescendantByName("MessageTextBox");
-            details?.Focus(FocusState.Programmatic); // Focus to chat box after selecting a thread
+            if (details == null) return;
+            if (MainLayout.SelectedIndex == -1 && MainLayout.ViewState == MasterDetailsViewState.Both)
+            {
+                await Task.Delay(100);
+            }
+
+            details.Focus(FocusState.Programmatic); // Focus to chat box after selecting a thread
             this.Log("Focus message box");
         }
 
