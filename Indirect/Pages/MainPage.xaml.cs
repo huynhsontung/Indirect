@@ -53,6 +53,7 @@ namespace Indirect.Pages
             Window.Current.SetTitleBar(TitleBarElement);
             MainLayout.ViewStateChanged += OnViewStateChange;
             MainLayout.SelectionChanged += MainLayout_OnSelectionChanged;
+            MainLayout.ItemClick += MainLayout_OnItemClick;
             Window.Current.Activated += OnWindowFocusChange;
             AdaptiveLayoutStateGroup.CurrentStateChanged += AdaptiveLayoutStateGroupOnCurrentStateChanged;
             Inbox = ViewModel.Inbox;
@@ -62,6 +63,7 @@ namespace Indirect.Pages
         {
             MainLayout.ViewStateChanged -= OnViewStateChange;
             MainLayout.SelectionChanged -= MainLayout_OnSelectionChanged;
+            MainLayout.ItemClick -= MainLayout_OnItemClick;
             Window.Current.Activated -= OnWindowFocusChange;
             AdaptiveLayoutStateGroup.CurrentStateChanged -= AdaptiveLayoutStateGroupOnCurrentStateChanged;
             base.OnNavigatedFrom(e);
@@ -218,13 +220,18 @@ namespace Indirect.Pages
                 DebugLogger.LogException(ex);
             }
 
-            var details = (TextBox) MainLayout.FindDescendantByName("MessageTextBox");
-            details?.Focus(FocusState.Programmatic); // Focus to chat box after selecting a thread
             if (await Debouncer.Delay("OnThreadChanged", e.RemovedItems[0] == null ? 600 : 200)
                 .ConfigureAwait(false))
             {
                 await inboxThread.MarkLatestItemSeen().ConfigureAwait(false);
             }
+        }
+
+        private void MainLayout_OnItemClick(object sender, ItemClickEventArgs e)
+        {
+            var details = (TextBox)MainLayout.FindDescendantByName("MessageTextBox");
+            details?.Focus(FocusState.Programmatic); // Focus to chat box after selecting a thread
+            this.Log("Focus message box");
         }
 
         #region Search

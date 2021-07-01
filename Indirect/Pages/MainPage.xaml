@@ -112,7 +112,6 @@
             BorderBrush="Transparent"
             BorderThickness="0"
             CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}"
-            DetailsElementToFocus="MessageTextBox"
             IntermediateModeThresholdWidth="{StaticResource FullWindowWidth}"
             ItemsSource="{x:Bind Inbox.Threads, Mode=OneWay}"
             MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"

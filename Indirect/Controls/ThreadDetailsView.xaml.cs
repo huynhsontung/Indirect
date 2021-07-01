@@ -340,11 +340,6 @@ namespace Indirect.Controls
 
         private async void OnThreadPropertyChanged(object sender, PropertyChangedEventArgs args)
         {
-            if (args.PropertyName == nameof(Thread.ReplyingItem) && Thread.ReplyingItem != null)
-            {
-                MessageTextBox.Focus(FocusState.Programmatic);
-            }
-
             if (args.PropertyName == nameof(Thread.QuickReplyEmoji))
             {
                 await Dispatcher.QuickRunAsync(UpdateSendButtonIcon, CoreDispatcherPriority.Low);

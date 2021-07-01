@@ -394,8 +394,6 @@ namespace Indirect.Controls
             set { SetValue(BackButtonBehaviorProperty, value); }
         }
 
-        public string DetailsElementToFocus { get; set; }
-
         /// <summary>
         /// Gets or sets a function for mapping the selected item to a different model.
         /// This new model will be the DataContext of the Details area.

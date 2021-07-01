@@ -15,6 +15,8 @@ namespace Indirect.Controls
     /// <seealso cref="Windows.UI.Xaml.Controls.ItemsControl" />
     public partial class ExtendedMasterDetailsView
     {
+        public event ItemClickEventHandler ItemClick;
+
         /// <summary>
         /// Occurs when the currently selected item changes.
         /// </summary>

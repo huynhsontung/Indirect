@@ -27,6 +27,7 @@ namespace Indirect.Controls
     [TemplatePart(Name = PartMainShadow, Type = typeof(ThemeShadow))]
     [TemplatePart(Name = PartMasterPanel, Type = typeof(FrameworkElement))]
     [TemplatePart(Name = PartDetailsPanel, Type = typeof(FrameworkElement))]
+    [TemplatePart(Name = PartMasterList, Type = typeof(ListViewBase))]
     [TemplateVisualState(Name = NoSelectionNarrowState, GroupName = SelectionStates)]
     [TemplateVisualState(Name = NoSelectionWideState, GroupName = SelectionStates)]
     [TemplateVisualState(Name = HasSelectionWideState, GroupName = SelectionStates)]
@@ -41,6 +42,7 @@ namespace Indirect.Controls
         private const string PartMasterPanel = "MasterPanel";
         private const string PartBackButton = "MasterDetailsBackButton";
         private const string PartHeaderContentPresenter = "HeaderContentPresenter";
+        private const string PartMasterList = "MasterList";
         private const string NarrowState = "NarrowState";
         private const string WideState = "WideState";
         private const string IntermediateState = "IntermediateState";
@@ -59,6 +61,7 @@ namespace Indirect.Controls
         private int _previousNavigationViewBackVisibilty;
         private ContentPresenter _detailsPresenter;
         private VisualStateGroup _selectionStateGroup;
+        private ListViewBase _masterList;
         private Button _inlineBackButton;
         private object _navigationView;
         private Frame _frame;
@@ -92,6 +95,13 @@ namespace Indirect.Controls
             if (_inlineBackButton != null)
             {
                 _inlineBackButton.Click += OnInlineBackButtonClicked;
+            }
+
+            _masterList = (ListViewBase)GetTemplateChild(PartMasterList);
+            if (_masterList != null)
+            {
+                _masterList.ItemClick -= MasterList_OnItemClick;
+                _masterList.ItemClick += MasterList_OnItemClick;
             }
 
             _detailsPresenter = (ContentPresenter)GetTemplateChild(PartDetailsPresenter);
@@ -256,6 +266,12 @@ namespace Indirect.Controls
                     _selectionStateGroup = null;
                 }
             }
+        }
+
+
+        private void MasterList_OnItemClick(object sender, ItemClickEventArgs e)
+        {
+            ItemClick?.Invoke(sender, e);
         }
 
         private void MasterDetailsView_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -579,9 +595,9 @@ namespace Indirect.Controls
         /// </summary>
         private void SetListSelectionWithKeyboardFocus(bool singleSelectionFollowsFocus)
         {
-            if (GetTemplateChild("MasterList") is Windows.UI.Xaml.Controls.ListViewBase masterList)
+            if (_masterList != null)
             {
-                masterList.SingleSelectionFollowsFocus = singleSelectionFollowsFocus;
+                _masterList.SingleSelectionFollowsFocus = singleSelectionFollowsFocus;
             }
         }
 
@@ -623,9 +639,7 @@ namespace Indirect.Controls
         {
             if (GetTemplateChild(PartDetailsPanel) is DependencyObject details)
             {
-                var focusableElement = string.IsNullOrEmpty(DetailsElementToFocus)
-                    ? FocusManager.FindFirstFocusableElement(details)
-                    : details.FindDescendantByName(DetailsElementToFocus);
+                var focusableElement = FocusManager.FindFirstFocusableElement(details);
                 (focusableElement as Control)?.Focus(FocusState.Programmatic);
             }
         }
@@ -635,10 +649,7 @@ namespace Indirect.Controls
         /// </summary>
         private void FocusItemList()
         {
-            if (GetTemplateChild("MasterList") is Control masterList)
-            {
-                masterList.Focus(FocusState.Programmatic);
-            }
+            _masterList?.Focus(FocusState.Programmatic);
         }
     }
 }
