@@ -704,65 +704,7 @@
                 Content="{x:Bind Item}"
                 ContentTemplateSelector="{StaticResource ItemTemplateSelector}"
                 DoubleTapped="Item_DoubleTapped"
-                SizeChanged="ConfigTooltip_OnSizeChanged">
-                <ContentControl.ContextFlyout>
-                    <MenuFlyout>
-
-                        <MenuFlyoutItem Click="AddReactionMenuItem_OnClick" Text="Add a Reaction">
-                            <MenuFlyoutItem.Icon>
-                                <SymbolIcon Symbol="Emoji" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-
-                        <MenuFlyoutItem
-                            Click="RemoveReactionMenuItem_OnClick"
-                            Text="Remove Reaction"
-                            Visibility="{x:Bind Item.ObservableReactions.MeLiked, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
-                            <MenuFlyoutItem.Icon>
-                                <SymbolIcon Symbol="Clear" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-
-                        <MenuFlyoutItem
-                            Click="ReplyToItem_OnClick"
-                            Text="Reply"
-                            Visibility="{x:Bind Item.IsReplyable, Converter={StaticResource BooleanVisibilityConverter}}">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xE97A;" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-
-                        <MenuFlyoutItem
-                            x:Name="MenuCopyOption"
-                            Click="MenuCopyOption_Click"
-                            Text="Copy"
-                            Visibility="Collapsed">
-                            <MenuFlyoutItem.Icon>
-                                <SymbolIcon Symbol="Copy" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-
-                        <MenuFlyoutItem
-                            x:Name="DownloadMenuItem"
-                            Click="DownloadMenuItem_OnClick"
-                            Text="Download"
-                            Visibility="Collapsed">
-                            <MenuFlyoutItem.Icon>
-                                <SymbolIcon Symbol="Download" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-
-                        <MenuFlyoutSeparator Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
-
-                        <MenuFlyoutItem
-                            Click="UnsendMessage"
-                            Icon="Delete"
-                            Text="Unsend"
-                            Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
-
-                    </MenuFlyout>
-                </ContentControl.ContextFlyout>
-            </ContentControl>
+                SizeChanged="ConfigTooltip_OnSizeChanged" />
 
             <controls1:ReactionsControl
                 Margin="6,-2,6,0"
@@ -784,4 +726,61 @@
         </StackPanel>
 
     </StackPanel>
+
+    <UserControl.ContextFlyout>
+        <MenuFlyout>
+            <MenuFlyoutItem Click="AddReactionMenuItem_OnClick" Text="Add a Reaction">
+                <MenuFlyoutItem.Icon>
+                    <SymbolIcon Symbol="Emoji" />
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+
+            <MenuFlyoutItem
+                Click="RemoveReactionMenuItem_OnClick"
+                Text="Remove Reaction"
+                Visibility="{x:Bind Item.ObservableReactions.MeLiked, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
+                <MenuFlyoutItem.Icon>
+                    <SymbolIcon Symbol="Clear" />
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+
+            <MenuFlyoutItem
+                Click="ReplyToItem_OnClick"
+                Text="Reply"
+                Visibility="{x:Bind Item.IsReplyable, Converter={StaticResource BooleanVisibilityConverter}}">
+                <MenuFlyoutItem.Icon>
+                    <FontIcon Glyph="&#xE97A;" />
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+
+            <MenuFlyoutItem
+                x:Name="MenuCopyOption"
+                Click="MenuCopyOption_Click"
+                Text="Copy"
+                Visibility="Collapsed">
+                <MenuFlyoutItem.Icon>
+                    <SymbolIcon Symbol="Copy" />
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+
+            <MenuFlyoutItem
+                x:Name="DownloadMenuItem"
+                Click="DownloadMenuItem_OnClick"
+                Text="Download"
+                Visibility="Collapsed">
+                <MenuFlyoutItem.Icon>
+                    <SymbolIcon Symbol="Download" />
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+
+            <MenuFlyoutSeparator Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
+
+            <MenuFlyoutItem
+                Click="UnsendMessage"
+                Icon="Delete"
+                Text="Unsend"
+                Visibility="{x:Bind Item.FromMe, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
+
+        </MenuFlyout>
+    </UserControl.ContextFlyout>
 </UserControl>

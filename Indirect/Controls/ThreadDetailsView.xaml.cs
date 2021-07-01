@@ -19,6 +19,7 @@ using Indirect.Utilities;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
+using Microsoft.Toolkit.Uwp.UI.Extensions;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -509,6 +510,24 @@ namespace Indirect.Controls
             Thread.QuickReplyEmoji = emoji;
             Thread.UpdateQuickReplyEmoji();
             MessageTextBox.Text = MessageTextBox.Text;
+        }
+
+        private void ItemsHolder_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
+        {
+            if (FocusManager.GetFocusedElement(sender.XamlRoot) is ListViewItem item &&
+                item.ContentTemplateRoot is ThreadItemControl itemControl &&
+                itemControl.ContextFlyout != null &&
+                itemControl.FindChildByName("MainContentControl") is FrameworkElement element)
+            {
+                args.Handled = true;
+                itemControl.ContextFlyout.ShowAt(element,
+                    new FlyoutShowOptions
+                    {
+                        Placement = itemControl.Item.FromMe
+                            ? FlyoutPlacementMode.BottomEdgeAlignedRight
+                            : FlyoutPlacementMode.BottomEdgeAlignedLeft
+                    });
+            }
         }
     }
 }

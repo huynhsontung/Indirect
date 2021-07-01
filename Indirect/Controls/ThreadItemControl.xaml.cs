@@ -62,7 +62,7 @@ namespace Indirect.Controls
             if (Item.Source.ItemType == DirectItemType.ActionLog)
             {
                 ItemContainer.Visibility = Item.Source.HideInThread ? Visibility.Collapsed : Visibility.Visible;
-                MainContentControl.ContextFlyout = null;
+                ContextFlyout = null;
             }
 
             if (Item.Source.ItemType == DirectItemType.Text)
