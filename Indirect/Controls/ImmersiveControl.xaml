@@ -8,6 +8,7 @@
     xmlns:entities="using:Indirect.Entities"
     xmlns:local="using:Indirect"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:selectors="using:Indirect.Controls.Selectors"
     xmlns:wrappers="using:Indirect.Entities.Wrappers"
     d:DesignHeight="300"
     d:DesignWidth="400"
@@ -26,7 +27,9 @@
                     IsTabStop="True"
                     Loaded="ScrollViewer_OnLoaded"
                     MinZoomFactor="1"
+                    PreviewKeyDown="ScrollViewer_OnPreviewKeyDown"
                     SizeChanged="ScrollViewer_OnSizeChanged"
+                    TabIndex="0"
                     VerticalScrollBarVisibility="Auto"
                     VerticalScrollMode="Enabled"
                     ZoomMode="Enabled">
@@ -58,6 +61,12 @@
             <DataTemplate x:Key="ReelView" x:DataType="entities:FlatReelsContainer">
                 <controls1:ReelsControl Source="{x:Bind}" />
             </DataTemplate>
+
+            <selectors:MediaTemplateSelector
+                x:Key="MediaTemplateSelector"
+                ImageView="{StaticResource ImageView}"
+                ReelView="{StaticResource ReelView}"
+                VideoView="{StaticResource VideoView}" />
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -66,7 +75,7 @@
         Width="400"
         Height="200"
         IsOpen="False">
-        <Grid Background="{ThemeResource SystemControlAcrylicElementBrush}">
+        <Grid Background="{ThemeResource SystemControlAcrylicElementBrush}" XYFocusDownNavigationStrategy="NavigationDirectionDistance">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
@@ -91,7 +100,10 @@
                 x:Name="MainControl"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                Content="{x:Bind Item, Mode=OneWay}">
+                Content="{x:Bind Item, Mode=OneWay}"
+                ContentTemplateSelector="{StaticResource MediaTemplateSelector}"
+                IsTabStop="False"
+                Loaded="MainControl_OnLoaded">
                 <ContentControl.ContextFlyout>
                     <MenuFlyout>
                         <MenuFlyoutItem Click="DownloadMenuItem_OnClick" Text="Download">

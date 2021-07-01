@@ -135,6 +135,7 @@
     <Compile Include="Controls\ReactionsControl.xaml.cs">
       <DependentUpon>ReactionsControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Selectors\MediaTemplateSelector.cs" />
     <Compile Include="Entities\LinkTextForDisplay.cs" />
     <Compile Include="MainViewModel.Handlers.cs" />
     <Compile Include="Services\ContactsService.cs" />

@@ -1,15 +1,12 @@
 ﻿using System;
+using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using Indirect.Entities;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
-using InstagramAPI.Classes.Direct;
-using InstagramAPI.Classes.Media;
 using Microsoft.Toolkit.Uwp.UI.Controls;
-using Microsoft.Toolkit.Uwp.UI.Extensions;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -21,7 +18,7 @@ namespace Indirect.Controls
             nameof(Item),
             typeof(object),
             typeof(ImmersiveControl),
-            new PropertyMetadata(null, OnItemChanged));
+            new PropertyMetadata(null));
 
         public object Item
         {
@@ -32,51 +29,6 @@ namespace Indirect.Controls
         public bool IsOpen => MediaPopup.IsOpen;
 
         private Control _focusedElement;
-
-        private static void OnItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var view = (ImmersiveControl)d;
-
-            if (e.NewValue is FlatReelsContainer)
-            {
-                view.PrepareReelView();
-            }
-
-            var item = e.NewValue as DirectItemWrapper;
-            if (item == null) return;
-            switch (item.Source.ItemType)
-            {
-                case DirectItemType.Media when item.Source.Media.MediaType == InstaMediaType.Image:
-                case DirectItemType.RavenMedia when 
-                    item.Source.RavenMedia?.MediaType == InstaMediaType.Image || item.Source.VisualMedia?.Media.MediaType == InstaMediaType.Image:
-                    view.PrepareImageView();
-                    break;
-
-                case DirectItemType.Media when item.Source.Media.MediaType == InstaMediaType.Video:
-                case DirectItemType.RavenMedia when
-                    item.Source.RavenMedia?.MediaType == InstaMediaType.Video || item.Source.VisualMedia?.Media.MediaType == InstaMediaType.Video:
-                    view.PrepareVideoView();
-                    break;
-
-                case DirectItemType.ReelShare:
-                    if (item.Source.ReelShareMedia.Media.MediaType == InstaMediaType.Image)
-                        view.PrepareImageView();
-                    else
-                        view.PrepareVideoView();
-                    break;
-
-                case DirectItemType.StoryShare when item.Source.StoryShareMedia.Media != null:
-                    if (item.Source.StoryShareMedia.Media.MediaType == InstaMediaType.Image)
-                        view.PrepareImageView();
-                    else
-                        view.PrepareVideoView();
-                    break;
-
-                default:
-                    view.MainControl.ContentTemplate = null;
-                    break;
-            }
-        }
 
         public ImmersiveControl()
         {
@@ -91,24 +43,6 @@ namespace Indirect.Controls
         {
             MediaPopup.Width = e.Size.Width;
             MediaPopup.Height = e.Size.Height > 32 ? e.Size.Height - 32 : e.Size.Height;
-        }
-
-        private void PrepareImageView()
-        {
-            MainControl.ContentTemplate = (DataTemplate)Resources["ImageView"];
-            var scrollviewer = this.FindDescendant<ScrollViewer>();
-            if (scrollviewer == null) return;
-            ScrollViewer_OnSizeChanged(scrollviewer, null);
-        }
-
-        private void PrepareVideoView()
-        {
-            MainControl.ContentTemplate = (DataTemplate)Resources["VideoView"];
-        }
-
-        private void PrepareReelView()
-        {
-            MainControl.ContentTemplate = (DataTemplate)Resources["ReelView"];
         }
 
         private void ScrollViewer_OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -163,7 +97,6 @@ namespace Indirect.Controls
             _focusedElement = FocusManager.GetFocusedElement() as Control;
             MediaPopup.IsOpen = true;
             Item = item;
-            MainControl.Focus(FocusState.Programmatic);
         }
 
         public void Close()
@@ -183,6 +116,35 @@ namespace Indirect.Controls
             catch (Exception)
             {
                 // pass
+            }
+        }
+
+        private void ScrollViewer_OnPreviewKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            var scrollviewer = (ScrollViewer) sender;
+            switch (e.Key)
+            {
+                case VirtualKey.GamepadRightTrigger:
+                    e.Handled = true;
+                    var zoomInFactor = scrollviewer.ZoomFactor + 0.2f;
+                    scrollviewer.ChangeView(null, null,
+                        zoomInFactor >= scrollviewer.MaxZoomFactor ? scrollviewer.MaxZoomFactor : zoomInFactor);
+                    break;
+                case VirtualKey.GamepadLeftTrigger:
+                    e.Handled = true;
+                    var zoomOutFactor = scrollviewer.ZoomFactor - 0.2f;
+                    scrollviewer.ChangeView(null, null,
+                        zoomOutFactor < scrollviewer.MinZoomFactor ? scrollviewer.MinZoomFactor : zoomOutFactor);
+                    break;
+            }
+        }
+
+        private void MainControl_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            if (MediaPopup.IsOpen)
+            {
+                var contentRoot = (Control)MainControl.ContentTemplateRoot;
+                contentRoot?.Focus(FocusState.Programmatic);
             }
         }
     }
