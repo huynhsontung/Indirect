@@ -7,6 +7,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
+using Windows.System.Profile;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -40,6 +41,10 @@ namespace Indirect
             this.Suspending += OnSuspending;
             this.Resuming += OnResuming;
             this.EnteredBackground += OnEnteredBackground;
+            if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
+            {
+                this.FocusVisualKind = FocusVisualKind.Reveal;
+            }
         }
 
         public async Task CloseAllSecondaryViews()
