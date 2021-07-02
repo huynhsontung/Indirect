@@ -31,29 +31,6 @@
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
-            <converters:LikeUnlikeStyleConverter x:Key="LikeUnlikeStyleConverter">
-                <converters:LikeUnlikeStyleConverter.LikeStyle>
-                    <Style x:Name="LikeMenuStyle" TargetType="MenuFlyoutItem">
-                        <Setter Property="Text" Value="Like" />
-                        <Setter Property="Icon">
-                            <Setter.Value>
-                                <FontIcon Glyph="&#xEB52;" />
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </converters:LikeUnlikeStyleConverter.LikeStyle>
-                <converters:LikeUnlikeStyleConverter.UnlikeStyle>
-                    <Style x:Name="UnlikeMenuStyle" TargetType="MenuFlyoutItem">
-                        <Setter Property="Text" Value="Unlike" />
-                        <Setter Property="Icon">
-                            <Setter.Value>
-                                <FontIcon Glyph="&#xEB51;" />
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </converters:LikeUnlikeStyleConverter.UnlikeStyle>
-            </converters:LikeUnlikeStyleConverter>
-
             <converters:NullVisibilityConverter x:Key="NullVisibilityConverter" />
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter" />
             <converters:FromMeBoolToGridColumnConverter x:Key="FromMeBoolToGridColumnConverter" />
@@ -70,6 +47,8 @@
             <converters:VariableMaxWidthConverter x:Key="VariableMaxWidthConverter" />
             <converters:ReelShareImageMarginConverter x:Key="ReelShareImageMarginConverter" />
             <converters:HumanizedDateTimeConverter x:Key="HumanizedDateTimeConverter" />
+
+            <ThemeShadow x:Name="SharedShadow" />
 
             <Style
                 x:Name="AvailableOpen"
@@ -704,7 +683,9 @@
                 Content="{x:Bind Item}"
                 ContentTemplateSelector="{StaticResource ItemTemplateSelector}"
                 DoubleTapped="Item_DoubleTapped"
-                SizeChanged="ConfigTooltip_OnSizeChanged" />
+                Shadow="{StaticResource SharedShadow}"
+                SizeChanged="ConfigTooltip_OnSizeChanged"
+                Translation="0,0,2" />
 
             <controls1:ReactionsControl
                 Margin="6,-2,6,0"

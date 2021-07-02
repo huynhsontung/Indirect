@@ -70,7 +70,7 @@
         <Border
             Grid.Row="0"
             Grid.RowSpan="2"
-            Background="{ThemeResource SystemControlAcrylicElementBrush}"
+            Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
             Canvas.ZIndex="1"
             Visibility="{x:Bind ThreadHeaderVisibility, Mode=OneWay}" />
 
@@ -203,7 +203,7 @@
                         Text="Send your first message to start chatting"
                         Visibility="{x:Bind Thread.ObservableItems.Count, Converter={StaticResource VisibleWhenZeroConverter}, Mode=OneWay}" />
 
-                    <!--<Grid x:Name="PendingControlGrid" HorizontalAlignment="Stretch" Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                    <!--<Grid x:Name="PendingControlGrid" HorizontalAlignment="Stretch" Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
                           Visibility="{x:Bind Thread.Pending, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
                         <Grid.Resources>
                             <ResourceDictionary>
@@ -297,7 +297,7 @@
                 Grid.Column="2"
                 Margin="4"
                 Padding="10,6,6,6"
-                Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
                 CornerRadius="2"
                 Visibility="{x:Bind Thread.ReplyingItem, Converter={StaticResource NullVisibilityConverter}, Mode=OneWay}">
                 <Grid.ColumnDefinitions>

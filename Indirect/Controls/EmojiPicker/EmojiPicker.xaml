@@ -43,7 +43,7 @@
 
                         <TextBox
                             x:Name="SearchBox"
-                            Margin="12, 0, 12, 0"
+                            Margin="12,0,12,0"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"
                             Background="Transparent"
@@ -114,7 +114,7 @@
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Bottom"
                                 BorderBrush="{ThemeResource SystemControlBackgroundAccentBrush}"
-                                BorderThickness="0 0 0 4">
+                                BorderThickness="0,0,0,4">
 
                                 <SymbolIcon
                                     HorizontalAlignment="Center"

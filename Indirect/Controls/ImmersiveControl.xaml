@@ -75,7 +75,7 @@
         Width="400"
         Height="200"
         IsOpen="False">
-        <Grid Background="{ThemeResource SystemControlAcrylicElementBrush}" XYFocusDownNavigationStrategy="NavigationDirectionDistance">
+        <Grid Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}" XYFocusDownNavigationStrategy="NavigationDirectionDistance">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>

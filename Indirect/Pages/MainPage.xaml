@@ -11,6 +11,7 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:users="using:InstagramAPI.Classes.User"
     xmlns:wrappers="using:Indirect.Entities.Wrappers"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="d">
 
@@ -114,7 +115,7 @@
             CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}"
             IntermediateModeThresholdWidth="{StaticResource FullWindowWidth}"
             ItemsSource="{x:Bind Inbox.Threads, Mode=OneWay}"
-            MasterPaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}"
+            MasterPaneBackground="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
             SelectedItem="{x:Bind ViewModel.Inbox.SelectedThread, Mode=TwoWay}">
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
                 <Grid

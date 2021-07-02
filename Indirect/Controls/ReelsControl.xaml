@@ -239,7 +239,7 @@
             Grid.Row="1"
             Grid.RowSpan="2"
             AutomationProperties.Name="Story view"
-            Background="{ThemeResource SystemControlAcrylicWindowBrush}"
+            Background="Transparent"
             ItemsSource="{x:Bind Source.Items, Mode=OneWay}"
             KeyDown="StoryView_OnKeyDown"
             Loaded="StoryView_OnLoaded"

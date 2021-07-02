@@ -1,25 +1,30 @@
 ﻿<UserControl
-    x:Class="Indirect.Controls.ReelProgressIndicator" x:Name="ReelProgressIndicatorXaml"
+    x:Class="Indirect.Controls.ReelProgressIndicator"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Indirect.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:entities="using:Indirect.Entities"
-    mc:Ignorable="d"
+    xmlns:local="using:Indirect.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    x:Name="ReelProgressIndicatorXaml"
     d:DesignHeight="300"
     d:DesignWidth="400"
-    SizeChanged="ReelProgressIndicator_OnSizeChanged">
+    SizeChanged="ReelProgressIndicator_OnSizeChanged"
+    mc:Ignorable="d">
 
-    <ItemsControl ItemsSource="{x:Bind IndicatorCollection}" Height="4" HorizontalAlignment="Stretch">
+    <ItemsControl HorizontalAlignment="Stretch" ItemsSource="{x:Bind IndicatorCollection}">
         <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-                <ItemsStackPanel Orientation="Horizontal"/>
+                <ItemsStackPanel Orientation="Horizontal" />
             </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="entities:ProgressItem">
-                <ProgressBar Width="{Binding SingleWidth, ElementName=ReelProgressIndicatorXaml, FallbackValue=60}" Value="{x:Bind Value, Mode=OneWay}" Margin="0,0,2,0"/>
+                <muxc:ProgressBar
+                    Width="{Binding SingleWidth, ElementName=ReelProgressIndicatorXaml, FallbackValue=60}"
+                    Margin="0,0,2,0"
+                    Value="{x:Bind Value, Mode=OneWay}" />
             </DataTemplate>
         </ItemsControl.ItemTemplate>
     </ItemsControl>
