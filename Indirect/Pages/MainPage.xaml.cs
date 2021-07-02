@@ -393,7 +393,12 @@ namespace Indirect.Pages
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            var about = new AboutDialog();
+            var about = new ContentDialog
+            {
+                Title = "About",
+                CloseButtonText = "Close",
+                Content = new AboutPage()
+            };
             _ = about.ShowAsync();
         }
 

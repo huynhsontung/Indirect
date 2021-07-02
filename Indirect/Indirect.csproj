@@ -138,6 +138,9 @@
     <Compile Include="Controls\Selectors\MediaTemplateSelector.cs" />
     <Compile Include="Entities\LinkTextForDisplay.cs" />
     <Compile Include="MainViewModel.Handlers.cs" />
+    <Compile Include="Pages\AboutPage.xaml.cs">
+      <DependentUpon>AboutPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Services\ContactsService.cs" />
     <Compile Include="Controls\AnimatedImagePicker.xaml.cs">
       <DependentUpon>AnimatedImagePicker.xaml</DependentUpon>
@@ -150,9 +153,6 @@
     </Compile>
     <Compile Include="Controls\TwoFactorAuthDialog.xaml.cs">
       <DependentUpon>TwoFactorAuthDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\AboutDialog.xaml.cs">
-      <DependentUpon>AboutDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ReelsControl.xaml.cs">
       <DependentUpon>ReelsControl.xaml</DependentUpon>
@@ -342,10 +342,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\AboutDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Controls\AutoVideoControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -377,6 +373,10 @@
     <Page Include="Controls\UserInfoView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\AboutPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\ContactPanelPage.xaml">
       <SubType>Designer</SubType>
