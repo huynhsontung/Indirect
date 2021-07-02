@@ -42,7 +42,7 @@ namespace InstagramAPI.Classes.Core
 
         [JsonProperty]
         [JsonConverter(typeof(CookieCollectionConverter))]
-        internal CookieCollection Cookies { get; set; }
+        public CookieCollection Cookies { get; internal set; }
 
         [JsonProperty]
         internal FbnsConnectionData PushData { get; }

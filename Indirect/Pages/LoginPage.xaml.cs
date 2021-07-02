@@ -201,8 +201,7 @@ namespace Indirect.Pages
                         case LoginResult.ChallengeRequired:
                             if (_session.ChallengeInfo != null && !WebviewPopup.IsOpen)
                             {
-                                LoginWebview.Navigate(_session.ChallengeInfo.Url);
-                                WebviewPopup.IsOpen = true;
+                                OpenChallengeInWebView(_session.ChallengeInfo.Url);
                             }
 
                             break;
@@ -281,12 +280,28 @@ namespace Indirect.Pages
             return false;
         }
 
+        private void OpenChallengeInWebView(Uri uri)
+        {
+            Instagram.SetAppCookies(_session.Cookies);
+            LoginWebview.Navigate(uri);
+            WebviewPopup.IsOpen = true;
+        }
+
         private async Task TwoFactorAuthAsync()
         {
             var tfaDialog = new TwoFactorAuthDialog(_session);
             var dialogResult = await tfaDialog.ShowAsync();
             if (dialogResult == ContentDialogResult.Primary)
-                await TryNavigateToMainPage();
+            {
+                if (_session.ChallengeInfo == null)
+                {
+                    await TryNavigateToMainPage();
+                }
+                else
+                {
+                    OpenChallengeInWebView(_session.ChallengeInfo.Url);
+                }
+            }
         }
 
         private async Task TryNavigateToMainPage()

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
@@ -29,22 +30,31 @@ namespace Indirect.Controls
                 ErrorMessage.Text = "Please enter a valid security code";
                 return;
             }
-            var deferral = args.GetDeferral();
-            this.IsPrimaryButtonEnabled = false;
-            var result = await Instagram.LoginWithTwoFactorAsync(CodeBox.Text, _session);
-            if (!result.IsSucceeded)
-            {
-                args.Cancel = true;
-                ErrorMessage.Text = result.Message;
 
-                if (result.Exception != null)
+            var deferral = args.GetDeferral();
+            try
+            {
+                this.IsPrimaryButtonEnabled = false;
+                var result = await Instagram.LoginWithTwoFactorAsync(CodeBox.Text, _session);
+                if (!result.IsSucceeded)
                 {
-                    DebugLogger.LogException(result.Exception);
+                    if (result.Value != LoginResult.ChallengeRequired)
+                    {
+                        args.Cancel = true;
+                        ErrorMessage.Text = result.Message;
+                    }
+
+                    if (result.Exception != null)
+                    {
+                        DebugLogger.LogException(result.Exception);
+                    }
                 }
             }
-
-            this.IsPrimaryButtonEnabled = true;
-            deferral.Complete();
+            finally
+            {
+                this.IsPrimaryButtonEnabled = true;
+                deferral.Complete();
+            }
         }
 
         private async void TwoFactorAuthDialog_OnOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)

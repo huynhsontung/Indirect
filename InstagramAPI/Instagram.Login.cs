@@ -33,9 +33,9 @@ namespace InstagramAPI
                 return Result<LoginResult>.Success(LoginResult.Success);
             }
 
+            var httpClient = new HttpClientManager(session);
             try
             {
-                var httpClient = new HttpClientManager(session);
                 await httpClient.GetAsync(UriCreator.BaseInstagramUri);
 
                 var loginUri = UriCreator.GetLoginUri();
@@ -67,36 +67,46 @@ namespace InstagramAPI
                             session.Username = loginFailReason.TwoFactorLoginInfo.Username;
                         session.TwoFactorInfo = loginFailReason.TwoFactorLoginInfo;
                         //2FA is required!
-                        return Result<LoginResult>.Fail(LoginResult.TwoFactorRequired, "Two Factor Authentication is required", json);
+                        return Result<LoginResult>.Fail(LoginResult.TwoFactorRequired,
+                            "Two Factor Authentication is required", json);
                     }
+
                     if (loginFailReason.ErrorType == "checkpoint_challenge_required"
-                       /* || !string.IsNullOrEmpty(loginFailReason.Message) && loginFailReason.Message == "challenge_required"*/)
+                        /* || !string.IsNullOrEmpty(loginFailReason.Message) && loginFailReason.Message == "challenge_required"*/
+                    )
                     {
                         session.ChallengeInfo = loginFailReason.Challenge;
 
                         return Result<LoginResult>.Fail(LoginResult.ChallengeRequired, "Challenge is required", json);
                     }
+
                     if (loginFailReason.ErrorType == "rate_limit_error")
                     {
-                        return Result<LoginResult>.Fail(LoginResult.LimitError, "Please wait a few minutes before you try again.", json);
+                        return Result<LoginResult>.Fail(LoginResult.LimitError,
+                            "Please wait a few minutes before you try again.", json);
                     }
+
                     if (loginFailReason.ErrorType == "inactive user" || loginFailReason.ErrorType == "inactive_user")
                     {
-                        return Result<LoginResult>.Fail(LoginResult.InactiveUser, $"{loginFailReason.Message}\r\nHelp url: {loginFailReason.HelpUrl}");
+                        return Result<LoginResult>.Fail(LoginResult.InactiveUser,
+                            $"{loginFailReason.Message}\r\nHelp url: {loginFailReason.HelpUrl}");
                     }
+
                     if (loginFailReason.ErrorType == "checkpoint_logged_out")
                     {
-                        return Result<LoginResult>.Fail(LoginResult.CheckpointLoggedOut, $"{loginFailReason.ErrorType} {loginFailReason.CheckpointUrl}");
+                        return Result<LoginResult>.Fail(LoginResult.CheckpointLoggedOut,
+                            $"{loginFailReason.ErrorType} {loginFailReason.CheckpointUrl}");
                     }
+
                     return Result<LoginResult>.Fail(LoginResult.Exception, json: json);
                 }
+
                 var loginInfo = JsonConvert.DeserializeObject<LoginResponse>(json);
                 if (loginInfo.User == null)
                 {
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
 
-                session.Cookies = httpClient.Cookies;
                 session.AuthorizationToken = HttpClientManager.GetAuthToken(response.Headers);
                 session.Username = loginInfo.User.Username;
                 session.LoggedInUser = loginInfo.User;
@@ -106,6 +116,10 @@ namespace InstagramAPI
             {
                 DebugLogger.LogException(exception);
                 return Result<LoginResult>.Except(exception, LoginResult.Exception);
+            }
+            finally
+            {
+                session.Cookies = httpClient.Cookies;
             }
         }
 
@@ -129,9 +143,9 @@ namespace InstagramAPI
                 return Result<LoginResult>.Success(LoginResult.Success);
             }
 
+            var httpClient = new HttpClientManager(session);
             try
             {
-                var httpClient = new HttpClientManager(session);
                 if (string.IsNullOrEmpty(fbAccessToken)) throw new ArgumentNullException(nameof(fbAccessToken));
                 await httpClient.GetAsync(UriCreator.BaseInstagramUri);
 
@@ -143,8 +157,8 @@ namespace InstagramAPI
                     {"phone_id", session.Device.PhoneId.ToString()},
                     {"_csrftoken", httpClient.GetCsrfToken()},
                     {"adid", Guid.NewGuid().ToString()},
-                    {"guid",  session.Device.Uuid.ToString()},
-                    {"_uuid",  session.Device.Uuid.ToString()},
+                    {"guid", session.Device.Uuid.ToString()},
+                    {"_uuid", session.Device.Uuid.ToString()},
                     {"device_id", session.Device.DeviceId},
                     {"waterfall_id", Guid.NewGuid().ToString()},
                     {"fb_access_token", fbAccessToken},
@@ -168,26 +182,35 @@ namespace InstagramAPI
                         if (loginFailReason.TwoFactorLoginInfo != null)
                             session.Username = loginFailReason.TwoFactorLoginInfo.Username;
                         session.TwoFactorInfo = loginFailReason.TwoFactorLoginInfo;
-                        return Result<LoginResult>.Fail(LoginResult.TwoFactorRequired, "Two Factor Authentication is required", json);
+                        return Result<LoginResult>.Fail(LoginResult.TwoFactorRequired,
+                            "Two Factor Authentication is required", json);
                     }
+
                     if (loginFailReason.ErrorType == "checkpoint_challenge_required")
                     {
                         session.ChallengeInfo = loginFailReason.Challenge;
 
                         return Result<LoginResult>.Fail(LoginResult.ChallengeRequired, "Challenge is required", json);
                     }
+
                     if (loginFailReason.ErrorType == "rate_limit_error")
                     {
-                        return Result<LoginResult>.Fail(LoginResult.LimitError, "Please wait a few minutes before you try again.", json);
+                        return Result<LoginResult>.Fail(LoginResult.LimitError,
+                            "Please wait a few minutes before you try again.", json);
                     }
+
                     if (loginFailReason.ErrorType == "inactive user" || loginFailReason.ErrorType == "inactive_user")
                     {
-                        return Result<LoginResult>.Fail(LoginResult.InactiveUser, $"{loginFailReason.Message}\r\nHelp url: {loginFailReason.HelpUrl}");
+                        return Result<LoginResult>.Fail(LoginResult.InactiveUser,
+                            $"{loginFailReason.Message}\r\nHelp url: {loginFailReason.HelpUrl}");
                     }
+
                     if (loginFailReason.ErrorType == "checkpoint_logged_out")
                     {
-                        return Result<LoginResult>.Fail(LoginResult.CheckpointLoggedOut, $"{loginFailReason.ErrorType} {loginFailReason.CheckpointUrl}");
+                        return Result<LoginResult>.Fail(LoginResult.CheckpointLoggedOut,
+                            $"{loginFailReason.ErrorType} {loginFailReason.CheckpointUrl}");
                     }
+
                     return Result<LoginResult>.Fail(LoginResult.Exception, json: json);
                 }
 
@@ -205,7 +228,8 @@ namespace InstagramAPI
                         }
                         else
                         {
-                            return Result<LoginResult>.Fail(LoginResult.Exception, "Facebook account is not linked", json);
+                            return Result<LoginResult>.Fail(LoginResult.Exception, "Facebook account is not linked",
+                                json);
                         }
                     }
                 }
@@ -219,7 +243,6 @@ namespace InstagramAPI
 
                 if (loginInfoUser == null) return Result<LoginResult>.Fail(LoginResult.Exception, json: json);
 
-                session.Cookies = httpClient.Cookies;
                 session.AuthorizationToken = HttpClientManager.GetAuthToken(response.Headers);
                 session.LoggedInUser = loginInfoUser;
                 session.FacebookUserId = fbUserId;
@@ -232,6 +255,10 @@ namespace InstagramAPI
                 DebugLogger.LogException(exception);
                 return Result<LoginResult>.Except(exception, LoginResult.Exception);
             }
+            finally
+            {
+                session.Cookies = httpClient.Cookies;
+            }
         }
 
         public static async Task<Result<LoginResult>> LoginWithTwoFactorAsync(string verificationCode, UserSessionData session)
@@ -240,9 +267,9 @@ namespace InstagramAPI
                 return Result<LoginResult>.Except(new ArgumentNullException(nameof(session.TwoFactorInfo),
                     "Cannot login with two factor before logging in normally"));
 
+            var httpClient = new HttpClientManager(session);
             try
             {
-                var httpClient = new HttpClientManager(session);
                 var twoFactorData = new JObject
                 {
                     {"verification_code", verificationCode},
@@ -268,13 +295,17 @@ namespace InstagramAPI
                     var loginFailReason = JsonConvert.DeserializeObject<LoginFailedResponse>(json);
 
                     if (loginFailReason.ErrorType == "sms_code_validation_code_invalid")
-                        return Result<LoginResult>.Fail(LoginResult.InvalidCode, "Please check the security code.", json);
-                    if (loginFailReason.Challenge != null)
+                        return Result<LoginResult>.Fail(LoginResult.InvalidCode, "Please check the security code.",
+                            json);
+                    if (loginFailReason.ErrorType == "checkpoint_challenge_required")
                     {
                         session.ChallengeInfo = loginFailReason.Challenge;
+                        session.TwoFactorInfo = null;
                         return Result<LoginResult>.Fail(LoginResult.ChallengeRequired, "Challenge is required", json);
                     }
-                    return Result<LoginResult>.Fail(LoginResult.CodeExpired, "This code is no longer valid, please, call LoginAsync again to request a new one", json);
+
+                    return Result<LoginResult>.Fail(LoginResult.CodeExpired,
+                        "This code is no longer valid, please, call LoginAsync again to request a new one", json);
                 }
 
                 var loginInfo =
@@ -284,7 +315,6 @@ namespace InstagramAPI
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
 
-                session.Cookies = httpClient.Cookies;
                 session.AuthorizationToken = HttpClientManager.GetAuthToken(response.Headers);
                 session.Username = loginInfo.User.Username;
                 session.LoggedInUser = loginInfo.User;
@@ -295,6 +325,10 @@ namespace InstagramAPI
             {
                 DebugLogger.LogException(exception);
                 return Result<LoginResult>.Except(exception, LoginResult.Exception);
+            }
+            finally
+            {
+                session.Cookies = httpClient.Cookies;
             }
         }
     }

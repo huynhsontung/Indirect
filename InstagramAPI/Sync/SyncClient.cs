@@ -120,7 +120,7 @@ namespace InstagramAPI.Sync
                 );
                 var username = JsonConvert.SerializeObject(json, Formatting.None);
                 connectPacket.Username = username;
-                SetCookies(_instaApi.HttpClient.Cookies);
+                Instagram.SetAppCookies(_instaApi.HttpClient.Cookies);
                 var messageWebsocket = new MessageWebSocket();
                 messageWebsocket.Control.MessageType = SocketMessageType.Binary;
                 messageWebsocket.SetRequestHeader("User-Agent", userAgent);
@@ -156,29 +156,6 @@ namespace InstagramAPI.Sync
             };
 
             await WriteAndFlushPacketAsync(publishPacket, _socket.OutputStream);
-        }
-
-        private static void SetCookies(CookieCollection cookies)
-        {
-            var filter = new HttpBaseProtocolFilter();
-            var cookieManager = filter.CookieManager;
-            
-            foreach (Cookie netCookie in cookies)
-            {
-                var cookie = new HttpCookie(netCookie.Name, netCookie.Domain, netCookie.Path)
-                {
-                    Value = netCookie.Value,
-                    HttpOnly = netCookie.HttpOnly,
-                    Secure = netCookie.Secure
-                };
-
-                if (netCookie.Expires != DateTime.MinValue)
-                {
-                    cookie.Expires = netCookie.Expires;
-                }
-
-                cookieManager.SetCookie(cookie);
-            }
         }
 
         private JObject MakeSendMessageJson(JObject content)

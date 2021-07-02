@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Net;
 using Windows.Networking.Connectivity;
+using Windows.Web.Http;
+using Windows.Web.Http.Filters;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
@@ -39,6 +42,29 @@ namespace InstagramAPI
                 {"num_reupload", 0},
                 {"num_step_manual_retry", 0}
             }.ToString(Formatting.None);
+        }
+
+        public static void SetAppCookies(CookieCollection cookies)
+        {
+            var filter = new HttpBaseProtocolFilter();
+            var cookieManager = filter.CookieManager;
+
+            foreach (Cookie netCookie in cookies)
+            {
+                var cookie = new HttpCookie(netCookie.Name, netCookie.Domain, netCookie.Path)
+                {
+                    Value = netCookie.Value,
+                    HttpOnly = netCookie.HttpOnly,
+                    Secure = netCookie.Secure
+                };
+
+                if (netCookie.Expires != DateTime.MinValue)
+                {
+                    cookie.Expires = netCookie.Expires;
+                }
+
+                cookieManager.SetCookie(cookie);
+            }
         }
 
         public static bool InternetAvailable()
