@@ -314,6 +314,7 @@ namespace Indirect.Pages
                 if (!IsSessionDuplicated(_session))
                 {
                     await ViewModel.SwitchAccountAsync(_session);
+                    await ViewModel.SaveDataAsync();
                 }
 
                 Frame.Navigate(typeof(MainPage));

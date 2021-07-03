@@ -84,7 +84,6 @@ namespace Indirect
             ReelsFeed.StopReelsFeedUpdateLoop(true);
             var tasks = new List<Task>
             {
-                SaveDataAsync(),
                 Inbox.ClearInbox(),
                 GetUserPresence(),
                 ReelsFeed.UpdateReelsFeedAsync(),
