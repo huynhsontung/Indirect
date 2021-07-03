@@ -247,6 +247,7 @@
                                         <Setter Target="RootPanelSplitter.Visibility" Value="Collapsed" />
                                         <Setter Target="MasterPanel.Width" Value="80" />
                                         <Setter Target="MasterColumn.Width" Value="Auto" />
+                                        <Setter Target="MasterColumn.MinWidth" Value="0" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="WideState" />

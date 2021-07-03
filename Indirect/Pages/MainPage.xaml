@@ -615,7 +615,6 @@
                     <VisualState.Setters>
                         <Setter Target="NewMessageButton.Width" Value="56" />
                         <Setter Target="NewMessageButton.Margin" Value="0,0,0,4" />
-                        <Setter Target="MainLayout.MasterPaneWidth" Value="80" />
                         <Setter Target="MasterHeading.Visibility" Value="Collapsed" />
                         <Setter Target="MasterMenuButton.Visibility" Value="Collapsed" />
                         <Setter Target="SearchBox.Visibility" Value="Collapsed" />
