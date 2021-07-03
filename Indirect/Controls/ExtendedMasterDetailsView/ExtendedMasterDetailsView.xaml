@@ -226,7 +226,6 @@
                                         <Setter Target="NoSelectionPresenter.Visibility" Value="Collapsed" />
                                         <Setter Target="SelectionDetailsPanel.Visibility" Value="Collapsed" />
                                         <Setter Target="MasterPanel.Visibility" Value="Visible" />
-                                        <Setter Target="DetailsPanel.Background" Value="{x:Null}" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
