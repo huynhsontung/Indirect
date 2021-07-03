@@ -6,8 +6,6 @@
     xmlns:controls="using:Indirect.Controls">
 
     <Style TargetType="controls:ExtendedMasterDetailsView">
-        <Setter Property="Background" Value="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource ApplicationForegroundThemeBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="IsTabStop" Value="False" />
         <Setter Property="Template">
@@ -81,6 +79,7 @@
                             <Grid
                                 x:Name="DetailsPanel"
                                 Grid.Column="1"
+                                Background="{TemplateBinding DetailsPaneBackground}"
                                 contract8Present:Shadow="{StaticResource MainShadow}"
                                 contract8Present:Translation="0,0,8"
                                 XYFocusKeyboardNavigation="Enabled">

@@ -12,7 +12,6 @@
     xmlns:users="using:InstagramAPI.Classes.User"
     xmlns:wrappers="using:Indirect.Entities.Wrappers"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -109,10 +108,10 @@
             Grid.Row="0"
             Grid.RowSpan="2"
             BackButtonBehavior="Manual"
-            Background="{ThemeResource MainBackground}"
             BorderBrush="Transparent"
             BorderThickness="0"
             CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}"
+            DetailsPaneBackground="{ThemeResource MainBackground}"
             IntermediateModeThresholdWidth="{StaticResource FullWindowWidth}"
             ItemsSource="{x:Bind Inbox.Threads, Mode=OneWay}"
             MasterPaneBackground="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
@@ -146,10 +145,9 @@
                         ScrollViewer.VerticalScrollMode="Disabled"
                         SelectionMode="None">
                         <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
+                            <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
                                 <Setter Property="MinHeight" Value="0" />
                                 <Setter Property="MinWidth" Value="0" />
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                             </Style>
                         </ListView.ItemContainerStyle>
                         <ListView.ItemsPanel>

@@ -58,6 +58,16 @@ namespace Indirect.Controls
             new PropertyMetadata(null));
 
         /// <summary>
+        /// Identifies the <see cref="DetailsPaneBackground"/> dependency property.
+        /// </summary>
+        /// <returns>The identifier for the <see cref="DetailsPaneBackground"/> dependency property.</returns>
+        public static readonly DependencyProperty DetailsPaneBackgroundProperty = DependencyProperty.Register(
+            nameof(DetailsPaneBackground),
+            typeof(Brush),
+            typeof(ExtendedMasterDetailsView),
+            new PropertyMetadata(null));
+
+        /// <summary>
         /// Identifies the <see cref="MasterHeader"/> dependency property.
         /// </summary>
         /// <returns>The identifier for the <see cref="MasterHeader"/> dependency property.</returns>
@@ -241,6 +251,16 @@ namespace Indirect.Controls
         {
             get { return (Brush)GetValue(MasterPaneBackgroundProperty); }
             set { SetValue(MasterPaneBackgroundProperty, value); }
+        }
+
+        // <summary>
+        /// Gets or sets the Brush to apply to the background of the details area of the control.
+        /// </summary>
+        /// <returns>The Brush to apply to the background of the details area of the control.</returns>
+        public Brush DetailsPaneBackground
+        {
+            get { return (Brush)GetValue(DetailsPaneBackgroundProperty); }
+            set { SetValue(DetailsPaneBackgroundProperty, value); }
         }
 
         /// <summary>
