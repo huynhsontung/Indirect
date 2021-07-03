@@ -8,7 +8,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
-using Indirect.Controls;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Utils;
@@ -289,8 +288,7 @@ namespace Indirect.Pages
 
         private async Task TwoFactorAuthAsync()
         {
-            var tfaDialog = new TwoFactorAuthDialog(_session);
-            var dialogResult = await tfaDialog.ShowAsync();
+            var dialogResult = await TwoFactorAuthPage.ShowAsync(_session);
             if (dialogResult == ContentDialogResult.Primary)
             {
                 if (_session.ChallengeInfo == null)

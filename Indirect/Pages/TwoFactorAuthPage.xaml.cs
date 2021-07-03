@@ -1,28 +1,45 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using InstagramAPI;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Utils;
 
-// The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
+// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
-namespace Indirect.Controls
+namespace Indirect
 {
-    public sealed partial class TwoFactorAuthDialog : ContentDialog
+    /// <summary>
+    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// </summary>
+    public sealed partial class TwoFactorAuthPage : Page
     {
         private readonly UserSessionData _session;
 
-        public TwoFactorAuthDialog(UserSessionData session)
+        public TwoFactorAuthPage(UserSessionData session)
         {
             this.InitializeComponent();
             _session = session;
         }
 
-        private async void ConfirmSecurityCode(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        public static async Task<ContentDialogResult> ShowAsync(UserSessionData session)
+        {
+            var page = new TwoFactorAuthPage(session);
+            var dialog = new ContentDialog
+            {
+                Title = "Two-factor authentication required",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Primary,
+                PrimaryButtonText = "Confirm",
+                Content = page
+            };
+            dialog.Opened += page.OnDialogOpened;
+            dialog.PrimaryButtonClick += page.OnDialogPrimaryButtonClick;
+            return await dialog.ShowAsync();
+        }
+
+        private async void OnDialogPrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
             if (CodeBox.Text.Length < 6)
             {
@@ -34,7 +51,7 @@ namespace Indirect.Controls
             var deferral = args.GetDeferral();
             try
             {
-                this.IsPrimaryButtonEnabled = false;
+                sender.IsPrimaryButtonEnabled = false;
                 var result = await Instagram.LoginWithTwoFactorAsync(CodeBox.Text, _session);
                 if (!result.IsSucceeded)
                 {
@@ -52,16 +69,14 @@ namespace Indirect.Controls
             }
             finally
             {
-                this.IsPrimaryButtonEnabled = true;
+                sender.IsPrimaryButtonEnabled = true;
                 deferral.Complete();
             }
         }
 
-        private async void TwoFactorAuthDialog_OnOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
+        private void OnDialogOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
         {
             ErrorMessage.Text = string.Empty;
-            await Task.Delay(200);
-            CodeBox.Focus(FocusState.Programmatic);
         }
 
         private void CodeBox_OnTextChanging(TextBox sender, TextBoxTextChangingEventArgs args)

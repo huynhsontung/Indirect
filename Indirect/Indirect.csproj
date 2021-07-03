@@ -151,9 +151,6 @@
     <Compile Include="Controls\ReelProgressIndicator.xaml.cs">
       <DependentUpon>ReelProgressIndicator.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\TwoFactorAuthDialog.xaml.cs">
-      <DependentUpon>TwoFactorAuthDialog.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Controls\ReelsControl.xaml.cs">
       <DependentUpon>ReelsControl.xaml</DependentUpon>
     </Compile>
@@ -203,6 +200,9 @@
     </Compile>
     <Compile Include="Services\ChatService.cs" />
     <Compile Include="Services\SettingsService.cs" />
+    <Compile Include="Pages\TwoFactorAuthPage.xaml.cs">
+      <DependentUpon>TwoFactorAuthPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Utilities\Debouncer.cs" />
     <Compile Include="Utilities\Helpers.cs" />
     <Compile Include="Controls\Selectors\ItemTemplateSelector.cs" />
@@ -338,10 +338,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\TwoFactorAuthDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Controls\AutoVideoControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -395,6 +391,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\ThreadPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\TwoFactorAuthPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

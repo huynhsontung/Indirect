@@ -1,16 +1,10 @@
-﻿<ContentDialog
-    x:Class="Indirect.Controls.TwoFactorAuthDialog"
+﻿<Page
+    x:Class="Indirect.TwoFactorAuthPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="using:Indirect.Controls"
+    xmlns:local="using:Indirect"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="Two-factor authentication required"
-    CloseButtonText="Cancel"
-    DefaultButton="Primary"
-    Opened="TwoFactorAuthDialog_OnOpened"
-    PrimaryButtonClick="ConfirmSecurityCode"
-    PrimaryButtonText="Confirm"
     mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical">
@@ -27,6 +21,7 @@
             HorizontalAlignment="Left"
             MaxLength="8"
             PlaceholderText="Security code"
+            TabIndex="0"
             TextChanging="CodeBox_OnTextChanging" />
         <TextBlock
             x:Name="ErrorMessage"
@@ -34,4 +29,4 @@
             Foreground="Firebrick"
             TextWrapping="Wrap" />
     </StackPanel>
-</ContentDialog>
+</Page>
