@@ -379,5 +379,10 @@ namespace Indirect.Pages
                 Frame.GoBack();
             }
         }
+
+        private double IsEnabledToOpacity(bool isEnabled)
+        {
+            return isEnabled ? 1 : 0.4;
+        }
     }
 }
