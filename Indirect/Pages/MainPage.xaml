@@ -2,6 +2,7 @@
     x:Class="Indirect.Pages.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:contract13NotPresent="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractNotPresent(Windows.Foundation.UniversalApiContract, 13)"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:Indirect.Controls"
     xmlns:converters="using:Indirect.Converters"
@@ -51,7 +52,10 @@
         </ResourceDictionary>
     </Page.Resources>
 
-    <Grid TabFocusNavigation="Once" XYFocusKeyboardNavigation="Enabled">
+    <Grid
+        contract13NotPresent:Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+        TabFocusNavigation="Once"
+        XYFocusKeyboardNavigation="Enabled">
         <Grid.RowDefinitions>
             <RowDefinition Height="32" />
             <RowDefinition />
@@ -114,7 +118,6 @@
             DetailsPaneBackground="{ThemeResource MainBackground}"
             IntermediateModeThresholdWidth="{StaticResource FullWindowWidth}"
             ItemsSource="{x:Bind Inbox.Threads, Mode=OneWay}"
-            MasterPaneBackground="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
             SelectedItem="{x:Bind ViewModel.Inbox.SelectedThread, Mode=TwoWay}">
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
                 <Grid
@@ -145,7 +148,7 @@
                         ScrollViewer.VerticalScrollMode="Disabled"
                         SelectionMode="None">
                         <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                            <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
                                 <Setter Property="MinHeight" Value="0" />
                                 <Setter Property="MinWidth" Value="0" />
                             </Style>

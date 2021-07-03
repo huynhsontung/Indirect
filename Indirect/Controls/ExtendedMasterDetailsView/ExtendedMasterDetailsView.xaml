@@ -79,9 +79,9 @@
                             <Grid
                                 x:Name="DetailsPanel"
                                 Grid.Column="1"
-                                Background="{TemplateBinding DetailsPaneBackground}"
                                 contract8Present:Shadow="{StaticResource MainShadow}"
                                 contract8Present:Translation="0,0,8"
+                                Background="{TemplateBinding DetailsPaneBackground}"
                                 XYFocusKeyboardNavigation="Enabled">
                                 <ContentPresenter
                                     x:Name="NoSelectionPresenter"
