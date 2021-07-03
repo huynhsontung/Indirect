@@ -114,7 +114,6 @@ namespace Indirect.Controls
             SizeChanged -= MasterDetailsView_SizeChanged;
             SizeChanged += MasterDetailsView_SizeChanged;
 
-            DrawShadow();
             UpdateView(true);
         }
 
@@ -358,37 +357,29 @@ namespace Indirect.Controls
             }
         }
 
-        private void DrawShadow()
+        private void UpdateShadow()
         {
-            try
+            var shadow = GetTemplateChild(PartMainShadow) as ThemeShadow;
+            var mainPanel = GetTemplateChild(PartMasterPanel) as FrameworkElement;
+            if (shadow == null || mainPanel == null)
             {
-                var shadow = GetTemplateChild(PartMainShadow) as ThemeShadow;
-                var mainPanel = GetTemplateChild(PartMasterPanel) as FrameworkElement;
-                var details = GetTemplateChild(PartDetailsPanel) as FrameworkElement;
-                if (shadow == null || mainPanel == null || details == null) return;
-                shadow.Receivers.Add(mainPanel);
-                details.Translation += new Vector3(0, 0, 16);
-                ViewStateChanged += (sender, state) =>
-                {
-                    if (state == MasterDetailsViewState.Master || state == MasterDetailsViewState.Details)
-                    {
-                        shadow.Receivers.Clear();
-                    }
-                    else if (shadow.Receivers.Count == 0)
-                    {
-                        shadow.Receivers.Add(mainPanel);
-                    }
-                };
+                return;
             }
-            catch (Exception)
+
+            if (ViewState != MasterDetailsViewState.Both)
             {
-                // Failed to set config Shadow. Maybe old system?
+                shadow.Receivers.Clear();
+            }
+            else if (shadow.Receivers.Count == 0)
+            {
+                shadow.Receivers.Add(mainPanel);
             }
         }
 
         private void UpdateView(bool animate)
         {
             UpdateViewState();
+            UpdateShadow();
             SetVisualState(animate);
         }
 
