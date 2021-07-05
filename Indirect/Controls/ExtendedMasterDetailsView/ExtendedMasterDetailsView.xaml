@@ -51,6 +51,7 @@
                                 <ListView
                                     x:Name="MasterList"
                                     Grid.Row="1"
+                                    DataFetchSize="1"
                                     Header="{TemplateBinding MasterListHeader}"
                                     HeaderTemplate="{TemplateBinding MasterListHeaderTemplate}"
                                     IsItemClickEnabled="True"

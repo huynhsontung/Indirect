@@ -266,6 +266,7 @@
             Margin="44"
             HorizontalAlignment="Center"
             VerticalAlignment="Bottom"
+            Canvas.ZIndex="1"
             IsClosable="False" />
     </Grid>
 </UserControl>
