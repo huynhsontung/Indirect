@@ -9,6 +9,7 @@ using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Direct.ItemContent;
 using InstagramAPI.Classes.Media;
 using InstagramAPI.Classes.User;
+using NeoSmart.Unicode;
 
 namespace Indirect.Entities.Wrappers
 {
@@ -468,11 +469,7 @@ namespace Indirect.Entities.Wrappers
                 return;
             }
 
-            if (item.Text.Length > 1 && item.Text.All(c =>
-            {
-                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
-                return unicodeCategory == UnicodeCategory.Surrogate || unicodeCategory == UnicodeCategory.Format;
-            }))
+            if (item.Text.Length > 1 && Emoji.IsEmoji(item.Text))
             {
                 item.Like = item.Text;
                 item.ItemType = DirectItemType.Like;
