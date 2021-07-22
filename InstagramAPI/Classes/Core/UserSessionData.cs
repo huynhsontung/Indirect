@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
@@ -22,7 +21,7 @@ namespace InstagramAPI.Classes.Core
         [JsonProperty]
         public string Username { get; set; }
 
-        [JsonProperty]
+        [JsonIgnore]
         public string Password { get; set; }
 
         [JsonProperty]
