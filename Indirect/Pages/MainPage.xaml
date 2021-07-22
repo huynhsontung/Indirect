@@ -381,11 +381,10 @@
                         AutomationProperties.Name="New message"
                         Background="Transparent"
                         ToolTipService.ToolTip="New message (Ctrl+N)">
-                        <FontIcon
+                        <SymbolIcon
                             Width="32"
                             Height="32"
-                            FontFamily="{StaticResource SymbolThemeFontFamily}"
-                            Glyph="&#xF716;" />
+                            Symbol="Add" />
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="N" Modifiers="Control" />
                         </Button.KeyboardAccelerators>

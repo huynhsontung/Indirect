@@ -85,12 +85,12 @@ namespace Indirect.Controls
         }
 
         private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
-        private FontFamily SegoeMDL2Assets { get; }
+        private FontFamily SymbolThemeFontFamily { get; }
 
         public ThreadDetailsView()
         {
             this.InitializeComponent();
-            SegoeMDL2Assets = new FontFamily("Segoe MDL2 Assets");
+            SymbolThemeFontFamily = this.Resources["SymbolThemeFontFamily"] as FontFamily;
             ViewModel.PropertyChanged += OnUserPresenceChanged;
             GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
         }
@@ -107,7 +107,7 @@ namespace Indirect.Controls
             {
                 if (string.IsNullOrEmpty(Thread?.QuickReplyEmoji))
                 {
-                    SendButtonIcon.FontFamily = SegoeMDL2Assets;
+                    SendButtonIcon.FontFamily = SymbolThemeFontFamily;
                     SendButtonIcon.Margin = default;
                     SendButtonIcon.Glyph = "\xEB51";
                 }
@@ -120,7 +120,7 @@ namespace Indirect.Controls
             }
             else
             {
-                SendButtonIcon.FontFamily = SegoeMDL2Assets;
+                SendButtonIcon.FontFamily = SymbolThemeFontFamily;
                 SendButtonIcon.Margin = default;
                 SendButtonIcon.Glyph = "\xE724";
             }
