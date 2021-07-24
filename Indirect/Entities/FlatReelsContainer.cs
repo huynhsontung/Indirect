@@ -3,22 +3,33 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml;
 using Indirect.Entities.Wrappers;
-using Indirect.Utilities;
-using InstagramAPI.Classes;
 
 namespace Indirect.Entities
 {
-    public class FlatReelsContainer
+    public class FlatReelsContainer : DependencyObject
     {
+        public static DependencyProperty SelectedIndexProperty = DependencyProperty.Register(nameof(SelectedIndex),
+            typeof(int),
+            typeof(FlatReelsContainer),
+            PropertyMetadata.Create(-1, OnSelectedIndexChanged));
+
+        public int SelectedIndex
+        {
+            get => (int) GetValue(SelectedIndexProperty);
+            set => SetValue(SelectedIndexProperty, value);
+        }
+
+        public bool SecondaryView { get; set; }
+
         public ObservableCollection<ReelItemWrapper> Items { get; } = new ObservableCollection<ReelItemWrapper>();
+
         public List<long> UserOrder { get; } = new List<long>();
 
-        private static MainViewModel ViewModel => ((App)Windows.UI.Xaml.Application.Current).ViewModel;
+        private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
         private readonly Dictionary<long, ReelWrapper> _userReelsDictionary = new Dictionary<long, ReelWrapper>();
         private int _userIndex;
-        private bool _loaded;
 
         public FlatReelsContainer(ICollection<ReelWrapper> initialReels, int selected)
         {
@@ -27,38 +38,38 @@ namespace Indirect.Entities
             _userIndex = selected;
             foreach (var reel in initialReels)
             {
-                UserOrder.Add(reel.User.Pk);
-                _userReelsDictionary[reel.User.Pk] = reel;
+                UserOrder.Add(reel.Source.User.Pk);
+                _userReelsDictionary[reel.Source.User.Pk] = reel;
             }
         }
 
-        public int GetUserIndex(long userId) => UserOrder.IndexOf(userId);
-
-        public bool StoriesFetched(long userId) =>
-            _userReelsDictionary[userId].Items != null && _userReelsDictionary[userId].Items.Length > 0;
-
-        public async Task OnLoaded(Selector view)
+        public void SelectItemToView()
         {
-            if (view == null) return;
-            _loaded = true;
             var userItems = Items.Where(x => x.User.Pk == UserOrder[_userIndex]).ToArray();
-            if (userItems.Length == 0) return;
-            var firstUnseenItem = userItems.FirstOrDefault(x => x.TakenAt > x.Parent.Seen);
-            var storyIndex = Items.IndexOf(firstUnseenItem ?? userItems[0]);
+            if (userItems.Length == 0)
+            {
+                return;
+            }
 
-            if (view.SelectedIndex != storyIndex)
-            {
-                view.SelectedIndex = storyIndex;
-            }
-            else
-            {
-                await OnSelectionChanged(storyIndex);
-            }
+            var firstUnseenItem = userItems.FirstOrDefault(x => x.TakenAt > x.Parent.Source.Seen);
+            var storyIndex = Items.IndexOf(firstUnseenItem ?? userItems[0]);
+            SelectedIndex = storyIndex;
         }
 
-        public async Task OnSelectionChanged(int selectedIndex)
+        private static async void OnSelectedIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (selectedIndex == -1 || selectedIndex >= Items.Count || !_loaded) return;
+            var view = (FlatReelsContainer)d;
+            await view.OnSelectionChanged((int) e.NewValue);
+        }
+
+        private int GetUserIndex(long userId) => UserOrder.IndexOf(userId);
+
+        private bool StoriesFetched(long userId) =>
+            _userReelsDictionary[userId].Source.Items != null && _userReelsDictionary[userId].Source.Items.Length > 0;
+
+        private async Task OnSelectionChanged(int selectedIndex)
+        {
+            if (selectedIndex == -1 || selectedIndex >= Items.Count) return;
             var userIndex = GetUserIndex(Items[selectedIndex].User.Pk);
             await UpdateUserIndex(userIndex);
             await TryMarkStorySeen(selectedIndex);
@@ -104,7 +115,8 @@ namespace Indirect.Entities
             var reelsHolders = UserOrder.Select(x => _userReelsDictionary[x]).ToList();
             if (UserOrder.Count <= 3)
             {
-                var userList = reelsHolders.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.User.Pk);
+                var userList = reelsHolders.Where(x => x.Source.Items == null || x.Source.Items.Length == 0)
+                    .Select(x => x.Source.User.Pk);
                 await FetchStories(userList.ToArray());
                 SyncItems();
             }
@@ -113,7 +125,8 @@ namespace Indirect.Entities
                 // Moving forward
                 var count = _userIndex + 4 < UserOrder.Count ? 3 : UserOrder.Count - (_userIndex + 2);
                 var reels = reelsHolders.GetRange(_userIndex + 2, count);
-                var userList = reels.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.User.Pk);
+                var userList = reels.Where(x => x.Source.Items == null || x.Source.Items.Length == 0)
+                    .Select(x => x.Source.User.Pk);
                 await FetchStories(userList.ToArray());
                 SyncItems();
             }
@@ -123,7 +136,8 @@ namespace Indirect.Entities
                 var startIndex = _userIndex - 4 >= 0 ? _userIndex - 4 : 0;
                 var count = _userIndex - 2 - startIndex + 1;
                 var reels = reelsHolders.GetRange(startIndex, count);
-                var userList = reels.Where(x => x.Items == null || x.Items.Length == 0).Select(x => x.User.Pk);
+                var userList = reels.Where(x => x.Source.Items == null || x.Source.Items.Length == 0)
+                    .Select(x => x.Source.User.Pk);
                 await FetchStories(userList.ToArray());
                 SyncItems();
             }
@@ -134,10 +148,9 @@ namespace Indirect.Entities
         private async Task TryMarkStorySeen(int storyIndex)
         {
             var story = Items[storyIndex];
-            if (story.Parent.Seen != null && story.Parent.Seen >= story.TakenAt) return;
+            if (story.Parent.Source.Seen != null && story.Parent.Source.Seen >= story.TakenAt) return;
             await ViewModel.InstaApi.MarkStorySeenAsync(story.Id, story.User.Pk, story.TakenAt ?? DateTimeOffset.Now);
-            story.Parent.Seen = story.TakenAt;
-            story.Parent.OnSeenChanged();
+            story.Parent.Source.Seen = story.TakenAt;
         }
 
         private async Task FetchStories(params long[] users)
@@ -150,7 +163,7 @@ namespace Indirect.Entities
                 {
                     if (_userReelsDictionary.ContainsKey(userId) && _userReelsDictionary[userId] != null)
                     {
-                        PropertyCopier<Reel, Reel>.Copy(reel, _userReelsDictionary[userId]);
+                        _userReelsDictionary[userId].Source = reel;
                     }
                     else
                     {
@@ -167,21 +180,22 @@ namespace Indirect.Entities
             foreach (var userId in UserOrder)
             {
                 var reel = _userReelsDictionary[userId];
-                if (reel.Items == null) continue;
+                var media = reel.Source.Items;
+                if (media == null) continue;
                 
-                for (int i = 0; i < reel.Items.Length; i++)
+                for (int i = 0; i < media.Length; i++)
                 {
                     if (i + indexAdder >= Items.Count)
                     {
-                        Items.Add(new ReelItemWrapper(reel.Items[i], reel));
+                        Items.Add(new ReelItemWrapper(media[i], reel));
                     }
-                    else if (reel.Items[i].Id != Items[i+indexAdder].Id)
+                    else if (media[i].Id != Items[i+indexAdder].Id)
                     {
-                        Items.Insert(i+indexAdder, new ReelItemWrapper(reel.Items[i], reel));
+                        Items.Insert(i+indexAdder, new ReelItemWrapper(media[i], reel));
                     }
                 }
 
-                indexAdder += reel.Items.Length;
+                indexAdder += media.Length;
             }
         }
     }

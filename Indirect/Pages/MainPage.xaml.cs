@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
@@ -9,7 +10,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
-using Indirect.Controls;
 using Indirect.Entities.Wrappers;
 using Indirect.Services;
 using Indirect.Utilities;
@@ -46,6 +46,7 @@ namespace Indirect.Pages
 
         private MainViewModel ViewModel => ((App) Application.Current).ViewModel;
         private ObservableCollection<BaseUser> NewMessageCandidates { get; } = new ObservableCollection<BaseUser>();
+        private int? _reelPageViewId;
 
         public MainPage()
         {
@@ -499,6 +500,11 @@ namespace Indirect.Pages
 
         private async void ReelsFeed_OnItemClicked(object sender, ItemClickEventArgs e)
         {
+            if (_reelPageViewId is int reelPageViewId)
+            {
+                await App.CloseSecondaryView(reelPageViewId);
+            }
+
             var reelsWrapper = await ViewModel.ReelsFeed.PrepareFlatReelsContainer((ReelWrapper)e.ClickedItem);
             if (reelsWrapper != null)
             {
@@ -510,6 +516,36 @@ namespace Indirect.Pages
         {
             args.Handled = true;
             SearchBox.Focus(FocusState.Programmatic);
+        }
+
+        private async void OpenReelInNewWindow_OnClick(object sender, RoutedEventArgs e)
+        {
+            var menuItem = (MenuFlyoutItem) sender;
+            if (menuItem.DataContext is ReelWrapper reelWrapper)
+            {
+                if (_reelPageViewId is int reelPageViewId)
+                {
+                    await App.CloseSecondaryView(reelPageViewId);
+                }
+
+                var view = CoreApplication.CreateNewView();
+                await view.Dispatcher.QuickRunAsync(async () =>
+                {
+                    var flatReels = await ViewModel.ReelsFeed.PrepareFlatReelsContainer(reelWrapper);
+                    flatReels.SecondaryView = true;
+                    _reelPageViewId = await ((App) App.Current).CreateAndShowNewView(typeof(ReelPage), flatReels, view);
+                });
+            }
+        }
+
+        private void ReelItemMenuFlyout_OnOpening(object sender, object e)
+        {
+            var menu = (MenuFlyout) sender;
+            var dataContext = menu.Target?.DataContext ?? (menu.Target as ContentControl)?.Content;
+            foreach (var item in menu.Items)
+            {
+                item.DataContext = dataContext;
+            }
         }
     }
 }

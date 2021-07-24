@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Classes.Media;
+using NeoSmart.Unicode;
 
 namespace Indirect.Entities.Wrappers
 {
@@ -27,8 +27,6 @@ namespace Indirect.Entities.Wrappers
 
         private MainViewModel ViewModel { get; }
 
-        private static readonly Regex EmojiRegex = new Regex(@"^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])$");
-
         public ReelItemWrapper(ReelMedia source, ReelWrapper parent)
         {
             PropertyCopier<ReelMedia, ReelItemWrapper>.Copy(source, this);
@@ -43,13 +41,13 @@ namespace Indirect.Entities.Wrappers
             if (!resultThread.IsSucceeded) return false;
             var thread = resultThread.Value;
             Result result;
-            if (EmojiRegex.IsMatch(message))
+            if (Emoji.IsEmoji(message))
             {
-                result = await ViewModel.InstaApi.SendReelReactAsync(Parent.Id, Id, thread.ThreadId, message);
+                result = await ViewModel.InstaApi.SendReelReactAsync(Parent.Source.Id, Id, thread.ThreadId, message);
             }
             else
             {
-                result = await ViewModel.InstaApi.SendReelShareAsync(Parent.Id, Id, MediaType, thread.ThreadId, message);
+                result = await ViewModel.InstaApi.SendReelShareAsync(Parent.Source.Id, Id, MediaType, thread.ThreadId, message);
             }
 
             return result.IsSucceeded;

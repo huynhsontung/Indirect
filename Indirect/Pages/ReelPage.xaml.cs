@@ -1,4 +1,5 @@
 ﻿using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -39,6 +40,18 @@ namespace Indirect.Pages
         {
             base.OnNavigatedTo(e);
             Reels = e?.Parameter as FlatReelsContainer;
+            if (Reels?.SecondaryView ?? false)
+            {
+                ApplicationView.GetForCurrentView().Consolidated += ViewConsolidated;
+                ApplicationView.GetForCurrentView().Title = "Story";
+                BackButton.Visibility = Visibility.Collapsed;
+                BackButtonPlaceholder.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void ViewConsolidated(ApplicationView sender, ApplicationViewConsolidatedEventArgs args)
+        {
+            ReelsControl.OnClose();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)

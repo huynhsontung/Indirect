@@ -1,18 +1,29 @@
 ﻿using System.ComponentModel;
-using Indirect.Utilities;
 using InstagramAPI.Classes;
 
 namespace Indirect.Entities.Wrappers
 {
-    public class ReelWrapper : Reel, INotifyPropertyChanged
+    public class ReelWrapper : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void OnSeenChanged() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnseenItems)));
+        public Reel Source
+        {
+            get => _source;
+            set
+            {
+                _source = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Source)));
+            }
+        }
+
+        public bool HasUnseenItems => Source.Seen != Source.LatestReelMedia;
+
+        private Reel _source;
 
         public ReelWrapper(Reel source)
         {
-            PropertyCopier<Reel, ReelWrapper>.Copy(source, this);
+            _source = source;
         }
     }
 }

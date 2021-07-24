@@ -13,6 +13,7 @@
     xmlns:wrappers="using:Indirect.Entities.Wrappers"
     d:DesignHeight="300"
     d:DesignWidth="400"
+    Loaded="ReelsControl_OnLoaded"
     mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -41,7 +42,7 @@
                 <StackPanel
                     Margin="0,4,0,0"
                     Orientation="Horizontal"
-                    Visibility="{x:Bind Parent.CanReply, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
+                    Visibility="{x:Bind Parent.Source.CanReply, Converter={StaticResource BooleanVisibilityConverter}}">
                     <TextBox
                         x:Name="ReplyTextBox"
                         Width="300"
@@ -187,7 +188,7 @@
                     VerticalAlignment="Center"
                     AutomationProperties.LabeledBy="{Binding ElementName=StoryOwnerName}"
                     CornerRadius="99"
-                    Source="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.Parent).User.ProfilePictureUrl, Mode=OneWay}" />
+                    Source="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.Parent).Source.User.ProfilePictureUrl, Mode=OneWay}" />
 
                 <TextBlock
                     x:Name="StoryOwnerName"
@@ -196,7 +197,7 @@
                     VerticalAlignment="Center"
                     MaxLines="1"
                     Style="{ThemeResource FluentTitleTextStyle}"
-                    Text="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.Parent).User.Username, Mode=OneWay}" />
+                    Text="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.Parent).Source.User.Username, Mode=OneWay}" />
 
                 <TextBlock
                     Grid.Row="1"
@@ -242,7 +243,7 @@
             Background="Transparent"
             ItemsSource="{x:Bind Source.Items, Mode=OneWay}"
             KeyDown="StoryView_OnKeyDown"
-            Loaded="StoryView_OnLoaded"
+            SelectedIndex="{x:Bind Source.SelectedIndex, Mode=TwoWay}"
             SelectionChanged="StoryView_OnSelectionChanged">
             <FlipView.ContextFlyout>
                 <MenuFlyout>

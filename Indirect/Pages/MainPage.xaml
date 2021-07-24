@@ -151,6 +151,16 @@
                             <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
                                 <Setter Property="MinHeight" Value="0" />
                                 <Setter Property="MinWidth" Value="0" />
+                                <Setter Property="ContextFlyout">
+                                    <Setter.Value>
+                                        <MenuFlyout Opening="ReelItemMenuFlyout_OnOpening">
+                                            <MenuFlyoutItem
+                                                Click="OpenReelInNewWindow_OnClick"
+                                                Icon="NewWindow"
+                                                Text="Open in new window" />
+                                        </MenuFlyout>
+                                    </Setter.Value>
+                                </Setter>
                             </Style>
                         </ListView.ItemContainerStyle>
                         <ListView.ItemsPanel>
@@ -180,14 +190,14 @@
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         CornerRadius="99"
-                                        Source="{x:Bind User.ProfilePictureUrl}" />
+                                        Source="{x:Bind Source.User.ProfilePictureUrl}" />
                                     <Border
                                         Grid.Row="0"
                                         Width="54"
                                         Height="54"
                                         BorderThickness="2"
                                         CornerRadius="99"
-                                        Visibility="{x:Bind HasUnseenItems, Mode=OneWay, Converter={StaticResource BooleanVisibilityConverter}}">
+                                        Visibility="{x:Bind HasUnseenItems, Converter={StaticResource BooleanVisibilityConverter}}">
                                         <Border.BorderBrush>
                                             <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
                                                 <GradientStop Offset="0" Color="#962fbf" />
@@ -202,7 +212,7 @@
                                         MaxWidth="54"
                                         HorizontalAlignment="Center"
                                         Style="{ThemeResource FluentCaptionTextStyle}"
-                                        Text="{x:Bind User.Username}" />
+                                        Text="{x:Bind Source.User.Username}" />
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>

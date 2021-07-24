@@ -17,6 +17,7 @@ using Indirect.Services;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Utils;
+using Microsoft.Toolkit.Uwp.Helpers;
 
 namespace Indirect
 {
@@ -51,15 +52,20 @@ namespace Indirect
         {
             foreach (var secondaryViewId in SecondaryViewIds.ToArray())
             {
-                await ApplicationViewSwitcher.SwitchAsync(ApplicationView.GetForCurrentView().Id, secondaryViewId,
-                    ApplicationViewSwitchingOptions.ConsolidateViews);
+                await CloseSecondaryView(secondaryViewId);
             }
         }
 
-        public async Task CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)
+        public static IAsyncAction CloseSecondaryView(int viewId)
+        {
+            return ApplicationViewSwitcher.SwitchAsync(ApplicationView.GetForCurrentView().Id, viewId,
+                ApplicationViewSwitchingOptions.ConsolidateViews);
+        }
+
+        public Task<int> CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)
         {
             var newView = view ?? CoreApplication.CreateNewView();
-            await newView.Dispatcher.QuickRunAsync(async () =>
+            return newView.Dispatcher.AwaitableRunAsync(async () =>
             {
                 var frame = new Frame();
                 frame.Navigate(targetPage, parameter);
@@ -79,6 +85,7 @@ namespace Indirect
                 await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
                 newAppView.TryResizeView(new Size(380, 640));
                 newAppView.Consolidated += SecondaryView_OnConsolidated;
+                return newViewId;
             });
         }
 

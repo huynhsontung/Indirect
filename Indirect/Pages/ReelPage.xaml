@@ -41,7 +41,7 @@
                     Margin="13,0,0,0"
                     VerticalAlignment="Center"
                     Style="{ThemeResource FluentCaptionTextStyle}"
-                    Text="Indirect" />
+                    Text="Story - Indirect" />
             </StackPanel>
         </Grid>
         <Button

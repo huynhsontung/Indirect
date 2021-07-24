@@ -39,7 +39,7 @@ namespace Indirect.Controls
             {
                 var story = (ReelItemWrapper)StoryView.SelectedItem;
                 if (story == null) return true;
-                return Source.UserOrder.IndexOf(story.Parent.User.Pk) != 0;
+                return Source.UserOrder.IndexOf(story.Parent.Source.User.Pk) != 0;
             }
         }
 
@@ -49,7 +49,7 @@ namespace Indirect.Controls
             {
                 var story = (ReelItemWrapper)StoryView.SelectedItem;
                 if (story == null) return true;
-                return Source.UserOrder.LastIndexOf(story.Parent.User.Pk) != Source.UserOrder.Count - 1;
+                return Source.UserOrder.LastIndexOf(story.Parent.Source.User.Pk) != Source.UserOrder.Count - 1;
             }
         }
 
@@ -60,14 +60,18 @@ namespace Indirect.Controls
             this.InitializeComponent();
         }
 
-        private void StoryView_OnLoaded(object sender, RoutedEventArgs e)
+        private void ReelsControl_OnLoaded(object sender, RoutedEventArgs e)
         {
-            var storyView = (FlipView) sender;
-            Source?.OnLoaded(storyView);
+            Source?.SelectItemToView();
         }
 
         public void OnClose()
         {
+            if (StoryView.SelectedIndex == -1)
+            {
+                return;
+            }
+
             var flipViewItem = StoryView.ContainerFromIndex(StoryView.SelectedIndex) as FlipViewItem;
             var grid = flipViewItem?.ContentTemplateRoot as Grid;
             var autoVideo = grid.FindDescendant<AutoVideoControl>();
@@ -100,8 +104,6 @@ namespace Indirect.Controls
         private void StoryView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var storyView = (FlipView)sender;
-            Source?.OnSelectionChanged(storyView.SelectedIndex);
-            //StoryViewOnLoadedAndOnSelectionChanged();
             var previous = (ReelItemWrapper) e.RemovedItems.FirstOrDefault();
             var selected = (ReelItemWrapper) e.AddedItems.FirstOrDefault();
             var flipViewItem = storyView.ContainerFromItem(previous) as FlipViewItem;
@@ -120,13 +122,14 @@ namespace Indirect.Controls
             {
                 return;
             }
-            else if (!selected.Parent.Id.Equals(previous?.Parent.Id))
+
+            if (!selected.Parent.Source.Id.Equals(previous?.Parent.Source.Id))
             {
                 var start = 0;
                 var end = 0;
                 for (int i = 0; i < Source.Items.Count; i++)
                 {
-                    if (selected.Parent.Id.Equals(Source.Items[i].Parent.Id))
+                    if (selected.Parent.Source.Id.Equals(Source.Items[i].Parent.Source.Id))
                     {
                         start = i;
                         break;
@@ -135,7 +138,7 @@ namespace Indirect.Controls
 
                 for (int i = Source.Items.Count - 1; i >= 0; i--)
                 {
-                    if (selected.Parent.Id.Equals(Source.Items[i].Parent.Id))
+                    if (selected.Parent.Source.Id.Equals(Source.Items[i].Parent.Source.Id))
                     {
                         end = i;
                         break;
@@ -165,19 +168,19 @@ namespace Indirect.Controls
             var items = Source?.Items;
             var selectedIndex = StoryView.SelectedIndex;
             if (items == null || selectedIndex == -1) return;
-            var userId = items[selectedIndex].Parent.User.Pk;
+            var userId = items[selectedIndex].Parent.Source.User.Pk;
             var previousReelIndex = -1;
             for (int i = selectedIndex; i >= 0; i--)
             {
-                if (userId == items[i].Parent.User.Pk) continue;
+                if (userId == items[i].Parent.Source.User.Pk) continue;
                 previousReelIndex = i;
-                userId = items[i].Parent.User.Pk;
+                userId = items[i].Parent.Source.User.Pk;
                 break;
             }
 
             if (previousReelIndex == -1) return;
-            var previousStories = items.Where(x => x.Parent.User.Pk == userId).ToArray();
-            var unseenStory = previousStories.FirstOrDefault(x => x.TakenAt > x.Parent.Seen);
+            var previousStories = items.Where(x => x.Parent.Source.User.Pk == userId).ToArray();
+            var unseenStory = previousStories.FirstOrDefault(x => x.TakenAt > x.Parent.Source.Seen);
             previousReelIndex = items.IndexOf(unseenStory ?? previousStories[0]);
 
             if (previousReelIndex != -1)
@@ -191,24 +194,24 @@ namespace Indirect.Controls
             var items = Source?.Items;
             var selectedIndex = StoryView.SelectedIndex;
             if (items == null || selectedIndex == -1) return;
-            var userId = items[selectedIndex].Parent.User.Pk;
+            var userId = items[selectedIndex].Parent.Source.User.Pk;
             var nextReelIndex = -1;
             for (int i = selectedIndex; i < items.Count; i++)
             {
                 if (nextReelIndex == -1)
                 {
-                    if (userId != items[i].Parent.User.Pk)
+                    if (userId != items[i].Parent.Source.User.Pk)
                     {
                         nextReelIndex = i;
-                        userId = items[i].Parent.User.Pk;
-                        if (items[i].TakenAt > items[i].Parent.Seen) break;
+                        userId = items[i].Parent.Source.User.Pk;
+                        if (items[i].TakenAt > items[i].Parent.Source.Seen) break;
                     }
                 }
                 else
                 {
                     // Go to unseen story
-                    if (userId != items[i].Parent.User.Pk) break;
-                    if (items[i].TakenAt > items[i].Parent.Seen)
+                    if (userId != items[i].Parent.Source.User.Pk) break;
+                    if (items[i].TakenAt > items[i].Parent.Source.Seen)
                     {
                         nextReelIndex = i;
                         break;
