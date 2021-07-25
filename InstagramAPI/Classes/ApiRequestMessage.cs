@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using Windows.Storage.Streams;
@@ -9,19 +11,11 @@ using Newtonsoft.Json.Linq;
 
 namespace InstagramAPI.Classes
 {
-    internal class ApiRequestChallengeMessage : ApiRequestMessage
-    {
-        public ApiRequestChallengeMessage(UserSessionData session) : base(session) {}
-
-        [JsonProperty("_csrftoken")]
-        public string CsrtToken { get; set; }
-    }
-
     internal class ApiRequestMessage
     {
         private readonly UserSessionData _session;
 
-        [JsonProperty("country_codes")] public JRaw CountryCodes { get; set; } = new JRaw("[{\"country_code\":\"1\",\"source\":[\"default\",\"sim\"]}]");
+        [JsonProperty("country_codes")] public JRaw CountryCodes { get; set; } = new JRaw("[{\"country_code\":\"1\",\"source\":[\"default\"]}]");
         [JsonProperty("phone_id")] public string PhoneId => _session.Device.PhoneId.ToString();
         [JsonProperty("username")] public string Username => _session.Username;
         [JsonProperty("adid")] public string AdId => _session.Device.AdId.ToString();
@@ -29,6 +23,7 @@ namespace InstagramAPI.Classes
         [JsonProperty("_uuid")] public string Uuid => Guid.ToString();
         [JsonProperty("device_id")] public string DeviceId => _session.Device.DeviceId;
         [JsonProperty("enc_password")] public string Password => EncodePassword(_session.Password);
+        [JsonProperty("jazoest")] public string Jazoest => CreateJazoest(PhoneId);
         [JsonProperty("login_attempt_count")] public string LoginAttemptCount { get; set; } = "0";
         [JsonProperty("google_tokens")] public string[] GoogleTokens { get; set; } = new string[0];
 
@@ -72,11 +67,10 @@ namespace InstagramAPI.Classes
             }
         }
 
-        internal static string GetChallengeMessageString(UserSessionData session, string csrtToken)
+        internal static string GetChallengeMessageString(UserSessionData session)
         {
-            var api = new ApiRequestChallengeMessage(session)
+            var api = new ApiRequestMessage(session)
             {
-                CsrtToken = csrtToken,
                 LoginAttemptCount = "1"
             };
             var json = JsonConvert.SerializeObject(api);
@@ -107,9 +101,8 @@ namespace InstagramAPI.Classes
         {
             if (string.IsNullOrEmpty(signatureKey))
                 signatureKey = apiVersion.SignatureKey;
-            var api = new ApiRequestChallengeMessage(_session)
+            var api = new ApiRequestMessage(_session)
             {
-                CsrtToken = csrfToken,
                 LoginAttemptCount = "1"
             };
             var res = CryptoHelper.CalculateHash(signatureKey,
@@ -134,6 +127,14 @@ namespace InstagramAPI.Classes
             return longId
                 ? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()
                 : DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+        }
+
+        private static string CreateJazoest(string phoneId)
+        {
+            var buffer = CryptographicBuffer.ConvertStringToBinary(phoneId, BinaryStringEncoding.Utf8);
+            var sum = buffer.ToArray().Aggregate(0, (current, b) => current + b);
+
+            return $"2{sum}";
         }
 
         public static string GenerateDeviceIdFromGuid(Guid guid)

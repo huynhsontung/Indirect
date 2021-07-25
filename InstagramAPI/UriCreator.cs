@@ -71,7 +71,7 @@ namespace InstagramAPI
 
         public static Uri GetCurrentUserUri()
         {
-            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/accounts/current_user?edit=true", out var instaUri))
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/accounts/current_user/", out var instaUri))
                 throw new Exception("Cant create URI for current user info");
             return instaUri;
         }
@@ -118,7 +118,7 @@ namespace InstagramAPI
         public static Uri GetDirectInboxThreadUri(string threadId, string nextId, long seqId)
         {
             if (
-                !Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/{threadId}",
+                !Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/{threadId}/",
                     out var instaUri)) throw new Exception("Cant create URI for get inbox thread by id");
             return !string.IsNullOrEmpty(nextId)
                 ? new UriBuilder(instaUri) { Query = $"visual_message_return_type=unseen&cursor={nextId}&direction=older&seq_id={seqId}&limit=20" }.Uri
@@ -136,7 +136,7 @@ namespace InstagramAPI
 
         public static Uri GetRankedRecipientsUri()
         {
-            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/ranked_recipients", out var instaUri))
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/ranked_recipients/", out var instaUri))
                 throw new Exception("Cant create URI (get ranked recipients)");
             return instaUri;
         }
@@ -188,7 +188,7 @@ namespace InstagramAPI
 
         public static Uri GetDirectSendPhotoUri(string uploadId)
         {
-            if (!Uri.TryCreate(BaseInstagramUri, $"/rupload_igphoto/{uploadId}", out var instaUri))
+            if (!Uri.TryCreate(BaseInstagramUri, $"/rupload_igphoto/{uploadId}/", out var instaUri))
                 throw new Exception("Cant create URI for sending photo to direct");
             return instaUri;
         }
@@ -202,14 +202,14 @@ namespace InstagramAPI
 
         public static Uri GetStoryUploadPhotoUri(string uploadId, int fileHashCode)
         {
-            if (!Uri.TryCreate(BaseInstagramUri, $"/rupload_igphoto/{uploadId}_0_{fileHashCode}", out var instaUri))
+            if (!Uri.TryCreate(BaseInstagramUri, $"/rupload_igphoto/{uploadId}_0_{fileHashCode}/", out var instaUri))
                 throw new Exception("Cant create URI for story upload photo");
             return instaUri;
         }
 
         public static Uri GetStoryUploadVideoUri(string uploadId, int fileHashCode)
         {
-            if (!Uri.TryCreate(BaseInstagramUri, $"/rupload_igvideo/{uploadId}_0_{fileHashCode}", out var instaUri))
+            if (!Uri.TryCreate(BaseInstagramUri, $"/rupload_igvideo/{uploadId}_0_{fileHashCode}/", out var instaUri))
                 throw new Exception("Cant create URI for story upload video");
             return instaUri;
         }

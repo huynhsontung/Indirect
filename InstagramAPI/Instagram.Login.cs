@@ -39,8 +39,7 @@ namespace InstagramAPI
                 await httpClient.SyncServerConfig();
 
                 var loginUri = UriCreator.GetLoginUri();
-                var signature =
-                    $"SIGNATURE.{ApiRequestMessage.GetChallengeMessageString(session, httpClient.GetCsrfToken())}";
+                var signature = $"SIGNATURE.{ApiRequestMessage.GetChallengeMessageString(session)}";
                 var fields = new Dictionary<string, string>
                 {
                     {"signed_body", signature}
@@ -336,7 +335,6 @@ namespace InstagramAPI
             await HttpClient.GetAsync(tokenResultUri);
             await HttpClient.SyncServerConfig();
             await HttpClient.GetAsync(UriCreator.GetAccountFamilyUri());
-            //await HttpClient.GetAsync(UriCreator.GetDirectBadgeCountUri());
         }
     }
 }
