@@ -47,6 +47,7 @@ namespace Indirect.Pages
         private MainViewModel ViewModel => ((App) Application.Current).ViewModel;
         private ObservableCollection<BaseUser> NewMessageCandidates { get; } = new ObservableCollection<BaseUser>();
         private int? _reelPageViewId;
+        private bool _loggedOut;
 
         public MainPage()
         {
@@ -69,6 +70,7 @@ namespace Indirect.Pages
             Window.Current.Activated -= OnWindowFocusChange;
             SystemNavigationManager.GetForCurrentView().BackRequested -= SystemNavigationManager_BackRequested;
             AdaptiveLayoutStateGroup.CurrentStateChanged -= AdaptiveLayoutStateGroupOnCurrentStateChanged;
+            ViewModel.InstaApi.HttpClient.LoginRequired -= ClientOnLoginRequired;
             base.OnNavigatedFrom(e);
         }
 
@@ -116,7 +118,37 @@ namespace Indirect.Pages
             ViewModel.SyncClient.ExceptionsCaught += SyncClientOnExceptionsCaught;
             ViewModel.SyncClient.Connected += SyncClientOnConnected;
 
+            ViewModel.InstaApi.HttpClient.LoginRequired -= ClientOnLoginRequired;
+            ViewModel.InstaApi.HttpClient.LoginRequired += ClientOnLoginRequired;
+
             UpdateSwitchAccountMenu();
+        }
+
+        private async void ClientOnLoginRequired(object sender, EventArgs e)
+        {
+            lock (this)
+            {
+                if (_loggedOut)
+                {
+                    return;
+                }
+
+                _loggedOut = true;
+            }
+
+            await Dispatcher.QuickRunAsync(async () =>
+            {
+                var dialog = new ContentDialog
+                {
+                    Title = "You've been logged out",
+                    Content = "Please log back in.",
+                    CloseButtonText = "Close",
+                    DefaultButton = ContentDialogButton.Close
+                };
+                await dialog.ShowAsync();
+
+                await Logout();
+            });
         }
 
         private void SystemNavigationManager_BackRequested(object sender, BackRequestedEventArgs e)
@@ -177,10 +209,16 @@ namespace Indirect.Pages
                 return;
             }
 
-            await ((App) App.Current).CloseAllSecondaryViews();
+            await Logout();
+        }
+
+        private async Task Logout()
+        {
+            await ((App)App.Current).CloseAllSecondaryViews();
             if (await ViewModel.Logout())
             {
                 Frame.Navigate(typeof(LoginPage));
+                Frame.BackStack.Clear();
             }
             else
             {
@@ -491,6 +529,7 @@ namespace Indirect.Pages
         {
             if (((FrameworkElement)sender).DataContext is UserSessionData session)
             {
+                ViewModel.InstaApi.HttpClient.LoginRequired -= ClientOnLoginRequired;
                 await ((App)App.Current).CloseAllSecondaryViews();
                 await ViewModel.SaveDataAsync();
                 await ViewModel.SwitchAccountAsync(session);

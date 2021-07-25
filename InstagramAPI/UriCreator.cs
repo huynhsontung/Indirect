@@ -7,6 +7,7 @@ namespace InstagramAPI
     public class UriCreator
     {
         public static readonly Uri BaseInstagramUri = new Uri("https://i.instagram.com");
+        public static readonly Uri BackgroundInstagramUri = new Uri("https://b.i.instagram.com");
         private const string API_SUFFIX = "/api/v1";
         private const string API_SUFFIX_V2 = "/api/v2";
 
@@ -15,6 +16,36 @@ namespace InstagramAPI
             if (!Uri.TryCreate(BaseInstagramUri, "/graphql/query/", out var instaUri))
                 throw new Exception("Cant create URI for GraphQL");
             return new UriBuilder(instaUri) {Query = $"query_hash={queryHash}&variables={variables}"}.Uri;
+        }
+
+        public static Uri GetTokenResultUri(string deviceId, string phoneId)
+        {
+            if (!Uri.TryCreate(BackgroundInstagramUri,
+                $"{API_SUFFIX}/zr/token/result/?device_id={deviceId}&custom_device_id={phoneId}&fetch_reason=token_expired",
+                out var instaUri))
+                throw new Exception("Cant create URI for token result");
+            return instaUri;
+        }
+
+        public static Uri GetDirectBadgeCountUri()
+        {
+            if (!Uri.TryCreate(BackgroundInstagramUri, API_SUFFIX + "/direct_v2/get_badge_count/", out var instaUri))
+                throw new Exception("Cant create URI for direct badge count");
+            return instaUri;
+        }
+
+        public static Uri GetAccountFamilyUri()
+        {
+            if (!Uri.TryCreate(BackgroundInstagramUri, API_SUFFIX + "/multiple_accounts/get_account_family/", out var instaUri))
+                throw new Exception("Cant create URI for launcher sync");
+            return instaUri;
+        }
+
+        public static Uri GetLauncherSyncUri()
+        {
+            if (!Uri.TryCreate(BackgroundInstagramUri, API_SUFFIX + "/launcher/sync/", out var instaUri))
+                throw new Exception("Cant create URI for launcher sync");
+            return instaUri;
         }
 
         public static Uri GetLoginUri()
@@ -84,14 +115,14 @@ namespace InstagramAPI
             return instaUri;
         }
 
-        public static Uri GetDirectInboxThreadUri(string threadId, string nextId)
+        public static Uri GetDirectInboxThreadUri(string threadId, string nextId, long seqId)
         {
             if (
                 !Uri.TryCreate(BaseInstagramUri, API_SUFFIX + $"/direct_v2/threads/{threadId}",
                     out var instaUri)) throw new Exception("Cant create URI for get inbox thread by id");
             return !string.IsNullOrEmpty(nextId)
-                ? new UriBuilder(instaUri) { Query = $"use_unified_inbox=true&cursor={nextId}&direction=older" }.Uri
-                : new UriBuilder(instaUri) { Query = $"use_unified_inbox=true" }.Uri;
+                ? new UriBuilder(instaUri) { Query = $"visual_message_return_type=unseen&cursor={nextId}&direction=older&seq_id={seqId}&limit=20" }.Uri
+                : new UriBuilder(instaUri) { Query = $"visual_message_return_type=unseen&seq_id={seqId}&limit=20" }.Uri;
         }
 
         public static Uri GetThreadByRecipientsUri(IEnumerable<long> userIds)

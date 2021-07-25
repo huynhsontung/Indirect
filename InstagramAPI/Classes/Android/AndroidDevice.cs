@@ -60,7 +60,8 @@ namespace InstagramAPI.Classes.Android
             "24/7.0; 640dpi; 1440x2560; HUAWEI; LON-L29; HWLON; hi3660",
             "23/6.0.1; 640dpi; 1440x2560; ZTE; ZTE A2017U; ailsa_ii; qcom",
             "23/6.0.1; 640dpi; 1440x2560; samsung; SM-G935F; hero2lte; samsungexynos8890",
-            "23/6.0.1; 640dpi; 1440x2560; samsung; SM-G930F; herolte; samsungexynos8890"
+            "23/6.0.1; 640dpi; 1440x2560; samsung; SM-G930F; herolte; samsungexynos8890",
+            "31/12.0; 440dpi; 1080x2176; Google/google; Pixel 3a; sargo; sargo"
         };
 
 

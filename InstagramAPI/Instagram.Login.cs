@@ -36,7 +36,7 @@ namespace InstagramAPI
             var httpClient = new HttpClientManager(session);
             try
             {
-                await httpClient.GetAsync(UriCreator.BaseInstagramUri);
+                await httpClient.SyncServerConfig();
 
                 var loginUri = UriCreator.GetLoginUri();
                 var signature =
@@ -107,7 +107,6 @@ namespace InstagramAPI
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
 
-                session.AuthorizationToken = HttpClientManager.GetAuthToken(response.Headers);
                 session.Username = loginInfo.User.Username;
                 session.LoggedInUser = loginInfo.User;
                 return Result<LoginResult>.Success(LoginResult.Success, json: json);
@@ -147,7 +146,7 @@ namespace InstagramAPI
             try
             {
                 if (string.IsNullOrEmpty(fbAccessToken)) throw new ArgumentNullException(nameof(fbAccessToken));
-                await httpClient.GetAsync(UriCreator.BaseInstagramUri);
+                await httpClient.SyncServerConfig();
 
                 var instaUri = UriCreator.GetFacebookSignUpUri();
 
@@ -243,7 +242,6 @@ namespace InstagramAPI
 
                 if (loginInfoUser == null) return Result<LoginResult>.Fail(LoginResult.Exception, json: json);
 
-                session.AuthorizationToken = HttpClientManager.GetAuthToken(response.Headers);
                 session.LoggedInUser = loginInfoUser;
                 session.FacebookUserId = fbUserId;
                 session.Username = loginInfoUser.Username;
@@ -315,7 +313,6 @@ namespace InstagramAPI
                     return Result<LoginResult>.Fail(LoginResult.Exception, "User is null!", json);
                 }
 
-                session.AuthorizationToken = HttpClientManager.GetAuthToken(response.Headers);
                 session.Username = loginInfo.User.Username;
                 session.LoggedInUser = loginInfo.User;
                 session.TwoFactorInfo = null;
@@ -330,6 +327,16 @@ namespace InstagramAPI
             {
                 session.Cookies = httpClient.Cookies;
             }
+        }
+
+        public async Task RunPostLoginFlow()
+        {
+            var tokenResultUri =
+                UriCreator.GetTokenResultUri(Session.Device.DeviceId, Session.Device.PhoneId.ToString());
+            await HttpClient.GetAsync(tokenResultUri);
+            await HttpClient.SyncServerConfig();
+            await HttpClient.GetAsync(UriCreator.GetAccountFamilyUri());
+            //await HttpClient.GetAsync(UriCreator.GetDirectBadgeCountUri());
         }
     }
 }

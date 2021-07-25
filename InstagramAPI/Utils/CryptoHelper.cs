@@ -2,26 +2,19 @@
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using Windows.Security.Cryptography;
+using Windows.Storage.Streams;
 
 namespace InstagramAPI.Utils
 {
     internal class CryptoHelper
     {
-        public static string ByteToString(byte[] buff)
+        public static IBuffer ConvertPemToDer(string pem)
         {
-            return buff.Aggregate("", (current, item) => current + item.ToString("X2"));
-        }
-
-        public static string Base64Encode(string plainText)
-        {
-            var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
-            return Convert.ToBase64String(plainTextBytes);
-        }
-
-        public static string Base64Decode(string base64EncodedData)
-        {
-            var base64EncodedBytes = Convert.FromBase64String(base64EncodedData);
-            return Encoding.UTF8.GetString(base64EncodedBytes);
+            pem = pem.Replace("\n", "");
+            pem = pem.Replace("-----BEGIN PUBLIC KEY-----", "");
+            pem = pem.Replace("-----END PUBLIC KEY-----", "");
+            return CryptographicBuffer.DecodeFromBase64String(pem);
         }
 
         public static string CalculateMd5(string message)

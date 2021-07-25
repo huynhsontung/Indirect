@@ -25,7 +25,6 @@ namespace Indirect
 {
     internal partial class MainViewModel : INotifyPropertyChanged
     {
-        private DateTimeOffset _lastUpdated = DateTimeOffset.Now;
         private string _threadToBeOpened;
 
         private string ThreadInfoKey => $"{nameof(ThreadInfoDictionary)}_{LoggedInUser?.Pk}";
@@ -84,6 +83,7 @@ namespace Indirect
             ReelsFeed.StopReelsFeedUpdateLoop(true);
             var tasks = new List<Task>
             {
+                InstaApi.RunPostLoginFlow(),
                 Inbox.ClearInbox(),
                 GetUserPresence(),
                 ReelsFeed.UpdateReelsFeedAsync(),
@@ -164,7 +164,7 @@ namespace Indirect
                 return;
             }
             
-            var result = await InstaApi.GetThreadAsync(thread.Source.ThreadId, PaginationParameters.MaxPagesToLoad(1));
+            var result = await InstaApi.GetThreadAsync(thread.Source.ThreadId, Inbox.SeqId, PaginationParameters.MaxPagesToLoad(1));
             if (result.IsSucceeded)
             {
                 await thread.Dispatcher.AwaitableRunAsync(() => { thread.Update(result.Value); });
@@ -173,7 +173,6 @@ namespace Indirect
 
         public async Task UpdateInboxAndSelectedThread()
         {
-            _lastUpdated = DateTime.Now;
             await Inbox.UpdateInbox();
             if (Inbox.SelectedThread == null) return;
             var selectedThread = Inbox.SelectedThread;

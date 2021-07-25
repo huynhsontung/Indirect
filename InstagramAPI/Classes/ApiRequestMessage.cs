@@ -1,4 +1,7 @@
 ﻿using System;
+using Windows.Security.Cryptography;
+using Windows.Security.Cryptography.Core;
+using Windows.Storage.Streams;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
@@ -25,18 +28,48 @@ namespace InstagramAPI.Classes
         [JsonProperty("guid")] public Guid Guid => _session.Device.Uuid;
         [JsonProperty("_uuid")] public string Uuid => Guid.ToString();
         [JsonProperty("device_id")] public string DeviceId => _session.Device.DeviceId;
-        [JsonProperty("enc_password")] public string Password => $"#PWD_INSTAGRAM:0:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:{_session.Password}";
+        [JsonProperty("enc_password")] public string Password => EncodePassword(_session.Password);
         [JsonProperty("login_attempt_count")] public string LoginAttemptCount { get; set; } = "0";
+        [JsonProperty("google_tokens")] public string[] GoogleTokens { get; set; } = new string[0];
 
         public ApiRequestMessage(UserSessionData session)
         {
             _session = session;
         }
 
-        internal string GetMessageString()
+        internal string EncodePassword(string plainPassword)
         {
-            var json = JsonConvert.SerializeObject(this);
-            return json;
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+            var timestampBuffer = CryptographicBuffer.ConvertStringToBinary(timestamp, BinaryStringEncoding.Utf8);
+            var passwordBuffer = CryptographicBuffer.ConvertStringToBinary(plainPassword, BinaryStringEncoding.Utf8);
+            var aesKey = CryptographicBuffer.GenerateRandom(32);
+            var iv = CryptographicBuffer.GenerateRandom(12);
+            var pubKey = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, _session.PasswordEncryptionPubKey);
+            var pubKeyBuffer = CryptoHelper.ConvertPemToDer(pubKey);
+
+            var rsaProvider = AsymmetricKeyAlgorithmProvider.OpenAlgorithm(AsymmetricAlgorithmNames.RsaPkcs1);
+            var rsaPubKey = rsaProvider.ImportPublicKey(pubKeyBuffer);
+            var aesKeyEncrypted = CryptographicEngine.Encrypt(rsaPubKey, aesKey, null);
+
+            var aesGcmProvider = SymmetricKeyAlgorithmProvider.OpenAlgorithm(SymmetricAlgorithmNames.AesGcm);
+            var aesKeyMaterial = aesGcmProvider.CreateSymmetricKey(aesKey);
+            var encodedPassword = CryptographicEngine.EncryptAndAuthenticate(aesKeyMaterial,
+                passwordBuffer, iv, timestampBuffer);
+
+            using (var writer = new DataWriter())
+            {
+                writer.ByteOrder = ByteOrder.LittleEndian;
+                writer.WriteByte(1);
+                writer.WriteByte(_session.PasswordEncryptionKeyId);
+                writer.WriteBuffer(iv);
+                writer.WriteInt16((short) aesKeyEncrypted.Length);
+                writer.WriteBuffer(aesKeyEncrypted);
+                writer.WriteBuffer(encodedPassword.AuthenticationTag);
+                writer.WriteBuffer(encodedPassword.EncryptedData);
+                var buffer = writer.DetachBuffer();
+                var encoded = CryptographicBuffer.EncodeToBase64String(buffer);
+                return $"#PWD_INSTAGRAM:4:{timestamp}:{encoded}";
+            }
         }
 
         internal static string GetChallengeMessageString(UserSessionData session, string csrtToken)

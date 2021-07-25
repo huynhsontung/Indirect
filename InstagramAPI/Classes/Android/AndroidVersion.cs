@@ -90,8 +90,14 @@ namespace InstagramAPI.Classes.Android
             new AndroidVersion
             {
                 Codename = "Pie",
-                VersionNumber = "9",
+                VersionNumber = "9.0",
                 APILevel = "28"
+            },
+            new AndroidVersion
+            {
+                Codename = string.Empty,
+                VersionNumber = "12.0",
+                APILevel = "31"
             }
         };
 

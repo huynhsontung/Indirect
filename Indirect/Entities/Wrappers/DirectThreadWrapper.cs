@@ -115,7 +115,7 @@ namespace Indirect.Entities.Wrappers
 
         public async Task<DirectThreadWrapper> CloneThreadForSecondaryView(CoreDispatcher dispatcher)
         {
-            var result = await _viewModel.InstaApi.GetThreadAsync(Source.ThreadId, PaginationParameters.MaxPagesToLoad(1));
+            var result = await _viewModel.InstaApi.GetThreadAsync(Source.ThreadId, _viewModel.Inbox.SeqId, PaginationParameters.MaxPagesToLoad(1));
             if (!result.IsSucceeded) return null;
             var clone = new DirectThreadWrapper(_viewModel, result.Value, dispatcher);
             return clone;
@@ -318,7 +318,7 @@ namespace Indirect.Entities.Wrappers
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(source.OldestCursor);
             
-            var result = await _viewModel.InstaApi.GetThreadAsync(source.ThreadId, pagination);
+            var result = await _viewModel.InstaApi.GetThreadAsync(source.ThreadId, _viewModel.Inbox.SeqId, pagination);
             if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0)
             {
                 return new List<DirectItemWrapper>(0);

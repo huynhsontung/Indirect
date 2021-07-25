@@ -164,7 +164,7 @@ namespace InstagramAPI
         /// <returns>
         ///     <see cref="DirectThread" />
         /// </returns>
-        public async Task<Result<DirectThread>> GetThreadAsync(string threadId, PaginationParameters paginationParameters)
+        public async Task<Result<DirectThread>> GetThreadAsync(string threadId, long seqId, PaginationParameters paginationParameters)
         {
             ValidateLoggedIn();
             try
@@ -172,7 +172,7 @@ namespace InstagramAPI
                 if (paginationParameters == null)
                     paginationParameters = PaginationParameters.MaxPagesToLoad(1);
 
-                var thread = await GetDirectThread(threadId, paginationParameters.NextMaxId).ConfigureAwait(false);
+                var thread = await GetDirectThread(threadId, seqId, paginationParameters.NextMaxId).ConfigureAwait(false);
                 if (!thread.IsSucceeded)
                     return thread;
 
@@ -184,7 +184,7 @@ namespace InstagramAPI
                       && !string.IsNullOrEmpty(threadResponse.OldestCursor)
                       && pagesLoaded < paginationParameters.MaximumPagesToLoad)
                 {
-                    var nextThread = await GetDirectThread(threadId, threadResponse.OldestCursor).ConfigureAwait(false);
+                    var nextThread = await GetDirectThread(threadId, seqId, threadResponse.OldestCursor).ConfigureAwait(false);
 
                     if (!nextThread.IsSucceeded)
                     {
@@ -229,11 +229,11 @@ namespace InstagramAPI
             }
         }
 
-        private async Task<Result<DirectThread>> GetDirectThread(string threadId, string maxId = null)
+        private async Task<Result<DirectThread>> GetDirectThread(string threadId, long seqId, string maxId = null)
         {
             try
             {
-                var directInboxUri = UriCreator.GetDirectInboxThreadUri(threadId, maxId);
+                var directInboxUri = UriCreator.GetDirectInboxThreadUri(threadId, maxId, seqId);
                 var response = await HttpClient.GetAsync(directInboxUri);
                 var json = await response.Content.ReadAsStringAsync();
 

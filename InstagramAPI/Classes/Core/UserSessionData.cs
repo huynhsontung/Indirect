@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
+using Windows.Storage.Streams;
 using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
@@ -24,6 +26,12 @@ namespace InstagramAPI.Classes.Core
         [JsonIgnore]
         public string Password { get; set; }
 
+        [JsonIgnore]
+        public byte PasswordEncryptionKeyId { get; internal set; }
+
+        [JsonIgnore]
+        public IBuffer PasswordEncryptionPubKey { get; internal set; }
+
         [JsonProperty]
         public BaseUser LoggedInUser { get; internal set; }
 
@@ -38,6 +46,12 @@ namespace InstagramAPI.Classes.Core
 
         [JsonProperty]
         public string AuthorizationToken { get; internal set; }
+
+        [JsonProperty]
+        public string WwwClaim { get; internal set; }
+
+        [JsonProperty]
+        public string Mid { get; internal set; }
 
         [JsonProperty]
         [JsonConverter(typeof(CookieCollectionConverter))]
