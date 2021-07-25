@@ -7,12 +7,12 @@ using InstagramAPI.Classes.Core;
 
 namespace InstagramAPI.Push
 {
-    internal sealed class FbnsUserAgent
+    internal sealed class PushUserAgent
     {
         const string FBNS_APPLICATION_NAME = "MQTT";
         const string INSTAGRAM_APPLICATION_NAME = "Instagram";  // for Realtime features
 
-        public static string BuildFbUserAgent(AndroidDevice device, string appName = FBNS_APPLICATION_NAME, string userLocale = "en_US")
+        public static string BuildFbUserAgent(AndroidDevice device, string appName = FBNS_APPLICATION_NAME)
         {
             var fields = new Dictionary<string, string>
             {
@@ -22,7 +22,7 @@ namespace InstagramAPI.Push
                 {"FBDM",
                     $"{{density={Math.Round(device.Dpi / 160f, 1):F1},width={device.ScreenResolution.Width},height={device.ScreenResolution.Height}}}"
                 },
-                {"FBLC", userLocale},
+                {"FBLC", Instagram.GetCurrentLocale() ?? "en_US"},
                 {"FBCR", ""},   // We don't have cellular
                 {"FBMF", device.HardwareManufacturer},
                 {"FBBD", device.HardwareManufacturer},

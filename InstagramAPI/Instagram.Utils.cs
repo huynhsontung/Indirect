@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using Windows.Networking.Connectivity;
 using Windows.Web.Http;
@@ -71,6 +72,12 @@ namespace InstagramAPI
         {
             var internetProfile = NetworkInformation.GetInternetConnectionProfile();
             return internetProfile != null;
+        }
+
+        public static string GetCurrentLocale()
+        {
+            var runtimeLanguages = Windows.Globalization.ApplicationLanguages.Languages;
+            return runtimeLanguages.FirstOrDefault()?.Replace('-', '_');
         }
 
         public static void StartAppCenter()

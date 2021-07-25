@@ -58,7 +58,7 @@ namespace InstagramAPI.Classes.Core
         public CookieCollection Cookies { get; internal set; }
 
         [JsonProperty]
-        internal FbnsConnectionData PushData { get; }
+        internal PushConnectionData PushData { get; }
 
         [JsonProperty]
         public AndroidDevice Device { get; }
@@ -66,7 +66,7 @@ namespace InstagramAPI.Classes.Core
         public UserSessionData()
         {
             Device = AndroidDevice.GetRandomAndroidDevice();
-            PushData = new FbnsConnectionData();
+            PushData = new PushConnectionData();
         }
     }
 }

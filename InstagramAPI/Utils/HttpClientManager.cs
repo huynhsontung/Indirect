@@ -49,7 +49,7 @@ namespace InstagramAPI.Utils
         private void SetDefaultRequestHeaders(UserSessionData session)
         {
             var runtimeLanguages = Windows.Globalization.ApplicationLanguages.Languages;
-            var primaryLanguage = runtimeLanguages.First().Replace('-', '_');
+            var primaryLanguage = Instagram.GetCurrentLocale() ?? "en_US";
             var defaultHeaders = _httpClient.DefaultRequestHeaders;
             defaultHeaders.ConnectionClose = true;
             defaultHeaders.AcceptEncoding.TryParseAdd("gzip, deflate");
@@ -273,8 +273,11 @@ namespace InstagramAPI.Utils
                         if (key.Contains("ig-set-ig-u-"))
                         {
                             key = key.Replace("ig-set-", "", StringComparison.OrdinalIgnoreCase);
-                            _httpClient.DefaultRequestHeaders.Remove(key);
-                            _httpClient.DefaultRequestHeaders.Add(key, header.Value);
+                            lock (_httpClient)
+                            {
+                                _httpClient.DefaultRequestHeaders.Remove(key);
+                                _httpClient.DefaultRequestHeaders.Add(key, header.Value);
+                            }
                         }
 
                         break;

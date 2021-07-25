@@ -108,8 +108,7 @@ namespace InstagramAPI.Classes.Android
             // Example complete user agent:
             // Instagram 85.0.0.21.100 Android (24/7.0; 380dpi; 1080x1920; OnePlus; ONEPLUS A3010; OnePlus3T; qcom; en_US; 146536611)
             string format = "Instagram {0} Android ({1}; {2}; {3})";
-            return string.Format(format, ApiVersion.Current.AppVersion, deviceString,
-                "en_US", ApiVersion.Current.AppVersionCode);
+            return string.Format(format, ApiVersion.Current.AppVersion, deviceString, Instagram.GetCurrentLocale() ?? "en_US", ApiVersion.Current.AppVersionCode);
         }
 
         public static AndroidDevice GetRandomAndroidDevice()

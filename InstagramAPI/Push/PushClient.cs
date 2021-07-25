@@ -27,7 +27,7 @@ namespace InstagramAPI.Push
         public event EventHandler<PushReceivedEventArgs> MessageReceived;
         public event EventHandler<UnhandledExceptionEventArgs> ExceptionsCaught; 
 
-        public FbnsConnectionData ConnectionData => _instaApi.Session.PushData;
+        public PushConnectionData ConnectionData => _instaApi.Session.PushData;
         public StreamSocket Socket { get; private set; }
         public bool Running => !(_runningTokenSource?.IsCancellationRequested ?? true);
         public string SocketId => SocketIdPrefix + _instaApi.Session.SessionName;
@@ -265,7 +265,7 @@ namespace InstagramAPI.Push
 
             // Build user agent for first time setup
             if (string.IsNullOrEmpty(ConnectionData.UserAgent))
-                ConnectionData.UserAgent = FbnsUserAgent.BuildFbUserAgent(_instaApi.Device);
+                ConnectionData.UserAgent = PushUserAgent.BuildFbUserAgent(_instaApi.Device);
 
             var tokenSource = new CancellationTokenSource();
             var connectPacket = new FbnsConnectPacket
