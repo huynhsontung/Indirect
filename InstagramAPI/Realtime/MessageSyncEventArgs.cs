@@ -4,7 +4,7 @@ using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.JsonConverters;
 using Newtonsoft.Json;
 
-namespace InstagramAPI.Sync
+namespace InstagramAPI.Realtime
 {
     public class MessageSyncEventArgs : EventArgs
     {

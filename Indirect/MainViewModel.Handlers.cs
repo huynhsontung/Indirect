@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
+using InstagramAPI.Realtime;
 using InstagramAPI.Sync;
 using InstagramAPI.Utils;
 

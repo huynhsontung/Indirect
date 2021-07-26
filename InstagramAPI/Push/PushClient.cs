@@ -261,15 +261,10 @@ namespace InstagramAPI.Push
             }
 
             this.Log("Starting fresh");
-
-            // Build user agent for first time setup
-            if (string.IsNullOrEmpty(ConnectionData.UserAgent))
-                ConnectionData.UserAgent = PushUserAgent.BuildFbUserAgent(_instaApi.Device);
-
             var tokenSource = new CancellationTokenSource();
             var connectPacket = new FbnsConnectPacket
             {
-                KeepAliveInSeconds = 900,
+                KeepAliveInSeconds = KeepAlive,
                 Payload = await PayloadProcessor.BuildPayload(ConnectionData, tokenSource.Token)
             };
 

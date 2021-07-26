@@ -12,6 +12,7 @@ using Windows.Storage.Streams;
 using Windows.Web.Http;
 using Windows.Web.Http.Filters;
 using InstagramAPI.Classes.Mqtt.Packets;
+using InstagramAPI.Realtime;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

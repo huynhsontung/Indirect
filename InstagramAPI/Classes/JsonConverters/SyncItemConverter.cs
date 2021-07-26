@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using InstagramAPI.Classes.Direct;
-using InstagramAPI.Sync;
+using InstagramAPI.Realtime;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

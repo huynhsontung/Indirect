@@ -66,7 +66,7 @@ namespace InstagramAPI.Classes.Core
         public UserSessionData()
         {
             Device = AndroidDevice.GetRandomAndroidDevice();
-            PushData = new PushConnectionData();
+            PushData = new PushConnectionData(Device);
         }
     }
 }

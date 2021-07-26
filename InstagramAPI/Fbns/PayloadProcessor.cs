@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using System.Threading.Tasks;
+using Windows.Storage.Streams;
 using Thrift.Protocol;
 using Thrift.Transport.Client;
-using System.Threading;
-using Windows.Storage.Streams;
 
-namespace InstagramAPI.Push
+namespace InstagramAPI.Fbns
 {
     internal class PayloadProcessor : IDisposable
     {
@@ -15,10 +15,10 @@ namespace InstagramAPI.Push
         private TMemoryBufferTransport MemoryBufferTransport { get; }
 
         /// <summary>
-        /// Make a complete payload from <see cref="PushConnectionData"/> using Thrift.
+        /// Make a complete payload from <see cref="BaseConnectionData"/> using Thrift.
         /// </summary>
         /// <returns>Payload</returns>
-        public static async Task<IBuffer> BuildPayload(PushConnectionData data, CancellationToken cancellationToken)
+        public static async Task<IBuffer> BuildPayload(BaseConnectionData data, CancellationToken cancellationToken)
         {
             using (var instance = new PayloadProcessor())
             {

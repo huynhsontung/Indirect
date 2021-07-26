@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using InstagramAPI.Classes.Android;
 using InstagramAPI.Fbns;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Push
 {
-    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-    public sealed class PushConnectionData
+    public sealed class PushConnectionData : BaseConnectionData
     {
         private const int MessageTopicId = 76;
         private const int RegRespTopicId = 80;
 
-        private const long FbnsClientCapabilities = 439;
+        private const long FbnsClientCapabilities = 183;
         private const long FbnsEndpointCapabilities = 128;
         private const long FbnsAppId = 567310203415052;
         private const sbyte FbnsClientStack = 3;
@@ -25,37 +25,10 @@ namespace InstagramAPI.Push
         private const string FbnsClientType = "device_auth";
         private static readonly int[] FbnsSubscribeTopics = { MessageTopicId, RegRespTopicId };
 
-        [JsonProperty]
-        public string ClientId { get; set; } = Guid.NewGuid().ToString().Substring(0, 20);
-        
-        [JsonProperty]
-        public string UserAgent { get; set; }
-
-        [JsonProperty]
-        public long ClientMqttSessionId { get; set; }
-
-        #region DeviceAuth
-
-        [JsonProperty]
-        public long UserId { get; private set; }
-
-        [JsonProperty]
-        public string Password { get; private set; }
-
-        [JsonProperty]
-        public string DeviceId { get; private set; }
-
-        [JsonProperty]
-        public string DeviceSecret { get; private set; }
-
-        //[JsonProperty]
-        //public string FbnsToken { get; internal set; }
-
-        //[JsonProperty]
-        //public DateTimeOffset FbnsTokenLastUpdated { get; internal set; }
-
-        #endregion
-
+        public PushConnectionData(AndroidDevice device)
+        {
+            UserAgent = PushUserAgent.BuildFbUserAgent(device);
+        }
 
         public void UpdateAuth(string json)
         {
@@ -87,15 +60,8 @@ namespace InstagramAPI.Push
             // TODO: sr, rc ?
         }
 
-        public ConnectPayload ToPayload()
+        public override ConnectPayload ToPayload()
         {
-            if (ClientMqttSessionId == 0)
-            {
-                var difference = DateTime.Today.DayOfWeek - DayOfWeek.Monday;
-                var lastMonday = new DateTimeOffset(DateTime.Today.Subtract(TimeSpan.FromDays(difference > 0 ? difference : 7)));
-                ClientMqttSessionId = DateTimeOffset.Now.ToUnixTimeMilliseconds() - lastMonday.ToUnixTimeMilliseconds();
-            }
-
             return new ConnectPayload
             {
                 ClientId = ClientId,
@@ -104,6 +70,7 @@ namespace InstagramAPI.Push
                 {
                     UserId = UserId,
                     UserAgent = UserAgent,
+                    ClientMqttSessionId = ClientMqttSessionId,
                     ClientCapabilities = FbnsClientCapabilities,
                     EndpointCapabilities = FbnsEndpointCapabilities,
                     PublishFormat = FbnsPublishFormat,

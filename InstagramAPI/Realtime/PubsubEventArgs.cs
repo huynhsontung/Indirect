@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using InstagramAPI.Classes.JsonConverters;
+using InstagramAPI.Sync;
 using Newtonsoft.Json;
 
-namespace InstagramAPI.Sync
+namespace InstagramAPI.Realtime
 {
     public class PubsubEventArgs : EventArgs
     {
@@ -16,7 +13,7 @@ namespace InstagramAPI.Sync
         [JsonProperty("lazy")]
         public bool Lazy { get; set; }
 
-        [JsonProperty("data")]
+        [JsonProperty("data", ItemConverterType = typeof(ActivityIndicatorDataConverter))]
         public ActivityIndicatorData[] Data { get; set; }
 
         [JsonProperty("event")]
@@ -40,16 +37,8 @@ namespace InstagramAPI.Sync
         [JsonProperty("doublePublish")]
         public bool DoublePublish { get; set; }
 
-        private ActivityIndicator _indicator;
         [JsonIgnore]
-        public ActivityIndicator Indicator {
-            get
-            {
-                if (string.IsNullOrEmpty(Value)) return null;
-                if (_indicator == null) _indicator = JsonConvert.DeserializeObject<ActivityIndicator>(Value);
-                return _indicator;
-            }
-        }
+        public ActivityIndicator Indicator { get; set; }
     }
 
     public class ActivityIndicator
