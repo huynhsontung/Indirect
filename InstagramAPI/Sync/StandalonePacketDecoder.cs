@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Windows.Storage.Streams;
 using InstagramAPI.Classes.Mqtt.Packets;
-using InstagramAPI.Push.Packets;
+using InstagramAPI.Fbns.Packets;
 using InstagramAPI.Utils;
 using ByteOrder = Windows.Storage.Streams.ByteOrder;
 

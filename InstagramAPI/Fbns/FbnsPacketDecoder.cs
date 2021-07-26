@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using InstagramAPI.Classes.Mqtt;
 using InstagramAPI.Classes.Mqtt.Packets;
+using InstagramAPI.Fbns.Packets;
 using InstagramAPI.Utils;
+using Ionic.Zlib;
 
-namespace InstagramAPI.Push.Packets
+namespace InstagramAPI.Fbns
 {
     /// <summary>
     ///     Customized MqttDecoder for Fbns that only handles Publish, PubAck, and ConnAck
@@ -204,6 +208,7 @@ namespace InstagramAPI.Push.Packets
             if (remainingLength > 0)
             {
                 payload = reader.ReadBuffer(remainingLength);
+                payload = DecompressPayload(payload);
                 remainingLength = 0;
             }
             else
@@ -315,6 +320,19 @@ namespace InstagramAPI.Push.Packets
                         break;
                 }
             }
+        }
+
+        private static IBuffer DecompressPayload(IBuffer payload)
+        {
+            var compressedStream = payload.AsStream();
+
+            var decompressedStream = new MemoryStream(256);
+            using (var zlibStream = new ZlibStream(compressedStream, CompressionMode.Decompress, true))
+            {
+                zlibStream.CopyTo(decompressedStream);
+            }
+
+            return decompressedStream.GetWindowsRuntimeBuffer(0, (int)decompressedStream.Length);
         }
     }
 }

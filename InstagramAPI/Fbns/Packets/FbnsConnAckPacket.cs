@@ -1,6 +1,6 @@
 ﻿using InstagramAPI.Classes.Mqtt.Packets;
 
-namespace InstagramAPI.Push.Packets
+namespace InstagramAPI.Fbns.Packets
 {
     public sealed class FbnsConnAckPacket : Packet
     {

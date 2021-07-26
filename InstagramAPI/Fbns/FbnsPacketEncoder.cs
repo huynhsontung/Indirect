@@ -1,12 +1,15 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
-using InstagramAPI.Classes.Mqtt;
 using InstagramAPI.Classes.Mqtt.Packets;
+using InstagramAPI.Fbns.Packets;
 using InstagramAPI.Utils;
+using Ionic.Zlib;
 
-namespace InstagramAPI.Push.Packets
+namespace InstagramAPI.Fbns
 {
     public static class FbnsPacketEncoder
     {
@@ -46,7 +49,7 @@ namespace InstagramAPI.Push.Packets
 
         private static void EncodeFbnsConnectPacket(FbnsConnectPacket packet, DataWriter writer)
         {
-            var payload = packet.Payload;
+            var payload = CompressPayload(packet.Payload);
             uint payloadSize = payload?.Length ?? 0;
             byte[] protocolNameBytes = EncodeStringInUtf8(packet.ProtocolName);
             // variableHeaderwriterferSize = 2 bytes length + ProtocolName bytes + 4 bytes
@@ -73,7 +76,7 @@ namespace InstagramAPI.Push.Packets
 
         private static void EncodePublishPacket(PublishPacket packet, DataWriter writer)
         {
-            var payload = packet.Payload;
+            var payload = CompressPayload(packet.Payload);
 
             string topicName = packet.TopicName;
             byte[] topicNameBytes = EncodeStringInUtf8(topicName);
@@ -176,6 +179,21 @@ namespace InstagramAPI.Push.Packets
                 flagByte |= 0x02;
             }
             return (byte) flagByte;
+        }
+
+        private static IBuffer CompressPayload(IBuffer payload)
+        {
+            var buffer = payload.ToArray();
+
+            // zlib deflate
+            var dataStream = new MemoryStream(1024);
+            using (var zlibStream = new ZlibStream(dataStream, CompressionMode.Compress, CompressionLevel.Level9, true))
+            {
+                zlibStream.Write(buffer, 0, buffer.Length);
+            }
+
+            var compressed = dataStream.GetWindowsRuntimeBuffer(0, (int)dataStream.Length);
+            return compressed;
         }
     }
 }

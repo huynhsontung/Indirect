@@ -1,14 +1,10 @@
 ﻿using System;
-using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using Windows.Storage.Streams;
-using Ionic.Zlib;
 using Thrift.Protocol;
 using Thrift.Transport.Client;
-using CompressionLevel = Ionic.Zlib.CompressionLevel;
-using CompressionMode = Ionic.Zlib.CompressionMode;
 using System.Threading;
+using Windows.Storage.Streams;
 
 namespace InstagramAPI.Push
 {
@@ -36,17 +32,7 @@ namespace InstagramAPI.Push
                     return null;
                 }
 
-                var rawPayload = instance.MemoryBufferTransport.GetBuffer();
-
-                // zlib deflate
-                var dataStream = new MemoryStream(512);
-                using (var zlibStream = new ZlibStream(dataStream, CompressionMode.Compress, CompressionLevel.Level9, true))
-                {
-                    await zlibStream.WriteAsync(rawPayload, 0, rawPayload.Length, cancellationToken);
-                }
-
-                var compressed = dataStream.GetWindowsRuntimeBuffer(0, (int)dataStream.Length);
-                return compressed;
+                return instance.MemoryBufferTransport.GetBuffer().AsBuffer();
             }
         }
 

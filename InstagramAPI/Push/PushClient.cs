@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -15,9 +14,9 @@ using Windows.Security.Cryptography;
 using Windows.Storage.Streams;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Classes.Mqtt.Packets;
-using InstagramAPI.Push.Packets;
+using InstagramAPI.Fbns;
+using InstagramAPI.Fbns.Packets;
 using InstagramAPI.Utils;
-using Ionic.Zlib;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Push
@@ -270,6 +269,7 @@ namespace InstagramAPI.Push
             var tokenSource = new CancellationTokenSource();
             var connectPacket = new FbnsConnectPacket
             {
+                KeepAliveInSeconds = 900,
                 Payload = await PayloadProcessor.BuildPayload(ConnectionData, tokenSource.Token)
             };
 
@@ -422,8 +422,7 @@ namespace InstagramAPI.Push
                             await FbnsPacketEncoder.EncodePacket(PubAckPacket.InResponseTo(publishPacket), writer);
                         }
 
-                        var payload = DecompressPayload(publishPacket.Payload);
-                        var json = Encoding.UTF8.GetString(payload);
+                        var json = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, publishPacket.Payload);
                         this.Log($"MQTT json: {json}");
                         switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
                         {
@@ -533,41 +532,15 @@ namespace InstagramAPI.Push
 
             var json = JsonConvert.SerializeObject(message);
             var jsonBytes = Encoding.UTF8.GetBytes(json);
-            byte[] compressed;
-            using (var compressedStream = new MemoryStream(jsonBytes.Length))
-            {
-                using (var zlibStream =
-                    new ZlibStream(compressedStream, CompressionMode.Compress, CompressionLevel.Level9, true))
-                {
-                    zlibStream.Write(jsonBytes, 0, jsonBytes.Length);
-                }
-                compressed = new byte[compressedStream.Length];
-                compressedStream.Position = 0;
-                compressedStream.Read(compressed, 0, compressed.Length);
-            }
 
             var publishPacket = new PublishPacket(QualityOfService.AtLeastOnce, false, false)
             {
-                Payload = compressed.AsBuffer(),
+                Payload = jsonBytes.AsBuffer(),
                 PacketId = (ushort) CryptographicBuffer.GenerateRandomNumber(),
                 TopicName = ((byte)TopicIds.RegReq).ToString()
             };
 
             await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);
-        }
-
-        private byte[] DecompressPayload(IBuffer payload)
-        {
-            var compressedStream = payload.AsStream();
-
-            var decompressedStream = new MemoryStream(256);
-            using (var zlibStream = new ZlibStream(compressedStream, CompressionMode.Decompress, true))
-            {
-                zlibStream.CopyTo(decompressedStream);
-            }
-
-            var data = decompressedStream.GetWindowsRuntimeBuffer(0, (int) decompressedStream.Length);
-            return data.ToArray();
         }
     }
 }
