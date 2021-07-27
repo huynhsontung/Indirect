@@ -20,7 +20,7 @@ using Newtonsoft.Json.Linq;
 
 namespace InstagramAPI.Realtime
 {
-    public partial class RealtimeClient
+    public class RealtimeClient
     {
         public event EventHandler<List<MessageSyncEventArgs>> MessageReceived;
         public event EventHandler<PubsubEventArgs> ActivityIndicatorChanged;
@@ -277,6 +277,7 @@ namespace InstagramAPI.Realtime
                     break;
 
                 default:
+#if DEBUG
                     try
                     {
                         this.Log($"Raw payload: {CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, publishPacket.Payload)}");
@@ -285,7 +286,7 @@ namespace InstagramAPI.Realtime
                     {
                         DebugLogger.LogException(e, false);
                     }
-
+#endif
                     break;
             }
         }

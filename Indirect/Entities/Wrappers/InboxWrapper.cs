@@ -16,7 +16,7 @@ namespace Indirect.Entities.Wrappers
 {
     internal class InboxWrapper: DependencyObject, IIncrementalSource<DirectThreadWrapper>
     {
-        public event Action<long, DateTimeOffset> FirstUpdated;    // callback to start SyncClient
+        public event EventHandler FirstUpdated;    // callback to start RealtimeClient
 
         public static readonly DependencyProperty SelectedThreadProperty = DependencyProperty.Register(
             nameof(SelectedThread),
@@ -157,7 +157,7 @@ namespace Indirect.Entities.Wrappers
                 if (_firstTime)
                 {
                     _firstTime = false;
-                    FirstUpdated?.Invoke(container.SeqId, container.SnapshotAt);
+                    FirstUpdated?.Invoke(this, EventArgs.Empty);
                 }
 
                 UpdateExcludeThreads(container, true);

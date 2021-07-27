@@ -4,25 +4,95 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.Networking.Connectivity;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Indirect.Entities.Wrappers;
+using Indirect.Pages;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Realtime;
 using InstagramAPI.Utils;
+using Microsoft.UI.Xaml.Controls;
 
 namespace Indirect
 {
     internal partial class MainViewModel
     {
-        private void RegisterRealtimeClientHandlers(RealtimeClient client)
+        private async Task StartRealtimeClient()
         {
-            client.MessageReceived -= OnMessageSyncReceived;
-            client.ActivityIndicatorChanged -= OnActivityIndicatorChanged;
-            client.UserPresenceChanged -= OnUserPresenceChanged;
+            RealtimeClient.MessageReceived -= OnMessageSyncReceived;
+            RealtimeClient.ActivityIndicatorChanged -= OnActivityIndicatorChanged;
+            RealtimeClient.UserPresenceChanged -= OnUserPresenceChanged;
+            RealtimeClient.ShuttingDown -= RealtimeClientOnUnexpectedShutdown;
+            NetworkInformation.NetworkStatusChanged -= OnNetworkStatusChanged;
 
-            client.MessageReceived += OnMessageSyncReceived;
-            client.ActivityIndicatorChanged += OnActivityIndicatorChanged;
-            client.UserPresenceChanged += OnUserPresenceChanged;
+            RealtimeClient.MessageReceived += OnMessageSyncReceived;
+            RealtimeClient.ActivityIndicatorChanged += OnActivityIndicatorChanged;
+            RealtimeClient.UserPresenceChanged += OnUserPresenceChanged;
+            RealtimeClient.ShuttingDown += RealtimeClientOnUnexpectedShutdown;
+
+            await RealtimeClient.Start(Inbox.SeqId, Inbox.SnapshotAt);
+
+            // Hide error message
+            _mainWindowDispatcherQueue.TryEnqueue(() =>
+            {
+                var frame = Window.Current.Content as Frame;
+                var page = frame?.Content as MainPage;
+                page?.ShowStatus(null, null);
+            });
+        }
+
+        private void ShutdownRealtimeClient()
+        {
+            RealtimeClient.MessageReceived -= OnMessageSyncReceived;
+            RealtimeClient.ActivityIndicatorChanged -= OnActivityIndicatorChanged;
+            RealtimeClient.UserPresenceChanged -= OnUserPresenceChanged;
+            RealtimeClient.ShuttingDown -= RealtimeClientOnUnexpectedShutdown;
+            NetworkInformation.NetworkStatusChanged -= OnNetworkStatusChanged;
+
+            RealtimeClient.Shutdown();
+        }
+
+        private async void RealtimeClientOnUnexpectedShutdown(object sender, EventArgs e)
+        {
+            _mainWindowDispatcherQueue.TryEnqueue(() =>
+            {
+                var frame = Window.Current.Content as Frame;
+                var page = frame?.Content as MainPage;
+                page?.ShowStatus("Lost connection to the server",
+                    "Attempting to reconnect...",
+                    InfoBarSeverity.Error);
+            });
+
+            await Task.Delay(5000);
+
+            var internetProfile = NetworkInformation.GetInternetConnectionProfile();
+            if (internetProfile == null)
+            {
+                _mainWindowDispatcherQueue.TryEnqueue(() =>
+                {
+                    var frame = Window.Current.Content as Frame;
+                    var page = frame?.Content as MainPage;
+                    page?.ShowStatus("No Internet connection",
+                        "New messages will not be updated. Please check your Internet connection.",
+                        InfoBarSeverity.Error);
+                });
+
+                NetworkInformation.NetworkStatusChanged += OnNetworkStatusChanged;
+            }
+            else
+            {
+                await StartRealtimeClient();
+            }
+        }
+
+        private async void OnNetworkStatusChanged(object sender)
+        {
+            if (await Debouncer.Delay(nameof(OnNetworkStatusChanged), 5000) && !RealtimeClient.Running)
+            {
+                await StartRealtimeClient().ConfigureAwait(false);
+            }
         }
 
         private void InboxThreads_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -44,9 +114,9 @@ namespace Indirect
             }
         }
 
-        private async void OnInboxFirstUpdated(long seqId, DateTimeOffset snapshotAt)
+        private async void OnInboxFirstUpdated(object sender, EventArgs eventArgs)
         {
-            await RealtimeClient.Start(seqId, snapshotAt).ConfigureAwait(false);
+            await StartRealtimeClient().ConfigureAwait(false);
             if (!string.IsNullOrEmpty(_threadToBeOpened) && Inbox.Threads.Count > 0)
             {
                 await Inbox.Dispatcher.QuickRunAsync(() =>

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using Windows.System;
 using Windows.UI.Core;
 using Indirect.Entities;
 using Indirect.Entities.Wrappers;
@@ -15,7 +16,6 @@ using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
-using InstagramAPI.Sync;
 using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.Helpers;
 using InstagramAPI.Classes.Responses;
@@ -27,6 +27,7 @@ namespace Indirect
     internal partial class MainViewModel : INotifyPropertyChanged
     {
         private string _threadToBeOpened;
+        private readonly DispatcherQueue _mainWindowDispatcherQueue;
 
         private string ThreadInfoKey => $"{nameof(ThreadInfoDictionary)}_{LoggedInUser?.Pk}";
         private Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; set; }
@@ -35,8 +36,8 @@ namespace Indirect
 
         public Instagram InstaApi { get; private set; }
         public bool StartedFromMainView { get; set; }
-        public PushClient PushClient => InstaApi.PushClient;
-        public RealtimeClient RealtimeClient => InstaApi.RealtimeClient;
+        private PushClient PushClient => InstaApi.PushClient;
+        private RealtimeClient RealtimeClient => InstaApi.RealtimeClient;
         public Dictionary<long, UserPresenceValue> UserPresenceDictionary { get; } = new Dictionary<long, UserPresenceValue>();
         public InboxWrapper PendingInbox { get; }
         public InboxWrapper Inbox { get; }
@@ -50,8 +51,9 @@ namespace Indirect
         public ChatService ChatService { get; }
         public SettingsService Settings { get; }
 
-        public MainViewModel()
+        public MainViewModel(DispatcherQueue mainWindowDispatcherQueue)
         {
+            _mainWindowDispatcherQueue = mainWindowDispatcherQueue;
             Inbox = new InboxWrapper(this);
             //PendingInbox = new InboxWrapper(this, true);
             ChatService = new ChatService(this);
@@ -69,7 +71,7 @@ namespace Indirect
             }
 
             var session = await SessionManager.TryLoadLastSessionAsync() ?? new UserSessionData();
-            InitializeInstaApi(session);
+            InstaApi = new Instagram(session);
 
             AvailableSessions = await SessionManager.GetAvailableSessionsAsync(InstaApi.Session);
             ThreadInfoDictionary =
@@ -101,11 +103,11 @@ namespace Indirect
         public async Task SwitchAccountAsync(UserSessionData session)
         {
             ReelsFeed.StopReelsFeedUpdateLoop();
-            RealtimeClient.Shutdown();
+            ShutdownRealtimeClient();
             await PushClient.TransferPushSocket();
             ThreadInfoDictionary.Clear();
 
-            InitializeInstaApi(session);
+            InstaApi = new Instagram(session);
             AvailableSessions = await SessionManager.GetAvailableSessionsAsync(InstaApi.Session);
             SyncLock.Acquire(session.SessionName);
         }
@@ -131,8 +133,13 @@ namespace Indirect
         {
             ReelsFeed.StopReelsFeedUpdateLoop(true);
             await CacheManager.RemoveCacheAsync(ThreadInfoKey);
-            await InstaApi.Logout();
+            await SessionManager.TryRemoveSessionAsync(InstaApi.Session);
             ThreadInfoDictionary.Clear();
+
+            ShutdownRealtimeClient();
+            PushClient.Shutdown();
+            PushClient.DisposeBackgroundSocket();
+
             SyncLock.Release();
 
             if (AvailableSessions.Length > 0)
@@ -152,7 +159,7 @@ namespace Indirect
         {
             var user = await InstaApi.UpdateLoggedInUser();
             if (user == null) return;
-            await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
+            _mainWindowDispatcherQueue.TryEnqueue(() =>
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
             });
@@ -309,16 +316,6 @@ namespace Indirect
             }
         }
 
-        private void InitializeInstaApi(UserSessionData session)
-        {
-            InstaApi = new Instagram(session);
-            RegisterRealtimeClientHandlers(InstaApi.RealtimeClient);
-            InstaApi.PushClient.MessageReceived += (sender, args) =>
-            {
-                this.Log("Background notification: " + args.Json);
-            };
-        }
-
         public async Task SaveDataAsync()
         {
             if (!IsUserAuthenticated)
@@ -339,6 +336,35 @@ namespace Indirect
             }
 
             SettingsService.SetGlobal("LoggedInUsers", composite);
+        }
+
+        public async Task OnSuspending()
+        {
+            try
+            {
+                ReelsFeed.StopReelsFeedUpdateLoop();
+                ShutdownRealtimeClient();
+                await PushClient.TransferPushSocket();
+            }
+            finally
+            {
+                SyncLock.Release();
+            }
+        }
+
+        public async Task OnResuming()
+        {
+            if (Inbox.SeqId > 0)
+            {
+                await StartRealtimeClient();
+            }
+
+            if (StartedFromMainView)
+            {
+                SyncLock.Acquire(ActiveSession.SessionName);
+                await UpdateInboxAndSelectedThread();
+                ReelsFeed.StartReelsFeedUpdateLoop();
+            }
         }
     }
 }

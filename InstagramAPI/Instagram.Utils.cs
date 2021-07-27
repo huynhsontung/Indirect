@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
-using Windows.Networking.Connectivity;
 using Windows.Web.Http;
 using Windows.Web.Http.Filters;
 using Microsoft.AppCenter;
@@ -66,12 +65,6 @@ namespace InstagramAPI
 
                 cookieManager.SetCookie(cookie);
             }
-        }
-
-        public static bool InternetAvailable()
-        {
-            var internetProfile = NetworkInformation.GetInternetConnectionProfile();
-            return internetProfile != null;
         }
 
         public static string GetCurrentLocale()

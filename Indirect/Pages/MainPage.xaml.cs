@@ -79,6 +79,13 @@ namespace Indirect.Pages
         {
             await Dispatcher.QuickRunAsync(async () =>
             {
+                if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(message))
+                {
+                    Debouncer.CancelDelay(nameof(MainStatusBar));
+                    MainStatusBar.IsOpen = false;
+                    return;
+                }
+
                 if (MainStatusBar.IsOpen)
                 {
                     MainStatusBar.IsOpen = false;
@@ -112,11 +119,6 @@ namespace Indirect.Pages
             {
                 await ViewModel.OnLoggedIn();
             }
-
-            //ViewModel.SyncClient.ExceptionsCaught -= SyncClientOnExceptionsCaught;
-            //ViewModel.SyncClient.Connected -= SyncClientOnConnected;
-            //ViewModel.SyncClient.ExceptionsCaught += SyncClientOnExceptionsCaught;
-            //ViewModel.SyncClient.Connected += SyncClientOnConnected;
 
             ViewModel.InstaApi.HttpClient.LoginRequired -= ClientOnLoginRequired;
             ViewModel.InstaApi.HttpClient.LoginRequired += ClientOnLoginRequired;
@@ -173,24 +175,6 @@ namespace Indirect.Pages
         private void AdaptiveLayoutStateGroupOnCurrentStateChanged(object sender, VisualStateChangedEventArgs e)
         {
             ReelsTray.Visibility = GetReelsTrayVisibility(ViewModel.ReelsFeed.Reels.Count);
-        }
-
-        private async void SyncClientOnConnected(object sender, EventArgs e)
-        {
-            await Dispatcher.QuickRunAsync(() =>
-            {
-                if (MainStatusBar.Title == "Lost connection to the server")
-                {
-                    MainStatusBar.IsOpen = false;
-                }
-            }, CoreDispatcherPriority.Low);
-        }
-
-        private void SyncClientOnExceptionsCaught(object sender, Exception e)
-        {
-            DebugLogger.LogException(e);
-            ShowStatus("Lost connection to the server",
-                "New messages will not be updated. Please check your Internet connection or restart Indirect to try again.", InfoBarSeverity.Error);
         }
 
         private async void LogoutButton_Click(object sender, RoutedEventArgs e)

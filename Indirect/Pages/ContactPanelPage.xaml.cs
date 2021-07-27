@@ -48,21 +48,21 @@ namespace Indirect.Pages
 
         private async Task OptionallyStartRealtimeClient()
         {
-            if (ViewModel.RealtimeClient.Running) return;
-            var seqId = ViewModel.Inbox.SeqId;
-            var snapshotAt = ViewModel.Inbox.SnapshotAt;
-            if (seqId == default || snapshotAt == default)
-            {
-                var result = await ViewModel.InstaApi.GetInboxInfoAsync();
-                if (result.IsSucceeded)
-                {
-                    await ViewModel.RealtimeClient.Start(result.Value.SeqId, result.Value.SnapshotAt);
-                }
-            }
-            else
-            {
-                await ViewModel.RealtimeClient.Start(seqId, snapshotAt);
-            }
+            //if (ViewModel.RealtimeClient.Running) return;
+            //var seqId = ViewModel.Inbox.SeqId;
+            //var snapshotAt = ViewModel.Inbox.SnapshotAt;
+            //if (seqId == default || snapshotAt == default)
+            //{
+            //    var result = await ViewModel.InstaApi.GetInboxInfoAsync();
+            //    if (result.IsSucceeded)
+            //    {
+            //        await ViewModel.RealtimeClient.Start(result.Value.SeqId, result.Value.SnapshotAt);
+            //    }
+            //}
+            //else
+            //{
+            //    await ViewModel.RealtimeClient.Start(seqId, snapshotAt);
+            //}
         }
 
         private void ContactPanelOnClosing(ContactPanel sender, ContactPanelClosingEventArgs args)

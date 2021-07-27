@@ -7,6 +7,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
+using Windows.System;
 using Windows.System.Profile;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -14,7 +15,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Pages;
 using Indirect.Services;
-using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.Helpers;
@@ -26,9 +26,9 @@ namespace Indirect
     /// </summary>
     sealed partial class App : Application
     {
-        internal MainViewModel ViewModel { get; } = new MainViewModel();
+        internal MainViewModel ViewModel { get; }
 
-        private List<int> SecondaryViewIds { get; } = new List<int>();
+        private List<int> SecondaryViewIds { get; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -46,6 +46,9 @@ namespace Indirect
             {
                 this.FocusVisualKind = FocusVisualKind.Reveal;
             }
+
+            ViewModel = new MainViewModel(DispatcherQueue.GetForCurrentThread());
+            SecondaryViewIds = new List<int>();
         }
 
         public async Task CloseAllSecondaryViews()
@@ -225,9 +228,7 @@ namespace Indirect
             var deferral = e.SuspendingOperation.GetDeferral();
             try
             {
-                ViewModel.ReelsFeed.StopReelsFeedUpdateLoop();
-                ViewModel.RealtimeClient.Shutdown();    // Shutdown cleanly is not important here.
-                await ViewModel.PushClient.TransferPushSocket();
+                await ViewModel.OnSuspending();
             }
             catch (Exception exception)
             {
@@ -235,7 +236,6 @@ namespace Indirect
             }
             finally
             {
-                SyncLock.Release();
                 deferral.Complete();
             }
         }
@@ -243,23 +243,7 @@ namespace Indirect
         private async void OnResuming(object sender, object e)
         {
             if (!ViewModel.IsUserAuthenticated) return;
-            var seqId = ViewModel.Inbox.SeqId;
-            var snapshotAt = ViewModel.Inbox.SnapshotAt;
-            if (ViewModel.StartedFromMainView)
-            {
-                if (ViewModel.IsUserAuthenticated)
-                {
-                    SyncLock.Acquire(ViewModel.ActiveSession.SessionName);
-                }
-
-                await ViewModel.UpdateInboxAndSelectedThread();
-                ViewModel.ReelsFeed.StartReelsFeedUpdateLoop();
-            }
-
-            if (seqId > 0)
-            {
-                await ViewModel.RealtimeClient.Start(seqId, snapshotAt);
-            }
+            await ViewModel.OnResuming();
         }
 
         private async void OnEnteredBackground(object sender, EnteredBackgroundEventArgs e)

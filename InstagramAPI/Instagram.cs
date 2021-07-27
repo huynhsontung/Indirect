@@ -17,7 +17,7 @@ namespace InstagramAPI
     public partial class Instagram
     {
         public bool IsUserAuthenticated => Session?.IsAuthenticated ?? false;
-        public UserSessionData Session { get; private set; }
+        public UserSessionData Session { get; }
         public AndroidDevice Device => Session.Device;
         public PushClient PushClient { get; }
         public RealtimeClient RealtimeClient { get; }
@@ -43,15 +43,6 @@ namespace InstagramAPI
                 var e = (Exception) args.ExceptionObject;
                 DebugLogger.LogException(e, properties: e.Data);
             };
-        }
-
-        public async Task Logout()
-        {
-            await SessionManager.TryRemoveSessionAsync(Session);
-            RealtimeClient.Shutdown();
-            PushClient.Shutdown();
-            PushClient.DisposeBackgroundSocket();
-            Session = new UserSessionData();
         }
 
         public async Task<CurrentUser> UpdateLoggedInUser()
