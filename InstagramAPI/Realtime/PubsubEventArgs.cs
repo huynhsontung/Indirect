@@ -1,6 +1,5 @@
 ﻿using System;
 using InstagramAPI.Classes.JsonConverters;
-using InstagramAPI.Sync;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Realtime

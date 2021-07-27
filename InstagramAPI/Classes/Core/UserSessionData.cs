@@ -90,6 +90,7 @@ namespace InstagramAPI.Classes.Core
         {
             Device = AndroidDevice.GetRandomAndroidDevice();
             PushData = new PushConnectionData(Device);
+            WwwClaim = "0";
         }
     }
 }

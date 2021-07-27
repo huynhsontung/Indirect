@@ -250,11 +250,8 @@
     <Compile Include="Realtime\Thrift\SkywalkerMessage.cs" />
     <Compile Include="SECRETS.cs" />
     <Compile Include="Realtime\PubsubEventArgs.cs" />
-    <Compile Include="Sync\StandalonePacketDecoder.cs" />
-    <Compile Include="Sync\StandalonePacketEncoder.cs" />
     <Compile Include="Realtime\MessageSyncEventArgs.cs" />
     <Compile Include="Realtime\SyncBaseData.cs" />
-    <Compile Include="Sync\SyncClient.cs" />
     <Compile Include="Realtime\UserPresenceEventArgs.cs" />
     <Compile Include="Utils\CacheManager.cs" />
     <Compile Include="Utils\CryptoHelper.cs" />

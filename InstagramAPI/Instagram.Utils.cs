@@ -44,29 +44,6 @@ namespace InstagramAPI
             }.ToString(Formatting.None);
         }
 
-        public static void SetAppCookies(CookieCollection cookies)
-        {
-            var filter = new HttpBaseProtocolFilter();
-            var cookieManager = filter.CookieManager;
-
-            foreach (Cookie netCookie in cookies)
-            {
-                var cookie = new HttpCookie(netCookie.Name, netCookie.Domain, netCookie.Path)
-                {
-                    Value = netCookie.Value,
-                    HttpOnly = netCookie.HttpOnly,
-                    Secure = netCookie.Secure
-                };
-
-                if (netCookie.Expires != DateTime.MinValue)
-                {
-                    cookie.Expires = netCookie.Expires;
-                }
-
-                cookieManager.SetCookie(cookie);
-            }
-        }
-
         public static string GetCurrentLocale()
         {
             var runtimeLanguages = Windows.Globalization.ApplicationLanguages.Languages;

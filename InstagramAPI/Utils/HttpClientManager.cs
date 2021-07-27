@@ -70,7 +70,7 @@ namespace InstagramAPI.Utils
             //defaultHeaders.Add("X-Bloks-Is-Layout-Rtl", "false");
             //defaultHeaders.Add("X-Bloks-Is-Panorama-Enabled", "true");
             //defaultHeaders.Add("X-Pigeon-Session-Id", session.PigeonSessionId);
-            defaultHeaders.Add("X-Ig-Www-Claim", "0");
+            defaultHeaders.Add("X-Ig-Www-Claim", session.WwwClaim);
             defaultHeaders.Add("Ig-Intended-User-Id", "0");
 
             foreach (var runtimeLanguage in runtimeLanguages)
@@ -89,13 +89,6 @@ namespace InstagramAPI.Utils
             if (!string.IsNullOrEmpty(authorizationToken))
             {
                 defaultHeaders.Authorization = new AuthenticationHeaderValue("Bearer", session.AuthorizationToken.Substring(7));
-            }
-
-            var wwwClaim = session.WwwClaim;
-            if (!string.IsNullOrEmpty(wwwClaim))
-            {
-                defaultHeaders.Remove("X-Ig-Www-Claim");
-                defaultHeaders.Add("X-Ig-Www-Claim", wwwClaim);
             }
 
             var mid = session.Mid;
