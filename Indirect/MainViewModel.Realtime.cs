@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Networking.Connectivity;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Indirect.Entities.Wrappers;
 using Indirect.Pages;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
@@ -92,25 +90,6 @@ namespace Indirect
             if (await Debouncer.Delay(nameof(OnNetworkStatusChanged), 5000) && !RealtimeClient.Running)
             {
                 await StartRealtimeClient().ConfigureAwait(false);
-            }
-        }
-
-        private void InboxThreads_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems == null || ThreadInfoDictionary == null)
-            {
-                return;
-            }
-
-            foreach (var item in e.NewItems)
-            {
-                var thread = (DirectThreadWrapper) item;
-                if (string.IsNullOrEmpty(thread.ThreadId))
-                {
-                    continue;
-                }
-
-                ThreadInfoDictionary[thread.ThreadId] = new DirectThreadInfo(thread.Source);
             }
         }
 
