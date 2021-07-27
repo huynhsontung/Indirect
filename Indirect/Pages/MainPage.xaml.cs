@@ -113,10 +113,10 @@ namespace Indirect.Pages
                 await ViewModel.OnLoggedIn();
             }
 
-            ViewModel.SyncClient.ExceptionsCaught -= SyncClientOnExceptionsCaught;
-            ViewModel.SyncClient.Connected -= SyncClientOnConnected;
-            ViewModel.SyncClient.ExceptionsCaught += SyncClientOnExceptionsCaught;
-            ViewModel.SyncClient.Connected += SyncClientOnConnected;
+            //ViewModel.SyncClient.ExceptionsCaught -= SyncClientOnExceptionsCaught;
+            //ViewModel.SyncClient.Connected -= SyncClientOnConnected;
+            //ViewModel.SyncClient.ExceptionsCaught += SyncClientOnExceptionsCaught;
+            //ViewModel.SyncClient.Connected += SyncClientOnConnected;
 
             ViewModel.InstaApi.HttpClient.LoginRequired -= ClientOnLoginRequired;
             ViewModel.InstaApi.HttpClient.LoginRequired += ClientOnLoginRequired;

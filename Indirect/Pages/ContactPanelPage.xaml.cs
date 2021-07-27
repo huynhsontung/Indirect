@@ -9,8 +9,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Indirect.Entities.Wrappers;
 using Indirect.Services;
-using InstagramAPI;
-using InstagramAPI.Utils;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -44,13 +42,13 @@ namespace Indirect.Pages
             if (_thread != null)
             {
                 ViewModel.SecondaryThreads.Add(_thread);
-                await OptionallyStartSyncClient().ConfigureAwait(false);
+                await OptionallyStartRealtimeClient().ConfigureAwait(false);
             }
         }
 
-        private async Task OptionallyStartSyncClient()
+        private async Task OptionallyStartRealtimeClient()
         {
-            if (ViewModel.SyncClient.IsRunning) return;
+            if (ViewModel.RealtimeClient.Running) return;
             var seqId = ViewModel.Inbox.SeqId;
             var snapshotAt = ViewModel.Inbox.SnapshotAt;
             if (seqId == default || snapshotAt == default)
@@ -58,12 +56,12 @@ namespace Indirect.Pages
                 var result = await ViewModel.InstaApi.GetInboxInfoAsync();
                 if (result.IsSucceeded)
                 {
-                    await ViewModel.SyncClient.Start(result.Value.SeqId, result.Value.SnapshotAt);
+                    await ViewModel.RealtimeClient.Start(result.Value.SeqId, result.Value.SnapshotAt);
                 }
             }
             else
             {
-                await ViewModel.SyncClient.Start(seqId, snapshotAt);
+                await ViewModel.RealtimeClient.Start(seqId, snapshotAt);
             }
         }
 

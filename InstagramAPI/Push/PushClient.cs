@@ -48,6 +48,7 @@ namespace InstagramAPI.Push
         private DataReader _inboundReader;
         private DataWriter _outboundWriter;
         private readonly Instagram _instaApi;
+        private readonly object _lockObj = new object();
 
         public PushClient(Instagram api)
         {
@@ -196,7 +197,7 @@ namespace InstagramAPI.Push
         /// </summary>
         public async Task TransferPushSocket()
         {
-            lock (this)
+            lock (_lockObj)
             {
                 // Only transfer once
                 if (!_instaApi.IsUserAuthenticated || !Running || _transferred) return;
@@ -300,11 +301,15 @@ namespace InstagramAPI.Push
 
         public void Shutdown()
         {
-            this.Log("Stopping push server");
-            var tokenSource = _runningTokenSource;
-            tokenSource?.Cancel();
-            _runningTokenSource = null;
-            tokenSource?.Dispose();
+            lock (_lockObj)
+            {
+                if (!Running) return;
+                this.Log("Stopping push server");
+                var tokenSource = _runningTokenSource;
+                tokenSource?.Cancel();
+                _runningTokenSource = null;
+                tokenSource?.Dispose();
+            }
         }
 
         private async void StartPollingLoop()
@@ -316,6 +321,7 @@ namespace InstagramAPI.Push
                 try
                 {
                     await reader.LoadAsync(FbnsPacketDecoder.PACKET_HEADER_LENGTH);
+                    packet = await FbnsPacketDecoder.DecodePacket(reader);
                 }
                 catch (Exception e)
                 {
@@ -324,12 +330,12 @@ namespace InstagramAPI.Push
                         DebugLogger.LogException(e, false);
                     }
 
+                    Shutdown();
                     return;
                 }
 
                 try
                 {
-                    packet = await FbnsPacketDecoder.DecodePacket(reader);
                     await OnPacketReceived(packet);
                 }
                 catch (Exception e)
@@ -352,13 +358,6 @@ namespace InstagramAPI.Push
             {
                 this.Log("Failed to ping Push server");
             }
-        }
-
-        public enum TopicIds
-        {
-            Message = 76,   // "/fbns_msg"
-            RegReq = 79,    // "/fbns_reg_req"
-            RegResp = 80    // "/fbns_reg_resp"
         }
 
         private async void DelayTransferAsync()
@@ -401,10 +400,19 @@ namespace InstagramAPI.Push
                 switch (msg.PacketType)
                 {
                     case PacketType.CONNACK:
-                        this.Log("Received CONNACK");
-                        var auth = ((FbnsConnAckPacket) msg).Authentication;
-                        ConnectionData.UpdateAuth(auth);
-                        await RegisterMqttClient();
+                        var connackPacket = (FbnsConnAckPacket)msg;
+                        this.Log($"Received CONNACK - {connackPacket.ReturnCode}");
+                        if (connackPacket.ReturnCode == ConnectReturnCode.Accepted)
+                        {
+                            var auth = connackPacket.Authentication;
+                            ConnectionData.UpdateAuth(auth);
+                            await RegisterMqttClient();
+                        }
+                        else
+                        {
+                            Shutdown();
+                        }
+
                         break;
 
                     case PacketType.PUBLISH:
@@ -419,9 +427,9 @@ namespace InstagramAPI.Push
 
                         var json = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, publishPacket.Payload);
                         this.Log($"MQTT json: {json}");
-                        switch (Enum.Parse(typeof(TopicIds), publishPacket.TopicName))
+                        switch (Enum.Parse(typeof(PushTopicId), publishPacket.TopicName))
                         {
-                            case TopicIds.Message:
+                            case PushTopicId.Message:
                                 try
                                 {
                                     var message = JsonConvert.DeserializeObject<PushReceivedEventArgs>(json);
@@ -435,7 +443,7 @@ namespace InstagramAPI.Push
                                     DebugLogger.LogException(e);
                                 }
                                 break;
-                            case TopicIds.RegResp:
+                            case PushTopicId.RegResp:
                                 this.Log("Received token to register");
                                 await OnRegisterResponse(json);
                                 DelayTransferAsync();
@@ -532,7 +540,7 @@ namespace InstagramAPI.Push
             {
                 Payload = jsonBytes.AsBuffer(),
                 PacketId = (ushort) CryptographicBuffer.GenerateRandomNumber(),
-                TopicName = ((byte)TopicIds.RegReq).ToString()
+                TopicName = ((byte)PushTopicId.RegReq).ToString()
             };
 
             await FbnsPacketEncoder.EncodePacket(publishPacket, _outboundWriter);

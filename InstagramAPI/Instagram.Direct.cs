@@ -421,11 +421,13 @@ namespace InstagramAPI
             }
         }
         
-        public Task ReplyToItemAsync(DirectItem item, string threadId, string text)
+        public async Task ReplyToItemAsync(DirectItem item, string threadId, string text)
         {
             Contract.Requires(!string.IsNullOrEmpty(item?.ItemId));
             Contract.Requires(!string.IsNullOrEmpty(threadId));
             Contract.Requires(!string.IsNullOrEmpty(text));
+
+            if (!RealtimeClient.Running) return;
             
             var json = new JObject
             {
@@ -433,7 +435,10 @@ namespace InstagramAPI
                 {"mutation_token", DateTime.UtcNow.Ticks.ToString()},
                 {"replied_to_item_id", item.ItemId},
                 {"text", text},
-                {"thread_id", threadId}
+                {"thread_id", threadId},
+                {"client_context", DateTime.UtcNow.Ticks.ToString()},
+                {"device_id", Device.PhoneId.ToString().ToUpper()},
+                {"action", "send_item"}
             };
             
             if (!string.IsNullOrEmpty(item.ClientContext))
@@ -441,7 +446,7 @@ namespace InstagramAPI
                 json["replied_to_client_context"] = item.ClientContext;
             }
 
-            return SyncClient.SendMessage(json);
+            await RealtimeClient.SendMessage(json);
         }
 
         /// <summary>

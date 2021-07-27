@@ -6,16 +6,7 @@ namespace InstagramAPI.Fbns
     public abstract class BaseConnectionData
     {
         [JsonIgnore]
-        protected long ClientMqttSessionId
-        {
-            get
-            {
-                var difference = DateTime.Today.DayOfWeek - DayOfWeek.Monday;
-                var lastMonday =
-                    new DateTimeOffset(DateTime.Today.Subtract(TimeSpan.FromDays(difference > 0 ? difference : 7)));
-                return DateTimeOffset.Now.ToUnixTimeMilliseconds() - lastMonday.ToUnixTimeMilliseconds();
-            }
-        }
+        protected long ClientMqttSessionId => DateTimeOffset.Now.ToUnixTimeMilliseconds() & 0xffffffff;
 
         [JsonProperty]
         public string ClientId { get; protected set; } = Guid.NewGuid().ToString().Substring(0, 20);

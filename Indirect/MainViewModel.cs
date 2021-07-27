@@ -20,6 +20,7 @@ using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.Helpers;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.Core;
+using InstagramAPI.Realtime;
 
 namespace Indirect
 {
@@ -35,7 +36,7 @@ namespace Indirect
         public Instagram InstaApi { get; private set; }
         public bool StartedFromMainView { get; set; }
         public PushClient PushClient => InstaApi.PushClient;
-        public SyncClient SyncClient => InstaApi.SyncClient;
+        public RealtimeClient RealtimeClient => InstaApi.RealtimeClient;
         public Dictionary<long, UserPresenceValue> UserPresenceDictionary { get; } = new Dictionary<long, UserPresenceValue>();
         public InboxWrapper PendingInbox { get; }
         public InboxWrapper Inbox { get; }
@@ -100,7 +101,7 @@ namespace Indirect
         public async Task SwitchAccountAsync(UserSessionData session)
         {
             ReelsFeed.StopReelsFeedUpdateLoop();
-            SyncClient.Shutdown();
+            RealtimeClient.Shutdown();
             await PushClient.TransferPushSocket();
             ThreadInfoDictionary.Clear();
 
@@ -149,8 +150,8 @@ namespace Indirect
 
         public async Task UpdateLoggedInUser()
         {
-            var succeeded = await InstaApi.UpdateLoggedInUser();
-            if (!succeeded) return;
+            var user = await InstaApi.UpdateLoggedInUser();
+            if (user == null) return;
             await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
@@ -311,7 +312,7 @@ namespace Indirect
         private void InitializeInstaApi(UserSessionData session)
         {
             InstaApi = new Instagram(session);
-            RegisterSyncClientHandlers(InstaApi.SyncClient);
+            RegisterRealtimeClientHandlers(InstaApi.RealtimeClient);
             InstaApi.PushClient.MessageReceived += (sender, args) =>
             {
                 this.Log("Background notification: " + args.Json);

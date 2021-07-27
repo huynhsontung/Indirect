@@ -226,7 +226,7 @@ namespace Indirect
             try
             {
                 ViewModel.ReelsFeed.StopReelsFeedUpdateLoop();
-                ViewModel.SyncClient.Shutdown();    // Shutdown cleanly is not important here.
+                ViewModel.RealtimeClient.Shutdown();    // Shutdown cleanly is not important here.
                 await ViewModel.PushClient.TransferPushSocket();
             }
             catch (Exception exception)
@@ -258,7 +258,7 @@ namespace Indirect
 
             if (seqId > 0)
             {
-                await ViewModel.SyncClient.Start(seqId, snapshotAt, true);
+                await ViewModel.RealtimeClient.Start(seqId, snapshotAt);
             }
         }
 

@@ -232,6 +232,7 @@
     <Compile Include="Instagram.Utils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Push\PushConnectionData.cs" />
+    <Compile Include="Push\PushTopicId.cs" />
     <Compile Include="Push\PushUserAgent.cs" />
     <Compile Include="Fbns\Packets\FbnsConnAckPacket.cs" />
     <Compile Include="Fbns\Packets\FbnsConnectPacket.cs" />
@@ -242,6 +243,11 @@
     <Compile Include="Push\PushReceivedEventArgs.cs" />
     <Compile Include="Realtime\RealtimeClient.cs" />
     <Compile Include="Realtime\RealtimeConnectionData.cs" />
+    <Compile Include="Realtime\RealtimeTopicId.cs" />
+    <Compile Include="Realtime\Subscriptions\GraphQL.cs" />
+    <Compile Include="Realtime\Subscriptions\Skywalker.cs" />
+    <Compile Include="Realtime\Thrift\GraphQLMessage.cs" />
+    <Compile Include="Realtime\Thrift\SkywalkerMessage.cs" />
     <Compile Include="SECRETS.cs" />
     <Compile Include="Realtime\PubsubEventArgs.cs" />
     <Compile Include="Sync\StandalonePacketDecoder.cs" />
@@ -284,6 +290,7 @@
   <ItemGroup />
   <ItemGroup>
     <None Include="Fbns\Fbns.thrift" />
+    <None Include="Realtime\Thrift\Realtime.thrift" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

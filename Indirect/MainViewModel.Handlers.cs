@@ -8,14 +8,13 @@ using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Realtime;
-using InstagramAPI.Sync;
 using InstagramAPI.Utils;
 
 namespace Indirect
 {
     internal partial class MainViewModel
     {
-        private void RegisterSyncClientHandlers(SyncClient client)
+        private void RegisterRealtimeClientHandlers(RealtimeClient client)
         {
             client.MessageReceived -= OnMessageSyncReceived;
             client.ActivityIndicatorChanged -= OnActivityIndicatorChanged;
@@ -47,7 +46,7 @@ namespace Indirect
 
         private async void OnInboxFirstUpdated(long seqId, DateTimeOffset snapshotAt)
         {
-            await SyncClient.Start(seqId, snapshotAt, true).ConfigureAwait(false);
+            await RealtimeClient.Start(seqId, snapshotAt).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(_threadToBeOpened) && Inbox.Threads.Count > 0)
             {
                 await Inbox.Dispatcher.QuickRunAsync(() =>

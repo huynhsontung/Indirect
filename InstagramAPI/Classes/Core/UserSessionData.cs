@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using Windows.Security.Cryptography;
 using Windows.Storage.Streams;
 using InstagramAPI.Classes.JsonConverters;
 using InstagramAPI.Classes.User;
@@ -7,6 +8,7 @@ using InstagramAPI.Push;
 using Newtonsoft.Json;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Challenge;
+using Newtonsoft.Json.Linq;
 
 namespace InstagramAPI.Classes.Core
 {
@@ -62,6 +64,27 @@ namespace InstagramAPI.Classes.Core
 
         [JsonProperty]
         public AndroidDevice Device { get; }
+
+        [JsonIgnore]
+        public string SessionId
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(AuthorizationToken))
+                {
+                    var base64 = AuthorizationToken.Substring("Bearer IGT:2:".Length);
+                    if (!string.IsNullOrEmpty(base64))
+                    {
+                        var buffer = CryptographicBuffer.DecodeFromBase64String(base64);
+                        var json = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, buffer);
+                        var jObject = JObject.Parse(json);
+                        return jObject["sessionid"]?.ToObject<string>();
+                    }
+                }
+
+                return string.Empty;
+            }
+        }
 
         public UserSessionData()
         {

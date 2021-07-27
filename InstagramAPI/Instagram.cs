@@ -6,11 +6,11 @@ using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
-using InstagramAPI.Sync;
 using InstagramAPI.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using InstagramAPI.Classes.Core;
+using InstagramAPI.Realtime;
 
 namespace InstagramAPI
 {
@@ -20,7 +20,7 @@ namespace InstagramAPI
         public UserSessionData Session { get; private set; }
         public AndroidDevice Device => Session.Device;
         public PushClient PushClient { get; }
-        public SyncClient SyncClient { get; }
+        public RealtimeClient RealtimeClient { get; }
         public HttpClientManager HttpClient { get; }
 
         public Instagram(UserSessionData session)
@@ -36,7 +36,7 @@ namespace InstagramAPI
             Session = session;
             HttpClient = new HttpClientManager(session);
             PushClient = new PushClient(this);
-            SyncClient = new SyncClient(this);
+            RealtimeClient = new RealtimeClient(this);
 
             PushClient.ExceptionsCaught += (sender, args) =>
             {
@@ -48,18 +48,18 @@ namespace InstagramAPI
         public async Task Logout()
         {
             await SessionManager.TryRemoveSessionAsync(Session);
-            SyncClient.Shutdown();
+            RealtimeClient.Shutdown();
             PushClient.Shutdown();
             PushClient.DisposeBackgroundSocket();
             Session = new UserSessionData();
         }
 
-        public async Task<bool> UpdateLoggedInUser()
+        public async Task<CurrentUser> UpdateLoggedInUser()
         {
             var result = await GetCurrentUserAsync();
-            if (!result.IsSucceeded) return false;
+            if (!result.IsSucceeded) return null;
             Session.LoggedInUser = result.Value;
-            return true;
+            return result.Value;
         }
 
         public async Task<Result<CurrentUser>> GetCurrentUserAsync()

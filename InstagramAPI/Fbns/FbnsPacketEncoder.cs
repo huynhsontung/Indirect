@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
@@ -13,8 +14,8 @@ namespace InstagramAPI.Fbns
 {
     public static class FbnsPacketEncoder
     {
-        const uint PACKET_ID_LENGTH = 2;
-        const uint STRING_SIZE_LENGTH = 2;
+        const uint PacketIdLength = 2;
+        const uint StringSizeLength = 2;
         // const uint MAX_VARIABLE_LENGTH = 4;
 
         public static async Task EncodePacket(Packet packet, DataWriter writer)
@@ -35,6 +36,12 @@ namespace InstagramAPI.Fbns
                 case PacketType.UNSUBACK:
                     EncodePacketWithIdOnly((PacketWithId)packet, writer);
                     break;
+                case PacketType.SUBSCRIBE:
+                    EncodeSubscribeMessage(writer, (SubscribePacket)packet);
+                    break;
+                case PacketType.UNSUBSCRIBE:
+                    EncodeUnsubscribeMessage(writer, (UnsubscribePacket)packet);
+                    break;
                 case PacketType.PINGREQ:
                 case PacketType.PINGRESP:
                 case PacketType.DISCONNECT:
@@ -54,7 +61,7 @@ namespace InstagramAPI.Fbns
             byte[] protocolNameBytes = EncodeStringInUtf8(packet.ProtocolName);
             // variableHeaderwriterferSize = 2 bytes length + ProtocolName bytes + 4 bytes
             // 4 bytes are reserved for: 1 byte ProtocolLevel, 1 byte ConnectFlags, 2 byte KeepAlive
-            uint variableHeaderwriterferSize = (uint) (STRING_SIZE_LENGTH + protocolNameBytes.Length + 4);
+            uint variableHeaderwriterferSize = (uint) (StringSizeLength + protocolNameBytes.Length + 4);
             uint variablePartSize = variableHeaderwriterferSize + payloadSize;
 
             // MQTT message format from: http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/MQTT_V3.1_Protocol_Specific.pdf
@@ -81,8 +88,8 @@ namespace InstagramAPI.Fbns
             string topicName = packet.TopicName;
             byte[] topicNameBytes = EncodeStringInUtf8(topicName);
 
-            uint variableHeaderBufferSize = (uint)(STRING_SIZE_LENGTH + topicNameBytes.Length +
-                                           (packet.QualityOfService > QualityOfService.AtMostOnce ? PACKET_ID_LENGTH : 0));
+            uint variableHeaderBufferSize = (uint)(StringSizeLength + topicNameBytes.Length +
+                                           (packet.QualityOfService > QualityOfService.AtMostOnce ? PacketIdLength : 0));
             uint payloadBufferSize = payload?.Length ?? 0;
             uint variablePartSize = variableHeaderBufferSize + payloadBufferSize;
 
@@ -105,10 +112,10 @@ namespace InstagramAPI.Fbns
         {
             var msgId = packet.PacketId;
 
-            const uint VariableHeaderBufferSize = PACKET_ID_LENGTH; // variable part only has a packet id
+            const uint variableHeaderBufferSize = PacketIdLength; // variable part only has a packet id
 
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
-            WriteVariableLengthInt(writer, VariableHeaderBufferSize);
+            WriteVariableLengthInt(writer, variableHeaderBufferSize);
             writer.WriteUInt16(msgId);
         }
 
@@ -116,6 +123,66 @@ namespace InstagramAPI.Fbns
         {
             writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
             writer.WriteByte(0);
+        }
+
+        static void EncodeSubscribeMessage(DataWriter writer, SubscribePacket packet)
+        {
+            uint payloadBufferSize = 0;
+
+            var encodedTopicFilters = new List<byte[]>();
+
+            foreach (var topic in packet.Requests)
+            {
+                byte[] topicFilterBytes = EncodeStringInUtf8(topic.TopicFilter);
+                payloadBufferSize += StringSizeLength + (uint) topicFilterBytes.Length + 1; // length, value, QoS
+                encodedTopicFilters.Add(topicFilterBytes);
+            }
+
+            uint variablePartSize = PacketIdLength + payloadBufferSize;
+
+            writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
+            WriteVariableLengthInt(writer, variablePartSize);
+
+            // Variable Header
+            writer.WriteInt16((short)packet.PacketId); // todo: review: validate?
+
+            // Payload
+            for (int i = 0; i < encodedTopicFilters.Count; i++)
+            {
+                var topicFilterBytes = encodedTopicFilters[i];
+                writer.WriteInt16((short)topicFilterBytes.Length);
+                writer.WriteBytes(topicFilterBytes);
+                writer.WriteByte((byte)packet.Requests[i].QualityOfService);
+            }
+        }
+
+        static void EncodeUnsubscribeMessage(DataWriter writer, UnsubscribePacket packet)
+        {
+            uint payloadBufferSize = 0;
+
+            var encodedTopicFilters = new List<byte[]>();
+
+            foreach (string topic in packet.TopicFilters)
+            {
+                byte[] topicFilterBytes = EncodeStringInUtf8(topic);
+                payloadBufferSize += StringSizeLength + (uint) topicFilterBytes.Length; // length, value
+                encodedTopicFilters.Add(topicFilterBytes);
+            }
+
+            uint variablePartSize = PacketIdLength + payloadBufferSize;
+
+            writer.WriteByte(CalculateFirstByteOfFixedHeader(packet));
+            WriteVariableLengthInt(writer, variablePartSize);
+
+            // Variable Header
+            writer.WriteInt16((short)packet.PacketId); // todo: review: validate?
+
+            // Payload
+            foreach (var topic in encodedTopicFilters)
+            {
+                writer.WriteInt16((short)topic.Length);
+                writer.WriteBytes(topic);
+            }
         }
 
         static byte CalculateFirstByteOfFixedHeader(Packet packet)
@@ -186,7 +253,7 @@ namespace InstagramAPI.Fbns
             var buffer = payload.ToArray();
 
             // zlib deflate
-            var dataStream = new MemoryStream(1024);
+            var dataStream = new MemoryStream(buffer.Length);
             using (var zlibStream = new ZlibStream(dataStream, CompressionMode.Compress, CompressionLevel.Level9, true))
             {
                 zlibStream.Write(buffer, 0, buffer.Length);
