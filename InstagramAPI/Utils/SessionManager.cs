@@ -128,7 +128,8 @@ namespace InstagramAPI.Utils
         {
             var excludeName = exclude?.LoggedInUser?.Pk.ToString();
             var files = await LocalFolder.GetFilesAsync();
-            var tasks = files.Where(x => x.FileType == SESSION_EXT && x.DisplayName != excludeName)
+            var tasks = files.Where(x =>
+                    x.FileType == SESSION_EXT && x.DisplayName != excludeName && x.DisplayName.All(char.IsDigit))
                 .Select(async x => new UserSessionContainer
                 {
                     Session = await TryLoadSessionAsync(x),
