@@ -241,6 +241,7 @@ namespace InstagramAPI.Realtime
             {
                 case RealtimeTopicId.MessageSync:
                     var iris = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, publishPacket.Payload);
+                    this.Log($"Message sync: {iris}");
                     var messageSyncPayload = JsonConvert.DeserializeObject<List<MessageSyncEventArgs>>(iris);
                     var latest = messageSyncPayload.Last();
                     if (latest.SeqId > _seqId)
@@ -274,6 +275,17 @@ namespace InstagramAPI.Realtime
                     await PayloadProcessor.DeserializeObject(publishPacket.Payload, realtimeMessage, cancellationToken);
                     this.Log($"GraphQL message ({realtimeMessage.Topic}): {realtimeMessage.Payload}");
                     HandleGraphQLMessage(realtimeMessage);
+                    break;
+
+                case RealtimeTopicId.IrisSubResponse:
+                    var json = CryptographicBuffer.ConvertBinaryToString(BinaryStringEncoding.Utf8, publishPacket.Payload);
+                    this.Log($"Iris sub response: {json}");
+                    var response = JsonConvert.DeserializeObject<JObject>(json);
+                    if (!(response["succeeded"]?.ToObject<bool>() ?? false))
+                    {
+                        Shutdown();
+                    }
+
                     break;
 
                 default:

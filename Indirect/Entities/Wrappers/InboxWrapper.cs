@@ -154,12 +154,6 @@ namespace Indirect.Entities.Wrappers
                 }
 
                 var container = result.Value;
-                if (_firstTime)
-                {
-                    _firstTime = false;
-                    FirstUpdated?.Invoke(this, EventArgs.Empty);
-                }
-
                 UpdateExcludeThreads(container, true);
                 var wrappedThreadList = new List<DirectThreadWrapper>(container.Inbox.Threads.Count);
                 foreach (var directThread in container.Inbox.Threads)
@@ -167,6 +161,12 @@ namespace Indirect.Entities.Wrappers
                     var wrappedThread = new DirectThreadWrapper(_viewModel, directThread);
                     wrappedThread.PropertyChanged += OnThreadChanged;
                     wrappedThreadList.Add(wrappedThread);
+                }
+
+                if (_firstTime)
+                {
+                    _firstTime = false;
+                    FirstUpdated?.Invoke(this, EventArgs.Empty);
                 }
 
                 return wrappedThreadList;
