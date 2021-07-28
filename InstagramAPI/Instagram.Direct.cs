@@ -420,7 +420,25 @@ namespace InstagramAPI
                 return Result<DirectThread[]>.Except(exception);
             }
         }
-        
+
+        public async Task SendTextAsync(string threadId, string text)
+        {
+            if (!RealtimeClient.Running) return;
+
+            var json = new JObject
+            {
+                {"item_type", "text"},
+                {"mutation_token", DateTime.UtcNow.Ticks.ToString()},
+                {"text", text},
+                {"thread_id", threadId},
+                {"client_context", DateTime.UtcNow.Ticks.ToString()},
+                {"device_id", Device.PhoneId.ToString().ToUpper()},
+                {"action", "send_item"}
+            };
+
+            await RealtimeClient.SendMessage(json);
+        }
+
         public async Task ReplyToItemAsync(DirectItem item, string threadId, string text)
         {
             Contract.Requires(!string.IsNullOrEmpty(item?.ItemId));
