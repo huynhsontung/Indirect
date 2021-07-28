@@ -76,6 +76,7 @@ namespace Indirect.Controls
             var grid = flipViewItem?.ContentTemplateRoot as Grid;
             var autoVideo = grid.FindDescendant<AutoVideoControl>();
             autoVideo?.Pause();
+            Source = null;
         }
 
         private async Task PopReplyDeliveryStatus()
