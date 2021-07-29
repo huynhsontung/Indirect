@@ -11,7 +11,7 @@ namespace InstagramAPI.Realtime
         [JsonProperty("event")]
         public string Event { get; set; }
 
-        [JsonProperty("data", ItemConverterType = typeof(SyncItemConverter))]
+        [JsonProperty("data")]
         public List<SyncItem> Data { get; set; }
 
         [JsonProperty("message_type")]
@@ -25,14 +25,5 @@ namespace InstagramAPI.Realtime
 
         [JsonProperty("realtime")]
         public bool Realtime { get; set; }
-    }
-
-    public class SyncItem : SyncBaseData
-    {
-        [JsonIgnore]
-        public bool? ShhModeEnabled { get; set; }
-
-        [JsonIgnore]
-        public DirectItem Item { get; set; }
     }
 }

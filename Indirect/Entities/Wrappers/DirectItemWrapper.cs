@@ -83,7 +83,7 @@ namespace Indirect.Entities.Wrappers
 
             Source = source;
             Parent = parent;
-            ObservableReactions = source.Reactions != null ? new ReactionsWrapper(viewModel, source.Reactions, parent.Users) : new ReactionsWrapper(viewModel);
+            ObservableReactions = new ReactionsWrapper(viewModel, source.Reactions, parent.Users);
             FromMe = viewModel.LoggedInUser?.Pk == source.UserId;
             SetDescriptionText();
             LinkText = DeconstructLinkShare(Source.Link);

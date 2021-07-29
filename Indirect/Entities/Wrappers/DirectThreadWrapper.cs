@@ -247,14 +247,15 @@ namespace Indirect.Entities.Wrappers
 
                     foreach (var item in source)
                     {
-                        var existingItem = ObservableItems.LastOrDefault(x => x.Equals(item));
-                        var existed = existingItem != null;
-
-                        if (existed)
+                        for (var i = ObservableItems.Count - 1; i >= 0; i--)
                         {
-                            existingItem.ObservableReactions.Update(item.ObservableReactions);
-                            continue;
+                            if (ObservableItems[i].Equals(item))
+                            {
+                                ObservableItems.RemoveAt(i);
+                                break;
+                            }
                         }
+
                         for (var i = ObservableItems.Count - 1; i >= 0; i--)
                         {
                             if (item.Source.Timestamp > ObservableItems[i].Source.Timestamp)

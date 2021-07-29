@@ -31,7 +31,7 @@ namespace InstagramAPI.Realtime
         public long TopicPublishId { get; set; }
     }
 
-    public class ActivityIndicatorData : SyncBaseData
+    public class ActivityIndicatorData : SyncItem
     {
         [JsonProperty("doublePublish")]
         public bool DoublePublish { get; set; }

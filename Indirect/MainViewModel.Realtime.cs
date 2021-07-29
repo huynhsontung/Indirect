@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 using Windows.Networking.Connectivity;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Indirect.Entities.Wrappers;
 using Indirect.Pages;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.Direct.ItemContent;
 using InstagramAPI.Realtime;
 using InstagramAPI.Utils;
 using Microsoft.UI.Xaml.Controls;
+using Newtonsoft.Json;
 
 namespace Indirect
 {
@@ -105,6 +108,47 @@ namespace Indirect
             }
         }
 
+        private async Task<bool> SyncForEachThread(string threadId, SyncItem syncItem, string[] breadcrumbs)
+        {
+            var mainThread = Inbox.Threads.FirstOrDefault(wrapper => wrapper.ThreadId == threadId);
+
+            // Update thread in main view as well as in secondary views
+            var threadsToUpdate = SecondaryThreads.Where(x => x.ThreadId == threadId).ToList();
+            if (mainThread != null)
+            {
+                threadsToUpdate.Add(mainThread);
+            }
+
+            if (threadsToUpdate.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (var thread in threadsToUpdate)
+            {
+                switch (syncItem.Op)
+                {
+                    case "add":
+                        await HandleSyncAdd(thread, syncItem, breadcrumbs);
+                        break;
+
+                    case "replace":
+                        await HandleSyncReplace(thread, syncItem, breadcrumbs);
+                        break;
+
+                    case "remove":
+                        await HandleSyncRemove(thread, syncItem, breadcrumbs);
+                        break;
+
+                    default:
+                        DebugLogger.LogException(new Exception($"Sync operation '{syncItem.Op}' not expected"));
+                        break;
+                }
+            }
+
+            return true;
+        }
+
         private async void OnMessageSyncReceived(object sender, List<MessageSyncEventArgs> data)
         {
             try
@@ -118,84 +162,23 @@ namespace Indirect
                     }
 
                     var itemData = syncEvent.Data[0];
+                    this.Log($"SyncItem {itemData.Op} {itemData.Path}");
+                    this.Log(itemData.Value);
+
                     if (syncEvent.SeqId > Inbox.SeqId)
                     {
                         Inbox.Container.SeqId = syncEvent.SeqId;
                         Inbox.Container.SnapshotAt = DateTimeOffset.Now;
                     }
 
-                    if (itemData.Item == null)
-                    {
-                        continue;
-                    }
-
-                    var segments = itemData.Path.Trim('/').Split('/');
-                    var threadId = segments[2];
+                    var breadcrumbs = itemData.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    var threadId = breadcrumbs.Length > 3 && breadcrumbs[1] == "threads" ? breadcrumbs[2] : null;
                     if (string.IsNullOrEmpty(threadId)) continue;
-                    var mainThread = Inbox.Threads.FirstOrDefault(wrapper => wrapper.ThreadId == threadId);
-                    if (mainThread == null && StartedFromMainView)
+
+                    var threadsUpdated = await SyncForEachThread(threadId, itemData, breadcrumbs.Skip(3).ToArray());
+                    if (!threadsUpdated && StartedFromMainView)
                     {
                         if (!updateInbox) updateInbox = itemData.Op == "add";
-                        continue;
-                    }
-
-                    // Update thread in main view as well as in secondary views
-                    var threadsToUpdate = SecondaryThreads.Where(x => x.ThreadId == threadId).ToList();
-                    if (mainThread != null) threadsToUpdate.Add(mainThread);
-
-                    foreach (var thread in threadsToUpdate)
-                    {
-                        switch (itemData.Op)
-                        {
-                            case "add":
-                                {
-                                    var item = itemData.Item;
-                                    if (item.ItemType == DirectItemType.Placeholder)
-                                    {
-                                        if (syncEvent.Realtime) await Task.Delay(1000);
-                                        var result =
-                                            await InstaApi.GetItemsInDirectThreadAsync(threadId, itemData.Item.ItemId);
-                                        if (result.IsSucceeded && result.Value.Items.Count > 0)
-                                            item = result.Value.Items[0];
-                                    }
-
-                                    await thread.AddItem(item);
-                                    break;
-                                }
-                            case "replace":
-                                {
-                                    if (itemData.Path.Contains("has_seen", StringComparison.Ordinal) &&
-                                        long.TryParse(segments[4], out var userId))
-                                    {
-                                        await thread.UpdateLastSeenAt(userId, itemData.Item.Timestamp, itemData.Item.ItemId);
-                                    }
-                                    else
-                                    {
-                                        var item = thread.ObservableItems.LastOrDefault(x => x.Source.ItemId == itemData.Item.ItemId);
-                                        if (item != null)
-                                        {
-                                            await thread.Dispatcher.QuickRunAsync(() =>
-                                            {
-                                                if (itemData.Item.Reactions == null)
-                                                {
-                                                    item.ObservableReactions.Clear();
-                                                }
-                                                else
-                                                {
-                                                    item.ObservableReactions.Update(itemData.Item.Reactions);
-                                                }
-                                            });
-                                        }
-                                    }
-                                    break;
-                                }
-                            case "remove":
-                                await thread.RemoveItem(itemData.Value);
-                                break;
-                            default:
-                                DebugLogger.LogException(new Exception($"Sync operation '{itemData.Op}' not expected"));
-                                break;
-                        }
                     }
                 }
                 if (updateInbox)
@@ -207,7 +190,109 @@ namespace Indirect
             {
                 DebugLogger.LogException(e);
             }
-            this.Log("Sync(s) received.");
+        }
+
+        private async Task HandleSyncAdd(DirectThreadWrapper thread, SyncItem syncItem, string[] breadcrumbs)
+        {
+            if (breadcrumbs.Length < 2)
+            {
+                return;
+            }
+
+            switch (breadcrumbs[0])
+            {
+                case "items" when breadcrumbs.Length == 2:
+                {
+                    var itemId = breadcrumbs[1];
+                    var item = JsonConvert.DeserializeObject<DirectItem>(syncItem.Value);
+                    item.ItemId = itemId;
+                    await thread.AddItem(item);
+                    break;
+                }
+
+                case "items" when breadcrumbs.Length == 5 && breadcrumbs[2] == "reactions":
+                {
+                    var itemId = breadcrumbs[1];
+                    var senderId = Convert.ToInt64(breadcrumbs[4]);
+                    var reaction = JsonConvert.DeserializeObject<EmojiReaction>(syncItem.Value);
+                    reaction.SenderId = senderId;
+                    var existingItem = thread.ObservableItems.LastOrDefault(x => x.Source.ItemId == itemId);
+                    if (existingItem != null)
+                    {
+                        // TODO: Refactor to use ObservableReactions' Dispatcher instead
+                        await thread.Dispatcher.QuickRunAsync(() =>
+                        {
+                            existingItem.ObservableReactions.Add(reaction);
+                        });
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        private async Task HandleSyncReplace(DirectThreadWrapper thread, SyncItem syncItem, string[] breadcrumbs)
+        {
+            if (breadcrumbs.Length < 2)
+            {
+                return;
+            }
+
+            switch (breadcrumbs[0])
+            {
+                case "items" when breadcrumbs.Length == 2:
+                {
+                    var itemId = breadcrumbs[1];
+                    var item = JsonConvert.DeserializeObject<DirectItem>(syncItem.Value);
+                    item.ItemId = itemId;
+                    await thread.RemoveItem(itemId);
+                    await thread.AddItem(item);
+                    break;
+                }
+
+                case "participants" when breadcrumbs.Length == 3 && breadcrumbs[2] == "has_seen":
+                {
+                    var userId = Convert.ToInt64(breadcrumbs[1]);
+                    var item = JsonConvert.DeserializeObject<DirectItem>(syncItem.Value);
+                    await thread.UpdateLastSeenAt(userId, item.Timestamp, item.ItemId);
+                    break;
+                }
+            }
+        }
+
+        private async Task HandleSyncRemove(DirectThreadWrapper thread, SyncItem syncItem, string[] breadcrumbs)
+        {
+            if (breadcrumbs.Length < 2)
+            {
+                return;
+            }
+
+            switch (breadcrumbs[0])
+            {
+                case "items" when breadcrumbs.Length == 2:
+                {
+                    var itemId = breadcrumbs[1];
+                    await thread.RemoveItem(itemId);
+                    break;
+                }
+
+                case "items" when breadcrumbs.Length == 5 && breadcrumbs[2] == "reactions":
+                {
+                    var itemId = breadcrumbs[1];
+                    var senderId = Convert.ToInt64(breadcrumbs[4]);
+                    var existingItem = thread.ObservableItems.FirstOrDefault(x => x.Source.ItemId == itemId);
+                    if (existingItem != null)
+                    {
+                        // TODO: Refactor to use ObservableReactions' Dispatcher instead
+                        await thread.Dispatcher.QuickRunAsync(() =>
+                        {
+                            existingItem.ObservableReactions.Remove(senderId);
+                        });
+                    }
+
+                    break;
+                }
+            }
         }
 
         private void OnActivityIndicatorChanged(object sender, PubsubEventArgs data)

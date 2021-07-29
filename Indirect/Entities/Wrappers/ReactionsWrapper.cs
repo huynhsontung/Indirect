@@ -20,11 +20,8 @@ namespace Indirect.Entities.Wrappers
         private readonly MainViewModel _viewModel;
         private readonly ICollection<BaseUser> _users;
         private bool _meLiked;
-        private ReactionsContainer _reactionsContainer;
 
         public event PropertyChangedEventHandler PropertyChanged;
-
-        public ObservableCollection<BaseUser> Senders = new ObservableCollection<BaseUser>();
 
         public ObservableCollection<ReactionWithUser> EmojiReactions { get; }
 
@@ -38,82 +35,44 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
-        public ReactionsWrapper(MainViewModel viewModel)
+        public ReactionsWrapper(MainViewModel viewModel, ReactionsContainer source, ICollection<BaseUser> usersList)
         {
             _viewModel = viewModel;
-            EmojiReactions = new ObservableCollection<ReactionWithUser>();
-            MeLiked = false;
-        }
-
-        public ReactionsWrapper(MainViewModel viewModel, ReactionsContainer source, ICollection<BaseUser> usersList) :
-            this(viewModel)
-        {
             _users = usersList;
-            Update(source);
+            var reactionsWithUser = source?.Emojis.Select(reaction => new ReactionWithUser
+                {Reaction = reaction, User = GetUserFromId(reaction.SenderId)});
+            EmojiReactions = reactionsWithUser != null
+                ? new ObservableCollection<ReactionWithUser>(reactionsWithUser)
+                : new ObservableCollection<ReactionWithUser>();
+            MeLiked = EmojiReactions.Any(x => x?.User != null && x.User.Equals(_viewModel.LoggedInUser));
         }
 
         public void Clear()
         {
             MeLiked = false;
-            Senders.Clear();
             EmojiReactions.Clear();
         }
 
-        public void Update(ReactionsContainer source)
+        public void Add(EmojiReaction reaction)
         {
-            if (source == null) return;
-            _reactionsContainer = source;
+            Remove(reaction.SenderId);
+            EmojiReactions.Add(new ReactionWithUser {Reaction = reaction, User = GetUserFromId(reaction.SenderId)});
+            MeLiked = EmojiReactions.Any(x => x?.User != null && x.User.Equals(_viewModel.LoggedInUser));
+        }
 
-            if (source.Emojis == null || source.Emojis.Length == 0) return;
-
-            var emojiReactions = new List<EmojiReaction>(source.Emojis);
-
-            if (source.Likes != null && source.Likes.Length > 0)
+        public void Remove(long senderId)
+        {
+            for (int i = 0; i < EmojiReactions.Count; i++)
             {
-                emojiReactions.AddRange(source.Likes.Select(x =>
+                if (EmojiReactions[i].User.Pk == senderId)
                 {
-                    var emojiReaction = new EmojiReaction();
-                    PropertyCopier<LikeReaction, EmojiReaction>.Copy(x, emojiReaction);
-                    emojiReaction.Emoji = "♥";
-                    return emojiReaction;
-                }));
-            }
-
-            var consistent = true;
-            if (source.Emojis.Length == EmojiReactions.Count)
-            {
-                for (int i = 0; i < EmojiReactions.Count; i++)
-                {
-                    var local = EmojiReactions[i];
-                    var reference = source.Emojis[i];
-                    if (local.Reaction.SenderId != reference.SenderId || local.Reaction.Timestamp != reference.Timestamp)
-                    {
-                        consistent = false;
-                        break;
-                    }
+                    EmojiReactions.RemoveAt(i);
+                    break;
                 }
-            }
-            else
-            {
-                consistent = false;
-            }
-
-            if (consistent)
-            {
-                return;
-            }
-
-            EmojiReactions.Clear();
-            foreach (var emojiReaction in source.Emojis)
-            {
-                EmojiReactions.Add(new ReactionWithUser
-                { Reaction = emojiReaction, User = GetUserFromId(emojiReaction.SenderId) });
             }
 
             MeLiked = EmojiReactions.Any(x => x?.User != null && x.User.Equals(_viewModel.LoggedInUser));
         }
-
-        public void Update(ReactionsWrapper source) => Update(source._reactionsContainer);
 
         private BaseUser GetUserFromId(long userId)
         {

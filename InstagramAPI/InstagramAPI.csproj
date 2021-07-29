@@ -140,7 +140,6 @@
     <Compile Include="Classes\JsonConverters\BoolConverter.cs" />
     <Compile Include="Classes\JsonConverters\CookieCollectionConverter.cs" />
     <Compile Include="Classes\JsonConverters\CookieConverter.cs" />
-    <Compile Include="Classes\JsonConverters\SyncItemConverter.cs" />
     <Compile Include="Classes\Media\InstaMedia.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectMediaShare.cs" />
     <Compile Include="Classes\Direct\Inbox.cs" />
@@ -251,7 +250,7 @@
     <Compile Include="SECRETS.cs" />
     <Compile Include="Realtime\PubsubEventArgs.cs" />
     <Compile Include="Realtime\MessageSyncEventArgs.cs" />
-    <Compile Include="Realtime\SyncBaseData.cs" />
+    <Compile Include="Realtime\SyncItem.cs" />
     <Compile Include="Realtime\UserPresenceEventArgs.cs" />
     <Compile Include="Utils\CacheManager.cs" />
     <Compile Include="Utils\CryptoHelper.cs" />

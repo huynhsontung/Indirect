@@ -2,7 +2,7 @@
 
 namespace InstagramAPI.Realtime
 {
-    public class SyncBaseData
+    public class SyncItem
     {
         [JsonProperty("op")]
         public string Op { get; set; }
