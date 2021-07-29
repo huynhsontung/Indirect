@@ -39,6 +39,7 @@ namespace InstagramAPI.Utils
 
         public static void LogRequest(HttpRequestMessage request)
         {
+#if DEBUG
             if (LogLevel < LogLevel.Request) return;
             WriteSeprator();
             Write($"Request: {request.Method} {request.RequestUri}");
@@ -46,16 +47,20 @@ namespace InstagramAPI.Utils
             WriteProperties(request.Properties);
             if (request.Method == HttpMethod.Post)
                 WriteRequestContent(request.Content);
+#endif
         }
 
         public static void LogRequest(Uri uri)
         {
+#if DEBUG
             if (LogLevel < LogLevel.Request) return;
             Write($"Request: {uri}");
+#endif
         }
 
         public static void LogResponse(HttpResponseMessage response)
         {
+#if DEBUG
             if (LogLevel < LogLevel.Response) return;
             Write($"Response: {response.RequestMessage.Method} {response.RequestMessage.RequestUri} [{response.StatusCode}]");
             var mediaType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
@@ -70,6 +75,7 @@ namespace InstagramAPI.Utils
             {
                 WriteContent(response.Content, Formatting.None, 0);
             }
+#endif
         }
 
         public static void LogException(Exception ex, bool track = true, IDictionary properties = null)

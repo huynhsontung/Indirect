@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -22,6 +23,7 @@ namespace InstagramAPI.Utils
         private readonly HttpClient _httpClient;
         private readonly HttpClientHandler _handler;
         private readonly UserSessionData _session;
+        private ImmutableDictionary<string, IEnumerable<string>> _variableHeaders;
 
         public HttpClientManager(UserSessionData session)
         {
@@ -108,7 +110,7 @@ namespace InstagramAPI.Utils
 
         public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
         {
-            DebugLogger.LogRequest(request);
+            SetRequestVariableHeaders(request);
             var response = await _httpClient.SendAsync(request);
             DebugLogger.LogResponse(response);
             UpdateHeaders(response);
@@ -122,8 +124,9 @@ namespace InstagramAPI.Utils
 
         public async Task<HttpResponseMessage> GetAsync(Uri requestUri)
         {
-            DebugLogger.LogRequest(requestUri);
-            var response = await _httpClient.GetAsync(requestUri);
+            var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+            SetRequestVariableHeaders(request);
+            var response = await _httpClient.SendAsync(request);
             DebugLogger.LogResponse(response);
             UpdateHeaders(response);
             if (!response.IsSuccessStatusCode)
@@ -136,8 +139,9 @@ namespace InstagramAPI.Utils
 
         public async Task<HttpResponseMessage> PostAsync(Uri requestUri, HttpContent content)
         {
-            DebugLogger.LogRequest(requestUri);
-            var response = await _httpClient.PostAsync(requestUri, content);
+            var request = new HttpRequestMessage(HttpMethod.Post, requestUri) {Content = content};
+            SetRequestVariableHeaders(request);
+            var response = await _httpClient.SendAsync(request);
             DebugLogger.LogResponse(response);
             UpdateHeaders(response);
             if (!response.IsSuccessStatusCode)
@@ -204,77 +208,81 @@ namespace InstagramAPI.Utils
             }
         }
 
+        private void SetRequestVariableHeaders(HttpRequestMessage request)
+        {
+            var headers = request.Headers;
+            headers.Add("X-Ig-Www-Claim", _session.WwwClaim);
+
+            var mid = _session.Mid;
+            if (!string.IsNullOrEmpty(mid))
+            {
+                headers.Add("X-Mid", _session.Mid);
+            }
+
+            var auth = _session.AuthorizationToken;
+            if (!string.IsNullOrEmpty(auth))
+            {
+                headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.Substring(7));
+            }
+
+            var variableHeaders = _variableHeaders;
+            if (variableHeaders?.Count > 0)
+            {
+                foreach (var (key, value) in variableHeaders)
+                {
+                    headers.Add(key, value);
+                }
+            }
+        }
+
         private void UpdateHeaders(HttpResponseMessage response)
         {
             var session = _session;
-            foreach (var header in response.Headers)
+            var headers = response.Headers;
+
+            if (headers.TryGetValues("x-ig-set-www-claim", out var wwwClaim))
             {
-                var key = header.Key.ToLower();
-                switch (key)
+                session.WwwClaim = wwwClaim.FirstOrDefault();
+            }
+
+            if (headers.TryGetValues("ig-set-x-mid", out var mid))
+            {
+                session.Mid = mid.FirstOrDefault();
+            }
+
+            if (headers.TryGetValues("ig-set-authorization", out var auth))
+            {
+                session.AuthorizationToken = auth.FirstOrDefault();
+            }
+
+            if (headers.TryGetValues("ig-set-password-encryption-key-id", out var keyId))
+            {
+                var value = keyId.FirstOrDefault();
+                if (!string.IsNullOrEmpty(value))
                 {
-                    case "x-ig-set-www-claim":
-                        lock (_httpClient)
-                        {
-                            var wwwClaim = session.WwwClaim = header.Value.FirstOrDefault();
-                            _httpClient.DefaultRequestHeaders.Remove("X-Ig-Www-Claim");
-                            _httpClient.DefaultRequestHeaders.Add("X-Ig-Www-Claim", wwwClaim);
-                        }
-
-                        break;
-
-                    case "ig-set-x-mid":
-                        lock (_httpClient)
-                        {
-                            var mid = session.Mid = header.Value.FirstOrDefault();
-                            _httpClient.DefaultRequestHeaders.Remove("X-Mid");
-                            _httpClient.DefaultRequestHeaders.Add("X-Mid", mid);
-                        }
-
-                        break;
-
-                    case "ig-set-authorization":
-                        lock (_httpClient)
-                        {
-                            var auth = session.AuthorizationToken = header.Value.FirstOrDefault();
-                            if (!string.IsNullOrEmpty(auth))
-                            {
-                                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Substring(7)); ;
-                            }
-                        }
-
-                        break;
-
-                    case "ig-set-password-encryption-key-id":
-                        var keyId = header.Value.FirstOrDefault();
-                        if (!string.IsNullOrEmpty(keyId))
-                        {
-                            session.PasswordEncryptionKeyId = byte.Parse(keyId);
-                        }
-
-                        break;
-
-                    case "ig-set-password-encryption-pub-key":
-                        var pubkey = header.Value.FirstOrDefault();
-                        if (!string.IsNullOrEmpty(pubkey))
-                        {
-                            session.PasswordEncryptionPubKey = CryptographicBuffer.DecodeFromBase64String(pubkey);
-                        }
-
-                        break;
-
-                    default:
-                        if (key.Contains("ig-set-ig-u-"))
-                        {
-                            key = key.Replace("ig-set-", "", StringComparison.OrdinalIgnoreCase);
-                            lock (_httpClient)
-                            {
-                                _httpClient.DefaultRequestHeaders.Remove(key);
-                                _httpClient.DefaultRequestHeaders.Add(key, header.Value);
-                            }
-                        }
-
-                        break;
+                    session.PasswordEncryptionKeyId = byte.Parse(value);
                 }
+            }
+
+            if (headers.TryGetValues("ig-set-password-encryption-pub-key", out var pubkey))
+            {
+                var value = pubkey.FirstOrDefault();
+                if (!string.IsNullOrEmpty(value))
+                {
+                    session.PasswordEncryptionPubKey = CryptographicBuffer.DecodeFromBase64String(value);
+                }
+            }
+
+            var variableHeaders =
+                headers.Where(pair => pair.Key.StartsWith("ig-set-ig-u-", StringComparison.OrdinalIgnoreCase))
+                    .Select(pair =>
+                        new KeyValuePair<string, IEnumerable<string>>(
+                            pair.Key.Replace("ig-set-", "", StringComparison.OrdinalIgnoreCase), pair.Value))
+                    .ToImmutableDictionary();
+
+            if (!variableHeaders.IsEmpty)
+            {
+                _variableHeaders = variableHeaders;
             }
         }
     }
