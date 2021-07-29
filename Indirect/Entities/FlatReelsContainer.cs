@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Indirect.Entities.Wrappers;
+using Indirect.Utilities;
 
 namespace Indirect.Entities
 {
@@ -29,6 +30,7 @@ namespace Indirect.Entities
 
         private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
         private readonly Dictionary<long, ReelWrapper> _userReelsDictionary = new Dictionary<long, ReelWrapper>();
+        private readonly object _lockObj = new object();
         private int _userIndex;
 
         public FlatReelsContainer(ICollection<ReelWrapper> initialReels, int selected)
@@ -45,20 +47,24 @@ namespace Indirect.Entities
 
         public void SelectItemToView()
         {
-            var userItems = Items.Where(x => x.User.Pk == UserOrder[_userIndex]).ToArray();
-            if (userItems.Length == 0)
+            lock (_lockObj)
             {
-                return;
-            }
+                var userItems = Items.Where(x => x.User.Pk == UserOrder[_userIndex]).ToArray();
+                if (userItems.Length == 0)
+                {
+                    return;
+                }
 
-            var firstUnseenItem = userItems.FirstOrDefault(x => x.TakenAt > x.Parent.Source.Seen);
-            var storyIndex = Items.IndexOf(firstUnseenItem ?? userItems[0]);
-            SelectedIndex = storyIndex;
+                var firstUnseenItem = userItems.FirstOrDefault(x => x.TakenAt > x.Parent.Source.Seen);
+                var storyIndex = Items.IndexOf(firstUnseenItem ?? userItems[0]);
+                SelectedIndex = storyIndex;
+            }
         }
 
         private static async void OnSelectedIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (FlatReelsContainer)d;
+            // TODO: Investigate exception when scrolling too fast
             await view.OnSelectionChanged((int) e.NewValue);
         }
 
@@ -78,7 +84,13 @@ namespace Indirect.Entities
         public async Task UpdateUserIndex(int userIndex)
         {
             var selectedUserId = UserOrder[userIndex];
-            if (Items.FirstOrDefault(x => x.User.Pk == selectedUserId) == null)
+            ReelItemWrapper firstReelFromUser;
+            lock (_lockObj)
+            {
+                firstReelFromUser = Items.FirstOrDefault(x => x.User.Pk == selectedUserId);
+            }
+
+            if (firstReelFromUser == null)
             {
                 if (!StoriesFetched(selectedUserId))
                 {
@@ -185,13 +197,16 @@ namespace Indirect.Entities
                 
                 for (int i = 0; i < media.Length; i++)
                 {
-                    if (i + indexAdder >= Items.Count)
+                    lock (_lockObj)
                     {
-                        Items.Add(new ReelItemWrapper(media[i], reel));
-                    }
-                    else if (media[i].Id != Items[i+indexAdder].Id)
-                    {
-                        Items.Insert(i+indexAdder, new ReelItemWrapper(media[i], reel));
+                        if (i + indexAdder >= Items.Count)
+                        {
+                            Items.Add(new ReelItemWrapper(media[i], reel));
+                        }
+                        else if (media[i].Id != Items[i+indexAdder].Id)
+                        {
+                            Items.Insert(i+indexAdder, new ReelItemWrapper(media[i], reel));
+                        }
                     }
                 }
 

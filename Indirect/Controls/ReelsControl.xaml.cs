@@ -73,9 +73,13 @@ namespace Indirect.Controls
             }
 
             var flipViewItem = StoryView.ContainerFromIndex(StoryView.SelectedIndex) as FlipViewItem;
-            var grid = flipViewItem?.ContentTemplateRoot as Grid;
-            var autoVideo = grid.FindDescendant<AutoVideoControl>();
-            autoVideo?.Pause();
+            var autoVideo = flipViewItem?.ContentTemplateRoot?.FindDescendant<AutoVideoControl>();
+            if (autoVideo != null)
+            {
+                autoVideo.AutoPlay = false;
+                autoVideo.Pause();
+            }
+
             Source = null;
         }
 
