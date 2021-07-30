@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.System;
 using Windows.UI.Xaml;
 using Indirect.Entities.Wrappers;
 
@@ -29,6 +30,7 @@ namespace Indirect.Entities
 
         private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
         private readonly Dictionary<long, ReelWrapper> _userReelsDictionary = new Dictionary<long, ReelWrapper>();
+        private readonly DispatcherQueue _dispatcherQueue;
         private readonly object _lockObj = new object();
         private int _userIndex;
 
@@ -37,6 +39,7 @@ namespace Indirect.Entities
             if (initialReels.Count == 0)
                 throw new ArgumentException("Initial reels has to have at least 1 item.", nameof(initialReels));
             _userIndex = selected;
+            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
             foreach (var reel in initialReels)
             {
                 UserOrder.Add(reel.Source.User.Pk);
@@ -60,7 +63,7 @@ namespace Indirect.Entities
             }
         }
 
-        private static async void OnSelectedIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnSelectedIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (e.NewValue == e.OldValue)
             {
@@ -68,7 +71,10 @@ namespace Indirect.Entities
             }
 
             var view = (FlatReelsContainer)d;
-            await view.OnSelectionChanged((int) e.NewValue);
+            view._dispatcherQueue.TryEnqueue(async () =>
+            {
+                await view.OnSelectionChanged((int) e.NewValue);
+            });
         }
 
         private int GetUserIndex(long userId) => UserOrder.IndexOf(userId);
