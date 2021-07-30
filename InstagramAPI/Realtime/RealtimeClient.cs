@@ -73,17 +73,19 @@ namespace InstagramAPI.Realtime
             var socket = new StreamSocket();
             await socket.ConnectAsync(new HostName(HostName), "443", SocketProtectionLevel.Tls12);
 
+            var reader = new DataReader(socket.InputStream) {ByteOrder = ByteOrder.BigEndian};
+            var writer = new DataWriter(socket.OutputStream) {ByteOrder = ByteOrder.BigEndian};
+
+            await FbnsPacketEncoder.EncodePacket(connectPacket, writer);
+
             lock (_lockObj)
             {
-                _inboundReader = new DataReader(socket.InputStream);
-                _outboundWriter = new DataWriter(socket.OutputStream);
-                _inboundReader.ByteOrder = ByteOrder.BigEndian;
-                _outboundWriter.ByteOrder = ByteOrder.BigEndian;
+                _inboundReader = reader;
+                _outboundWriter = writer;
                 _runningTokenSource = tokenSource;
                 _socket = socket;
             }
 
-            await FbnsPacketEncoder.EncodePacket(connectPacket, _outboundWriter);
             StartPollingLoop();
         }
 

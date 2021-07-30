@@ -33,15 +33,19 @@ namespace Indirect
             RealtimeClient.UserPresenceChanged += OnUserPresenceChanged;
             RealtimeClient.ShuttingDown += RealtimeClientOnUnexpectedShutdown;
 
-            await RealtimeClient.Start(Inbox.SeqId, Inbox.SnapshotAt);
+            try
+            {
+                await RealtimeClient.Start(Inbox.SeqId, Inbox.SnapshotAt);
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+                ShowErrorMessage("Cannot connect to the server", "New messages will not be updated. Please try again later.");
+                return;
+            }
 
             // Hide error message
-            _mainWindowDispatcherQueue.TryEnqueue(() =>
-            {
-                var frame = Window.Current.Content as Frame;
-                var page = frame?.Content as MainPage;
-                page?.ShowStatus(null, null);
-            });
+            ShowErrorMessage(null, null);
         }
 
         private void ShutdownRealtimeClient()
@@ -57,29 +61,14 @@ namespace Indirect
 
         private async void RealtimeClientOnUnexpectedShutdown(object sender, EventArgs e)
         {
-            _mainWindowDispatcherQueue.TryEnqueue(() =>
-            {
-                var frame = Window.Current.Content as Frame;
-                var page = frame?.Content as MainPage;
-                page?.ShowStatus("Lost connection to the server",
-                    "Attempting to reconnect...",
-                    InfoBarSeverity.Error);
-            });
-
+            ShowErrorMessage("Lost connection to the server", "Attempting to reconnect...");
             await Task.Delay(5000);
 
             var internetProfile = NetworkInformation.GetInternetConnectionProfile();
             if (internetProfile == null)
             {
-                _mainWindowDispatcherQueue.TryEnqueue(() =>
-                {
-                    var frame = Window.Current.Content as Frame;
-                    var page = frame?.Content as MainPage;
-                    page?.ShowStatus("No Internet connection",
-                        "New messages will not be updated. Please check your Internet connection.",
-                        InfoBarSeverity.Error);
-                });
-
+                ShowErrorMessage("No Internet connection",
+                    "New messages will not be updated. Please check your Internet connection.");
                 NetworkInformation.NetworkStatusChanged += OnNetworkStatusChanged;
             }
             else
@@ -320,6 +309,16 @@ namespace Indirect
         {
             UserPresenceDictionary[e.UserId] = e;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserPresenceDictionary)));
+        }
+
+        private void ShowErrorMessage(string title, string message)
+        {
+            _mainWindowDispatcherQueue.TryEnqueue(() =>
+            {
+                var frame = Window.Current.Content as Frame;
+                var page = frame?.Content as MainPage;
+                page?.ShowStatus(title, message, InfoBarSeverity.Error);
+            });
         }
     }
 }
