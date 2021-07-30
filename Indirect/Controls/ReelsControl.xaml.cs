@@ -115,13 +115,14 @@ namespace Indirect.Controls
                 return;
             }
 
-            if (!selected.Parent.Source.Id.Equals(previous?.Parent.Source.Id))
+            var selectedReelId = selected.Parent.Source.Id;
+            if (!selectedReelId.Equals(previous?.Parent.Source.Id))
             {
                 var start = 0;
                 var end = 0;
                 for (int i = 0; i < Source.Items.Count; i++)
                 {
-                    if (selected.Parent.Source.Id.Equals(Source.Items[i].Parent.Source.Id))
+                    if (selectedReelId.Equals(Source.Items[i].Parent.Source.Id))
                     {
                         start = i;
                         break;
@@ -130,7 +131,7 @@ namespace Indirect.Controls
 
                 for (int i = Source.Items.Count - 1; i >= 0; i--)
                 {
-                    if (selected.Parent.Source.Id.Equals(Source.Items[i].Parent.Source.Id))
+                    if (selectedReelId.Equals(Source.Items[i].Parent.Source.Id))
                     {
                         end = i;
                         break;
@@ -142,7 +143,7 @@ namespace Indirect.Controls
                 NewReelProgressIndicator.Count = end - start + 1;
                 NewReelProgressIndicator.Selected = selectedIndex - start;
             }
-            else
+            else if (_reelLimit != null)
             {
                 var selectedIndex = StoryView.SelectedIndex;
                 NewReelProgressIndicator.Selected = selectedIndex - _reelLimit.Item1;
@@ -160,19 +161,19 @@ namespace Indirect.Controls
             var items = Source?.Items;
             var selectedIndex = StoryView.SelectedIndex;
             if (items == null || selectedIndex == -1) return;
-            var userId = items[selectedIndex].Parent.Source.User.Pk;
+            var userId = items[selectedIndex].Source.User.Pk;
             var previousReelIndex = -1;
             for (int i = selectedIndex; i >= 0; i--)
             {
-                if (userId == items[i].Parent.Source.User.Pk) continue;
+                if (userId == items[i].Source.User.Pk) continue;
                 previousReelIndex = i;
-                userId = items[i].Parent.Source.User.Pk;
+                userId = items[i].Source.User.Pk;
                 break;
             }
 
             if (previousReelIndex == -1) return;
-            var previousStories = items.Where(x => x.Parent.Source.User.Pk == userId).ToArray();
-            var unseenStory = previousStories.FirstOrDefault(x => x.TakenAt > x.Parent.Source.Seen);
+            var previousStories = items.Where(item => item.Source.User.Pk == userId).ToArray();
+            var unseenStory = previousStories.FirstOrDefault(item => item.Source.TakenAt > item.Parent.Source.Seen);
             previousReelIndex = items.IndexOf(unseenStory ?? previousStories[0]);
 
             if (previousReelIndex != -1)
@@ -186,24 +187,24 @@ namespace Indirect.Controls
             var items = Source?.Items;
             var selectedIndex = StoryView.SelectedIndex;
             if (items == null || selectedIndex == -1) return;
-            var userId = items[selectedIndex].Parent.Source.User.Pk;
+            var userId = items[selectedIndex].Source.User.Pk;
             var nextReelIndex = -1;
             for (int i = selectedIndex; i < items.Count; i++)
             {
                 if (nextReelIndex == -1)
                 {
-                    if (userId != items[i].Parent.Source.User.Pk)
+                    if (userId != items[i].Source.User.Pk)
                     {
                         nextReelIndex = i;
-                        userId = items[i].Parent.Source.User.Pk;
-                        if (items[i].TakenAt > items[i].Parent.Source.Seen) break;
+                        userId = items[i].Source.User.Pk;
+                        if (items[i].Source.TakenAt > items[i].Parent.Source.Seen) break;
                     }
                 }
                 else
                 {
                     // Go to unseen story
-                    if (userId != items[i].Parent.Source.User.Pk) break;
-                    if (items[i].TakenAt > items[i].Parent.Source.Seen)
+                    if (userId != items[i].Source.User.Pk) break;
+                    if (items[i].Source.TakenAt > items[i].Parent.Source.Seen)
                     {
                         nextReelIndex = i;
                         break;
@@ -219,7 +220,7 @@ namespace Indirect.Controls
 
         private async void UserInfo_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            var userId = (StoryView.SelectedItem as ReelItemWrapper)?.User.Pk ?? 0;
+            var userId = (StoryView.SelectedItem as ReelItemWrapper)?.Source.User.Pk ?? 0;
             if (userId == 0) return;
             if (UserInfoView.User?.Pk != userId)
             {

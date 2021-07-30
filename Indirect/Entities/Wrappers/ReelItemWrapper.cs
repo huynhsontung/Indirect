@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Core;
@@ -8,46 +7,47 @@ using NeoSmart.Unicode;
 
 namespace Indirect.Entities.Wrappers
 {
-    public class ReelItemWrapper : ReelMedia, INotifyPropertyChanged
+    public class ReelItemWrapper : DependencyObject
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        public static readonly DependencyProperty DraftMessageProperty = DependencyProperty.Register(
+            nameof(DraftMessage),
+            typeof(string),
+            typeof(ReelItemWrapper),
+            new PropertyMetadata(""));
+
+        public ReelMedia Source { get; }
 
         public ReelWrapper Parent { get; }
 
-        private string _draftMessage;
         public string DraftMessage
         {
-            get => _draftMessage;
-            set
-            {
-                _draftMessage = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DraftMessage)));
-            }
+            get => (string) GetValue(DraftMessageProperty);
+            set => SetValue(DraftMessageProperty, value);
         }
 
         private MainViewModel ViewModel { get; }
 
         public ReelItemWrapper(ReelMedia source, ReelWrapper parent)
         {
-            PropertyCopier<ReelMedia, ReelItemWrapper>.Copy(source, this);
+            Source = source;
             Parent = parent;
             ViewModel = ((App) Application.Current).ViewModel;
         }
 
         public async Task<bool> Reply(string message)
         {
-            var userId = User.Pk;
+            var userId = Source.User.Pk;
             var resultThread = await ViewModel.InstaApi.CreateGroupThreadAsync(new[] { userId });
             if (!resultThread.IsSucceeded) return false;
             var thread = resultThread.Value;
             Result result;
             if (Emoji.IsEmoji(message))
             {
-                result = await ViewModel.InstaApi.SendReelReactAsync(Parent.Source.Id, Id, thread.ThreadId, message);
+                result = await ViewModel.InstaApi.SendReelReactAsync(Parent.Source.Id, Source.Id, thread.ThreadId, message);
             }
             else
             {
-                result = await ViewModel.InstaApi.SendReelShareAsync(Parent.Source.Id, Id, MediaType, thread.ThreadId, message);
+                result = await ViewModel.InstaApi.SendReelShareAsync(Parent.Source.Id, Source.Id, Source.MediaType, thread.ThreadId, message);
             }
 
             return result.IsSucceeded;
@@ -55,7 +55,7 @@ namespace Indirect.Entities.Wrappers
 
         public async Task Download()
         {
-            var url = Videos?.Length > 0 ? Videos[0].Url : Images.GetFullImageUri();
+            var url = Source.Videos?.Length > 0 ? Source.Videos[0].Url : Source.Images.GetFullImageUri();
             if (url == null)
             {
                 return;

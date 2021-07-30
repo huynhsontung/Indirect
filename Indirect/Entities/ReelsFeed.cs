@@ -3,8 +3,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
+using Windows.UI.Xaml;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI;
@@ -13,7 +13,7 @@ using InstagramAPI.Utils;
 
 namespace Indirect.Entities
 {
-    class ReelsFeed
+    internal class ReelsFeed : DependencyObject
     {
         public readonly ObservableCollection<ReelWrapper> Reels = new ObservableCollection<ReelWrapper>();
 
@@ -32,7 +32,7 @@ namespace Indirect.Entities
         {
             var result = await ((App)App.Current).ViewModel.InstaApi.GetReelsTrayFeed(fetchReason);
             if (!result.IsSucceeded) return;
-            await CoreApplication.MainView.CoreWindow.Dispatcher.QuickRunAsync(() =>
+            await Dispatcher.QuickRunAsync(() =>
             {
                 try
                 {
@@ -68,28 +68,24 @@ namespace Indirect.Entities
                 for (int i = 0; i < target.Length; i++)
                 {
                     var reel = target[i];
-                    Reel equivalent = null;
                     var equivalentIndex = -1;
                     for (int j = 0; j < Reels.Count; j++)
                     {
                         if (Reels[j].Source.Id.Equals(reel.Id))
                         {
-                            equivalent = Reels[j].Source;
                             equivalentIndex = j;
                             break;
                         }
                     }
-                    if (equivalent != null)
+
+                    if (equivalentIndex >= 0)
                     {
-                        PropertyCopier<Reel, Reel>.Copy(reel, equivalent);
+                        Reels[equivalentIndex].Source = reel;
                         if (i == equivalentIndex) continue;
                         Reels.RemoveAt(equivalentIndex);
-                        Reels.Insert(i > Reels.Count ? Reels.Count : i, new ReelWrapper(equivalent));
                     }
-                    else
-                    {
-                        Reels.Insert(i > Reels.Count ? Reels.Count : i, new ReelWrapper(reel));
-                    }
+
+                    Reels.Insert(i > Reels.Count ? Reels.Count : i, new ReelWrapper(reel));
                 }
             }
         }

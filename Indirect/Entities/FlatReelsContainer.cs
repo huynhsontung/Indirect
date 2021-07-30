@@ -51,13 +51,13 @@ namespace Indirect.Entities
         {
             lock (_lockObj)
             {
-                var userItems = Items.Where(x => x.User.Pk == UserOrder[_userIndex]).ToArray();
+                var userItems = Items.Where(x => x.Source.User.Pk == UserOrder[_userIndex]).ToArray();
                 if (userItems.Length == 0)
                 {
                     return;
                 }
 
-                var firstUnseenItem = userItems.FirstOrDefault(x => x.TakenAt > x.Parent.Source.Seen);
+                var firstUnseenItem = userItems.FirstOrDefault(x => x.Source.TakenAt > x.Parent.Source.Seen);
                 var storyIndex = Items.IndexOf(firstUnseenItem ?? userItems[0]);
                 SelectedIndex = storyIndex;
             }
@@ -85,7 +85,7 @@ namespace Indirect.Entities
         private async Task OnSelectionChanged(int selectedIndex)
         {
             if (selectedIndex == -1 || selectedIndex >= Items.Count) return;
-            var userIndex = GetUserIndex(Items[selectedIndex].User.Pk);
+            var userIndex = GetUserIndex(Items[selectedIndex].Source.User.Pk);
             await UpdateUserIndex(userIndex);
             await TryMarkStorySeen(selectedIndex);
         }
@@ -96,7 +96,7 @@ namespace Indirect.Entities
             ReelItemWrapper firstReelFromUser;
             lock (_lockObj)
             {
-                firstReelFromUser = Items.FirstOrDefault(x => x.User.Pk == selectedUserId);
+                firstReelFromUser = Items.FirstOrDefault(x => x.Source.User.Pk == selectedUserId);
             }
 
             if (firstReelFromUser == null)
@@ -169,9 +169,10 @@ namespace Indirect.Entities
         private async Task TryMarkStorySeen(int storyIndex)
         {
             var story = Items[storyIndex];
-            if (story.Parent.Source.Seen != null && story.Parent.Source.Seen >= story.TakenAt) return;
-            await ViewModel.InstaApi.MarkStorySeenAsync(story.Id, story.User.Pk, story.TakenAt ?? DateTimeOffset.Now);
-            story.Parent.Source.Seen = story.TakenAt;
+            var storySource = story.Source;
+            if (story.Parent.Source.Seen != null && story.Parent.Source.Seen >= storySource.TakenAt) return;
+            await ViewModel.InstaApi.MarkStorySeenAsync(storySource.Id, storySource.User.Pk, storySource.TakenAt ?? DateTimeOffset.Now);
+            story.Parent.Source.Seen = storySource.TakenAt;
         }
 
         private async Task FetchStories(params long[] users)
@@ -182,6 +183,8 @@ namespace Indirect.Entities
             {
                 foreach (var (userId, reel) in result.Value)
                 {
+                    if (reel == null) continue;
+
                     if (_userReelsDictionary.ContainsKey(userId) && _userReelsDictionary[userId] != null)
                     {
                         _userReelsDictionary[userId].Source = reel;
@@ -212,7 +215,7 @@ namespace Indirect.Entities
                         {
                             Items.Add(new ReelItemWrapper(media[i], reel));
                         }
-                        else if (media[i].Id != Items[i+indexAdder].Id)
+                        else if (media[i].Id != Items[i+indexAdder].Source.Id)
                         {
                             Items.Insert(i+indexAdder, new ReelItemWrapper(media[i], reel));
                         }

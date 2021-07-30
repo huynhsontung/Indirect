@@ -13,7 +13,7 @@ namespace Indirect.Controls.Selectors
 
         protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
         {
-            if (item is ReelItemWrapper story && story.MediaType == InstaMediaType.Video)
+            if (item is ReelItemWrapper story && story.Source.MediaType == InstaMediaType.Video)
                 return VideoTemplate;
             return ImageTemplate;
         }

@@ -106,8 +106,8 @@
                         AutoPlay="True"
                         AutoStop="True"
                         IsLoopingEnabled="True"
-                        PosterSource="{x:Bind Images[0].Url}"
-                        Source="{x:Bind Videos[0].Url}"
+                        PosterSource="{x:Bind Source.Images[0].Url}"
+                        Source="{x:Bind Source.Videos[0].Url}"
                         VideoHeight="1137"
                         VideoWidth="640" />
 
@@ -126,7 +126,7 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <controls:ImageEx Grid.Row="0" Source="{x:Bind Images[0].Url}" />
+                    <controls:ImageEx Grid.Row="0" Source="{x:Bind Source.Images[0].Url}" />
 
                     <ContentPresenter
                         Grid.Row="1"
@@ -204,7 +204,7 @@
                     Grid.Row="1"
                     Grid.Column="1"
                     Style="{ThemeResource FluentCaptionTextStyle}"
-                    Text="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.TakenAt), Converter={StaticResource RelativeTimeConverter}, Mode=OneWay}" />
+                    Text="{x:Bind StoryView.SelectedItem.(wrappers:ReelItemWrapper.Source).TakenAt, Converter={StaticResource RelativeTimeConverter}, Mode=OneWay}" />
             </Grid>
 
             <StackPanel
