@@ -55,6 +55,7 @@ namespace Indirect.Pages
         {
             ApplicationView.GetForCurrentView().Consolidated -= ViewConsolidated;
             ((App) Application.Current).ViewModel.SecondaryThreads.Remove(_thread);
+            Window.Current.Content = null;
         }
     }
 }

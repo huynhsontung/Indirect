@@ -51,14 +51,13 @@ namespace Indirect.Pages
 
         private void ViewConsolidated(ApplicationView sender, ApplicationViewConsolidatedEventArgs args)
         {
-            ReelsControl.OnClose();
+            Window.Current.Content = null;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
             SystemNavigationManager.GetForCurrentView().BackRequested -= SystemNavigationManager_BackRequested;
-            ReelsControl.OnClose();
         }
 
         private void OnWindowFocusChange(object sender, WindowActivatedEventArgs e)
