@@ -10,6 +10,7 @@
     d:DesignHeight="300"
     d:DesignWidth="400"
     SizeChanged="AutoVideoControl_OnSizeChanged"
+    Unloaded="AutoVideoControl_OnUnloaded"
     mc:Ignorable="d">
     <UserControl.Resources>
         <Style x:Key="AudioOnlyMediaPlayerElement" TargetType="MediaPlayerElement">

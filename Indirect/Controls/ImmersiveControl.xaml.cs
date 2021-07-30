@@ -102,17 +102,7 @@ namespace Indirect.Controls
         public void Close()
         {
             MediaPopup.IsOpen = false;
-
-            if (MainControl.ContentTemplateRoot is AutoVideoControl videoView)
-            {
-                videoView.MediaPlayer.Pause();
-                videoView.Source = null;
-            }
-
-            if (MainControl.ContentTemplateRoot is ReelsControl reelView)
-            {
-                reelView.OnClose();
-            }
+            Item = null;
 
             try
             {

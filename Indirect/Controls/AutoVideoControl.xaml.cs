@@ -274,11 +274,11 @@ namespace Indirect.Controls
 
             if (bringIntoViewDistanceX >= width * 0.9 || bringIntoViewDistanceY >= height * 0.9)
             {
-                if (AutoStop) VideoPlayer.MediaPlayer?.Pause();
+                if (AutoStop) Pause();
             }
             else if (AutoPlay)
             {
-                VideoPlayer.MediaPlayer?.Play();
+                Play();
             }
         }
 
@@ -294,6 +294,13 @@ namespace Indirect.Controls
         private void AutoVideoControl_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             OnVideoSizeChanged(this, null);
+        }
+
+        private void AutoVideoControl_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            AutoPlay = false;
+            Pause();
+            Source = null;
         }
     }
 }

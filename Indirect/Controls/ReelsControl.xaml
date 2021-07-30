@@ -14,6 +14,7 @@
     d:DesignHeight="300"
     d:DesignWidth="400"
     Loaded="ReelsControl_OnLoaded"
+    Unloaded="ReelsControl_OnUnloaded"
     mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>

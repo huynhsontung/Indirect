@@ -65,21 +65,8 @@ namespace Indirect.Controls
             Source?.SelectItemToView();
         }
 
-        public void OnClose()
+        private void ReelsControl_OnUnloaded(object sender, RoutedEventArgs e)
         {
-            if (StoryView.SelectedIndex == -1)
-            {
-                return;
-            }
-
-            var flipViewItem = StoryView.ContainerFromIndex(StoryView.SelectedIndex) as FlipViewItem;
-            var autoVideo = flipViewItem?.ContentTemplateRoot?.FindDescendant<AutoVideoControl>();
-            if (autoVideo != null)
-            {
-                autoVideo.AutoPlay = false;
-                autoVideo.Pause();
-            }
-
             Source = null;
         }
 
