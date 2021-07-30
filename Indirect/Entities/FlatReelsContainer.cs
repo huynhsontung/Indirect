@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Indirect.Entities.Wrappers;
-using Indirect.Utilities;
 
 namespace Indirect.Entities
 {
@@ -63,8 +62,12 @@ namespace Indirect.Entities
 
         private static async void OnSelectedIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
+            if (e.NewValue == e.OldValue)
+            {
+                return;
+            }
+
             var view = (FlatReelsContainer)d;
-            // TODO: Investigate exception when scrolling too fast
             await view.OnSelectionChanged((int) e.NewValue);
         }
 
