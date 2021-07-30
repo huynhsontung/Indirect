@@ -8,8 +8,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
-using Windows.Web.Http;
-using Windows.Web.Http.Headers;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Utils;
@@ -145,10 +143,6 @@ namespace Indirect.Pages
                     EnableButtons();
                 }
             }
-
-            sender.NavigationStarting -= LoginWebviewOnNavigationStarting;
-            args.Cancel = true;
-            NavigateWithHeader(args.Uri);
         }
 
         private void SystemNavigationManager_BackRequested(object sender, BackRequestedEventArgs e)
@@ -288,41 +282,9 @@ namespace Indirect.Pages
             return false;
         }
 
-        private void NavigateWithHeader(Uri uri)
-        {
-            var requestMsg = new Windows.Web.Http.HttpRequestMessage(HttpMethod.Get, uri);
-            if (uri.Host.Contains("instagram"))
-            {
-                var primaryLanguage = Instagram.GetCurrentLocale() ?? "en_US";
-                var headers = requestMsg.Headers;
-                headers.Clear();
-                headers.UserAgent.TryParseAdd(_session.Device.UserAgent);
-                headers.Add("X-Ig-Device-Id", _session.Device.PhoneId.ToString());
-                headers.Add("X-Ig-Android-Id", _session.Device.DeviceId);
-                headers.Add("X-Ig-Device-Locale", primaryLanguage);
-                headers.Add("X-Ig-App-Locale", primaryLanguage);
-                headers.Add("X-Ig-Timezone-Offset", ((int)DateTimeOffset.Now.Offset.TotalSeconds).ToString());
-                headers.Add("X-Ig-Capabilities", ApiVersion.Current.Capabilities);
-                headers.Add("X-Ig-Connection-Type", "WIFI");
-                headers.Add("X-Ig-App-ID", ApiVersion.AppId);
-                headers.Add("X-Fb-Http-Engine", "Liger");
-                headers.Add("X-Ig-Www-Claim", _session.WwwClaim);
-
-                var authorizationToken = _session.AuthorizationToken;
-                if (!string.IsNullOrEmpty(authorizationToken))
-                {
-                    headers.Authorization =
-                        new HttpCredentialsHeaderValue("Bearer", _session.AuthorizationToken.Substring(7));
-                }
-            }
-
-            LoginWebview.NavigateWithHttpRequestMessage(requestMsg);
-            LoginWebview.NavigationStarting += LoginWebviewOnNavigationStarting;
-        }
-
         private void OpenChallengeInWebView(Uri uri)
         {
-            NavigateWithHeader(uri);
+            LoginWebview.Navigate(uri);
             WebviewPopup.IsOpen = true;
         }
 
