@@ -379,7 +379,12 @@ namespace Indirect.Controls
         private void UpdateView(bool animate)
         {
             UpdateViewState();
-            UpdateShadow();
+
+            if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.ThemeShadow"))
+            {
+                UpdateShadow();
+            }
+
             SetVisualState(animate);
         }
 

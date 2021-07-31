@@ -138,7 +138,7 @@ namespace Indirect.Controls
         {
             if (MediaPopup.IsOpen)
             {
-                var contentRoot = (Control)MainControl.ContentTemplateRoot;
+                var contentRoot = MainControl.ContentTemplateRoot as Control;
                 contentRoot?.Focus(FocusState.Programmatic);
             }
         }

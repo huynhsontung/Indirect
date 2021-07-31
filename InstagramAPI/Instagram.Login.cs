@@ -330,11 +330,18 @@ namespace InstagramAPI
 
         public async Task RunPostLoginFlow()
         {
-            var tokenResultUri =
-                UriCreator.GetTokenResultUri(Session.Device.DeviceId, Session.Device.PhoneId.ToString());
-            await HttpClient.GetAsync(tokenResultUri);
-            await HttpClient.SyncServerConfig();
-            await HttpClient.GetAsync(UriCreator.GetAccountFamilyUri());
+            try
+            {
+                var tokenResultUri =
+                    UriCreator.GetTokenResultUri(Session.Device.DeviceId, Session.Device.PhoneId.ToString());
+                await HttpClient.GetAsync(tokenResultUri);
+                await HttpClient.SyncServerConfig();
+                await HttpClient.GetAsync(UriCreator.GetAccountFamilyUri());
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+            }
         }
     }
 }
