@@ -516,7 +516,7 @@ namespace Indirect.Controls
 
         private void ItemsHolder_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
         {
-            if (FocusManager.GetFocusedElement(sender.XamlRoot) is ListViewItem item &&
+            if (FocusManager.GetFocusedElement() is ListViewItem item &&
                 item.ContentTemplateRoot is ThreadItemControl itemControl &&
                 itemControl.ContextFlyout != null &&
                 itemControl.FindChildByName("MainContentControl") is FrameworkElement element)
@@ -536,7 +536,7 @@ namespace Indirect.Controls
         {
             switch (e.Key)
             {
-                case VirtualKey.Space when FocusManager.GetFocusedElement(ItemsHolder.XamlRoot) is ListViewItem item &&
+                case VirtualKey.Space when FocusManager.GetFocusedElement() is ListViewItem item &&
                                            item.ContentTemplateRoot is ThreadItemControl itemControl:
                     e.Handled = true;
                     itemControl.OnItemClick();
