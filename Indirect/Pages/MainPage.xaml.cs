@@ -140,16 +140,23 @@ namespace Indirect.Pages
 
             await Dispatcher.QuickRunAsync(async () =>
             {
-                var dialog = new ContentDialog
+                try
                 {
-                    Title = "You've been logged out",
-                    Content = "Please log back in.",
-                    CloseButtonText = "Close",
-                    DefaultButton = ContentDialogButton.Close
-                };
-                await dialog.ShowAsync();
+                    var dialog = new ContentDialog
+                    {
+                        Title = "You've been logged out",
+                        Content = "Please log back in.",
+                        CloseButtonText = "Close",
+                        DefaultButton = ContentDialogButton.Close
+                    };
+                    await dialog.ShowAsync();
 
-                await Logout();
+                    await Logout();
+                }
+                catch (Exception)
+                {
+                    // pass
+                }
             });
         }
 

@@ -41,8 +41,9 @@ namespace Indirect.Utilities
                     {
                         await Task.Delay(200, tokenSource.Token);
                     }
-                    catch (TaskCanceledException)
+                    catch (Exception)
                     {
+                        // Return on task cancelled or token disposed
                         return;
                     }
                 }

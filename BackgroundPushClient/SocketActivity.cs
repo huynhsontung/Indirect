@@ -66,18 +66,9 @@ namespace BackgroundPushClient
                             var socket = details.SocketInformation.StreamSocket;
                             await instagram.PushClient.StartWithExistingSocket(socket);
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
-                            await Task.Delay(TimeSpan.FromSeconds(1), _cancellation.Token);
-                            if (instagram.PushClient.SocketRegistered())
-                            {
-                                Utils.PopMessageToast($"[{details.Reason}] {e}");
-                                return;
-                            }
-                            else
-                            {
-                                await instagram.PushClient.StartFresh(taskInstance);
-                            }
+                            return;
                         }
 
                         break;
@@ -101,7 +92,16 @@ namespace BackgroundPushClient
                             // pass
                         }
 
-                        await instagram.PushClient.StartFresh(taskInstance);
+                        try
+                        {
+                            await instagram.PushClient.StartFresh(taskInstance);
+                        }
+                        catch (Exception)
+                        {
+                            // Most common is "No such host is known"
+                            return;
+                        }
+
                         break;
                     }
                     default:
