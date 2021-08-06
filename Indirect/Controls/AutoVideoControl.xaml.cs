@@ -48,7 +48,7 @@ namespace Indirect.Controls
             nameof(IsAudioPlayer),
             typeof(bool),
             typeof(AutoVideoControl),
-            new PropertyMetadata(false, PropertyChangedCallback));
+            new PropertyMetadata(false, OnIsAudioPlayerChanged));
         public static readonly DependencyProperty AutoPlayProperty = DependencyProperty.Register(
             nameof(AutoPlay),
             typeof(bool),
@@ -94,10 +94,10 @@ namespace Indirect.Controls
             view.VideoPlayer.PosterSource = new BitmapImage(uri);
         }
 
-        private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnIsAudioPlayerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (AutoVideoControl) d;
-            view.VideoPlayer.Style = (bool) e.NewValue ? (Style) view.Resources["AudioOnlyMediaPlayerElement"] : null;
+            view.VideoPlayer.Style = (bool)e.NewValue ? (Style)view.Resources["AudioOnlyMediaPlayerElement"] : null;
         }
 
         private static void AreTransportControlsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

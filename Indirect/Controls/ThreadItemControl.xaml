@@ -18,9 +18,6 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Styles/CustomTransportControl.xaml" />
-            </ResourceDictionary.MergedDictionaries>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="FromThemItemBackground" Color="#333333" />
@@ -51,18 +48,12 @@
 
             <contract8Present:ThemeShadow x:Name="SharedShadow" />
 
-            <Style
-                x:Name="AvailableOpen"
-                BasedOn="{StaticResource ButtonRevealStyle}"
-                TargetType="Button">
+            <Style x:Name="AvailableOpen" TargetType="Button">
                 <Setter Property="Content" Value="📷 Photo" />
                 <Setter Property="Background" Value="{StaticResource FromMeItemBackground}" />
                 <Setter Property="IsEnabled" Value="True" />
             </Style>
-            <Style
-                x:Name="NotAvailableOpen"
-                BasedOn="{StaticResource ButtonRevealStyle}"
-                TargetType="Button">
+            <Style x:Name="NotAvailableOpen" TargetType="Button">
                 <Setter Property="Content" Value="Expired" />
                 <Setter Property="Foreground" Value="{StaticResource SystemBaseMediumColor}" />
                 <Setter Property="Background" Value="Transparent" />
@@ -135,7 +126,7 @@
                     x:Name="MessageContentWithBorder"
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                    CornerRadius="2,2,2,2">
+                    CornerRadius="2">
                     <TextBlock
                         MaxWidth="{x:Bind Source.Text.Length, Converter={StaticResource VariableMaxWidthConverter}, FallbackValue=250}"
                         Margin="6"
@@ -163,7 +154,7 @@
                     Padding="6"
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                    CornerRadius="2,2,2,2">
+                    CornerRadius="2">
                     <TextBlock Style="{ThemeResource FluentBodyTextStyle}" TextWrapping="Wrap">
                         <Hyperlink Foreground="{StaticResource SystemControlForegroundBaseHighBrush}" NavigateUri="{x:Bind NavigateUri}">
                             <Run Text="{x:Bind Source.Text}" />
@@ -407,7 +398,7 @@
                         x:Name="MessageContentWithBorder"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                         Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                        CornerRadius="2,2,2,2"
+                        CornerRadius="2"
                         Visibility="{x:Bind Source.ReelShareMedia.Type, Converter={StaticResource ReelShareTextVisibilityConverter}}">
                         <TextBlock
                             MaxWidth="250"
@@ -455,7 +446,7 @@
                         x:Name="MessageContentWithBorder"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                         Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                        CornerRadius="2,2,2,2"
+                        CornerRadius="2"
                         Visibility="{x:Bind Source.StoryShareMedia.Text, Converter={StaticResource NullVisibilityConverter}}">
                         <TextBlock
                             MaxWidth="250"
@@ -469,15 +460,17 @@
             </DataTemplate>
 
             <DataTemplate x:Key="AudioTemplate" x:DataType="wrappers:DirectItemWrapper">
-                <Border HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}" CornerRadius="2">
+                <Border HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}" CornerRadius="8">
                     <controls1:AutoVideoControl
                         Width="250"
+                        Height="48"
                         Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
                         IsAudioPlayer="True"
                         Source="{x:Bind VideoUri}">
                         <controls1:AutoVideoControl.TransportControls>
                             <MediaTransportControls
-                                Margin="0,0,0,-8"
+                                MinWidth="200"
+                                Margin="0"
                                 IsCompact="True"
                                 IsFullWindowButtonVisible="False"
                                 IsFullWindowEnabled="False"
