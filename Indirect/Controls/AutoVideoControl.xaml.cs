@@ -260,6 +260,7 @@ namespace Indirect.Controls
                 IsZoomButtonVisible = false,
                 IsZoomEnabled = false,
                 IsCompact = true,
+                MinWidth = 150
             };
             VideoPlayer.MediaPlayer.Volume = 0.5;
         }
