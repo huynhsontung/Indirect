@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
@@ -13,12 +12,19 @@ using NeoSmart.Unicode;
 
 namespace Indirect.Entities.Wrappers
 {
-    class DirectItemWrapper : INotifyPropertyChanged, IEquatable<DirectItemWrapper>
+    internal class DirectItemWrapper : DependencyObject, IEquatable<DirectItemWrapper>
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        public static readonly DependencyProperty ShowTimestampHeaderProperty = DependencyProperty.Register(
+            nameof(ShowTimestampHeader),
+            typeof(string),
+            typeof(DirectItemWrapper),
+            new PropertyMetadata(false));
 
-        private bool _showTimestampHeader;
-        private bool _showNameHeader;
+        public static readonly DependencyProperty ShowNameHeaderProperty = DependencyProperty.Register(
+            nameof(ShowNameHeader),
+            typeof(string),
+            typeof(DirectItemWrapper),
+            new PropertyMetadata(false));
 
         public DirectItem Source { get; }
         public DirectThreadWrapper Parent { get; }
@@ -28,22 +34,14 @@ namespace Indirect.Entities.Wrappers
 
         public bool ShowTimestampHeader
         {
-            get => _showTimestampHeader;
-            set
-            {
-                _showTimestampHeader = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowTimestampHeader)));
-            }
+            get => (bool)GetValue(ShowTimestampHeaderProperty);
+            set => SetValue(ShowTimestampHeaderProperty, value);
         }
 
         public bool ShowNameHeader
         {
-            get => _showNameHeader;
-            set
-            {
-                _showNameHeader = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowNameHeader)));
-            }
+            get => (bool)GetValue(ShowNameHeaderProperty);
+            set => SetValue(ShowNameHeaderProperty, value);
         }
 
         public string Description { get; set; }

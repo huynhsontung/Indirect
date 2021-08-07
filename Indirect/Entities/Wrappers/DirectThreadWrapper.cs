@@ -180,10 +180,9 @@ namespace Indirect.Entities.Wrappers
                 return;
             }
 
-            var decoratedItems = DecorateItems(items);
             _dispatcherQueue.TryEnqueue(() =>
             {
-                UpdateItemList(decoratedItems);
+                UpdateItemList(DecorateItems(items));
                 // Assuming order of item is maintained. Last item after update should be the latest.
                 var latestItem = ObservableItems.Last();
                 var source = Source;
@@ -241,12 +240,11 @@ namespace Indirect.Entities.Wrappers
                 return;
             }
 
-            var decoratedItems = DecorateItems(source.Items);
-            source.Items = null;
             _dispatcherQueue.TryEnqueue(() =>
             {
-                UpdateItemList(decoratedItems);
+                UpdateItemList(DecorateItems(source.Items));
                 LastPermanentItem = ObservableItems.LastOrDefault();
+                source.Items = null;
             });
         }
 
@@ -383,13 +381,16 @@ namespace Indirect.Entities.Wrappers
             
             UpdateExcludeItemList(result.Value);
             var wrappedItems = DecorateItems(result.Value.Items);
+            result.Value.Items = null;
             return wrappedItems;
         }
 
         private void DecorateOnItemDeleted(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Remove)
-                DecorateExistingItems();
+            {
+                _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, DecorateExistingItems);
+            }
         }
 
         private void DecorateExistingItems()
@@ -402,11 +403,8 @@ namespace Indirect.Entities.Wrappers
                 if (ObservableItems[i].ShowTimestampHeader != showTimestamp ||
                     ObservableItems[i].ShowNameHeader != showName)
                 {
-                    _dispatcherQueue.TryEnqueue(() =>
-                    {
-                        ObservableItems[i].ShowTimestampHeader = showTimestamp;
-                        ObservableItems[i].ShowNameHeader = showName;
-                    });
+                    ObservableItems[i].ShowTimestampHeader = showTimestamp;
+                    ObservableItems[i].ShowNameHeader = showName;
                 }
             }
         }
