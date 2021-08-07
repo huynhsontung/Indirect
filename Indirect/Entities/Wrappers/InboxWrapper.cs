@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +13,7 @@ using InstagramAPI.Utils;
 
 namespace Indirect.Entities.Wrappers
 {
-    internal class InboxWrapper: DependencyObject, IIncrementalSource<DirectThreadWrapper>
+    internal class InboxWrapper : DependencyObject, IIncrementalSource<DirectThreadWrapper>
     {
         public event EventHandler FirstUpdated;    // callback to start RealtimeClient
 
@@ -42,6 +41,7 @@ namespace Indirect.Entities.Wrappers
 
         private string OldestCursor { get; set; }
 
+        private readonly object _lockObj;
         private readonly MainViewModel _viewModel;
         private bool _firstTime = true;
         private int _pageCounter;
@@ -49,6 +49,7 @@ namespace Indirect.Entities.Wrappers
 
         public InboxWrapper(MainViewModel viewModel, bool pending = false)
         {
+            _lockObj = new object();
             _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             PendingInbox = pending;
             Container = new InboxContainer();
@@ -59,7 +60,7 @@ namespace Indirect.Entities.Wrappers
         private static void OnSelectedThreadPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var inbox = (InboxWrapper)d;
-            lock (inbox)
+            lock (inbox._lockObj)
             {
                 var tempThread = inbox._tempThread;
                 if (tempThread != null && tempThread != e.NewValue)
@@ -101,20 +102,23 @@ namespace Indirect.Entities.Wrappers
                 foreach (var thread in container.Inbox.Threads)
                 {
                     var existed = false;
-                    foreach (var existingThread in Threads)
+                    lock (_lockObj)
                     {
-                        if (thread.ThreadId != existingThread.ThreadId) continue;
-                        existingThread.Update(thread, true);
-                        existed = true;
-                        break;
-                    }
+                        foreach (var existingThread in Threads)
+                        {
+                            if (thread.ThreadId != existingThread.ThreadId) continue;
+                            existingThread.Update(thread, true);
+                            existed = true;
+                            break;
+                        }
 
-                    if (!existed)
-                    {
-                        var wrappedThread = new DirectThreadWrapper(_viewModel, thread);
-                        wrappedThread.RegisterPropertyChangedCallback(DirectThreadWrapper.LastPermanentItemProperty,
-                            OnThreadLastPermanentItemChanged);
-                        Threads.Insert(0, wrappedThread);
+                        if (!existed)
+                        {
+                            var wrappedThread = new DirectThreadWrapper(_viewModel, thread);
+                            wrappedThread.RegisterPropertyChangedCallback(DirectThreadWrapper.LastPermanentItemProperty,
+                                OnThreadLastPermanentItemChanged);
+                            Threads.Insert(0, wrappedThread);
+                        }
                     }
                 }
 
@@ -192,42 +196,45 @@ namespace Indirect.Entities.Wrappers
 
         private void SortInboxThread()
         {
-            var sorted = Threads.OrderByDescending(x => x.Source.LastActivity).ToList();
-            for (var i = 0; i < Threads.Count; i++)
+            lock (_lockObj)
             {
-                var satisfied = false;
-                var target = sorted[i];
-                var j = i;
-                for (; j < Threads.Count; j++)
+                var sorted = Threads.OrderByDescending(x => x.Source.LastActivity).ToList();
+                for (var i = 0; i < Threads.Count; i++)
                 {
-                    if (target.Equals(Threads[j]))
+                    var satisfied = false;
+                    var target = sorted[i];
+                    var j = i;
+                    for (; j < Threads.Count; j++)
                     {
-                        if (i == j)
+                        if (target.Equals(Threads[j]))
                         {
-                            satisfied = true;
+                            if (i == j)
+                            {
+                                satisfied = true;
+                            }
+                            break;
                         }
-                        break;
                     }
-                }
 
-                if (satisfied) continue;
-                // If not satisfied, Threads[j] has to move to index i
-                // ObservableCollection.Move() calls RemoveItem() under the hood which refreshes all items in collection
-                // Removing Selected thread from collection will deselect the thread
-                if (SelectedThread != Threads[j])
-                {
-                    var tmp = Threads[j];
-                    Threads.RemoveAt(j);
-                    Threads.Insert(i, tmp);
-                }
-                else
-                {
-                    // j is always greater than i
-                    for (var k = j - 1; i <= k; k--)
+                    if (satisfied) continue;
+                    // If not satisfied, Threads[j] has to move to index i
+                    // ObservableCollection.Move() calls RemoveItem() under the hood which refreshes all items in collection
+                    // Removing Selected thread from collection will deselect the thread
+                    if (SelectedThread != Threads[j])
                     {
-                        var tmp = Threads[k];
-                        Threads.RemoveAt(k);
-                        Threads.Insert(k+1, tmp);
+                        var tmp = Threads[j];
+                        Threads.RemoveAt(j);
+                        Threads.Insert(i, tmp);
+                    }
+                    else
+                    {
+                        // j is always greater than i
+                        for (var k = j - 1; i <= k; k--)
+                        {
+                            var tmp = Threads[k];
+                            Threads.RemoveAt(k);
+                            Threads.Insert(k + 1, tmp);
+                        }
                     }
                 }
             }
