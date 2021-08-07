@@ -122,7 +122,7 @@ namespace Indirect
                         break;
 
                     case "replace":
-                        await HandleSyncReplace(thread, syncItem, breadcrumbs);
+                        HandleSyncReplace(thread, syncItem, breadcrumbs);
                         break;
 
                     case "remove":
@@ -195,7 +195,7 @@ namespace Indirect
                     var itemId = breadcrumbs[1];
                     var item = JsonConvert.DeserializeObject<DirectItem>(syncItem.Value);
                     item.ItemId = itemId;
-                    await thread.AddItem(item);
+                    thread.AddItem(item);
                     break;
                 }
 
@@ -220,7 +220,7 @@ namespace Indirect
             }
         }
 
-        private async Task HandleSyncReplace(DirectThreadWrapper thread, SyncItem syncItem, string[] breadcrumbs)
+        private void HandleSyncReplace(DirectThreadWrapper thread, SyncItem syncItem, string[] breadcrumbs)
         {
             if (breadcrumbs.Length < 2)
             {
@@ -234,8 +234,8 @@ namespace Indirect
                     var itemId = breadcrumbs[1];
                     var item = JsonConvert.DeserializeObject<DirectItem>(syncItem.Value);
                     item.ItemId = itemId;
-                    await thread.RemoveItem(itemId);
-                    await thread.AddItem(item);
+                    thread.RemoveItem(itemId);
+                    thread.AddItem(item);
                     break;
                 }
 
@@ -243,7 +243,7 @@ namespace Indirect
                 {
                     var userId = Convert.ToInt64(breadcrumbs[1]);
                     var item = JsonConvert.DeserializeObject<DirectItem>(syncItem.Value);
-                    await thread.UpdateLastSeenAt(userId, item.Timestamp, item.ItemId);
+                    thread.UpdateLastSeenAt(userId, item.Timestamp, item.ItemId);
                     break;
                 }
             }
@@ -261,7 +261,7 @@ namespace Indirect
                 case "items" when breadcrumbs.Length == 2:
                 {
                     var itemId = breadcrumbs[1];
-                    await thread.RemoveItem(itemId);
+                    thread.RemoveItem(itemId);
                     break;
                 }
 

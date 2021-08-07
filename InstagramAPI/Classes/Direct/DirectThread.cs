@@ -101,20 +101,6 @@ namespace InstagramAPI.Classes.Direct
         [JsonProperty("mentions_muted")]
         public bool MentionsMuted { get; set; }
 
-        [JsonIgnore]
-        public bool HasUnreadMessage {
-            get
-            {
-                if (LastSeenAt != null && LastSeenAt.TryGetValue(ViewerId, out var viewerLastSeen))
-                {
-                    return LastNonSenderItemAt > viewerLastSeen.Timestamp &&
-                                              LastActivity == LastNonSenderItemAt;
-                }
-
-                return false;
-            }
-        }
-
         public bool Equals(DirectThread other)
         {
             if (other == null) return false;

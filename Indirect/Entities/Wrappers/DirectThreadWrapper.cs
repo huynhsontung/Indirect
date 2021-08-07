@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
+using Windows.System;
+using Windows.UI.Xaml;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.User;
@@ -18,37 +17,81 @@ using InstagramAPI.Classes.Core;
 namespace Indirect.Entities.Wrappers
 {
     /// Wrapper of <see cref="DirectThread"/> with Observable lists
-    class DirectThreadWrapper : INotifyPropertyChanged, IIncrementalSource<DirectItemWrapper>, IEquatable<DirectThreadWrapper>
+    class DirectThreadWrapper : DependencyObject, IIncrementalSource<DirectItemWrapper>, IEquatable<DirectThreadWrapper>
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        public static readonly DependencyProperty LastPermanentItemProperty = DependencyProperty.Register(
+            nameof(LastPermanentItem),
+            typeof(DirectItemWrapper),
+            typeof(DirectThreadWrapper),
+            new PropertyMetadata(null, OnLastPermanentItemPropertyChanged));
 
-        private readonly MainViewModel _viewModel;
-        private DirectItemWrapper _replyingItem;
+        public static readonly DependencyProperty IsSomeoneTypingProperty = DependencyProperty.Register(
+            nameof(IsSomeoneTyping),
+            typeof(bool),
+            typeof(DirectThreadWrapper),
+            new PropertyMetadata(false));
 
-        public DirectThread Source { get; private set; }
+        public static readonly DependencyProperty DraftMessageProperty = DependencyProperty.Register(
+            nameof(DraftMessage),
+            typeof(string),
+            typeof(DirectThreadWrapper),
+            new PropertyMetadata(null));
 
-        public DirectItemWrapper LastPermanentItem { get; private set; }
+        public static readonly DependencyProperty QuickReplyEmojiProperty = DependencyProperty.Register(
+            nameof(QuickReplyEmoji),
+            typeof(string),
+            typeof(DirectThreadWrapper),
+            new PropertyMetadata(null));
 
-        public CoreDispatcher Dispatcher { get; }
+        public static readonly DependencyProperty ReplyingItemProperty = DependencyProperty.Register(
+            nameof(ReplyingItem),
+            typeof(DirectItemWrapper),
+            typeof(DirectThreadWrapper),
+            new PropertyMetadata(null));
 
-        public bool IsSomeoneTyping { get; private set; }   // UI property
+        public static readonly DependencyProperty HasUnreadMessageProperty = DependencyProperty.Register(
+            nameof(HasUnreadMessage),
+            typeof(bool),
+            typeof(DirectThreadWrapper),
+            new PropertyMetadata(false));
 
-        public string DraftMessage { get; set; }    // UI property
+        public DirectItemWrapper LastPermanentItem
+        {
+            get => (DirectItemWrapper) GetValue(LastPermanentItemProperty);
+            private set => SetValue(LastPermanentItemProperty, value);
+        }
 
-        public string QuickReplyEmoji { get; set; } // UI property
+        public bool IsSomeoneTyping
+        {
+            get => (bool) GetValue(IsSomeoneTypingProperty);
+            private set => SetValue(IsSomeoneTypingProperty, value);
+        }
+
+        public string DraftMessage
+        {
+            get => (string) GetValue(DraftMessageProperty);
+            set => SetValue(DraftMessageProperty, value);
+        }
+
+        public string QuickReplyEmoji
+        {
+            get => (string) GetValue(QuickReplyEmojiProperty);
+            set => SetValue(QuickReplyEmojiProperty, value);
+        }
 
         public DirectItemWrapper ReplyingItem
         {
-            get => _replyingItem;
-            set
-            {
-                _replyingItem = value;
-                _ = Dispatcher.QuickRunAsync(() =>
-                {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ReplyingItem)));
-                });
-            }
+            get => (DirectItemWrapper) GetValue(ReplyingItemProperty);
+            set => SetValue(ReplyingItemProperty, value);
         }
+
+        public bool HasUnreadMessage
+        {
+            get => (bool) GetValue(HasUnreadMessageProperty);
+            set => SetValue(HasUnreadMessageProperty, value);
+        }
+
+        public DirectThread Source { get; private set; }
 
         public Dictionary<long,UserInfo> DetailedUserInfoDictionary { get; }
         public bool IsContactPanel { get; set; }
@@ -57,32 +100,27 @@ namespace Indirect.Entities.Wrappers
         public string ThreadId => Source.ThreadId;
         public ObservableCollection<BaseUser> Users { get; }
 
+        private readonly MainViewModel _viewModel;
+        private readonly DispatcherQueue _dispatcherQueue;
+
         /// <summary>
         /// Only use this constructor to make empty placeholder thread.
         /// </summary>
         /// <param name="viewModel"></param>
         /// <param name="user"></param>
-        public DirectThreadWrapper(MainViewModel viewModel, BaseUser user) : this(viewModel, null, null)
+        public DirectThreadWrapper(BaseUser user, MainViewModel viewModel) : this(viewModel, null)
         {
             Users[0] = user;
             Source.Title = user.Username;
         }
 
-        public DirectThreadWrapper(MainViewModel viewModel, RankedRecipientThread rankedThread) : this(viewModel, rankedThread, null)
-        {
-            if (string.IsNullOrEmpty(Source.Title))
-            {
-                Source.Title = rankedThread?.ThreadTitle;
-            }
-        }
-
-        public DirectThreadWrapper(MainViewModel viewModel, DirectThread source, CoreDispatcher dispatcher = null)
+        public DirectThreadWrapper(MainViewModel viewModel, DirectThread source)
         {
             _viewModel = viewModel;
+            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
             Users = new ObservableCollection<BaseUser>();
             ObservableItems = new ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper>(this);
             DetailedUserInfoDictionary = new Dictionary<long, UserInfo>();
-            Dispatcher = dispatcher ?? CoreApplication.MainView.CoreWindow.Dispatcher;
 
             if (source != null)
             {
@@ -93,6 +131,8 @@ namespace Indirect.Entities.Wrappers
                 }
 
                 UpdateItemList(DecorateItems(source.Items));
+                LastPermanentItem = ObservableItems.LastOrDefault();
+                source.Items = null;
             }
             else
             {
@@ -104,61 +144,74 @@ namespace Indirect.Entities.Wrappers
                 Users.Add(new BaseUser());
             }
 
+            if (string.IsNullOrEmpty(Source.Title) && source is RankedRecipientThread rankedThread)
+            {
+                Source.Title = rankedThread.ThreadTitle;
+            }
+
             QuickReplyEmoji =
                 !string.IsNullOrEmpty(ThreadId) &&
                 viewModel.Settings.TryGetForThread(ThreadId, nameof(QuickReplyEmoji), out string emoji)
                     ? emoji
-                    : null;
+                    : "❤";
             ObservableItems.CollectionChanged += DecorateOnItemDeleted;
             ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
+            RegisterPropertyChangedCallback(QuickReplyEmojiProperty, OnQuickReplyEmojiChanged);
         }
 
-        public async Task<DirectThreadWrapper> CloneThreadForSecondaryView(CoreDispatcher dispatcher)
+        private void OnQuickReplyEmojiChanged(DependencyObject sender, DependencyProperty dp)
+        {
+            if (!string.IsNullOrEmpty(QuickReplyEmoji))
+            {
+                _viewModel.Settings.SetForThread(ThreadId, nameof(QuickReplyEmoji), QuickReplyEmoji);
+            }
+        }
+
+        public async Task<DirectThread> CloneThread()
         {
             var result = await _viewModel.InstaApi.GetThreadAsync(Source.ThreadId, _viewModel.Inbox.SeqId, PaginationParameters.MaxPagesToLoad(1));
-            if (!result.IsSucceeded) return null;
-            var clone = new DirectThreadWrapper(_viewModel, result.Value, dispatcher);
-            return clone;
+            return result.IsSucceeded ? result.Value : null;
         }
 
-        public async Task AddItems(List<DirectItem> items)
+        public void AddItems(List<DirectItem> items)
         {
             if (items.Count == 0)
             {
                 return;
             }
 
-            await Dispatcher.QuickRunAsync(() =>
+            var decoratedItems = DecorateItems(items);
+            _dispatcherQueue.TryEnqueue(() =>
             {
-                UpdateItemList(DecorateItems(items));
-            });
-
-            var latestItem = ObservableItems.Last();    // Assuming order of item is maintained. Last item after update should be the latest.
-            var source = Source;
-            if (source.LastPermanentItem == null || latestItem.Source.Timestamp > source.LastPermanentItem.Timestamp)
-            {
-                // This does not update thread data like users in the thread or is thread muted or not
-                source.LastPermanentItem = latestItem.Source;
-                source.LastActivity = latestItem.Source.Timestamp;
-                source.NewestCursor = latestItem.Source.ItemId;
-                if (!latestItem.FromMe)
+                UpdateItemList(decoratedItems);
+                // Assuming order of item is maintained. Last item after update should be the latest.
+                var latestItem = ObservableItems.Last();
+                var source = Source;
+                if (source.LastPermanentItem == null ||
+                    latestItem.Source.Timestamp > source.LastPermanentItem.Timestamp)
                 {
-                    source.LastNonSenderItemAt = latestItem.Source.Timestamp;
+                    // This does not update thread data like users in the thread or is thread muted or not
+                    source.LastPermanentItem = latestItem.Source;
+                    source.LastActivity = latestItem.Source.Timestamp;
+                    source.NewestCursor = latestItem.Source.ItemId;
+                    if (!latestItem.FromMe)
+                    {
+                        source.LastNonSenderItemAt = latestItem.Source.Timestamp;
+                    }
+
+                    Source = source;
                 }
 
-                await Dispatcher.QuickRunAsync(() =>
-                {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Source)));
-                });
-            }
+                LastPermanentItem = latestItem;
+            });
         }
 
-        public Task AddItem(DirectItem item) => AddItems(new List<DirectItem> {item});
+        public void AddItem(DirectItem item) => AddItems(new List<DirectItem> {item});
 
-        public async Task RemoveItem(string itemId)
+        public void RemoveItem(string itemId)
         {
             if (string.IsNullOrEmpty(itemId)) return;
-            await Dispatcher.QuickRunAsync(() =>
+            _dispatcherQueue.TryEnqueue(() =>
             {
                 lock (ObservableItems)
                 {
@@ -179,22 +232,39 @@ namespace Indirect.Entities.Wrappers
         /// </summary>
         /// <param name="source"></param>
         /// <param name="fromInbox"></param>
-        public async void Update(DirectThread source, bool fromInbox = false)
+        public void Update(DirectThread source, bool fromInbox = false)
         {
-            await UpdateExcludeItemList(source);
+            UpdateExcludeItemList(source);
             // Items from GetInbox request will interfere with GetPagedItemsAsync
             if (fromInbox)
             {
                 return;
             }
 
-            await Dispatcher.QuickRunAsync(() =>
+            var decoratedItems = DecorateItems(source.Items);
+            source.Items = null;
+            _dispatcherQueue.TryEnqueue(() =>
             {
-                UpdateItemList(DecorateItems(source.Items));
+                UpdateItemList(decoratedItems);
+                LastPermanentItem = ObservableItems.LastOrDefault();
             });
         }
 
-        private async Task UpdateExcludeItemList(DirectThread target)
+        private static void OnLastPermanentItemPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var thread = (DirectThreadWrapper)d;
+            var sourceThread = thread.Source;
+            if (sourceThread.LastSeenAt != null && sourceThread.LastSeenAt.TryGetValue(sourceThread.ViewerId, out var viewerLastSeen))
+            {
+                thread.HasUnreadMessage = sourceThread.LastNonSenderItemAt > viewerLastSeen.Timestamp &&
+                                          sourceThread.LastActivity == sourceThread.LastNonSenderItemAt;
+                return;
+            }
+
+            thread.HasUnreadMessage = false;
+        }
+
+        private void UpdateExcludeItemList(DirectThread target)
         {
             if (target == null)
             {
@@ -222,74 +292,60 @@ namespace Indirect.Entities.Wrappers
             }
 
             Source = target;
-
-            await UpdateUserList(target.Users);
-            await Dispatcher.QuickRunAsync(() =>
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Source)));
-            });
+            UpdateUserList(target.Users);
         }
 
         private void UpdateItemList(ICollection<DirectItemWrapper> source)
         {
             if (source == null || source.Count == 0) return;
 
-            try
+            lock (ObservableItems)
             {
-                lock (ObservableItems)
+                if (ObservableItems.Count == 0)
                 {
-                    if (ObservableItems.Count == 0)
-                    {
-                        foreach (var item in source)
-                            ObservableItems.Add(item);
-                        return;
-                    }
-
                     foreach (var item in source)
+                        ObservableItems.Add(item);
+                    return;
+                }
+
+                foreach (var item in source)
+                {
+                    for (var i = ObservableItems.Count - 1; i >= 0; i--)
                     {
-                        for (var i = ObservableItems.Count - 1; i >= 0; i--)
+                        if (ObservableItems[i].Equals(item))
                         {
-                            if (ObservableItems[i].Equals(item))
-                            {
-                                ObservableItems.RemoveAt(i);
-                                break;
-                            }
-                        }
-
-                        for (var i = ObservableItems.Count - 1; i >= 0; i--)
-                        {
-                            if (item.Source.Timestamp > ObservableItems[i].Source.Timestamp)
-                            {
-                                ObservableItems.Insert(i + 1, item);
-                                break;
-                            }
-
-                            if (i == 0)
-                            {
-                                ObservableItems.Insert(0, item);
-                            }
+                            ObservableItems.RemoveAt(i);
+                            break;
                         }
                     }
 
-                    Source.Items = ObservableItems.Select(x => x.Source).ToList();
+                    for (var i = ObservableItems.Count - 1; i >= 0; i--)
+                    {
+                        if (item.Source.Timestamp > ObservableItems[i].Source.Timestamp)
+                        {
+                            ObservableItems.Insert(i + 1, item);
+                            break;
+                        }
+
+                        if (i == 0)
+                        {
+                            ObservableItems.Insert(0, item);
+                        }
+                    }
                 }
-            }
-            finally
-            {
-                LastPermanentItem = ObservableItems.LastOrDefault();
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LastPermanentItem)));
+
+                Source.Items = ObservableItems.Select(x => x.Source).ToList();
             }
         }
 
-        private async Task UpdateUserList(List<UserWithFriendship> users)
+        private void UpdateUserList(List<UserWithFriendship> users)
         {
             if (users == null || users.Count == 0) return;
-            await Dispatcher.QuickRunAsync(() =>
+            _dispatcherQueue.TryEnqueue(() =>
             {
                 lock (Users)
                 {
-                    var copyUsers =
-                        Users.ToList(); // attempt to troubleshoot InvalidOperationException: Collection was modified
+                    var copyUsers = Users.ToList();
                     var toBeAdded = users.Where(p2 => copyUsers.All(p1 => !p1.Equals(p2)));
                     var toBeDeleted = copyUsers.Where(p1 => users.All(p2 => !p1.Equals(p2)));
                     foreach (var user in toBeAdded)
@@ -325,18 +381,18 @@ namespace Indirect.Entities.Wrappers
                 return new List<DirectItemWrapper>(0);
             }
             
-            await UpdateExcludeItemList(result.Value);
+            UpdateExcludeItemList(result.Value);
             var wrappedItems = DecorateItems(result.Value.Items);
             return wrappedItems;
         }
 
-        private async void DecorateOnItemDeleted(object sender, NotifyCollectionChangedEventArgs e)
+        private void DecorateOnItemDeleted(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Remove)
-                await DecorateExistingItems();
+                DecorateExistingItems();
         }
 
-        private async Task DecorateExistingItems()
+        private void DecorateExistingItems()
         {
             for (int i = ObservableItems.Count - 1; i >= 1; i--)
             {
@@ -346,7 +402,7 @@ namespace Indirect.Entities.Wrappers
                 if (ObservableItems[i].ShowTimestampHeader != showTimestamp ||
                     ObservableItems[i].ShowNameHeader != showName)
                 {
-                    await Dispatcher.QuickRunAsync(() =>
+                    _dispatcherQueue.TryEnqueue(() =>
                     {
                         ObservableItems[i].ShowTimestampHeader = showTimestamp;
                         ObservableItems[i].ShowNameHeader = showName;
@@ -400,25 +456,34 @@ namespace Indirect.Entities.Wrappers
 
         public async Task MarkLatestItemSeen()
         {
-            try
+            await Dispatcher.QuickRunAsync(async () =>
             {
-                var source = Source;
-                if (string.IsNullOrEmpty(source.ThreadId) || source.LastSeenAt == null) return;
-                if (source.LastSeenAt.TryGetValue(source.ViewerId, out var lastSeen))
+                try
                 {
-                    if (string.IsNullOrEmpty(source.LastPermanentItem?.ItemId) ||
-                        lastSeen.ItemId == source.LastPermanentItem.ItemId ||
-                        LastPermanentItem.FromMe) return;
-                    await _viewModel.InstaApi.MarkItemSeenAsync(source.ThreadId, source.LastPermanentItem.ItemId).ConfigureAwait(false);
+                    var source = Source;
+                    if (string.IsNullOrEmpty(source.ThreadId) || source.LastSeenAt == null) return;
+                    if (source.LastSeenAt.TryGetValue(source.ViewerId, out var lastSeen))
+                    {
+                        if (string.IsNullOrEmpty(source.LastPermanentItem?.ItemId) ||
+                            lastSeen.ItemId == source.LastPermanentItem.ItemId ||
+                            LastPermanentItem.FromMe)
+                        {
+                            return;
+                        }
+
+                        HasUnreadMessage = false;
+                        await _viewModel.InstaApi.MarkItemSeenAsync(source.ThreadId, source.LastPermanentItem.ItemId)
+                            .ConfigureAwait(false);
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                DebugLogger.LogException(e);
-            }
+                catch (Exception e)
+                {
+                    DebugLogger.LogException(e);
+                }
+            });
         }
 
-        public async Task UpdateLastSeenAt(long userId, DateTimeOffset timestamp, string itemId)
+        public void UpdateLastSeenAt(long userId, DateTimeOffset timestamp, string itemId)
         {
             if (userId == default || timestamp == default || itemId == default)
             {
@@ -442,11 +507,7 @@ namespace Indirect.Entities.Wrappers
             }
 
             source.LastSeenAt = lastSeenAt;
-
-            await Dispatcher.QuickRunAsync(() =>
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Source)));
-            });
+            Source = source;
         }
 
 
@@ -454,10 +515,10 @@ namespace Indirect.Entities.Wrappers
         /// Set IsSomeoneTyping to true for a period of time
         /// </summary>
         /// <param name="ttl">Amount of time to keep IsSomeoneTyping true. If this is 0 immediately set to false</param>
-        public async void PingTypingIndicator(int ttl)
+        public void PingTypingIndicator(int ttl)
         {
             if (!IsSomeoneTyping && ttl == 0) return;
-            await Dispatcher.QuickRunAsync(async () =>
+            _dispatcherQueue.TryEnqueue(async () =>
             {
                 if (ttl > 0)
                 {
@@ -471,29 +532,6 @@ namespace Indirect.Entities.Wrappers
                 {
                     IsSomeoneTyping = false;
                 }
-
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSomeoneTyping)));
-            });
-        }
-
-        public async void UpdateQuickReplyEmoji()
-        {
-            var exists = _viewModel.Settings.TryGetForThread(ThreadId, nameof(QuickReplyEmoji), out string emoji);
-            if (string.IsNullOrEmpty(QuickReplyEmoji))
-            {
-                if (exists)
-                {
-                    QuickReplyEmoji = emoji;
-                }
-            }
-            else
-            {
-                _viewModel.Settings.SetForThread(ThreadId, nameof(QuickReplyEmoji), QuickReplyEmoji);
-            }
-
-            await Dispatcher.QuickRunAsync(() =>
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(QuickReplyEmoji)));
             });
         }
 

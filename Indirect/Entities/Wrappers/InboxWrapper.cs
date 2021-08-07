@@ -112,12 +112,14 @@ namespace Indirect.Entities.Wrappers
                     if (!existed)
                     {
                         var wrappedThread = new DirectThreadWrapper(_viewModel, thread);
-                        wrappedThread.PropertyChanged += OnThreadChanged;
+                        wrappedThread.RegisterPropertyChangedCallback(DirectThreadWrapper.LastPermanentItemProperty,
+                            OnThreadLastPermanentItemChanged);
                         Threads.Insert(0, wrappedThread);
                     }
                 }
 
                 SortInboxThread();
+                container.Inbox.Threads = null;
             });
         }
 
@@ -159,7 +161,8 @@ namespace Indirect.Entities.Wrappers
                 foreach (var directThread in container.Inbox.Threads)
                 {
                     var wrappedThread = new DirectThreadWrapper(_viewModel, directThread);
-                    wrappedThread.PropertyChanged += OnThreadChanged;
+                    wrappedThread.RegisterPropertyChangedCallback(DirectThreadWrapper.LastPermanentItemProperty,
+                        OnThreadLastPermanentItemChanged);
                     wrappedThreadList.Add(wrappedThread);
                 }
 
@@ -169,6 +172,7 @@ namespace Indirect.Entities.Wrappers
                     FirstUpdated?.Invoke(this, EventArgs.Empty);
                 }
 
+                container.Inbox.Threads = null;
                 return wrappedThreadList;
             }
             finally
@@ -229,12 +233,9 @@ namespace Indirect.Entities.Wrappers
             }
         }
 
-        private void OnThreadChanged(object sender, PropertyChangedEventArgs args)
+        private void OnThreadLastPermanentItemChanged(DependencyObject sender, DependencyProperty dp)
         {
-            if (args.PropertyName == nameof(DirectThreadWrapper.Source) || string.IsNullOrEmpty(args.PropertyName))
-            {
-                SortInboxThread();
-            }
+            SortInboxThread();
         }
     }
 }

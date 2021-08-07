@@ -163,7 +163,7 @@ namespace Indirect.Services
             var result = await Api.UnsendMessageAsync(item.Parent.ThreadId, item.Source.ItemId);
             if (result.IsSucceeded)
             {
-                await item.Parent.RemoveItem(item.Source.ItemId);
+                item.Parent.RemoveItem(item.Source.ItemId);
             }
         }
 

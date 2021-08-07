@@ -18,10 +18,10 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
-            <converters:SendButtonGlyphConverter x:Key="SendButtonGlyphConverter" />
             <converters:EqualityVisibilityConverter x:Key="VisibleWhenZeroConverter" />
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter" />
             <converters:NullVisibilityConverter x:Key="NullVisibilityConverter" />
+            <converters:NullVisibilityConverter x:Key="InvertNullVisibilityConverter" Invert="True" />
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -194,7 +194,7 @@
                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                         Style="{ThemeResource FluentCaptionTextStyle}"
                         Text="Typing..."
-                        Visibility="Collapsed" />
+                        Visibility="{x:Bind Thread.IsSomeoneTyping, Mode=OneWay, Converter={StaticResource BooleanVisibilityConverter}}" />
 
                     <TextBlock
                         Margin="0,0,0,16"
@@ -281,11 +281,11 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <ProgressBar
+            <muxc:ProgressBar
                 x:Name="UploadProgress"
                 Grid.Row="0"
                 Grid.Column="0"
-                Grid.ColumnSpan="4"
+                Grid.ColumnSpan="5"
                 Margin="2"
                 HorizontalAlignment="Stretch"
                 AutomationProperties.Name="Upload progress"
@@ -428,8 +428,26 @@
                 AutomationProperties.Name="Send"
                 Click="SendButton_Click"
                 ContextRequested="SendButton_OnContextRequested"
-                ToolTipService.ToolTip="Send">
-                <FontIcon x:Name="SendButtonIcon" />
+                ToolTipService.ToolTip="Send"
+                Visibility="{x:Bind MessageTextBox.Text, Mode=OneWay, Converter={StaticResource NullVisibilityConverter}}">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE724;" />
+            </Button>
+
+            <Button
+                x:Name="ReactButton"
+                Grid.Row="3"
+                Grid.Column="4"
+                Margin="0,0,8,0"
+                HorizontalAlignment="Stretch"
+                AutomationProperties.Name="React"
+                Click="SendButton_Click"
+                ContextRequested="SendButton_OnContextRequested"
+                ToolTipService.ToolTip="Send a reaction"
+                Visibility="{x:Bind MessageTextBox.Text, Mode=OneWay, Converter={StaticResource InvertNullVisibilityConverter}}">
+                <FontIcon
+                    Margin="0,-4,0,-3"
+                    FontFamily="{StaticResource ContentControlThemeFontFamily}"
+                    Glyph="{x:Bind Thread.QuickReplyEmoji, Mode=OneWay}" />
             </Button>
         </Grid>
 

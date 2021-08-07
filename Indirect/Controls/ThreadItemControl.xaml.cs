@@ -111,7 +111,7 @@ namespace Indirect.Controls
 
                 if (Item.Parent.Users.Count == 1)
                 {
-                    return Item.FromMe && Item.Parent.Source.LastPermanentItem?.ItemId != Item.Source.ItemId ? string.Empty : "Seen";
+                    return Item.FromMe && Item.Parent.LastPermanentItem?.Source.ItemId != Item.Source.ItemId ? string.Empty : "Seen";
                 }
 
                 if (Item.Parent.Users.Count <= seenList.Length)

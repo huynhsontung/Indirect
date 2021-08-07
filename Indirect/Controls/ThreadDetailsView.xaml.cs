@@ -6,13 +6,11 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
-using Windows.UI.Core;
 using Windows.UI.ViewManagement.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Indirect.Converters;
 using Indirect.Entities.Wrappers;
 using Indirect.Services;
@@ -66,33 +64,46 @@ namespace Indirect.Controls
 
 
         private bool _needUpdateCaret;   // For moving the caret to the end of text on thread change. This is a bad idea. ¯\_(ツ)_/¯
+        private readonly DispatcherQueue _dispatcherQueue;
 
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ThreadDetailsView)d;
-            var thread = e.NewValue as DirectThreadWrapper;
-            if (e.OldValue is DirectThreadWrapper oldThread) oldThread.PropertyChanged -= view.OnThreadPropertyChanged;
+            var thread = (DirectThreadWrapper) e.NewValue;
             if (thread == null) return;
-            thread.PropertyChanged -= view.OnThreadPropertyChanged;
-            thread.PropertyChanged += view.OnThreadPropertyChanged;
 
             view.ViewProfileAppBarButton.Visibility = thread.Users?.Count == 1 ? Visibility.Visible : Visibility.Collapsed;
             view.MessageInputGrid.Visibility = thread.Source.Pending ? Visibility.Collapsed : Visibility.Visible;
             view._needUpdateCaret = true;
             view.OnUserPresenceChanged();
-            view.UpdateSendButtonIcon();
             view.ConditionallyShowTeachingTips();
         }
 
         private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
-        private FontFamily SymbolThemeFontFamily { get; }
 
         public ThreadDetailsView()
         {
             this.InitializeComponent();
-            SymbolThemeFontFamily = this.Resources["SymbolThemeFontFamily"] as FontFamily;
+            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
             ViewModel.PropertyChanged += OnUserPresenceChanged;
             GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
+            TypingIndicator.RegisterPropertyChangedCallback(VisibilityProperty, TypingIndicator_OnVisibilityChanged);
+        }
+
+        private void TypingIndicator_OnVisibilityChanged(DependencyObject sender, DependencyProperty dp)
+        {
+            var chatItemsStackPanel = (ItemsStackPanel)ItemsHolder.ItemsPanelRoot;
+            if (chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 1 ||
+                chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 2)
+            {
+                if (Thread.IsSomeoneTyping)
+                {
+                    _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+                    {
+                        ItemsHolder.ScrollIntoView(ItemsHolder.Footer);
+                    });
+                }
+            }
         }
 
         public void UnsubscribeHandlers()
@@ -101,37 +112,12 @@ namespace Indirect.Controls
             ProfilePictureView.UnsubscribeHandlers();
         }
 
-        private void UpdateSendButtonIcon()
-        {
-            if (string.IsNullOrEmpty(MessageTextBox.Text))
-            {
-                if (string.IsNullOrEmpty(Thread?.QuickReplyEmoji))
-                {
-                    SendButtonIcon.FontFamily = SymbolThemeFontFamily;
-                    SendButtonIcon.Margin = default;
-                    SendButtonIcon.Glyph = "\xEB51";
-                }
-                else
-                {
-                    SendButtonIcon.FontFamily = FontFamily.XamlAutoFontFamily;
-                    SendButtonIcon.Margin = new Thickness(0, -4, 0, -3);
-                    SendButtonIcon.Glyph = Thread.QuickReplyEmoji;
-                }
-            }
-            else
-            {
-                SendButtonIcon.FontFamily = SymbolThemeFontFamily;
-                SendButtonIcon.Margin = default;
-                SendButtonIcon.Glyph = "\xE724";
-            }
-        }
-
-        private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs args)
+        private void OnUserPresenceChanged(object sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName != nameof(MainViewModel.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
             try
             {
-                await Dispatcher.QuickRunAsync(OnUserPresenceChanged);
+                _dispatcherQueue.TryEnqueue(OnUserPresenceChanged);
             }
             catch (InvalidComObjectException exception)
             {
@@ -187,6 +173,7 @@ namespace Indirect.Controls
             if (Thread == null) return;
             var message = MessageTextBox.Text;
             MessageTextBox.Text = string.Empty;
+            MessageTextBox.Focus(FocusState.Programmatic);
             if(string.IsNullOrEmpty(message))
             {
                 if (string.IsNullOrEmpty(Thread.QuickReplyEmoji) || Thread.QuickReplyEmoji == "♥")
@@ -340,40 +327,6 @@ namespace Indirect.Controls
                 SendButton_Click(sender, new RoutedEventArgs());
         }
 
-        private async void OnThreadPropertyChanged(object sender, PropertyChangedEventArgs args)
-        {
-            if (args.PropertyName == nameof(Thread.QuickReplyEmoji))
-            {
-                await Dispatcher.QuickRunAsync(UpdateSendButtonIcon, CoreDispatcherPriority.Low);
-                return;
-            }
-
-            if (args.PropertyName != nameof(Thread.IsSomeoneTyping) &&
-                !string.IsNullOrEmpty(args.PropertyName))
-            {
-                return;
-            }
-
-            var chatItemsStackPanel = (ItemsStackPanel) ItemsHolder.ItemsPanelRoot;
-            if (chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 1 ||
-                chatItemsStackPanel?.LastVisibleIndex == Thread.ObservableItems.Count - 2)
-            {
-                await Dispatcher.QuickRunAsync(async () =>
-                {
-                    if (Thread.IsSomeoneTyping)
-                    {
-                        TypingIndicator.Visibility = Visibility.Visible;
-                        await Task.Delay(100);
-                        ItemsHolder.ScrollIntoView(ItemsHolder.Footer);
-                    }
-                    else
-                    {
-                        TypingIndicator.Visibility = Visibility.Collapsed;
-                    }
-                });
-            }
-        }
-
         private async void UserList_OnItemClick(object sender, ItemClickEventArgs e)
         {
             var user = (BaseUser) e.ClickedItem;
@@ -409,7 +362,6 @@ namespace Indirect.Controls
 
         private void MessageTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            UpdateSendButtonIcon();
             if (!_needUpdateCaret) return;
             var tb = (TextBox) sender;
             tb.SelectionStart = tb.Text.Length;
@@ -510,7 +462,6 @@ namespace Indirect.Controls
             }
 
             Thread.QuickReplyEmoji = emoji;
-            Thread.UpdateQuickReplyEmoji();
             MessageTextBox.Text = MessageTextBox.Text;
         }
 

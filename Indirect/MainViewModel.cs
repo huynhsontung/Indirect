@@ -211,7 +211,7 @@ namespace Indirect
             var result = await InstaApi.GetRankedRecipientsByUsernameAsync(query);
             if (!result.IsSucceeded) return;
             var recipients = result.Value;
-            var threadsFromUser = recipients.Users.Select(x => new DirectThreadWrapper(this, x)).ToList();
+            var threadsFromUser = recipients.Users.Select(x => new DirectThreadWrapper(x, this)).ToList();
             var threadsFromRankedThread = recipients.Threads.Select(x => new DirectThreadWrapper(this, x)).ToList();
             var list = new List<DirectThreadWrapper>(threadsFromRankedThread.Count + threadsFromUser.Count);
             list.AddRange(threadsFromRankedThread);
@@ -245,10 +245,14 @@ namespace Indirect
         public async Task OpenThreadInNewWindow(DirectThreadWrapper thread)
         {
             var newView = CoreApplication.CreateNewView();
-            var cloneThread = await thread.CloneThreadForSecondaryView(newView.Dispatcher);
-            if (cloneThread == null) return;
-            SecondaryThreads.Add(cloneThread);
-            await ((App) App.Current).CreateAndShowNewView(typeof(ThreadPage), cloneThread, newView);
+            await newView.Dispatcher.QuickRunAsync(async () =>
+            {
+                var cloneThread = await thread.CloneThread();
+                if (cloneThread == null) return;
+                var wrapper = new DirectThreadWrapper(this, cloneThread);
+                SecondaryThreads.Add(wrapper);
+                await ((App) App.Current).CreateAndShowNewView(typeof(ThreadPage), wrapper, newView);
+            });
         }
 
         public async Task CreateAndOpenThread(IEnumerable<long> userIds)
@@ -265,7 +269,7 @@ namespace Indirect
             var result = await InstaApi.GetThreadByParticipantsAsync(userIds);
             return !result.IsSucceeded
                 ? null
-                : new DirectThreadWrapper(this, result.Value, dispatcher);
+                : new DirectThreadWrapper(this, result.Value);
         }
 
         public async void MakeProperInboxThread(DirectThreadWrapper placeholderThread)
@@ -278,7 +282,7 @@ namespace Indirect
                 if (result.IsSucceeded)
                 {
                     thread = result.Value != null && result.Value.Users.Count > 0 ? 
-                        new DirectThreadWrapper(this, result.Value) : new DirectThreadWrapper(this, placeholderThread.Users?[0]);
+                        new DirectThreadWrapper(this, result.Value) : new DirectThreadWrapper(placeholderThread.Users?[0], this);
                 }
                 else
                 {

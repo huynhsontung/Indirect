@@ -306,7 +306,7 @@
                             VerticalAlignment="Top"
                             MaxLines="1"
                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                            Style="{x:Bind Source.HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}"
+                            Style="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}"
                             Text="{x:Bind LastPermanentItem.Description, Mode=OneWay}" />
                     </Grid>
                 </DataTemplate>
