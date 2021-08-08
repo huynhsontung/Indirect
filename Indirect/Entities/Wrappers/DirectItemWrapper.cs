@@ -16,15 +16,21 @@ namespace Indirect.Entities.Wrappers
     {
         public static readonly DependencyProperty ShowTimestampHeaderProperty = DependencyProperty.Register(
             nameof(ShowTimestampHeader),
-            typeof(string),
+            typeof(bool),
             typeof(DirectItemWrapper),
             new PropertyMetadata(false));
 
         public static readonly DependencyProperty ShowNameHeaderProperty = DependencyProperty.Register(
             nameof(ShowNameHeader),
-            typeof(string),
+            typeof(bool),
             typeof(DirectItemWrapper),
             new PropertyMetadata(false));
+
+        public static readonly DependencyProperty RelativeModeProperty = DependencyProperty.Register(
+            nameof(RelativeMode),
+            typeof(RelativeItemMode),
+            typeof(DirectItemWrapper),
+            new PropertyMetadata(RelativeItemMode.None));
 
         public DirectItem Source { get; }
         public DirectThreadWrapper Parent { get; }
@@ -42,6 +48,12 @@ namespace Indirect.Entities.Wrappers
         {
             get => (bool)GetValue(ShowNameHeaderProperty);
             set => SetValue(ShowNameHeaderProperty, value);
+        }
+
+        public RelativeItemMode RelativeMode
+        {
+            get => (RelativeItemMode)GetValue(RelativeModeProperty);
+            set => SetValue(RelativeModeProperty, value);
         }
 
         public string Description { get; set; }
@@ -471,6 +483,32 @@ namespace Indirect.Entities.Wrappers
             {
                 item.Like = item.Text;
                 item.ItemType = DirectItemType.Like;
+            }
+        }
+
+        // Due to an issue in x:Bind, this function has to live here
+        // https://github.com/microsoft/microsoft-ui-xaml/issues/2508
+        // TODO: Move this function to ThreadItemControl
+        public CornerRadius GetRelativeCornerRadius(RelativeItemMode mode)
+        {
+            switch (mode)
+            {
+                case RelativeItemMode.Before when FromMe:
+                    return new CornerRadius(8, 2, 8, 8);
+                case RelativeItemMode.After when FromMe:
+                    return new CornerRadius(8, 8, 2, 8);
+                case RelativeItemMode.Both when FromMe:
+                    return new CornerRadius(8, 2, 2, 8);
+                case RelativeItemMode.None:
+                    return new CornerRadius(8);
+                case RelativeItemMode.Before:
+                    return new CornerRadius(2, 8, 8, 8);
+                case RelativeItemMode.After:
+                    return new CornerRadius(8, 8, 8, 2);
+                case RelativeItemMode.Both:
+                    return new CornerRadius(2, 8, 8, 2);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unexpected RelativeItemMode");
             }
         }
     }

@@ -137,6 +137,7 @@
     </Compile>
     <Compile Include="Controls\Selectors\MediaTemplateSelector.cs" />
     <Compile Include="Entities\LinkTextForDisplay.cs" />
+    <Compile Include="Entities\Wrappers\RelativeItemMode.cs" />
     <Compile Include="MainViewModel.Realtime.cs" />
     <Compile Include="Pages\AboutPage.xaml.cs">
       <DependentUpon>AboutPage.xaml</DependentUpon>

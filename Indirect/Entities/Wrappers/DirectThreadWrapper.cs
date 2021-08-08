@@ -57,43 +57,43 @@ namespace Indirect.Entities.Wrappers
 
         public DirectItemWrapper LastPermanentItem
         {
-            get => (DirectItemWrapper) GetValue(LastPermanentItemProperty);
+            get => (DirectItemWrapper)GetValue(LastPermanentItemProperty);
             private set => SetValue(LastPermanentItemProperty, value);
         }
 
         public bool IsSomeoneTyping
         {
-            get => (bool) GetValue(IsSomeoneTypingProperty);
+            get => (bool)GetValue(IsSomeoneTypingProperty);
             private set => SetValue(IsSomeoneTypingProperty, value);
         }
 
         public string DraftMessage
         {
-            get => (string) GetValue(DraftMessageProperty);
+            get => (string)GetValue(DraftMessageProperty);
             set => SetValue(DraftMessageProperty, value);
         }
 
         public string QuickReplyEmoji
         {
-            get => (string) GetValue(QuickReplyEmojiProperty);
+            get => (string)GetValue(QuickReplyEmojiProperty);
             set => SetValue(QuickReplyEmojiProperty, value);
         }
 
         public DirectItemWrapper ReplyingItem
         {
-            get => (DirectItemWrapper) GetValue(ReplyingItemProperty);
+            get => (DirectItemWrapper)GetValue(ReplyingItemProperty);
             set => SetValue(ReplyingItemProperty, value);
         }
 
         public bool HasUnreadMessage
         {
-            get => (bool) GetValue(HasUnreadMessageProperty);
+            get => (bool)GetValue(HasUnreadMessageProperty);
             set => SetValue(HasUnreadMessageProperty, value);
         }
 
         public DirectThread Source { get; private set; }
 
-        public Dictionary<long,UserInfo> DetailedUserInfoDictionary { get; }
+        public Dictionary<long, UserInfo> DetailedUserInfoDictionary { get; }
         public bool IsContactPanel { get; set; }
         public ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper> ObservableItems { get; }
         public BaseUser Viewer => _viewModel.LoggedInUser;
@@ -102,6 +102,8 @@ namespace Indirect.Entities.Wrappers
 
         private readonly MainViewModel _viewModel;
         private readonly DispatcherQueue _dispatcherQueue;
+        private readonly TimeSpan _showTimestampThreshold;
+        private readonly TimeSpan _showSeparatorThreshold;
 
         /// <summary>
         /// Only use this constructor to make empty placeholder thread.
@@ -118,6 +120,8 @@ namespace Indirect.Entities.Wrappers
         {
             _viewModel = viewModel;
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            _showTimestampThreshold = TimeSpan.FromHours(2);
+            _showSeparatorThreshold = TimeSpan.FromMinutes(5);
             Users = new ObservableCollection<BaseUser>();
             ObservableItems = new ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper>(this);
             DetailedUserInfoDictionary = new Dictionary<long, UserInfo>();
@@ -130,7 +134,7 @@ namespace Indirect.Entities.Wrappers
                     Users.Add(user);
                 }
 
-                UpdateItemList(DecorateItems(source.Items));
+                UpdateItemList(WrapItems(source.Items));
                 LastPermanentItem = ObservableItems.LastOrDefault();
                 source.Items = null;
             }
@@ -182,7 +186,7 @@ namespace Indirect.Entities.Wrappers
 
             _dispatcherQueue.TryEnqueue(() =>
             {
-                UpdateItemList(DecorateItems(items));
+                UpdateItemList(WrapItems(items));
                 // Assuming order of item is maintained. Last item after update should be the latest.
                 var latestItem = ObservableItems.Last();
                 var source = Source;
@@ -205,7 +209,7 @@ namespace Indirect.Entities.Wrappers
             });
         }
 
-        public void AddItem(DirectItem item) => AddItems(new List<DirectItem> {item});
+        public void AddItem(DirectItem item) => AddItems(new List<DirectItem> { item });
 
         public void RemoveItem(string itemId)
         {
@@ -242,7 +246,7 @@ namespace Indirect.Entities.Wrappers
 
             _dispatcherQueue.TryEnqueue(() =>
             {
-                UpdateItemList(DecorateItems(source.Items));
+                UpdateItemList(WrapItems(source.Items));
                 LastPermanentItem = ObservableItems.LastOrDefault();
                 source.Items = null;
             });
@@ -302,7 +306,11 @@ namespace Indirect.Entities.Wrappers
                 if (ObservableItems.Count == 0)
                 {
                     foreach (var item in source)
+                    {
                         ObservableItems.Add(item);
+                    }
+
+                    DecorateItems(ObservableItems);
                     return;
                 }
 
@@ -322,17 +330,17 @@ namespace Indirect.Entities.Wrappers
                         if (item.Source.Timestamp > ObservableItems[i].Source.Timestamp)
                         {
                             ObservableItems.Insert(i + 1, item);
+                            DecorateItemAtIndex(i + 1);
                             break;
                         }
 
                         if (i == 0)
                         {
                             ObservableItems.Insert(0, item);
+                            DecorateItemAtIndex(0);
                         }
                     }
                 }
-
-                Source.Items = ObservableItems.Select(x => x.Source).ToList();
             }
         }
 
@@ -367,20 +375,32 @@ namespace Indirect.Entities.Wrappers
             {
                 return new List<DirectItemWrapper>(0);
             }
-            
+
             var pagesToLoad = pageSize / 20;
             if (pagesToLoad < 1) pagesToLoad = 1;
             var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
             pagination.StartFromMaxId(source.OldestCursor);
-            
+
             var result = await _viewModel.InstaApi.GetThreadAsync(source.ThreadId, _viewModel.Inbox.SeqId, pagination);
             if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0)
             {
                 return new List<DirectItemWrapper>(0);
             }
-            
+
             UpdateExcludeItemList(result.Value);
-            var wrappedItems = DecorateItems(result.Value.Items);
+            var wrappedItems = WrapItems(result.Value.Items);
+            var oldestItem = ObservableItems.FirstOrDefault();
+            if (oldestItem != null)
+            {
+                var itemsToDecorate = wrappedItems.ToList();
+                itemsToDecorate.Add(oldestItem);
+                DecorateItems(itemsToDecorate);
+            }
+            else
+            {
+                DecorateItems(wrappedItems);
+            }
+
             result.Value.Items = null;
             return wrappedItems;
         }
@@ -389,67 +409,102 @@ namespace Indirect.Entities.Wrappers
         {
             if (e.Action == NotifyCollectionChangedAction.Remove)
             {
-                _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, DecorateExistingItems);
+                _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+                {
+                    var index = e.OldStartingIndex >= ObservableItems.Count
+                        ? ObservableItems.Count - 1
+                        : e.OldStartingIndex;
+                    DecorateItemAtIndex(index);
+                });
             }
         }
 
-        private void DecorateExistingItems()
+        private void DecorateItemAtIndex(int index)
         {
-            for (int i = ObservableItems.Count - 1; i >= 1; i--)
+            var current = ObservableItems[index];
+            var before = index - 1 >= 0 ? ObservableItems[index - 1] : null;
+            var after = index + 1 < ObservableItems.Count ? ObservableItems[index + 1] : null;
+
+            if (index == 0 && !(Source.HasOlder ?? true))
             {
-                var showTimestamp = !IsCloseEnough(ObservableItems[i].Source.Timestamp, ObservableItems[i - 1].Source.Timestamp);
-                var showName = ObservableItems[i].Source.UserId != ObservableItems[i - 1].Source.UserId &&
-                               !ObservableItems[i].FromMe && Users.Count > 1;
-                if (ObservableItems[i].ShowTimestampHeader != showTimestamp ||
-                    ObservableItems[i].ShowNameHeader != showName)
+                current.ShowNameHeader = !current.FromMe && Users.Count > 1;
+                current.ShowTimestampHeader = true;
+            }
+
+            DecorateItem(current, before, after);
+        }
+
+        // Decide whether item should show timestamp header, name header etc...
+        private void DecorateItem(DirectItemWrapper current, DirectItemWrapper before, DirectItemWrapper after)
+        {
+            if (before != null)
+            {
+                var showTimestamp = !IsCloseEnough(current.Source.Timestamp, before.Source.Timestamp, _showTimestampThreshold);
+                var showName = current.Source.UserId != before.Source.UserId && !current.FromMe && Users.Count > 1;
+                var hasItemBefore = before.Sender.Equals(current.Sender) && IsCloseEnough(current.Source.Timestamp, before.Source.Timestamp, _showSeparatorThreshold);
+                if (showTimestamp != current.ShowTimestampHeader)
                 {
-                    ObservableItems[i].ShowTimestampHeader = showTimestamp;
-                    ObservableItems[i].ShowNameHeader = showName;
+                    current.ShowTimestampHeader = showTimestamp;
+                }
+
+                if (hasItemBefore)
+                {
+                    current.RelativeMode |= RelativeItemMode.Before;
+                    before.RelativeMode |= RelativeItemMode.After;
+                }
+                else
+                {
+                    current.RelativeMode &= ~RelativeItemMode.Before;
+                    before.RelativeMode &= ~RelativeItemMode.After;
+                }
+
+                if (showName != current.ShowNameHeader)
+                {
+                    current.ShowNameHeader = showName;
+                }
+            }
+
+            if (after != null)
+            {
+                var hasItemAfter = after.Sender.Equals(current.Sender) && IsCloseEnough(after.Source.Timestamp, current.Source.Timestamp, _showSeparatorThreshold);
+                if (hasItemAfter)
+                {
+                    current.RelativeMode |= RelativeItemMode.After;
+                    after.RelativeMode |= RelativeItemMode.Before;
+                }
+                else
+                {
+                    current.RelativeMode &= ~RelativeItemMode.After;
+                    after.RelativeMode &= ~RelativeItemMode.Before;
                 }
             }
         }
 
-        // Decide whether item should show timestamp header, name header etc...
-        private List<DirectItemWrapper> DecorateItems(ICollection<DirectItem> items)
+        private void DecorateItems(IList<DirectItemWrapper> items)
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                var current = items[i];
+                var before = i > 0 ? items[i - 1] : null;
+                var after = i < items.Count - 1 ? items[i + 1] : null;
+                DecorateItem(current, before, after);
+            }
+        }
+
+        private List<DirectItemWrapper> WrapItems(ICollection<DirectItem> items)
         {
             if (items == null || items.Count == 0) return new List<DirectItemWrapper>(0);
             var wrappedItems = items.Where(x => x != null)
                 .Select(x => new DirectItemWrapper(_viewModel, x, this))
                 .ToList();
-            var lastItem = ObservableItems.FirstOrDefault();
-            var itemList = wrappedItems.ToList();
-            var refItem = itemList.Last();
-            if (lastItem != null)
-            {
-                if (refItem.Source.Timestamp <= lastItem.Source.Timestamp)
-                {
-                    lastItem.ShowTimestampHeader = !IsCloseEnough(lastItem.Source.Timestamp, refItem.Source.Timestamp);
-                    lastItem.ShowNameHeader = lastItem.Source.UserId != refItem.Source.UserId && !lastItem.FromMe && Users.Count > 1;
-                }
-                else
-                {
-                    // New item to be added to the top
-                    refItem = itemList.First();
-                    var latestItem = ObservableItems.Last();
-                    refItem.ShowTimestampHeader = !IsCloseEnough(latestItem.Source.Timestamp, refItem.Source.Timestamp);
-                    refItem.ShowNameHeader = latestItem.Source.UserId != refItem.Source.UserId && !refItem.FromMe && Users.Count > 1;
-                }
-            }
-
-            for (int i = itemList.Count - 1; i >= 1; i--)
-            {
-                itemList[i].ShowTimestampHeader = !IsCloseEnough(itemList[i].Source.Timestamp, itemList[i - 1].Source.Timestamp);
-                itemList[i].ShowNameHeader = itemList[i].Source.UserId != itemList[i - 1].Source.UserId && !itemList[i].FromMe && Users.Count > 1;
-            }
-
             return wrappedItems;
         }
 
-        private const int TimestampClosenessThreshold = 3; // hours
-        private static bool IsCloseEnough(DateTimeOffset x, DateTimeOffset y)
+        private static bool IsCloseEnough(DateTimeOffset x, DateTimeOffset y, TimeSpan threshold)
         {
-            return TimeSpan.FromHours(-TimestampClosenessThreshold) < x - y &&
-                   x - y < TimeSpan.FromHours(TimestampClosenessThreshold);
+            return threshold.Ticks > 0
+                ? threshold.Negate() < x - y && x - y < threshold
+                : threshold < x - y && x - y < threshold.Negate();
         }
 
         public async Task MarkLatestItemSeen()

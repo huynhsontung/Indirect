@@ -89,7 +89,24 @@ namespace Indirect.Controls
             }
         }
 
-        private string SeenTextConverter(Dictionary<long, LastSeen> lastSeenAt)
+        private Thickness GetRelativeMargin(RelativeItemMode mode)
+        {
+            switch (mode)
+            {
+                case RelativeItemMode.None:
+                    return new Thickness(0, 4, 0, 4);
+                case RelativeItemMode.Before:
+                    return new Thickness(0, 1, 0, 4);
+                case RelativeItemMode.After:
+                    return new Thickness(0, 4, 0, 1);
+                case RelativeItemMode.Both:
+                    return new Thickness(0, 1, 0, 1);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unexpected RelativeItemMode");
+            }
+        }
+
+        private string GetSeenText(Dictionary<long, LastSeen> lastSeenAt)
         {
             if (lastSeenAt == null || lastSeenAt.Count == 0)
             {

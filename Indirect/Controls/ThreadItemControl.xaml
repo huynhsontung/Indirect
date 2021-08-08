@@ -7,11 +7,9 @@
     xmlns:controls1="using:Indirect.Controls"
     xmlns:converters="using:Indirect.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="using:Indirect"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:InstagramAPI.Classes.Media"
     xmlns:selectors="using:Indirect.Controls.Selectors"
-    xmlns:user="using:InstagramAPI.Classes.User"
     xmlns:wrappers="using:Indirect.Entities.Wrappers"
     d:DesignHeight="300"
     d:DesignWidth="400"
@@ -66,7 +64,7 @@
                     Background="Transparent"
                     BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
                     BorderThickness="1"
-                    CornerRadius="2"
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                     ToolTipService.ToolTip="This item type is something I has not encountered during development and is totally unaccounted for.                         It would be nice if you can provide me some context regarding this item so I can support this item in the future.">
                     <TextBlock
                         MaxWidth="250"
@@ -87,7 +85,7 @@
                     Background="Transparent"
                     BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
                     BorderThickness="1"
-                    CornerRadius="2">
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <TextBlock
                         MaxWidth="250"
                         Margin="6"
@@ -105,7 +103,7 @@
                     x:Name="OpenMediaButton"
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     Click="OpenMediaButton_OnClick"
-                    CornerRadius="2"
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                     Style="{x:Bind Source.VisualMedia.IsExpired, Converter={StaticResource OpenButtonStyleConverter}}"
                     ToolTipService.ToolTip="Open media in immersive view" />
             </DataTemplate>
@@ -126,7 +124,7 @@
                     x:Name="MessageContentWithBorder"
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                    CornerRadius="2">
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <TextBlock
                         MaxWidth="{x:Bind Source.Text.Length, Converter={StaticResource VariableMaxWidthConverter}, FallbackValue=250}"
                         Margin="6"
@@ -154,7 +152,7 @@
                     Padding="6"
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                    CornerRadius="2">
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <TextBlock Style="{ThemeResource FluentBodyTextStyle}" TextWrapping="Wrap">
                         <Hyperlink Foreground="{StaticResource SystemControlForegroundBaseHighBrush}" NavigateUri="{x:Bind NavigateUri}">
                             <Run Text="{x:Bind Source.Text}" />
@@ -167,7 +165,7 @@
                 <StackPanel
                     MaxWidth="250"
                     Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                    CornerRadius="2"
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                     Orientation="Vertical">
                     <TextBlock
                         Margin="6"
@@ -213,7 +211,7 @@
                         MaxWidth="250"
                         MaxHeight="300"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
-                        CornerRadius="2"
+                        CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                         IsCacheEnabled="True"
                         Source="{x:Bind PreviewImageUri}"
                         Tapped="OpenWebLink" />
@@ -251,7 +249,7 @@
                     MaxWidth="250"
                     MaxHeight="350"
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
-                    CornerRadius="2"
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                     IsCacheEnabled="True"
                     Source="{x:Bind PreviewImageUri}"
                     Tapped="ImageFrame_Tapped" />
@@ -279,7 +277,7 @@
                         <SymbolIcon Symbol="NewWindow" />
                     </Button>
 
-                    <Border Grid.Column="1" CornerRadius="2">
+                    <Border Grid.Column="1" CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                         <controls1:AutoVideoControl
                             x:Name="MediaFrame"
                             MaxWidth="250"
@@ -306,7 +304,7 @@
                     MaxWidth="250"
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                    CornerRadius="2">
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
@@ -389,7 +387,7 @@
                         MaxWidth="100"
                         Margin="{x:Bind Source.ReelShareMedia.Type, Converter={StaticResource ReelShareImageMarginConverter}}"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
-                        CornerRadius="2"
+                        CornerRadius="8"
                         Source="{x:Bind PreviewImageUri}"
                         Stretch="UniformToFill"
                         Tapped="ReelShareImage_Tapped"
@@ -398,7 +396,7 @@
                         x:Name="MessageContentWithBorder"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                         Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                        CornerRadius="2"
+                        CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                         Visibility="{x:Bind Source.ReelShareMedia.Type, Converter={StaticResource ReelShareTextVisibilityConverter}}">
                         <TextBlock
                             MaxWidth="250"
@@ -430,7 +428,7 @@
                         MaxWidth="100"
                         Margin="{x:Bind Source.StoryShareMedia.Type, Converter={StaticResource ReelShareImageMarginConverter}}"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
-                        CornerRadius="2"
+                        CornerRadius="8"
                         Source="{x:Bind PreviewImageUri}"
                         Stretch="UniformToFill"
                         Tapped="ReelShareImage_Tapped"
@@ -446,7 +444,7 @@
                         x:Name="MessageContentWithBorder"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                         Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                        CornerRadius="2"
+                        CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                         Visibility="{x:Bind Source.StoryShareMedia.Text, Converter={StaticResource NullVisibilityConverter}}">
                         <TextBlock
                             MaxWidth="250"
@@ -460,7 +458,7 @@
             </DataTemplate>
 
             <DataTemplate x:Key="AudioTemplate" x:DataType="wrappers:DirectItemWrapper">
-                <Border HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}" CornerRadius="8">
+                <Border HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}" CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <controls1:AutoVideoControl
                         Width="250"
                         Height="48"
@@ -471,6 +469,7 @@
                             <MediaTransportControls
                                 MinWidth="200"
                                 Margin="0"
+                                CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                                 IsCompact="True"
                                 IsFullWindowButtonVisible="False"
                                 IsFullWindowEnabled="False"
@@ -488,7 +487,7 @@
                     Background="Transparent"
                     BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
                     BorderThickness="1"
-                    CornerRadius="2">
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <TextBlock
                         MaxWidth="250"
                         Margin="6"
@@ -506,7 +505,7 @@
                     Padding="0,8,0,0"
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                    CornerRadius="2">
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -586,7 +585,7 @@
                     Background="Transparent"
                     BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
                     BorderThickness="1"
-                    CornerRadius="2">
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <StackPanel Orientation="Vertical">
                         <TextBlock
                             Margin="0,0,0,2"
@@ -627,7 +626,7 @@
 
     <StackPanel
         x:Name="ItemContainer"
-        Margin="0,2,0,2"
+        Margin="{x:Bind GetRelativeMargin(Item.RelativeMode), Mode=OneWay}"
         Orientation="Vertical">
 
         <TextBlock
@@ -695,7 +694,7 @@
                 HorizontalAlignment="Right"
                 Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                 Style="{ThemeResource FluentCaptionTextStyle}"
-                Text="{x:Bind SeenTextConverter(Item.Parent.Source.LastSeenAt), Mode=OneWay}"
+                Text="{x:Bind GetSeenText(Item.Parent.Source.LastSeenAt), Mode=OneWay}"
                 TextWrapping="Wrap"
                 Visibility="{x:Bind SeenIndicator.Text, Converter={StaticResource NullVisibilityConverter}, Mode=OneWay}" />
         </StackPanel>
