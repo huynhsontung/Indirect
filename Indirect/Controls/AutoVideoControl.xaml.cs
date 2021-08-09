@@ -4,7 +4,6 @@ using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -175,6 +174,12 @@ namespace Indirect.Controls
         {
             var view = (AutoVideoControl) d;
             var source = e.NewValue;
+            if (source == null)
+            {
+                view.VideoPlayer.Source = null;
+                return;
+            }
+
             if (source is IMediaPlaybackSource mediaSource)
             {
                 view.VideoPlayer.Source = mediaSource;
@@ -292,11 +297,6 @@ namespace Indirect.Controls
         public void Pause() => VideoPlayer.MediaPlayer?.Pause();
 
         public void Play() => VideoPlayer.MediaPlayer?.Play();
-
-        private void VideoPlayer_OnPointerExited(object sender, PointerRoutedEventArgs e)
-        {
-            ((MediaPlayerElement) sender).TransportControls?.Hide();
-        }
 
         private void AutoVideoControl_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
