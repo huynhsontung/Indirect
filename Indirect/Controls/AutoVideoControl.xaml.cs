@@ -262,7 +262,6 @@ namespace Indirect.Controls
                 IsCompact = true,
                 MinWidth = 150
             };
-            VideoPlayer.MediaPlayer.Volume = 0.5;
         }
 
         private void AutoVideoControl_OnEffectiveViewportChanged(FrameworkElement sender, EffectiveViewportChangedEventArgs args)
