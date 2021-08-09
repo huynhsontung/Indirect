@@ -97,7 +97,12 @@ namespace Indirect.Controls
         private static void OnIsAudioPlayerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (AutoVideoControl) d;
-            view.VideoPlayer.Style = (bool)e.NewValue ? (Style)view.Resources["AudioOnlyMediaPlayerElement"] : null;
+            var isAudioPlayer = (bool)e.NewValue;
+            view.VideoPlayer.Style = isAudioPlayer ? (Style)view.Resources["AudioOnlyMediaPlayerElement"] : null;
+            if (isAudioPlayer)
+            {
+                view.MediaPlayer.Volume = 1;
+            }
         }
 
         private static void AreTransportControlsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -262,6 +267,7 @@ namespace Indirect.Controls
                 IsCompact = true,
                 MinWidth = 150
             };
+
             VideoPlayer.MediaPlayer.Volume = 0.5;
         }
 
