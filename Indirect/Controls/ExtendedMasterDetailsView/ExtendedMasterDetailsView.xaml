@@ -226,6 +226,8 @@
                                         <Setter Target="NoSelectionPresenter.Visibility" Value="Collapsed" />
                                         <Setter Target="SelectionDetailsPanel.Visibility" Value="Collapsed" />
                                         <Setter Target="MasterPanel.Visibility" Value="Visible" />
+                                        <Setter Target="DetailsPanel.Background" Value="Transparent" />
+                                        <Setter Target="DetailsPanel.IsHitTestVisible" Value="False" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
