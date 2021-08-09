@@ -93,5 +93,11 @@ namespace Indirect.Pages
             BackButton_OnClick(this, null);
             args.Handled = true;
         }
+
+        private void ReelPage_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            Reels = null;
+            Window.Current.Activated -= OnWindowFocusChange;
+        }
     }
 }

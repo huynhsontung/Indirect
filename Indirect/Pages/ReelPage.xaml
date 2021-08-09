@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
+    Unloaded="ReelPage_OnUnloaded"
     mc:Ignorable="d">
 
     <Grid contract13NotPresent:Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">

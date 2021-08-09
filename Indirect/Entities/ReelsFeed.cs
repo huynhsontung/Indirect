@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -16,7 +17,9 @@ namespace Indirect.Entities
 {
     internal class ReelsFeed : DependencyObject
     {
-        public readonly ObservableCollection<ReelWrapper> Reels = new ObservableCollection<ReelWrapper>();
+        public ObservableCollection<ReelWrapper> Reels { get; } = new ObservableCollection<ReelWrapper>();
+
+        public ImmutableList<Reel> LatestReelsFeed { get; private set; }
 
         private CancellationTokenSource _reelsUpdateLoop;
 
@@ -37,7 +40,9 @@ namespace Indirect.Entities
             {
                 try
                 {
-                    SyncReels(result.Value);
+                    var reels = result.Value.Where(x => x.ReelType == "user_reel").ToArray();
+                    LatestReelsFeed = reels.ToImmutableList();
+                    SyncReels(reels);
                 }
                 catch (ArgumentOutOfRangeException e)
                 {
@@ -50,7 +55,6 @@ namespace Indirect.Entities
         private void SyncReels(Reel[] target)
         {
             if (target.Length == 0) return;
-            target = target.Where(x => x.ReelType == "user_reel").ToArray();
 
             lock (Reels)
             {
@@ -110,14 +114,6 @@ namespace Indirect.Entities
             var flatReelsContainer = new FlatReelsContainer(reels, selectedIndex);
             await flatReelsContainer.UpdateUserIndex(selectedIndex);
             return flatReelsContainer;
-        }
-
-        public List<Reel> CloneReels()
-        {
-            lock (Reels)
-            {
-                return Reels.Select(x => x.Source).ToList();
-            }
         }
 
         public async void StartReelsFeedUpdateLoop()
