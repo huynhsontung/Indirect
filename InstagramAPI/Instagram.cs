@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading.Tasks;
 using InstagramAPI.Classes.Android;
 using InstagramAPI.Classes.Responses;
@@ -59,13 +57,7 @@ namespace InstagramAPI
             try
             {
                 var instaUri = UriCreator.GetCurrentUserUri();
-                var fields = new Dictionary<string, string>
-                {
-                    {"_uuid", Device.Uuid.ToString()},
-                    {"_uid", Session.LoggedInUser.Pk.ToString()},
-                    {"_csrftoken", HttpClient.GetCsrfToken()}
-                };
-                var response = await HttpClient.PostAsync(instaUri, new FormUrlEncodedContent(fields));
+                var response = await HttpClient.GetAsync(instaUri);
                 var json = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
