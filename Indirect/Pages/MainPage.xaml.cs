@@ -558,10 +558,13 @@ namespace Indirect.Pages
                     await App.CloseSecondaryView(reelPageViewId);
                 }
 
+                var reels = ViewModel.ReelsFeed.CloneReels();
+                var selectedIndex = reels.IndexOf(reelWrapper.Source);
                 var view = CoreApplication.CreateNewView();
                 await view.Dispatcher.QuickRunAsync(async () =>
                 {
-                    var flatReels = await ViewModel.ReelsFeed.PrepareFlatReelsContainer(reelWrapper);
+                    var wrappedReels = reels.Select(x => new ReelWrapper(x)).ToList();
+                    var flatReels = await ViewModel.ReelsFeed.PrepareFlatReelsContainer(wrappedReels, selectedIndex);
                     flatReels.SecondaryView = true;
                     _reelPageViewId = await ((App) App.Current).CreateAndShowNewView(typeof(ReelPage), flatReels, view);
                 });

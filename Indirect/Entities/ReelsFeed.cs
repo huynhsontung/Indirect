@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -102,6 +103,21 @@ namespace Indirect.Entities
             }
             await flatReelsContainer.UpdateUserIndex(selectedIndex);
             return flatReelsContainer;
+        }
+
+        public async Task<FlatReelsContainer> PrepareFlatReelsContainer(ICollection<ReelWrapper> reels, int selectedIndex)
+        {
+            var flatReelsContainer = new FlatReelsContainer(reels, selectedIndex);
+            await flatReelsContainer.UpdateUserIndex(selectedIndex);
+            return flatReelsContainer;
+        }
+
+        public List<Reel> CloneReels()
+        {
+            lock (Reels)
+            {
+                return Reels.Select(x => x.Source).ToList();
+            }
         }
 
         public async void StartReelsFeedUpdateLoop()

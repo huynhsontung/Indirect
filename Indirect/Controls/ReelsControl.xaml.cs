@@ -272,7 +272,7 @@ namespace Indirect.Controls
                     e.Handled = true;
                     PreviousReelButtonClick(this, null);
                     break;
-                case VirtualKey.Space:
+                case VirtualKey.Space when !(FocusManager.GetFocusedElement() is TextBox):
                     e.Handled = true;
                     StoryView.ContainerFromItem(selected)?.FindDescendant<TextBox>()?.Focus(FocusState.Programmatic);
                     break;
