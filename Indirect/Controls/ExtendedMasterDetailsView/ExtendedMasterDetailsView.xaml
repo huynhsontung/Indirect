@@ -82,10 +82,10 @@
                                 Grid.Column="1"
                                 contract8Present:Shadow="{StaticResource MainShadow}"
                                 contract8Present:Translation="0,0,8"
+                                Background="{TemplateBinding DetailsPaneBackground}"
                                 XYFocusKeyboardNavigation="Enabled">
                                 <ContentPresenter
                                     x:Name="NoSelectionPresenter"
-                                    Background="{TemplateBinding DetailsPaneBackground}"
                                     Content="{TemplateBinding NoSelectionContent}"
                                     ContentTemplate="{TemplateBinding NoSelectionContentTemplate}" />
                                 <Grid x:Name="SelectionDetailsPanel">
@@ -94,7 +94,7 @@
                                         <RowDefinition Height="*" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
-                                    <Grid Background="{TemplateBinding DetailsPaneBackground}">
+                                    <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
@@ -116,7 +116,6 @@
                                     <ContentPresenter
                                         x:Name="DetailsPresenter"
                                         Grid.Row="1"
-                                        Background="{TemplateBinding DetailsPaneBackground}"
                                         ContentTemplate="{TemplateBinding DetailsTemplate}" />
                                     <Grid x:Name="DetailsCommandBarPanel" Grid.Row="2" />
                                     <Grid.RenderTransform>
