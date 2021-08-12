@@ -390,7 +390,7 @@ namespace Indirect.Entities.Wrappers
             UpdateExcludeItemList(result.Value);
             var wrappedItems = WrapItems(result.Value.Items);
             var oldestItem = ObservableItems.FirstOrDefault();
-            if (oldestItem != null)
+            if (oldestItem != null && !oldestItem.Source.HideInThread)
             {
                 var itemsToDecorate = wrappedItems.ToList();
                 itemsToDecorate.Add(oldestItem);
@@ -437,34 +437,51 @@ namespace Indirect.Entities.Wrappers
         // Decide whether item should show timestamp header, name header etc...
         private void DecorateItem(DirectItemWrapper current, DirectItemWrapper before, DirectItemWrapper after)
         {
+            if (current.Source.HideInThread)
+            {
+                return;
+            }
+
             if (before != null)
             {
-                var showTimestamp = !IsCloseEnough(current.Source.Timestamp, before.Source.Timestamp, _showTimestampThreshold);
-                var showName = current.Source.UserId != before.Source.UserId && !current.FromMe && Users.Count > 1;
-                var hasItemBefore = before.Sender.Equals(current.Sender) && IsCloseEnough(current.Source.Timestamp, before.Source.Timestamp, _showSeparatorThreshold);
-                if (showTimestamp != current.ShowTimestampHeader)
+                if (before.Source.HideInThread)
                 {
-                    current.ShowTimestampHeader = showTimestamp;
-                }
-
-                if (hasItemBefore)
-                {
-                    current.RelativeMode |= RelativeItemMode.Before;
-                    before.RelativeMode |= RelativeItemMode.After;
+                    current.ShowNameHeader = !current.FromMe && Users.Count > 1;
                 }
                 else
                 {
-                    current.RelativeMode &= ~RelativeItemMode.Before;
-                    before.RelativeMode &= ~RelativeItemMode.After;
-                }
+                    var showTimestamp = !IsCloseEnough(current.Source.Timestamp, before.Source.Timestamp, _showTimestampThreshold);
+                    var showName = current.Source.UserId != before.Source.UserId && !current.FromMe && Users.Count > 1;
+                    var hasItemBefore = before.Sender.Equals(current.Sender) && IsCloseEnough(current.Source.Timestamp, before.Source.Timestamp, _showSeparatorThreshold);
+                    if (showTimestamp != current.ShowTimestampHeader)
+                    {
+                        current.ShowTimestampHeader = showTimestamp;
+                    }
 
-                if (showName != current.ShowNameHeader)
-                {
-                    current.ShowNameHeader = showName;
+                    if (hasItemBefore)
+                    {
+                        current.RelativeMode |= RelativeItemMode.Before;
+                        before.RelativeMode |= RelativeItemMode.After;
+                    }
+                    else
+                    {
+                        current.RelativeMode &= ~RelativeItemMode.Before;
+                        before.RelativeMode &= ~RelativeItemMode.After;
+                    }
+
+                    if (showName != current.ShowNameHeader)
+                    {
+                        current.ShowNameHeader = showName;
+                    }
                 }
             }
 
-            if (after != null)
+            if (before != null)
+            {
+                
+            }
+
+            if (after != null && !after.Source.HideInThread)
             {
                 var hasItemAfter = after.Sender.Equals(current.Sender) && IsCloseEnough(after.Source.Timestamp, current.Source.Timestamp, _showSeparatorThreshold);
                 if (hasItemAfter)
