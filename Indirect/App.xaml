@@ -20,6 +20,12 @@
                     </Style>
                     <SolidColorBrush x:Key="MainBackground" Color="#fafafa" />
                     <Color x:Key="TintedTransparent">#00FFFFFF</Color>
+                    <AcrylicBrush
+                        x:Key="AcrylicBackgroundBrush"
+                        BackgroundSource="HostBackdrop"
+                        FallbackColor="#F9F9F9"
+                        TintColor="#FCFCFC"
+                        TintOpacity="0.85" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <Style x:Key="ProfilePicturePlaceholderStyle" TargetType="controls:ImageEx">
@@ -27,6 +33,12 @@
                     </Style>
                     <SolidColorBrush x:Key="MainBackground" Color="#1a1a1a" />
                     <Color x:Key="TintedTransparent">#00000000</Color>
+                    <AcrylicBrush
+                        x:Key="AcrylicBackgroundBrush"
+                        BackgroundSource="HostBackdrop"
+                        FallbackColor="#2C2C2C"
+                        TintColor="#2C2C2C"
+                        TintOpacity="0.85" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 

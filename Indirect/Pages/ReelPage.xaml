@@ -12,7 +12,7 @@
     Unloaded="ReelPage_OnUnloaded"
     mc:Ignorable="d">
 
-    <Grid contract13NotPresent:Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">
+    <Grid contract13NotPresent:Background="{ThemeResource AcrylicBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="32" />
             <RowDefinition />

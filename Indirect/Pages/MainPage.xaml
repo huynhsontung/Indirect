@@ -53,7 +53,7 @@
     </Page.Resources>
 
     <Grid
-        contract13NotPresent:Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+        contract13NotPresent:Background="{ThemeResource AcrylicBackgroundBrush}"
         TabFocusNavigation="Once"
         XYFocusKeyboardNavigation="Enabled">
         <Grid.RowDefinitions>
