@@ -3,9 +3,11 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
+using Windows.UI.ViewManagement;
 using Windows.UI.ViewManagement.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -32,11 +34,11 @@ namespace Indirect.Controls
             typeof(ThreadDetailsView),
             new PropertyMetadata(null, OnThreadChanged));
 
-        public static readonly DependencyProperty NewWindowButtonVisibilityProperty = DependencyProperty.Register(
-            nameof(NewWindowButtonVisibility),
-            typeof(Visibility),
+        public static readonly DependencyProperty IsNewWindowProperty = DependencyProperty.Register(
+            nameof(IsNewWindow),
+            typeof(bool),
             typeof(ThreadDetailsView),
-            new PropertyMetadata(Visibility.Visible));
+            new PropertyMetadata(false));
 
         public static readonly DependencyProperty ThreadHeaderVisibilityProperty = DependencyProperty.Register(
             nameof(ThreadHeaderVisibility),
@@ -50,10 +52,10 @@ namespace Indirect.Controls
             set => SetValue(ThreadProperty, value);
         }
 
-        public Visibility NewWindowButtonVisibility
+        public bool IsNewWindow
         {
-            get => (Visibility) GetValue(NewWindowButtonVisibilityProperty);
-            set => SetValue(NewWindowButtonVisibilityProperty, value);
+            get => (bool) GetValue(IsNewWindowProperty);
+            set => SetValue(IsNewWindowProperty, value);
         }
 
         public Visibility ThreadHeaderVisibility
@@ -507,6 +509,29 @@ namespace Indirect.Controls
                     e.Handled = true;
                     ShowUsersInfoFlyout(ViewProfileAppBarButton, null);
                     break;
+            }
+        }
+
+        private async void CompactOverlayButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var button = (AppBarButton)sender;
+            var view = ApplicationView.GetForCurrentView();
+            if (view.ViewMode == ApplicationViewMode.Default)
+            {
+                var preferences = ViewModePreferences.CreateDefault(ApplicationViewMode.CompactOverlay);
+                preferences.ViewSizePreference = ViewSizePreference.Custom;
+                preferences.CustomSize = new Size(360, 300);
+                if (await view.TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay, preferences))
+                {
+                    button.Style = (Style)Resources["ExitCompactOverlayButtonStyle"];
+                }
+            }
+            else
+            {
+                if (await view.TryEnterViewModeAsync(ApplicationViewMode.Default))
+                {
+                    button.Style = (Style)Resources["EnterCompactOverlayButtonStyle"];
+                }
             }
         }
     }

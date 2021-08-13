@@ -26,14 +26,13 @@
             Canvas.ZIndex="2">
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="LeftPaddingColumn" Width="0" />
-                <ColumnDefinition />
-                <ColumnDefinition x:Name="RightPaddingColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <StackPanel
                 x:Name="AppTitle"
-                Grid.Column="1"
+                Grid.Column="0"
                 Orientation="Horizontal">
                 <TextBlock
                     Margin="13,0,0,0"
@@ -50,7 +49,7 @@
             x:Name="MainView"
             Grid.Row="0"
             Grid.RowSpan="2"
-            NewWindowButtonVisibility="Collapsed"
+            IsNewWindow="True"
             Thread="{x:Bind _thread}" />
     </Grid>
 </Page>

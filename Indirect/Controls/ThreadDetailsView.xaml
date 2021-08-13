@@ -20,8 +20,41 @@
         <ResourceDictionary>
             <converters:EqualityVisibilityConverter x:Key="VisibleWhenZeroConverter" />
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter" />
+            <converters:BooleanVisibilityConverter x:Key="InvertBooleanVisibilityConverter" Invert="True" />
             <converters:NullVisibilityConverter x:Key="NullVisibilityConverter" />
             <converters:NullVisibilityConverter x:Key="InvertNullVisibilityConverter" Invert="True" />
+
+            <Style
+                x:Key="EnterCompactOverlayButtonStyle"
+                BasedOn="{StaticResource DefaultAppBarButtonStyle}"
+                TargetType="AppBarButton">
+                <Setter Property="ToolTipService.ToolTip" Value="Enter Picture-in-Picture mode" />
+                <Setter Property="Label" Value="Enter Picture-in-Picture mode" />
+                <Setter Property="Icon">
+                    <Setter.Value>
+                        <FontIcon
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Glyph="&#xEE49;" />
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style
+                x:Key="ExitCompactOverlayButtonStyle"
+                BasedOn="{StaticResource DefaultAppBarButtonStyle}"
+                TargetType="AppBarButton">
+                <Setter Property="ToolTipService.ToolTip" Value="Exit Picture-in-Picture mode" />
+                <Setter Property="Label" Value="Exit Picture-in-Picture mode" />
+                <Setter Property="Icon">
+                    <Setter.Value>
+                        <FontIcon
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Glyph="&#xEE47;" />
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -126,9 +159,10 @@
             <AppBarButton
                 Width="48"
                 Click="OpenInNewWindow_OnClick"
+                Label="Open thread in a new window"
                 LabelPosition="Collapsed"
                 ToolTipService.ToolTip="Open thread in a new window"
-                Visibility="{x:Bind NewWindowButtonVisibility, Mode=OneWay}">
+                Visibility="{x:Bind IsNewWindow, Converter={StaticResource InvertBooleanVisibilityConverter}, Mode=OneWay}">
                 <AppBarButton.Icon>
                     <FontIcon
                         VerticalAlignment="Center"
@@ -136,6 +170,13 @@
                         Glyph="&#xE8A7;" />
                 </AppBarButton.Icon>
             </AppBarButton>
+
+            <AppBarButton
+                Width="48"
+                Click="CompactOverlayButton_OnClick"
+                LabelPosition="Collapsed"
+                Style="{StaticResource EnterCompactOverlayButtonStyle}"
+                Visibility="{x:Bind IsNewWindow, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
 
             <CommandBar.Content>
                 <StackPanel
