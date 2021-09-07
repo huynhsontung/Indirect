@@ -7,6 +7,7 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
+using Indirect.Entities;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI;
@@ -167,6 +168,32 @@ namespace Indirect.Services
             }
         }
 
+        public async Task SendVoiceClipAsync(DirectThreadWrapper thread, AudioWithWaveform audio, Action<UploaderProgress> progress)
+        {
+            try
+            {
+                var file = audio.AudioFile;
+                var properties = await file.Properties.GetMusicPropertiesAsync();
+                if (properties.Duration > TimeSpan.FromMinutes(1)) return;
+                var durationInMs = properties.Duration.TotalMilliseconds;
+                var buffer = await FileIO.ReadBufferAsync(file);
+                var instaAudio = new InstaAudio
+                {
+                    UploadBuffer = buffer,
+                    Duration = (int)durationInMs,
+                    WaveformData = audio.Waveform.ToArray(),
+                    WaveformSamplingFrequencyHz = 10
+                };
+
+                var uploadId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+                await Api.SendDirectAudioAsync(uploadId, thread.ThreadId, instaAudio, progress);
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+            }
+        }
+
         public async Task SendFile(DirectThreadWrapper thread, StorageFile file, Action<UploaderProgress> progress)
         {
             try
@@ -196,7 +223,6 @@ namespace Indirect.Services
 
                     await SendBuffer(thread, buffer, imageWidth, imageHeight, progress);
                 }
-
 
                 // Not yet tested
                 if (file.ContentType.Contains("video", StringComparison.OrdinalIgnoreCase))

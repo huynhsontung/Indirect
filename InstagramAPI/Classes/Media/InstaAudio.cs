@@ -1,4 +1,5 @@
 ﻿using System;
+using Windows.Storage.Streams;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Media
@@ -16,5 +17,8 @@ namespace InstagramAPI.Classes.Media
 
         [JsonProperty("waveform_sampling_frequency_hz")]
         public int WaveformSamplingFrequencyHz { get; set; }
+
+        [JsonIgnore]
+        public IBuffer UploadBuffer { get; set; }
     }
 }

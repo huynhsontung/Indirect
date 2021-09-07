@@ -111,6 +111,7 @@
     <Prefer32Bit>true</Prefer32Bit>
     <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
     <Optimize>false</Optimize>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -136,6 +137,10 @@
       <DependentUpon>ReactionsControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\Selectors\MediaTemplateSelector.cs" />
+    <Compile Include="Controls\SendAudioControl.xaml.cs">
+      <DependentUpon>SendAudioControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Entities\AudioWithWaveform.cs" />
     <Compile Include="Entities\LinkTextForDisplay.cs" />
     <Compile Include="Entities\Wrappers\RelativeItemMode.cs" />
     <Compile Include="MainViewModel.Realtime.cs" />
@@ -203,6 +208,7 @@
     <Compile Include="Pages\TwoFactorAuthPage.xaml.cs">
       <DependentUpon>TwoFactorAuthPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Services\AudioRecorder.cs" />
     <Compile Include="Utilities\Debouncer.cs" />
     <Compile Include="Utilities\Helpers.cs" />
     <Compile Include="Controls\Selectors\ItemTemplateSelector.cs" />
@@ -351,6 +357,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ReelsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SendAudioControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

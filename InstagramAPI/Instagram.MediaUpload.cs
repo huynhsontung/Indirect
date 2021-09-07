@@ -131,7 +131,7 @@ namespace InstagramAPI
                 var videoHashCode = video.Video.Url?.GetHashCode() ?? $"C:\\{GenerateRandomString(13)}.mp4".GetHashCode();
                 var waterfallId = Guid.NewGuid().ToString();
                 var videoEntityName = $"{uploadId}_0_{videoHashCode}";
-                var videoUri = UriCreator.GetStoryUploadVideoUri(uploadId, videoHashCode);
+                var videoUri = UriCreator.GetStoryUploadVideoUri(videoEntityName);
                 var retryContext = GetRetryContext();
                 HttpRequestMessage request;
                 HttpResponseMessage response;
@@ -573,5 +573,136 @@ namespace InstagramAPI
             }
         }
 
+        public async Task<Result> SendDirectAudioAsync(string uploadId, string threadId, InstaAudio audio,
+            Action<UploaderProgress> progress = null)
+        {
+            var upProgress = new UploaderProgress
+            {
+                Caption = string.Empty,
+                UploadId = uploadId
+            };
+
+            var uploadParams = new JObject
+            {
+                { "xsharing_user_ids", "[]" },
+                { "is_direct_voice", "1" },
+                { "upload_media_duration_ms", audio.Duration.ToString() },
+                { "upload_id", uploadId },
+                { "media_type", "11" },
+                {
+                    "retry_context", new JObject
+                    {
+                        { "num_reupload", 0 },
+                        { "num_step_auto_retry", 0 },
+                        { "num_step_manual_retry", 0 }
+                    }
+                }
+            };
+
+            try
+            {
+                if (!await UploadMedia(uploadId, audio.UploadBuffer.AsStream(), "audio/m4a", uploadParams))
+                {
+                    upProgress.UploadState = InstaUploadState.Error;
+                    progress?.Invoke(upProgress);
+                    return new Result(ResultStatus.Failed);
+                }
+
+                var uri = UriCreator.GetDirectShareVoiceUri();
+                var context = DateTime.UtcNow.Ticks.ToString();
+                var form = new Dictionary<string, string>
+                {
+                    { "action", "send_item" },
+                    { "is_shh_mode", "0" },
+                    { "thread_ids", $"[{threadId}]" },
+                    { "send_attribution", "inbox" },
+                    { "client_context", context },
+                    { "device_id", Device.DeviceId },
+                    { "mutation_token", context },
+                    { "_uuid", Device.Uuid.ToString() },
+                    { "waveform", new JArray(audio.WaveformData).ToString(Formatting.None) },
+                    { "waveform_sampling_frequency_hz", audio.WaveformSamplingFrequencyHz.ToString() },
+                    { "upload_id", uploadId },
+                    { "offline_threading_id", context }
+                };
+                var response = await HttpClient.PostAsync(uri, new FormUrlEncodedContent(form));
+                if (!response.IsSuccessStatusCode)
+                {
+                    upProgress.UploadState = InstaUploadState.Error;
+                    progress?.Invoke(upProgress);
+                    return new Result(ResultStatus.Failed, response.ReasonPhrase);
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                upProgress.UploadState = InstaUploadState.Completed;
+                progress?.Invoke(upProgress);
+
+                return new Result(ResultStatus.Succeeded, json: json);
+            }
+            catch (Exception e)
+            {
+                DebugLogger.LogException(e);
+                return new Result(e);
+            }
+        }
+
+        private async Task<bool> UploadMedia(string uploadId, Stream data, string entityType, JObject uploadParams)
+        {
+            var paramsString = uploadParams.ToString(Formatting.None);
+            var hash = paramsString.GetHashCode();
+            var entityName = $"{uploadId}_0_{hash}";
+            var uri = UriCreator.GetStoryUploadVideoUri(entityName);
+            var getRequest = new HttpRequestMessage(HttpMethod.Get, uri);
+            getRequest.Headers.Add("x-instagram-rupload-params", paramsString);
+            var getResponse = await HttpClient.SendAsync(getRequest);
+            if (!getResponse.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, uri);
+            postRequest.Content = new StreamContent(data);
+            postRequest.Headers.Add("x-instagram-rupload-params", paramsString);
+            postRequest.Headers.Add("x-entity-length", data.Length.ToString());
+            postRequest.Headers.Add("x-entity-name", entityName);
+            postRequest.Headers.Add("x-entity-type", entityType);
+            postRequest.Headers.Add("offset", "0");
+            var postResponse = await HttpClient.SendAsync(postRequest);
+            if (!postResponse.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            var uploadFinishUri = UriCreator.GetMediaUploadFinishUri();
+            var uploadFinishJson = new JObject
+            {
+                { "timezone_offset", ((int)DateTimeOffset.Now.Offset.TotalSeconds).ToString() },
+                { "source_type", "4" },
+                { "_uid", Session.LoggedInUser.Pk.ToString() },
+                { "device_id", Device.DeviceId },
+                { "_uuid", Device.Uuid.ToString() },
+                { "upload_id", uploadId },
+                {
+                    "device", new JObject
+                    {
+                        { "manufacturer", Device.HardwareManufacturer },
+                        { "model", Device.HardwareModel },
+                        { "android_version", Device.AndroidVersion.APILevel },
+                        { "android_release", Device.AndroidVersion.VersionNumber }
+                    }
+                }
+            };
+
+            var signature = $"SIGNATURE.{uploadFinishJson.ToString(Formatting.None)}";
+            var form = new[]
+                { new KeyValuePair<string, string>("signed_body", signature) };
+            var finishResponse = await HttpClient.PostAsync(uploadFinishUri, new FormUrlEncodedContent(form));
+            if (!finishResponse.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }

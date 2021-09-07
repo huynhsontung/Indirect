@@ -534,5 +534,14 @@ namespace Indirect.Controls
                 }
             }
         }
+
+        private async void AddAudioButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var audio = await SendAudioControl.ShowAsync((Button)sender, new FlyoutShowOptions());
+            if (audio != null)
+            {
+                await ViewModel.ChatService.SendVoiceClipAsync(Thread, audio, null);
+            }
+        }
     }
 }

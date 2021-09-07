@@ -447,7 +447,7 @@
                 </TextBox.KeyboardAccelerators>
             </TextBox>
 
-            <Button
+            <!--<Button
                 Grid.Row="3"
                 Grid.Column="3"
                 Margin="0,0,2,0"
@@ -458,6 +458,16 @@
                     <KeyboardAccelerator Key="E" Modifiers="Control" />
                 </Button.KeyboardAccelerators>
                 <SymbolIcon Symbol="Emoji2" />
+            </Button>-->
+
+            <Button
+                Grid.Row="3"
+                Grid.Column="3"
+                Margin="0,0,2,0"
+                AutomationProperties.Name="Send a voice clip"
+                Click="AddAudioButton_OnClick"
+                ToolTipService.ToolTip="Send a voice clip">
+                <SymbolIcon Symbol="Microphone" />
             </Button>
 
             <Button

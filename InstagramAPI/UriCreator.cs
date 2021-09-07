@@ -207,9 +207,23 @@ namespace InstagramAPI
             return instaUri;
         }
 
-        public static Uri GetStoryUploadVideoUri(string uploadId, int fileHashCode)
+        public static Uri GetDirectShareVoiceUri()
         {
-            if (!Uri.TryCreate(BaseInstagramUri, $"/rupload_igvideo/{uploadId}_0_{fileHashCode}/", out var instaUri))
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/direct_v2/threads/broadcast/share_voice/", out var instaUri))
+                throw new Exception("Cant create URI to config photo");
+            return instaUri;
+        }
+
+        public static Uri GetStoryUploadVideoUri(string entityName)
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, $"/rupload_igvideo/{entityName}", out var instaUri))
+                throw new Exception("Cant create URI for story upload video");
+            return instaUri;
+        }
+
+        public static Uri GetMediaUploadFinishUri()
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, API_SUFFIX + "/media/upload_finish/", out var instaUri))
                 throw new Exception("Cant create URI for story upload video");
             return instaUri;
         }
