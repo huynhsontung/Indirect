@@ -295,5 +295,17 @@ namespace Indirect.Controls
                     break;
             }
         }
+
+        private async void ViewOnWebMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            var story = (ReelItemWrapper)StoryView.SelectedItem;
+            if (story == null)
+            {
+                return;
+            }
+
+            await Launcher.LaunchUriAsync(
+                new Uri($"https://www.instagram.com/stories/{story.Parent.Source.User.Username}/{story.Source.Pk}/"));
+        }
     }
 }

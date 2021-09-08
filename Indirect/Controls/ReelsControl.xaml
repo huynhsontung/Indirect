@@ -248,6 +248,11 @@
             SelectionChanged="StoryView_OnSelectionChanged">
             <FlipView.ContextFlyout>
                 <MenuFlyout>
+                    <MenuFlyoutItem Click="ViewOnWebMenuItem_OnClick" Text="View on web">
+                        <MenuFlyoutItem.Icon>
+                            <SymbolIcon Symbol="Globe" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutItem Click="DownloadMenuItem_OnClick" Text="Download">
                         <MenuFlyoutItem.Icon>
                             <SymbolIcon Symbol="Download" />
