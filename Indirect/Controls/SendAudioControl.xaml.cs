@@ -128,7 +128,7 @@ namespace Indirect.Controls
 
                     try
                     {
-                        await Task.Delay(1000, tokenSource.Token);
+                        await Task.Delay(i != 59 ? 1000 : 500, tokenSource.Token);
                     }
                     catch (TaskCanceledException)
                     {
@@ -140,6 +140,7 @@ namespace Indirect.Controls
                     var duration = DateTimeOffset.Now - startTime;
                     DurationText.Text = $"{duration.Minutes}:{duration.Seconds:00}";
                     DurationRing.Value = duration.TotalSeconds / 60 * 100;
+                    if (duration.TotalSeconds >= 60) break;
                 }
 
                 tokenSource.Cancel();

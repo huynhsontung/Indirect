@@ -174,7 +174,6 @@ namespace Indirect.Services
             {
                 var file = audio.AudioFile;
                 var properties = await file.Properties.GetMusicPropertiesAsync();
-                if (properties.Duration > TimeSpan.FromMinutes(1)) return;
                 var durationInMs = properties.Duration.TotalMilliseconds;
                 var buffer = await FileIO.ReadBufferAsync(file);
                 var instaAudio = new InstaAudio

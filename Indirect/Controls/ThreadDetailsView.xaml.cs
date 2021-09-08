@@ -577,6 +577,14 @@ namespace Indirect.Controls
             {
                 UploadProgress.Visibility = Visibility.Visible;
                 await ViewModel.ChatService.SendVoiceClipAsync(Thread, audio, UploadAction);
+                try
+                {
+                    await audio.AudioFile.DeleteAsync(StorageDeleteOption.PermanentDelete);
+                }
+                catch (Exception)
+                {
+                    // pass
+                }
             }
         }
     }
