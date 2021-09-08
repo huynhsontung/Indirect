@@ -9,11 +9,182 @@
     d:DesignHeight="300"
     d:DesignWidth="400"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default" />
+            </ResourceDictionary.ThemeDictionaries>
+
+            <Style x:Key="MediaTransportControlsStyle1" TargetType="MediaTransportControls">
+                <Setter Property="IsTabStop" Value="False" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="FlowDirection" Value="LeftToRight" />
+                <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}" />
+                <Setter Property="IsTextScaleFactorEnabled" Value="False" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="MediaTransportControls">
+                            <Grid x:Name="RootGrid" Background="Transparent">
+                                <Grid.Resources>
+                                    <x:Double x:Key="MediaTransportControlsAppBarButtonHeight">40</x:Double>
+                                    <x:Double x:Key="MediaTransportControlsAppBarButtonWidth">40</x:Double>
+
+                                    <Style
+                                        x:Key="AppBarButtonStyle"
+                                        BasedOn="{StaticResource DefaultAppBarButtonStyle}"
+                                        TargetType="AppBarButton">
+                                        <Setter Property="Width" Value="{StaticResource MediaTransportControlsAppBarButtonWidth}" />
+                                        <Setter Property="Height" Value="{StaticResource MediaTransportControlsAppBarButtonHeight}" />
+                                        <Setter Property="AllowFocusOnInteraction" Value="True" />
+                                    </Style>
+                                    <Style x:Key="MediaTextBlockStyle" TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Foreground" Value="{ThemeResource MediaTransportControlsFillMediaText}" />
+                                        <Setter Property="FontSize" Value="{ThemeResource MTCMediaFontSize}" />
+                                        <Setter Property="FontFamily" Value="{ThemeResource MTCMediaFontFamily}" />
+                                        <Setter Property="Style" Value="{ThemeResource CaptionTextBlockStyle}" />
+                                        <Setter Property="IsTextScaleFactorEnabled" Value="False" />
+                                    </Style>
+                                </Grid.Resources>
+                                <Border x:Name="ControlPanel_ControlPanelVisibilityStates_Border">
+                                    <Grid
+                                        x:Name="ControlPanelGrid"
+                                        VerticalAlignment="Bottom"
+                                        RenderTransformOrigin="0.5,0.5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.RenderTransform>
+                                            <TranslateTransform x:Name="TranslateVertical" />
+                                        </Grid.RenderTransform>
+                                        <Border
+                                            x:Name="ErrorBorder"
+                                            Grid.ColumnSpan="3"
+                                            Width="320"
+                                            Height="96"
+                                            HorizontalAlignment="Center"
+                                            Visibility="Collapsed">
+                                            <TextBlock
+                                                x:Name="ErrorTextBlock"
+                                                Margin="12"
+                                                Style="{StaticResource MediaTextBlockStyle}"
+                                                TextWrapping="WrapWholeWords" />
+                                        </Border>
+                                        <Border
+                                            x:Name="LeftSidePlayBorder"
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Visibility="Collapsed">
+                                            <AppBarButton
+                                                x:Name="PlayPauseButtonOnLeft"
+                                                Margin="0"
+                                                VerticalAlignment="Center"
+                                                Style="{StaticResource AppBarButtonStyle}">
+                                                <AppBarButton.Resources>
+                                                    <Thickness x:Key="AppBarButtonInnerBorderMargin">5</Thickness>
+                                                    <Thickness x:Key="AppBarButtonContentViewboxCollapsedMargin">0,12</Thickness>
+                                                </AppBarButton.Resources>
+                                                <AppBarButton.Icon>
+                                                    <FontIcon x:Name="PlayPauseSymbolLeft" Glyph="&#xF5B0;" />
+                                                </AppBarButton.Icon>
+                                            </AppBarButton>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="ControlPanelVisibilityStates">
+                                        <VisualState x:Name="ControlPanelFadeIn" />
+                                        <VisualState x:Name="ControlPanelFadeOut" />
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="MediaStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="Buffering" />
+                                        <VisualState x:Name="Loading" />
+                                        <VisualState x:Name="Error">
+                                            <VisualState.Setters>
+                                                <Setter Target="ErrorBorder.Visibility" Value="Visible" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled">
+                                            <Storyboard />
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="AudioSelectionAvailablityStates">
+                                        <VisualState x:Name="AudioSelectionAvailable" />
+                                        <VisualState x:Name="AudioSelectionUnavailable" />
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="CCSelectionAvailablityStates">
+                                        <VisualState x:Name="CCSelectionAvailable" />
+                                        <VisualState x:Name="CCSelectionUnavailable" />
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="FocusStates">
+                                        <VisualState x:Name="Focused">
+                                            <Storyboard>
+                                                <DoubleAnimation
+                                                    Storyboard.TargetName="FocusVisualWhite"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    To="1"
+                                                    Duration="0" />
+                                                <DoubleAnimation
+                                                    Storyboard.TargetName="FocusVisualBlack"
+                                                    Storyboard.TargetProperty="Opacity"
+                                                    To="1"
+                                                    Duration="0" />
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Unfocused" />
+                                        <VisualState x:Name="PointerFocused" />
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="MediaTransportControlMode">
+                                        <VisualState x:Name="NormalMode" />
+                                        <VisualState x:Name="CompactMode">
+                                            <VisualState.Setters>
+                                                <Setter Target="LeftSidePlayBorder.Visibility" Value="Visible" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="PlayPauseStates">
+                                        <VisualState x:Name="PlayState" />
+                                        <VisualState x:Name="PauseState">
+                                            <VisualState.Setters>
+                                                <Setter Target="PlayPauseSymbolLeft.Glyph" Value="&#xF8AE;" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="VolumeMuteStates">
+                                        <VisualState x:Name="VolumeState" />
+                                        <VisualState x:Name="MuteState" />
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="FullWindowStates">
+                                        <VisualState x:Name="NonFullWindowState" />
+                                        <VisualState x:Name="FullWindowState" />
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="RepeatStates">
+                                        <VisualState x:Name="RepeatNoneState" />
+                                        <VisualState x:Name="RepeatOneState" />
+                                        <VisualState x:Name="RepeatAllState" />
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+
+    </UserControl.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="70" />
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
@@ -21,58 +192,80 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Button
-            x:Name="ClearButton"
-            Grid.Row="0"
+        <muxc:ProgressRing
+            x:Name="DurationRing"
+            Grid.Row="1"
             Grid.Column="0"
+            Width="76"
+            Height="76"
             HorizontalAlignment="Center"
-            AutomationProperties.Name="Clear recording"
-            Click="ClearButton_OnClick"
-            IsEnabled="False"
-            ToolTipService.ToolTip="Clear">
-            <SymbolIcon Symbol="Clear" />
-        </Button>
+            VerticalAlignment="Center"
+            IsIndeterminate="False" />
 
         <Button
             x:Name="MainButton"
-            Grid.Row="0"
-            Grid.Column="1"
-            Width="70"
-            Height="70"
+            Grid.Row="1"
+            Grid.Column="0"
+            Width="54"
+            Height="54"
             HorizontalAlignment="Center"
+            VerticalAlignment="Center"
             Click="MainButton_OnClick"
             CornerRadius="99"
             Style="{ThemeResource AccentButtonStyle}"
             ToolTipService.ToolTip="Record">
-            <SymbolIcon Symbol="Microphone" />
+            <FontIcon Glyph="&#xF63C;" />
         </Button>
 
-        <TextBlock
-            x:Name="Timer"
-            Grid.Row="0"
-            Grid.Column="2"
+        <Border
+            x:Name="DurationBorder"
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="8,0,4,0"
+            Padding="4,0"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            AutomationProperties.Name="Duration"
-            FontSize="20"
-            Opacity="0.5"
-            Text="0s"
-            ToolTipService.ToolTip="Duration" />
+            Background="{ThemeResource AccentFillColorDefaultBrush}"
+            CornerRadius="4">
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="VerticalTransform" />
+            </Border.RenderTransform>
+            <TextBlock
+                x:Name="DurationText"
+                AutomationProperties.Name="Duration"
+                Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                Text="0:00"
+                ToolTipService.ToolTip="Duration" />
+        </Border>
 
         <local:AutoVideoControl
             x:Name="AudioPlayer"
             Grid.Row="1"
-            Grid.Column="0"
-            Grid.ColumnSpan="3"
-            Width="300"
-            IsAudioPlayer="True" />
+            Grid.Column="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsAudioPlayer="True"
+            Opacity="0">
+            <local:AutoVideoControl.RenderTransform>
+                <TranslateTransform Y="-15" />
+            </local:AutoVideoControl.RenderTransform>
+            <local:AutoVideoControl.TransportControls>
+                <MediaTransportControls
+                    IsCompact="True"
+                    IsFullWindowButtonVisible="False"
+                    IsFullWindowEnabled="False"
+                    IsZoomButtonVisible="False"
+                    ShowAndHideAutomatically="False"
+                    Style="{StaticResource MediaTransportControlsStyle1}" />
+            </local:AutoVideoControl.TransportControls>
+        </local:AutoVideoControl>
 
         <muxc:InfoBar
             x:Name="ErrorInfo"
             Title="Can't record audio"
-            Grid.Row="1"
+            Grid.Row="0"
             Grid.Column="0"
-            Grid.ColumnSpan="3"
+            Grid.ColumnSpan="2"
             MaxWidth="300"
             Canvas.ZIndex="1"
             IsOpen="False"
@@ -90,7 +283,6 @@
                             </Setter.Value>
                         </Setter>
                         <Setter Target="MainButton.(ToolTipService.ToolTip)" Value="Stop" />
-                        <Setter Target="Timer.Opacity" Value="1" />
                     </VisualState.Setters>
                 </VisualState>
 
@@ -101,9 +293,30 @@
                                 <SymbolIcon Symbol="Send" />
                             </Setter.Value>
                         </Setter>
+                        <Setter Target="MainButton.(ToolTipService.ToolTip)" Value="Send" />
                         <Setter Target="MainButton.Style" Value="{ThemeResource DefaultButtonStyle}" />
-                        <Setter Target="ClearButton.IsEnabled" Value="True" />
                     </VisualState.Setters>
+                    <Storyboard>
+                        <DoubleAnimation
+                            Storyboard.TargetName="DurationRing"
+                            Storyboard.TargetProperty="Opacity"
+                            To="0"
+                            Duration="0:0:0.3" />
+                        <DoubleAnimation
+                            Storyboard.TargetName="AudioPlayer"
+                            Storyboard.TargetProperty="Opacity"
+                            To="1"
+                            Duration="0:0:0.3" />
+                        <DoubleAnimation
+                            Storyboard.TargetName="VerticalTransform"
+                            Storyboard.TargetProperty="Y"
+                            To="15"
+                            Duration="0:0:0.3">
+                            <DoubleAnimation.EasingFunction>
+                                <ExponentialEase />
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                    </Storyboard>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>

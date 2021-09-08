@@ -58,6 +58,7 @@ namespace InstagramAPI
                 if (!response.IsSuccessStatusCode || !ruploadResp.IsOk())
                 {
                     upProgress.UploadState = InstaUploadState.Error;
+                    upProgress.Message = response.ReasonPhrase;
                     progress?.Invoke(upProgress);
                     return Result<ItemAckPayloadResponse>.Fail(json);
                 }
@@ -83,6 +84,7 @@ namespace InstagramAPI
                 if (!response.IsSuccessStatusCode || !obj.IsOk())
                 {
                     upProgress.UploadState = InstaUploadState.Error;
+                    upProgress.Message = response.ReasonPhrase;
                     progress?.Invoke(upProgress);
                     return Result<ItemAckPayloadResponse>.Fail(json, obj.Message);
                 }
@@ -94,6 +96,7 @@ namespace InstagramAPI
             catch (Exception exception)
             {
                 upProgress.UploadState = InstaUploadState.Error;
+                upProgress.Message = exception.ToString();
                 progress?.Invoke(upProgress);
                 DebugLogger.LogException(exception);
                 return Result<ItemAckPayloadResponse>.Except(exception);
@@ -163,6 +166,7 @@ namespace InstagramAPI
                     if (!response.IsSuccessStatusCode)
                     {
                         upProgress.UploadState = InstaUploadState.Error;
+                        upProgress.Message = response.ReasonPhrase;
                         progress?.Invoke(upProgress);
                         return Result<bool>.Fail(json, response.ReasonPhrase);
                     }
@@ -233,6 +237,7 @@ namespace InstagramAPI
                     if (!response.IsSuccessStatusCode)
                     {
                         upProgress.UploadState = InstaUploadState.Error;
+                        upProgress.Message = response.ReasonPhrase;
                         progress?.Invoke(upProgress);
                         return Result<bool>.Fail(json, response.ReasonPhrase);
                     }
@@ -272,6 +277,7 @@ namespace InstagramAPI
                 if (!response.IsSuccessStatusCode)
                 {
                     upProgress.UploadState = InstaUploadState.Error;
+                    upProgress.Message = response.ReasonPhrase;
                     progress?.Invoke(upProgress);
                     return Result<bool>.Fail(json, response.ReasonPhrase);
                 }
@@ -324,6 +330,7 @@ namespace InstagramAPI
             catch (Exception exception)
             {
                 upProgress.UploadState = InstaUploadState.Error;
+                upProgress.Message = exception.ToString();
                 progress?.Invoke(upProgress);
                 DebugLogger.LogException(exception);
                 return Result<bool>.Except(exception);
@@ -367,6 +374,7 @@ namespace InstagramAPI
                     if (!response.IsSuccessStatusCode)
                     {
                         upProgress.UploadState = InstaUploadState.Error;
+                        upProgress.Message = response.ReasonPhrase;
                         progress?.Invoke(upProgress);
                         return Result<bool>.Fail(json, response.ReasonPhrase);
                     }
@@ -560,6 +568,7 @@ namespace InstagramAPI
                         return mediaResponse.IsOk() ? Result<bool>.Success(true) : Result<bool>.Fail(json, mediaResponse.Message);
                     }
                     upProgress.UploadState = InstaUploadState.Error;
+                    upProgress.Message = response.ReasonPhrase;
                     progress?.Invoke(upProgress);
                     return Result<bool>.Fail(json, response.ReasonPhrase);
                 }
@@ -567,6 +576,7 @@ namespace InstagramAPI
             catch (Exception exception)
             {
                 upProgress.UploadState = InstaUploadState.Error;
+                upProgress.Message = exception.ToString();
                 progress?.Invoke(upProgress);
                 DebugLogger.LogException(exception);
                 return Result<bool>.Except(exception);
@@ -629,6 +639,7 @@ namespace InstagramAPI
                 if (!response.IsSuccessStatusCode)
                 {
                     upProgress.UploadState = InstaUploadState.Error;
+                    upProgress.Message = response.ReasonPhrase;
                     progress?.Invoke(upProgress);
                     return new Result(ResultStatus.Failed, response.ReasonPhrase);
                 }
@@ -641,6 +652,9 @@ namespace InstagramAPI
             }
             catch (Exception e)
             {
+                upProgress.UploadState = InstaUploadState.Error;
+                upProgress.Message = e.ToString();
+                progress?.Invoke(upProgress);
                 DebugLogger.LogException(e);
                 return new Result(e);
             }

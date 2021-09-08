@@ -15,12 +15,14 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Indirect.Converters;
 using Indirect.Entities.Wrappers;
+using Indirect.Pages;
 using Indirect.Services;
 using Indirect.Utilities;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
+using Microsoft.UI.Xaml.Controls;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -278,26 +280,39 @@ namespace Indirect.Controls
             FilePickerPreview.PauseVideo();
         }
 
-        private void SendFileButton_OnClick(object sender, RoutedEventArgs e)
+        private void UploadAction(UploaderProgress progress)
         {
-            UploadProgress.Visibility = Visibility.Visible;
-
-            void UploadAction(UploaderProgress progress)
+            if (progress.UploadState != InstaUploadState.Completed &&
+                progress.UploadState != InstaUploadState.Error) return;
+            UploadProgress.Visibility = Visibility.Collapsed;
+            if (progress.UploadState == InstaUploadState.Error)
             {
-                if (progress.UploadState != InstaUploadState.Completed &&
-                    progress.UploadState != InstaUploadState.Error) return;
-                UploadProgress.Visibility = Visibility.Collapsed;
-                if (progress.UploadState == InstaUploadState.Error)
+                var frame = Window.Current?.Content as Frame;
+                if (frame?.Content is MainPage page)
                 {
-                    var dialog = new ContentDialog()
+                    _dispatcherQueue.TryEnqueue(() =>
+                    {
+                        page.ShowStatus("Upload failed", progress.Message, InfoBarSeverity.Error, 5);
+                    });
+                }
+                else
+                {
+                    var dialog = new ContentDialog
                     {
                         Title = "Upload failed",
+                        Content = progress.Message,
                         CloseButtonText = "Close"
                     };
                     _ = dialog.ShowAsync();
                 }
-                // Rely on sync client for update
+
             }
+            // Rely on sync client for update
+        }
+
+        private void SendFileButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            UploadProgress.Visibility = Visibility.Visible;
 
             if (FilePickerPreview.Source is StorageFile file)
             {
@@ -540,7 +555,8 @@ namespace Indirect.Controls
             var audio = await SendAudioControl.ShowAsync((Button)sender, new FlyoutShowOptions());
             if (audio != null)
             {
-                await ViewModel.ChatService.SendVoiceClipAsync(Thread, audio, null);
+                UploadProgress.Visibility = Visibility.Visible;
+                await ViewModel.ChatService.SendVoiceClipAsync(Thread, audio, UploadAction);
             }
         }
     }

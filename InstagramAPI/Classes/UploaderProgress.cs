@@ -3,6 +3,8 @@
     public class UploaderProgress
     {
         public InstaUploadState UploadState { get; internal set; }
+
+        public string Message { get; internal set; }
  
         public string UploadId { get; internal set; }
 
