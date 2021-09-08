@@ -395,23 +395,23 @@
             </Grid>
 
             <Button
-                x:Name="AddFilesButton"
+                x:Name="SendFilesButton"
                 Grid.Row="3"
                 Grid.Column="0"
                 Margin="8,0,0,0"
-                AutomationProperties.Name="Add photos"
-                Click="AddFilesButton_OnClick"
-                ToolTipService.ToolTip="Add photos">
+                AutomationProperties.Name="Send a photo"
+                Click="SendFilesButton_OnClick"
+                ToolTipService.ToolTip="Send a photo">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEB9F;" />
             </Button>
 
             <Button
-                x:Name="AddGifButton"
+                x:Name="SendGifButton"
                 Grid.Row="3"
                 Grid.Column="1"
                 Margin="2,0,0,0"
-                AutomationProperties.Name="Add a GIF"
-                ToolTipService.ToolTip="Add a GIF">
+                AutomationProperties.Name="Send a sticker or a GIF"
+                ToolTipService.ToolTip="Send a sticker or a GIF">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xF4A9;" />
                 <Button.Flyout>
                     <Flyout x:Name="GifPickerFlyout">
@@ -447,20 +447,8 @@
                 </TextBox.KeyboardAccelerators>
             </TextBox>
 
-            <!--<Button
-                Grid.Row="3"
-                Grid.Column="3"
-                Margin="0,0,2,0"
-                AutomationProperties.Name="Insert an Emoji"
-                Click="InsertEmojiButton_OnClick"
-                ToolTipService.ToolTip="Insert an Emoji (Ctrl+E)">
-                <Button.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="E" Modifiers="Control" />
-                </Button.KeyboardAccelerators>
-                <SymbolIcon Symbol="Emoji2" />
-            </Button>-->
-
             <Button
+                x:Name="SendVoiceButton"
                 Grid.Row="3"
                 Grid.Column="3"
                 Margin="0,0,2,0"
@@ -476,10 +464,10 @@
                 Grid.Column="4"
                 Margin="0,0,8,0"
                 HorizontalAlignment="Stretch"
-                AutomationProperties.Name="Send"
+                AutomationProperties.Name="Send message"
                 Click="SendButton_Click"
                 ContextRequested="SendButton_OnContextRequested"
-                ToolTipService.ToolTip="Send"
+                ToolTipService.ToolTip="Send message"
                 Visibility="{x:Bind MessageTextBox.Text, Mode=OneWay, Converter={StaticResource NullVisibilityConverter}}">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE724;" />
             </Button>
@@ -512,5 +500,12 @@
                 <muxc:SymbolIconSource Symbol="Emoji" />
             </muxc:TeachingTip.IconSource>
         </muxc:TeachingTip>
+
+        <muxc:TeachingTip
+            x:Name="SendEmojiTeachingTip"
+            Title="Emoji button has been removed"
+            Grid.Row="0"
+            Subtitle="To insert an emoji during text entry, press Win + . (period). The emoji keyboard will appear."
+            Target="{x:Bind MessageTextBox}" />
     </Grid>
 </UserControl>

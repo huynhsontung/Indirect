@@ -132,11 +132,18 @@ namespace Indirect.Controls
 
         private async void ConditionallyShowTeachingTips()
         {
-            if (!SettingsService.TryGetGlobal(nameof(SendButtonTeachingTip), out bool? value) || (value ?? true))
+            if (!SettingsService.TryGetGlobal(nameof(SendButtonTeachingTip), out bool? b1) || (b1 ?? true))
             {
-                await Task.Delay(600);
+                await Task.Delay(1000);
                 SendButtonTeachingTip.IsOpen = true;
+                SendButtonTeachingTip.Closed += (sender, args) => SendEmojiTeachingTip.IsOpen = true;
                 SettingsService.SetGlobal(nameof(SendButtonTeachingTip), false);
+            }
+            else if (!SettingsService.TryGetGlobal(nameof(SendEmojiTeachingTip), out bool? b2) || (b2 ?? true))
+            {
+                await Task.Delay(1000);
+                SendEmojiTeachingTip.IsOpen = true;
+                SettingsService.SetGlobal(nameof(SendEmojiTeachingTip), false);
             }
         }
 
@@ -219,7 +226,7 @@ namespace Indirect.Controls
             }
         }
 
-        private async void AddFilesButton_OnClick(object sender, RoutedEventArgs e)
+        private async void SendFilesButton_OnClick(object sender, RoutedEventArgs e)
         {
             var picker = new Windows.Storage.Pickers.FileOpenPicker
             {
@@ -261,7 +268,7 @@ namespace Indirect.Controls
                 }
             }
             FilePickerPreview.Source = file;
-            FilePickerFlyout.ShowAt(AddFilesButton);
+            FilePickerFlyout.ShowAt(SendFilesButton);
         }
 
         private static async void DisplayFailDialog(string reason)
@@ -333,7 +340,7 @@ namespace Indirect.Controls
             {
                 var imageStream = await dataPackage.GetBitmapAsync();
                 FilePickerPreview.Source = await imageStream.OpenReadAsync();
-                FilePickerFlyout.ShowAt(AddFilesButton);
+                FilePickerFlyout.ShowAt(SendFilesButton);
             }
         }
 
