@@ -162,7 +162,7 @@
                 Margin="4,6,4,4"
                 Padding="10,4,10,6"
                 Background="{ThemeResource CustomAcrylicBrush}"
-                CornerRadius="2"
+                CornerRadius="4"
                 Tapped="UserInfo_OnTapped">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -214,7 +214,7 @@
                 Padding="4"
                 VerticalAlignment="Top"
                 Background="{ThemeResource CustomAcrylicBrush}"
-                CornerRadius="2"
+                CornerRadius="4"
                 Orientation="Horizontal">
                 <Button
                     Margin="2"
