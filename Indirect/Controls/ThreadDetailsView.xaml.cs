@@ -436,10 +436,10 @@ namespace Indirect.Controls
                 var items = await e.DataView.GetStorageItemsAsync();
                 foreach (var item in items)
                 {
-                    var file = (StorageFile) item;
-                    if (file.FileType.EndsWith("png", StringComparison.OrdinalIgnoreCase) ||
-                        file.FileType.EndsWith("jpeg", StringComparison.OrdinalIgnoreCase) ||
-                        file.FileType.EndsWith("jpg", StringComparison.OrdinalIgnoreCase))
+                    if (item is StorageFile file &&
+                        (file.FileType.EndsWith("png", StringComparison.OrdinalIgnoreCase) ||
+                         file.FileType.EndsWith("jpeg", StringComparison.OrdinalIgnoreCase) ||
+                         file.FileType.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)))
                     {
                         UploadProgress.Visibility = Visibility.Visible;
                         count++;

@@ -162,12 +162,18 @@
             </DataTemplate>
 
             <DataTemplate x:Key="HyperlinkWithPreviewTemplate" x:DataType="wrappers:DirectItemWrapper">
-                <StackPanel
+                <Grid
                     MaxWidth="250"
                     Background="{x:Bind FromMe, Converter={StaticResource FromMeBrushConverter}}"
-                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
-                    Orientation="Vertical">
+                    CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
                     <TextBlock
+                        Grid.Row="0"
                         Margin="6"
                         Style="{ThemeResource FluentBodyTextStyle}"
                         TextWrapping="Wrap">
@@ -177,11 +183,13 @@
                     </TextBlock>
 
                     <controls:ImageEx
+                        Grid.Row="1"
                         Margin="0,2,0,0"
                         IsCacheEnabled="False"
                         Source="{x:Bind Source.Link.LinkContext.LinkImageUrl}"
                         Visibility="{x:Bind Source.Link.LinkContext.LinkImageUrl, Converter={StaticResource NullVisibilityConverter}}" />
                     <StackPanel
+                        Grid.Row="2"
                         Margin="6,6,6,8"
                         Orientation="Vertical"
                         Visibility="{x:Bind Source.Link.LinkContext.LinkTitle, Converter={StaticResource NullVisibilityConverter}}">
@@ -195,7 +203,7 @@
                             Text="{x:Bind Source.Link.LinkContext.LinkSummary}"
                             TextWrapping="Wrap" />
                     </StackPanel>
-                </StackPanel>
+                </Grid>
             </DataTemplate>
 
             <DataTemplate x:Key="ClipTemplate" x:DataType="wrappers:DirectItemWrapper">

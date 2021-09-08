@@ -192,31 +192,47 @@
                     Visibility="{x:Bind IsNewWindow, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
 
                 <CommandBar.Content>
-                    <StackPanel
+                    <Grid
                         x:Name="ThreadInfoHeader"
                         Margin="8,6,0,0"
                         Background="Transparent"
-                        Orientation="Horizontal"
                         Tapped="ShowUsersInfoFlyout">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
                         <controls1:ProfilePicture
                             x:Name="ProfilePictureView"
+                            Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Grid.Column="0"
                             Width="32"
                             Height="32"
                             Margin="4,0,12,0"
                             VerticalAlignment="Center"
                             Source="{x:Bind Thread.Users, Mode=OneWay}" />
 
-                        <StackPanel VerticalAlignment="Center" Orientation="Vertical">
-                            <TextBlock Style="{ThemeResource FluentBaseTextStyle}" Text="{x:Bind Thread.Source.Title, Mode=OneWay}" />
-                            <TextBlock
-                                x:Name="LastActiveText"
-                                Margin="0,-1,0,0"
-                                Opacity="0.6"
-                                Style="{ThemeResource FluentCaptionTextStyle}"
-                                Text="Active now" />
-                        </StackPanel>
-                    </StackPanel>
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            VerticalAlignment="Bottom"
+                            Style="{ThemeResource FluentBaseTextStyle}"
+                            Text="{x:Bind Thread.Source.Title, Mode=OneWay}" />
+                        <TextBlock
+                            x:Name="LastActiveText"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="0,-1,0,0"
+                            VerticalAlignment="Top"
+                            Opacity="0.6"
+                            Style="{ThemeResource FluentCaptionTextStyle}"
+                            Text="Active now" />
+                    </Grid>
                 </CommandBar.Content>
             </CommandBar>
 

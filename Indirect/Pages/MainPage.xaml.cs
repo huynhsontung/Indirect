@@ -194,8 +194,16 @@ namespace Indirect.Pages
                 PrimaryButtonText = "Log Out",
                 DefaultButton = ContentDialogButton.Primary
             };
-            var confirmation = await confirmDialog.ShowAsync();
-            if (confirmation != ContentDialogResult.Primary)
+
+            try
+            {
+                var confirmation = await confirmDialog.ShowAsync();
+                if (confirmation != ContentDialogResult.Primary)
+                {
+                    return;
+                }
+            }
+            catch (Exception)
             {
                 return;
             }

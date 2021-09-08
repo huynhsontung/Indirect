@@ -143,7 +143,6 @@
                         ItemsSource="{x:Bind ViewModel.ReelsFeed.Reels}"
                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
                         ScrollViewer.HorizontalScrollMode="Enabled"
-                        ScrollViewer.VerticalScrollBarVisibility="Hidden"
                         ScrollViewer.VerticalScrollMode="Disabled"
                         SelectionMode="None">
                         <ListView.ItemContainerStyle>
@@ -309,7 +308,6 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Bottom"
                             MaxLines="1"
-                            ScrollViewer.VerticalScrollBarVisibility="Disabled"
                             Style="{ThemeResource FluentTitleTextStyle}"
                             Text="{x:Bind Source.Title}" />
 
@@ -319,7 +317,6 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
                             MaxLines="1"
-                            ScrollViewer.VerticalScrollBarVisibility="Disabled"
                             Style="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}"
                             Text="{x:Bind LastPermanentItem.Description, Mode=OneWay}" />
                     </Grid>
