@@ -115,7 +115,6 @@
             BorderBrush="Transparent"
             BorderThickness="0"
             CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}"
-            DetailsPaneBackground="{ThemeResource MainBackground}"
             IntermediateModeThresholdWidth="{StaticResource FullWindowWidth}"
             ItemsSource="{x:Bind Inbox.Threads, Mode=OneWay}"
             SelectedItem="{x:Bind ViewModel.Inbox.SelectedThread, Mode=TwoWay}">
@@ -253,18 +252,33 @@
             </controls1:ExtendedMasterDetailsView.MasterListHeader>
 
             <controls1:ExtendedMasterDetailsView.NoSelectionContent>
-                <StackPanel
-                    Grid.Row="2"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Orientation="Vertical">
-                    <Image
-                        Width="160"
-                        Height="160"
-                        Opacity="0.8"
-                        Source="/Assets/NoSelectionGraphic.png" />
-                    <TextBlock Margin="0,24,0,0" Text="Select a thread to start chatting" />
-                </StackPanel>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="32" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Border
+                        Grid.Row="1"
+                        Background="{ThemeResource MainBackground}"
+                        BorderBrush="{StaticResource FlyoutBorderThemeBrush}"
+                        BorderThickness="1,1,0,0"
+                        CornerRadius="8,0,0,0" />
+                    <StackPanel
+                        Grid.Row="1"
+                        VerticalAlignment="Center"
+                        Orientation="Vertical">
+                        <Image
+                            Width="160"
+                            Height="160"
+                            HorizontalAlignment="Center"
+                            Opacity="0.8"
+                            Source="/Assets/NoSelectionGraphic.png" />
+                        <TextBlock
+                            Margin="0,24,0,0"
+                            HorizontalAlignment="Center"
+                            Text="Select a thread to start chatting" />
+                    </StackPanel>
+                </Grid>
             </controls1:ExtendedMasterDetailsView.NoSelectionContent>
 
             <controls1:ExtendedMasterDetailsView.ItemTemplate>

@@ -40,7 +40,7 @@ namespace Indirect.Controls
             nameof(IsNewWindow),
             typeof(bool),
             typeof(ThreadDetailsView),
-            new PropertyMetadata(false));
+            new PropertyMetadata(false, OnIsNewWindowChanged));
 
         public static readonly DependencyProperty ThreadHeaderVisibilityProperty = DependencyProperty.Register(
             nameof(ThreadHeaderVisibility),
@@ -69,6 +69,19 @@ namespace Indirect.Controls
 
         private bool _needUpdateCaret;   // For moving the caret to the end of text on thread change. This is a bad idea. ¯\_(ツ)_/¯
         private readonly DispatcherQueue _dispatcherQueue;
+
+        private static void OnIsNewWindowChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if ((bool)e.NewValue)
+            {
+                var view = (ThreadDetailsView)d;
+                view.RootGrid.RowDefinitions[0].Height = new GridLength(0);
+                view.ContentGrid.RowDefinitions[0].Height = new GridLength(82);
+                view.ContentGrid.CornerRadius = new CornerRadius(0);
+                view.ContentGrid.BorderThickness = new Thickness(0);
+                view.BorderThicknessSetter.Value = new Thickness(0);
+            }
+        }
 
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {

@@ -2,16 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using Windows.ApplicationModel;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
@@ -24,7 +21,6 @@ namespace Indirect.Controls
     /// </summary>
     [TemplatePart(Name = PartDetailsPresenter, Type = typeof(ContentPresenter))]
     [TemplatePart(Name = PartDetailsPanel, Type = typeof(FrameworkElement))]
-    [TemplatePart(Name = PartMainShadow, Type = typeof(ThemeShadow))]
     [TemplatePart(Name = PartMasterPanel, Type = typeof(FrameworkElement))]
     [TemplatePart(Name = PartDetailsPanel, Type = typeof(FrameworkElement))]
     [TemplatePart(Name = PartMasterList, Type = typeof(ListViewBase))]
@@ -47,7 +43,6 @@ namespace Indirect.Controls
         private const string WideState = "WideState";
         private const string IntermediateState = "IntermediateState";
         private const string WidthStates = "WidthStates";
-        private const string PartMainShadow = "MainShadow";
         private const string SelectionStates = "SelectionStates";
         private const string HasSelectionNarrowState = "HasSelectionNarrow";
         private const string HasSelectionWideState = "HasSelectionWide";
@@ -357,34 +352,9 @@ namespace Indirect.Controls
             }
         }
 
-        private void UpdateShadow()
-        {
-            var shadow = GetTemplateChild(PartMainShadow) as ThemeShadow;
-            var mainPanel = GetTemplateChild(PartMasterPanel) as FrameworkElement;
-            if (shadow == null || mainPanel == null)
-            {
-                return;
-            }
-
-            if (ViewState != MasterDetailsViewState.Both)
-            {
-                shadow.Receivers.Clear();
-            }
-            else if (shadow.Receivers.Count == 0)
-            {
-                shadow.Receivers.Add(mainPanel);
-            }
-        }
-
         private void UpdateView(bool animate)
         {
             UpdateViewState();
-
-            if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.ThemeShadow"))
-            {
-                UpdateShadow();
-            }
-
             SetVisualState(animate);
         }
 

@@ -2,7 +2,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:community="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:contract8Present="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 8)"
     xmlns:controls="using:Indirect.Controls">
 
     <Style TargetType="controls:ExtendedMasterDetailsView">
@@ -16,9 +15,6 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}">
                         <Grid x:Name="RootPanel">
-                            <Grid.Resources>
-                                <contract8Present:ThemeShadow x:Name="MainShadow" />
-                            </Grid.Resources>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition
                                     x:Name="MasterColumn"
@@ -80,8 +76,6 @@
                             <Grid
                                 x:Name="DetailsPanel"
                                 Grid.Column="1"
-                                contract8Present:Shadow="{StaticResource MainShadow}"
-                                contract8Present:Translation="0,0,8"
                                 Background="{TemplateBinding DetailsPaneBackground}"
                                 XYFocusKeyboardNavigation="Enabled">
                                 <ContentPresenter
