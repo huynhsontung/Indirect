@@ -70,30 +70,28 @@
 
         <FlyoutBase.AttachedFlyout>
             <Flyout x:Name="FilePickerFlyout" Closing="FilePickerFlyout_OnClosing">
-                <StackPanel Orientation="Vertical">
-                    <StackPanel x:Name="SendConfirmation" MaxWidth="300">
-                        <controls1:PhotoVideoControl
-                            x:Name="FilePickerPreview"
-                            Height="160"
-                            Margin="0,0,0,12"
-                            HorizontalAlignment="Center"
-                            CornerRadius="2" />
+                <StackPanel x:Name="SendConfirmation" MaxWidth="300">
+                    <controls1:PhotoVideoControl
+                        x:Name="FilePickerPreview"
+                        Height="160"
+                        Margin="0,0,0,12"
+                        HorizontalAlignment="Center"
+                        CornerRadius="4" />
 
-                        <TextBlock
-                            Margin="0,0,0,12"
-                            HorizontalAlignment="Center"
-                            Style="{ThemeResource FluentBaseTextStyle}"
-                            Text="Do you want to send this photo?" />
+                    <TextBlock
+                        Margin="0,0,0,12"
+                        HorizontalAlignment="Center"
+                        Style="{ThemeResource FluentBaseTextStyle}"
+                        Text="Do you want to send this photo?" />
 
-                        <Button
-                            HorizontalAlignment="Center"
-                            Click="SendFileButton_OnClick"
-                            Content="Send">
-                            <Button.KeyboardAccelerators>
-                                <KeyboardAccelerator Key="Enter" />
-                            </Button.KeyboardAccelerators>
-                        </Button>
-                    </StackPanel>
+                    <Button
+                        HorizontalAlignment="Center"
+                        Click="SendFileButton_OnClick"
+                        Content="Send">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="Enter" />
+                        </Button.KeyboardAccelerators>
+                    </Button>
                 </StackPanel>
             </Flyout>
         </FlyoutBase.AttachedFlyout>
@@ -367,7 +365,7 @@
                     Margin="4"
                     Padding="10,6,6,6"
                     Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
-                    CornerRadius="2"
+                    CornerRadius="4"
                     Visibility="{x:Bind Thread.ReplyingItem, Converter={StaticResource NullVisibilityConverter}, Mode=OneWay}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -415,9 +413,7 @@
                         Margin="3,0,0,0"
                         VerticalAlignment="Center"
                         Background="Transparent"
-                        Click="ClearReplyButton_OnClick"
-                        CornerRadius="2"
-                        Style="{x:Null}">
+                        Click="ClearReplyButton_OnClick">
                         <SymbolIcon Symbol="Cancel" />
                     </Button>
                 </Grid>

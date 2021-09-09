@@ -632,13 +632,18 @@
     </UserControl.Resources>
 
 
-    <StackPanel
+    <Grid
         x:Name="ItemContainer"
         Margin="{x:Bind GetRelativeMargin(Item.RelativeMode), Mode=OneWay}"
-        Orientation="Vertical">
+        HorizontalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
         <TextBlock
             x:Name="TimestampText"
+            Grid.Row="0"
             Margin="8,14,8,8"
             HorizontalAlignment="Center"
             Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
@@ -646,9 +651,18 @@
             Text="{x:Bind Item.Source.Timestamp, Converter={StaticResource HumanizedDateTimeConverter}}"
             Visibility="{x:Bind Item.ShowTimestampHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
 
-        <StackPanel HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}" Orientation="Vertical">
+        <Grid Grid.Row="1" HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
             <TextBlock
                 x:Name="SenderNameText"
+                Grid.Row="0"
                 Margin="0,0,0,2"
                 HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
                 Foreground="{StaticResource SystemControlForegroundBaseLowBrush}"
@@ -657,6 +671,7 @@
                 Visibility="{x:Bind Item.ShowNameHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
 
             <StackPanel
+                Grid.Row="1"
                 Margin="6,0,6,-4"
                 Orientation="Vertical"
                 Visibility="{x:Bind Item.RepliedItem, Converter={StaticResource NullVisibilityConverter}}">
@@ -677,9 +692,9 @@
                     Opacity="0.5" />
             </StackPanel>
 
-
             <ContentControl
                 x:Name="MainContentControl"
+                Grid.Row="2"
                 HorizontalAlignment="{x:Bind Item.HorizontalAlignment}"
                 contract8Present:Shadow="{StaticResource SharedShadow}"
                 Content="{x:Bind Item}"
@@ -689,6 +704,7 @@
                 Translation="0,0,2" />
 
             <controls1:ReactionsControl
+                Grid.Row="3"
                 Margin="6,-2,6,0"
                 HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
                 Background="{ThemeResource FromThemItemBackground}"
@@ -698,6 +714,7 @@
 
             <TextBlock
                 x:Name="SeenIndicator"
+                Grid.Row="4"
                 Margin="4,2,4,4"
                 HorizontalAlignment="Right"
                 Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
@@ -705,9 +722,9 @@
                 Text="{x:Bind GetSeenText(Item.Parent.Source.LastSeenAt), Mode=OneWay}"
                 TextWrapping="Wrap"
                 Visibility="{x:Bind SeenIndicator.Text, Converter={StaticResource NullVisibilityConverter}, Mode=OneWay}" />
-        </StackPanel>
+        </Grid>
 
-    </StackPanel>
+    </Grid>
 
     <UserControl.ContextFlyout>
         <MenuFlyout>
