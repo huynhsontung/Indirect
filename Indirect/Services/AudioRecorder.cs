@@ -52,29 +52,38 @@ namespace Indirect.Services
             }
 
             var audioGraph = _audioGraph = result.Graph;
-            CreateAudioDeviceInputNodeResult inputNodeResult = await audioGraph.CreateDeviceInputNodeAsync(MediaCategory.Speech);
-            if (inputNodeResult.Status != AudioDeviceNodeCreationStatus.Success)
+
+            try
             {
-                ExtendedError = inputNodeResult.ExtendedError;
+                CreateAudioDeviceInputNodeResult inputNodeResult = await audioGraph.CreateDeviceInputNodeAsync(MediaCategory.Speech);
+                if (inputNodeResult.Status != AudioDeviceNodeCreationStatus.Success)
+                {
+                    ExtendedError = inputNodeResult.ExtendedError;
+                    return false;
+                }
+
+                var inputNode = inputNodeResult.DeviceInputNode;
+
+                var file = _audioFile = await SaveFolder.CreateFileAsync($"{DateTimeOffset.Now.Ticks}.m4a", CreationCollisionOption.GenerateUniqueName);
+                CreateAudioFileOutputNodeResult fileOutputNodeResult = await audioGraph.CreateFileOutputNodeAsync(file, MediaEncodingProfile.CreateM4a(AudioEncodingQuality.Medium));
+                if (fileOutputNodeResult.Status != AudioFileNodeCreationStatus.Success)
+                {
+                    ExtendedError = fileOutputNodeResult.ExtendedError;
+                    return false;
+                }
+
+                var fileOutputNode = _fileOutputNode = fileOutputNodeResult.FileOutputNode;
+                var frameOutputNode = _frameOutputNode = audioGraph.CreateFrameOutputNode();
+                inputNode.AddOutgoingConnection(fileOutputNode);
+                inputNode.AddOutgoingConnection(frameOutputNode);
+                audioGraph.QuantumStarted += AudioGraphOnQuantumStarted;
+                return true;
+            }
+            catch (ObjectDisposedException e)
+            {
+                ExtendedError = e;
                 return false;
             }
-
-            var inputNode = inputNodeResult.DeviceInputNode;
-
-            var file = _audioFile = await SaveFolder.CreateFileAsync($"{DateTimeOffset.Now.Ticks}.m4a", CreationCollisionOption.GenerateUniqueName);
-            CreateAudioFileOutputNodeResult fileOutputNodeResult = await audioGraph.CreateFileOutputNodeAsync(file, MediaEncodingProfile.CreateM4a(AudioEncodingQuality.Medium));
-            if (fileOutputNodeResult.Status != AudioFileNodeCreationStatus.Success)
-            {
-                ExtendedError = fileOutputNodeResult.ExtendedError;
-                return false;
-            }
-
-            var fileOutputNode = _fileOutputNode = fileOutputNodeResult.FileOutputNode;
-            var frameOutputNode = _frameOutputNode = audioGraph.CreateFrameOutputNode();
-            inputNode.AddOutgoingConnection(fileOutputNode);
-            inputNode.AddOutgoingConnection(frameOutputNode);
-            audioGraph.QuantumStarted += AudioGraphOnQuantumStarted;
-            return true;
         }
 
         public void Start()
