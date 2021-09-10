@@ -55,6 +55,22 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+
+            <muxc:TeachingTip
+                x:Name="SendButtonTeachingTip"
+                Title="Customize your quick reply"
+                Subtitle="Right click the send button to choose an emoji for your quick reply."
+                Target="{x:Bind ReactButton}">
+                <muxc:TeachingTip.IconSource>
+                    <muxc:SymbolIconSource Symbol="Emoji" />
+                </muxc:TeachingTip.IconSource>
+            </muxc:TeachingTip>
+
+            <muxc:TeachingTip
+                x:Name="SendEmojiTeachingTip"
+                Title="Emoji button has been removed"
+                Subtitle="To insert an emoji during text entry, press Win + . (period). The emoji keyboard will appear."
+                Target="{x:Bind MessageTextBox}" />
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -514,24 +530,6 @@
                 </Button>
             </Grid>
         </Grid>
-
-        <muxc:TeachingTip
-            x:Name="SendButtonTeachingTip"
-            Title="Customize your quick reply"
-            Grid.Row="0"
-            Subtitle="Right click the send button to choose an emoji for your quick reply."
-            Target="{x:Bind SendButton}">
-            <muxc:TeachingTip.IconSource>
-                <muxc:SymbolIconSource Symbol="Emoji" />
-            </muxc:TeachingTip.IconSource>
-        </muxc:TeachingTip>
-
-        <muxc:TeachingTip
-            x:Name="SendEmojiTeachingTip"
-            Title="Emoji button has been removed"
-            Grid.Row="0"
-            Subtitle="To insert an emoji during text entry, press Win + . (period). The emoji keyboard will appear."
-            Target="{x:Bind MessageTextBox}" />
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="AdaptiveLayoutStateGroup">
