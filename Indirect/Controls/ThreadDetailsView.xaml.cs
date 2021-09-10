@@ -526,8 +526,16 @@ namespace Indirect.Controls
             {
                 case VirtualKey.Space when FocusManager.GetFocusedElement() is ListViewItem item &&
                                            item.ContentTemplateRoot is ThreadItemControl itemControl:
+                    if (FocusManager.FindFirstFocusableElement(item) is Control control)
+                    {
+                        control.Focus(FocusState.Programmatic);
+                    }
+                    else
+                    {
+                        itemControl.OnItemClick();
+                    }
+
                     e.Handled = true;
-                    itemControl.OnItemClick();
                     break;
             }
         }

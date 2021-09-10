@@ -692,6 +692,7 @@
             Content="{x:Bind Item}"
             ContentTemplateSelector="{StaticResource ItemTemplateSelector}"
             DoubleTapped="Item_DoubleTapped"
+            IsTabStop="False"
             SizeChanged="ConfigTooltip_OnSizeChanged" />
 
         <controls1:ReactionsControl
