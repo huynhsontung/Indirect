@@ -549,7 +549,6 @@ namespace Indirect.Controls
 
         private async void CompactOverlayButton_OnClick(object sender, RoutedEventArgs e)
         {
-            var button = (AppBarButton)sender;
             var view = ApplicationView.GetForCurrentView();
             if (view.ViewMode == ApplicationViewMode.Default)
             {
@@ -558,14 +557,14 @@ namespace Indirect.Controls
                 preferences.CustomSize = new Size(360, 300);
                 if (await view.TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay, preferences))
                 {
-                    button.Style = (Style)Resources["ExitCompactOverlayButtonStyle"];
+                    var result = VisualStateManager.GoToState(this, "ExitCompactOverlay", false);
                 }
             }
             else
             {
                 if (await view.TryEnterViewModeAsync(ApplicationViewMode.Default))
                 {
-                    button.Style = (Style)Resources["EnterCompactOverlayButtonStyle"];
+                    var result = VisualStateManager.GoToState(this, "EnterCompactOverlay", false);
                 }
             }
         }

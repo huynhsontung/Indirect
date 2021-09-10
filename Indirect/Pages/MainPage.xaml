@@ -300,6 +300,7 @@
                             Width="48"
                             Height="48"
                             Margin="4,8,16,8"
+                            x:Phase="2"
                             Source="{x:Bind Users}" />
 
                         <TextBlock
@@ -316,6 +317,7 @@
                             Grid.Column="1"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
+                            x:Phase="1"
                             MaxLines="1"
                             Style="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}"
                             Text="{x:Bind LastPermanentItem.Description, Mode=OneWay}" />

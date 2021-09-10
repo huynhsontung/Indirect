@@ -2,7 +2,6 @@
     x:Class="Indirect.Controls.ThreadItemControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:contract8Present="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract,8)"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:Indirect.Controls"
     xmlns:converters="using:Indirect.Converters"
@@ -43,8 +42,6 @@
             <converters:VariableMaxWidthConverter x:Key="VariableMaxWidthConverter" />
             <converters:ReelShareImageMarginConverter x:Key="ReelShareImageMarginConverter" />
             <converters:HumanizedDateTimeConverter x:Key="HumanizedDateTimeConverter" />
-
-            <contract8Present:ThemeShadow x:Name="SharedShadow" />
 
             <Style x:Name="AvailableOpen" TargetType="Button">
                 <Setter Property="Content" Value="📷 Photo" />
@@ -221,6 +218,7 @@
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                         CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                         IsCacheEnabled="True"
+                        PlaceholderSource="/Assets/PlaceholderSquare-200.png"
                         Source="{x:Bind PreviewImageUri}"
                         Tapped="OpenWebLink" />
 
@@ -259,12 +257,13 @@
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                     IsCacheEnabled="True"
+                    PlaceholderSource="/Assets/PlaceholderSquare-200.png"
                     Source="{x:Bind PreviewImageUri}"
                     Tapped="ImageFrame_Tapped" />
             </DataTemplate>
 
             <DataTemplate x:Key="VideoTemplate" x:DataType="wrappers:DirectItemWrapper">
-                <Grid x:Name="VideoView" HorizontalAlignment="{x:Bind FromMe, Mode=OneTime, Converter={StaticResource FromMeAlignmentConverter}}">
+                <Grid x:Name="VideoView" HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
@@ -279,7 +278,6 @@
                         VerticalAlignment="Center"
                         Background="Transparent"
                         Canvas.ZIndex="2"
-                        Style="{StaticResource ButtonRevealStyle}"
                         Tapped="VideoPopupButton_OnTapped"
                         ToolTipService.ToolTip="Open video in immersive view">
                         <SymbolIcon Symbol="NewWindow" />
@@ -555,7 +553,7 @@
                         SelectionMode="None"
                         Tapped="OpenWebLink">
                         <GridView.ItemContainerStyle>
-                            <Style TargetType="GridViewItem">
+                            <Style BasedOn="{StaticResource DefaultGridViewItemStyle}" TargetType="GridViewItem">
                                 <Setter Property="Margin" Value="0" />
                             </Style>
                         </GridView.ItemContainerStyle>
@@ -639,6 +637,10 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock
@@ -651,79 +653,66 @@
             Text="{x:Bind Item.Source.Timestamp, Converter={StaticResource HumanizedDateTimeConverter}}"
             Visibility="{x:Bind Item.ShowTimestampHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
 
-        <Grid Grid.Row="1" HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <TextBlock
+            x:Name="SenderNameText"
+            Grid.Row="1"
+            Margin="0,0,0,2"
+            HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
+            Foreground="{StaticResource SystemControlForegroundBaseLowBrush}"
+            Style="{ThemeResource FluentCaptionTextStyle}"
+            Text="{x:Bind Item.Sender.Username}"
+            Visibility="{x:Bind Item.ShowNameHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
 
+        <StackPanel
+            Grid.Row="2"
+            Margin="6,0,6,-4"
+            Orientation="Vertical"
+            Visibility="{x:Bind Item.RepliedItem, Converter={StaticResource NullVisibilityConverter}}">
             <TextBlock
-                x:Name="SenderNameText"
-                Grid.Row="0"
-                Margin="0,0,0,2"
+                Margin="2,0,2,2"
                 HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
-                Foreground="{StaticResource SystemControlForegroundBaseLowBrush}"
-                Style="{ThemeResource FluentCaptionTextStyle}"
-                Text="{x:Bind Item.Sender.Username}"
-                Visibility="{x:Bind Item.ShowNameHeader, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
-
-            <StackPanel
-                Grid.Row="1"
-                Margin="6,0,6,-4"
-                Orientation="Vertical"
-                Visibility="{x:Bind Item.RepliedItem, Converter={StaticResource NullVisibilityConverter}}">
-                <TextBlock
-                    Margin="2,0,2,2"
-                    HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
-                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                    Style="{ThemeResource FluentCaptionTextStyle}">
-                    <Run Text="Replied to " /><Run Text="{x:Bind Item.RepliedItem.Sender.Username}" />
-                </TextBlock>
-
-                <ContentControl
-                    x:Name="RepliedContentControl"
-                    MaxHeight="160"
-                    HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
-                    Content="{x:Bind Item.RepliedItem}"
-                    ContentTemplateSelector="{StaticResource ItemTemplateSelector}"
-                    Opacity="0.5" />
-            </StackPanel>
+                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                Style="{ThemeResource FluentCaptionTextStyle}">
+                <Run Text="Replied to " /><Run Text="{x:Bind Item.RepliedItem.Sender.Username}" />
+            </TextBlock>
 
             <ContentControl
-                x:Name="MainContentControl"
-                Grid.Row="2"
-                HorizontalAlignment="{x:Bind Item.HorizontalAlignment}"
-                contract8Present:Shadow="{StaticResource SharedShadow}"
-                Content="{x:Bind Item}"
-                ContentTemplateSelector="{StaticResource ItemTemplateSelector}"
-                DoubleTapped="Item_DoubleTapped"
-                SizeChanged="ConfigTooltip_OnSizeChanged"
-                Translation="0,0,2" />
-
-            <controls1:ReactionsControl
-                Grid.Row="3"
-                Margin="6,-2,6,0"
+                x:Name="RepliedContentControl"
+                MaxHeight="160"
                 HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
-                Background="{ThemeResource FromThemItemBackground}"
-                BorderBrush="{ThemeResource MainBackground}"
-                BorderThickness="2"
-                Reactions="{x:Bind Item.ObservableReactions.EmojiReactions}" />
+                Content="{x:Bind Item.RepliedItem}"
+                ContentTemplateSelector="{StaticResource ItemTemplateSelector}"
+                Opacity="0.5" />
+        </StackPanel>
 
-            <TextBlock
-                x:Name="SeenIndicator"
-                Grid.Row="4"
-                Margin="4,2,4,4"
-                HorizontalAlignment="Right"
-                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                Style="{ThemeResource FluentCaptionTextStyle}"
-                Text="{x:Bind GetSeenText(Item.Parent.Source.LastSeenAt), Mode=OneWay}"
-                TextWrapping="Wrap"
-                Visibility="{x:Bind SeenIndicator.Text, Converter={StaticResource NullVisibilityConverter}, Mode=OneWay}" />
-        </Grid>
+        <ContentControl
+            x:Name="MainContentControl"
+            Grid.Row="3"
+            HorizontalAlignment="{x:Bind Item.HorizontalAlignment}"
+            Content="{x:Bind Item}"
+            ContentTemplateSelector="{StaticResource ItemTemplateSelector}"
+            DoubleTapped="Item_DoubleTapped"
+            SizeChanged="ConfigTooltip_OnSizeChanged" />
 
+        <controls1:ReactionsControl
+            Grid.Row="4"
+            Margin="6,-2,6,0"
+            HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
+            Background="{ThemeResource FromThemItemBackground}"
+            BorderBrush="{ThemeResource MainBackground}"
+            BorderThickness="2"
+            Reactions="{x:Bind Item.ObservableReactions.EmojiReactions}" />
+
+        <TextBlock
+            x:Name="SeenIndicator"
+            Grid.Row="5"
+            Margin="4,2,4,4"
+            HorizontalAlignment="Right"
+            Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+            Style="{ThemeResource FluentCaptionTextStyle}"
+            Text="{x:Bind GetSeenText(Item.Parent.Source.LastSeenAt), Mode=OneWay}"
+            TextWrapping="Wrap"
+            Visibility="{x:Bind SeenIndicator.Text, Converter={StaticResource NullVisibilityConverter}, Mode=OneWay}" />
     </Grid>
 
     <UserControl.ContextFlyout>

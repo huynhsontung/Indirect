@@ -24,38 +24,6 @@
             <converters:NullVisibilityConverter x:Key="NullVisibilityConverter" />
             <converters:NullVisibilityConverter x:Key="InvertNullVisibilityConverter" Invert="True" />
 
-            <Style
-                x:Key="EnterCompactOverlayButtonStyle"
-                BasedOn="{StaticResource DefaultAppBarButtonStyle}"
-                TargetType="AppBarButton">
-                <Setter Property="ToolTipService.ToolTip" Value="Enter Picture-in-Picture mode" />
-                <Setter Property="Label" Value="Enter Picture-in-Picture mode" />
-                <Setter Property="Icon">
-                    <Setter.Value>
-                        <FontIcon
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource SymbolThemeFontFamily}"
-                            Glyph="&#xEE49;" />
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
-            <Style
-                x:Key="ExitCompactOverlayButtonStyle"
-                BasedOn="{StaticResource DefaultAppBarButtonStyle}"
-                TargetType="AppBarButton">
-                <Setter Property="ToolTipService.ToolTip" Value="Exit Picture-in-Picture mode" />
-                <Setter Property="Label" Value="Exit Picture-in-Picture mode" />
-                <Setter Property="Icon">
-                    <Setter.Value>
-                        <FontIcon
-                            VerticalAlignment="Center"
-                            FontFamily="{StaticResource SymbolThemeFontFamily}"
-                            Glyph="&#xEE47;" />
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
             <muxc:TeachingTip
                 x:Name="SendButtonTeachingTip"
                 Title="Customize your quick reply"
@@ -199,11 +167,20 @@
                 </AppBarButton>
 
                 <AppBarButton
+                    x:Name="CompactOverlayButton"
                     Width="48"
                     Click="CompactOverlayButton_OnClick"
+                    Label="Enter Picture-in-Picture mode"
                     LabelPosition="Collapsed"
-                    Style="{StaticResource EnterCompactOverlayButtonStyle}"
-                    Visibility="{x:Bind IsNewWindow, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}" />
+                    ToolTipService.ToolTip="Enter Picture-in-Picture mode"
+                    Visibility="{x:Bind IsNewWindow, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
+                    <AppBarButton.Icon>
+                        <FontIcon
+                            VerticalAlignment="Center"
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Glyph="&#xEE49;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
 
                 <CommandBar.Content>
                     <Grid
@@ -546,6 +523,23 @@
                     <VisualState.Setters>
                         <Setter Target="ContentGrid.CornerRadius" Value="0" />
                         <Setter x:Name="BorderThicknessSetter" Target="ContentGrid.BorderThickness" Value="0,1,0,0" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+            <VisualStateGroup x:Name="CompactOverlayStates">
+                <VisualState x:Name="EnterCompactOverlay" />
+                <VisualState x:Name="ExitCompactOverlay">
+                    <VisualState.Setters>
+                        <Setter Target="CompactOverlayButton.(ToolTipService.ToolTip)" Value="Exit Picture-in-Picture mode" />
+                        <Setter Target="CompactOverlayButton.Label" Value="Exit Picture-in-Picture mode" />
+                        <Setter Target="CompactOverlayButton.Icon">
+                            <Setter.Value>
+                                <FontIcon
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xEE47;" />
+                            </Setter.Value>
+                        </Setter>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
