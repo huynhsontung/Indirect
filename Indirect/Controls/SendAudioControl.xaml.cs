@@ -98,7 +98,7 @@ namespace Indirect.Controls
                 case Operation.Recording:
                     _audio = await _recorder.StopAsync();
                     _operation = Operation.Stopped;
-                    AudioPlayer.Source = _audio.AudioFile;
+                    AudioPlayer.Source = _audio?.AudioFile;
                     VisualStateManager.GoToState(this, "Stopped", true);
                     if (!(_tokenSource?.IsCancellationRequested ?? true))
                     {
