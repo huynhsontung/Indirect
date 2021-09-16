@@ -18,7 +18,8 @@ namespace Indirect.Controls
         {
             RecordReady,
             Recording,
-            Stopped
+            Stopped,
+            Busy
         }
 
         private static Flyout _openFlyout;
@@ -81,6 +82,7 @@ namespace Indirect.Controls
             switch (_operation)
             {
                 case Operation.RecordReady:
+                    _operation = Operation.Busy;
                     if (await _recorder.InitializeAsync())
                     {
                         _operation = Operation.Recording;
@@ -96,6 +98,7 @@ namespace Indirect.Controls
                     }
                     break;
                 case Operation.Recording:
+                    _operation = Operation.Busy;
                     _audio = await _recorder.StopAsync();
                     _operation = Operation.Stopped;
                     AudioPlayer.Source = _audio?.AudioFile;
@@ -108,6 +111,8 @@ namespace Indirect.Controls
                 case Operation.Stopped:
                     _returnAudio = _audio;
                     _openFlyout.Hide();
+                    break;
+                case Operation.Busy:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -144,7 +149,10 @@ namespace Indirect.Controls
                 }
 
                 tokenSource.Cancel();
-                MainButton_OnClick(MainButton, null);
+                if (_operation == Operation.Recording)
+                {
+                    MainButton_OnClick(MainButton, null);
+                }
             }
         }
     }

@@ -10,6 +10,7 @@ using Windows.Media.Render;
 using Windows.Media.Transcoding;
 using Windows.Storage;
 using Indirect.Entities;
+using InstagramAPI.Utils;
 
 namespace Indirect.Services
 {
@@ -93,12 +94,21 @@ namespace Indirect.Services
 
         public async Task<AudioWithWaveform> StopAsync()
         {
-            _audioGraph.Stop();
-            _fileOutputNode.Stop();
-            var errorReason = await _fileOutputNode.FinalizeAsync();
-            return errorReason != TranscodeFailureReason.None
-                ? null
-                : new AudioWithWaveform { AudioFile = _audioFile, Waveform = _waveform };
+            try
+            {
+                _audioGraph.Stop();
+                _fileOutputNode.Stop();
+                var errorReason = await _fileOutputNode.FinalizeAsync();
+                return errorReason != TranscodeFailureReason.None
+                    ? null
+                    : new AudioWithWaveform { AudioFile = _audioFile, Waveform = _waveform };
+            }
+            catch (Exception e)
+            {
+                ExtendedError = e;
+                DebugLogger.LogException(e);
+                return null;
+            }
         }
 
         private void AudioGraphOnQuantumStarted(AudioGraph sender, object args)
