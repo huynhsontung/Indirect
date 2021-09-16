@@ -154,6 +154,22 @@ namespace InstagramAPI.Utils
             }
         }
 
+        public static async Task RemoveLegacySessions()
+        {
+            var files = await LocalFolder.GetFilesAsync();
+            foreach (var sessionFile in files.Where(x => x.FileType == SESSION_EXT && x.DisplayName.Any(char.IsLetter)))
+            {
+                try
+                {
+                    await sessionFile.DeleteAsync();
+                }
+                catch (Exception)
+                {
+                    // pass
+                }
+            }
+        }
+
         public static async Task<bool> TryRemoveSessionAsync(UserSessionData session)
         {
             if (session.LoggedInUser?.Pk == default)

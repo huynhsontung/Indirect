@@ -16,6 +16,7 @@ namespace BackgroundPushClient
             var deferral = taskInstance.GetDeferral();
             try
             {
+                await SessionManager.RemoveLegacySessions();
                 PushClient.UnregisterTasks();
                 BackgroundExecutionManager.RemoveAccess();
                 UnregisterLegacySocket();
