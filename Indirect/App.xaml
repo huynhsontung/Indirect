@@ -44,7 +44,6 @@
 
             <Style TargetType="controls:ImageEx">
                 <Setter Property="IsCacheEnabled" Value="True" />
-                <Setter Property="CachingStrategy" Value="Internal" />
             </Style>
 
             <x:Double x:Key="CompactWindowWidth">0</x:Double>

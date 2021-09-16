@@ -11,7 +11,7 @@ using Indirect.Entities;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI.Utils;
-using Microsoft.Toolkit.Uwp.UI.Extensions;
+using Microsoft.Toolkit.Uwp.UI;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -278,14 +278,14 @@ namespace Indirect.Controls
                     break;
                 case VirtualKey.GamepadX:
                     e.Handled = true;
-                    var button = StoryView.ContainerFromItem(selected)?.FindDescendantByName("ReactButton") as Control;
+                    var button = StoryView.ContainerFromItem(selected)?.FindDescendant("ReactButton") as Control;
                     if (button?.Visibility == Visibility.Visible)
                     {
                         button.Focus(FocusState.Programmatic);
                     }
                     else
                     {
-                        (StoryView.ContainerFromItem(selected)?.FindDescendantByName("ReplyButton") as Control)?.Focus(
+                        (StoryView.ContainerFromItem(selected)?.FindDescendant("ReplyButton") as Control)?.Focus(
                             FocusState.Programmatic);
                     }
                     break;

@@ -176,7 +176,7 @@ namespace Indirect
             var result = await InstaApi.GetThreadAsync(thread.Source.ThreadId, Inbox.SeqId, PaginationParameters.MaxPagesToLoad(1));
             if (result.IsSucceeded)
             {
-                await thread.Dispatcher.AwaitableRunAsync(() => { thread.Update(result.Value); });
+                await thread.Dispatcher.QuickRunAsync(() => { thread.Update(result.Value); });
             }
         }
 

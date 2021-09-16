@@ -17,8 +17,8 @@ using InstagramAPI;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
+using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.Toolkit.Uwp.UI.Controls;
-using Microsoft.Toolkit.Uwp.UI.Extensions;
 using Microsoft.UI.Xaml.Controls;
 using SwipeItem = Windows.UI.Xaml.Controls.SwipeItem;
 using SwipeItemInvokedEventArgs = Windows.UI.Xaml.Controls.SwipeItemInvokedEventArgs;
@@ -242,9 +242,9 @@ namespace Indirect.Pages
             }
         }
 
-        private void OnViewStateChange(object sender, MasterDetailsViewState state)
+        private void OnViewStateChange(object sender, ListDetailsViewState state)
         {
-            BackButton.Visibility = state == MasterDetailsViewState.Details ? Visibility.Visible : Visibility.Collapsed;
+            BackButton.Visibility = state == ListDetailsViewState.Details ? Visibility.Visible : Visibility.Collapsed;
             BackButtonPlaceholder.Visibility = BackButton.Visibility;
         }
 
@@ -278,9 +278,9 @@ namespace Indirect.Pages
 
         private async void MainLayout_OnItemClick(object sender, ItemClickEventArgs e)
         {
-            var details = (TextBox)MainLayout.FindDescendantByName("MessageTextBox");
+            var details = (TextBox)MainLayout.FindDescendant("MessageTextBox");
             if (details == null) return;
-            if (MainLayout.SelectedIndex == -1 && MainLayout.ViewState == MasterDetailsViewState.Both)
+            if (MainLayout.SelectedIndex == -1 && MainLayout.ViewState == ListDetailsViewState.Both)
             {
                 await Task.Delay(100);
             }
@@ -392,12 +392,18 @@ namespace Indirect.Pages
 
         private void Candidate_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            (sender as FrameworkElement).FindDescendantByName("ClearSingleCandidateButton").Visibility = Visibility.Visible;
+            if (((FrameworkElement)sender).FindDescendant("ClearSingleCandidateButton") is Button button)
+            {
+                button.Visibility = Visibility.Visible;
+            }
         }
 
         private void Candidate_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
-            (sender as FrameworkElement).FindDescendantByName("ClearSingleCandidateButton").Visibility = Visibility.Collapsed;
+            if (((FrameworkElement)sender).FindDescendant("ClearSingleCandidateButton") is Button button)
+            {
+                button.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void ClearSingleCandidateSwipe_OnInvoked(SwipeItem sender, SwipeItemInvokedEventArgs args)

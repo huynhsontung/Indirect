@@ -21,7 +21,7 @@ using Indirect.Utilities;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
-using Microsoft.Toolkit.Uwp.UI.Extensions;
+using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.UI.Xaml.Controls;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
@@ -507,7 +507,7 @@ namespace Indirect.Controls
             if (FocusManager.GetFocusedElement() is ListViewItem item &&
                 item.ContentTemplateRoot is ThreadItemControl itemControl &&
                 itemControl.ContextFlyout != null &&
-                itemControl.FindChildByName("MainContentControl") is FrameworkElement element)
+                itemControl.FindChild("MainContentControl") is FrameworkElement element)
             {
                 args.Handled = true;
                 itemControl.ContextFlyout.ShowAt(element,

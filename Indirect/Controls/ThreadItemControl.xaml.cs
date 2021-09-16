@@ -13,7 +13,7 @@ using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
-using Microsoft.Toolkit.Uwp.UI.Extensions;
+using Microsoft.Toolkit.Uwp.UI;
 using NeoSmart.Unicode;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
@@ -248,7 +248,7 @@ namespace Indirect.Controls
         private void ReplyToItem_OnClick(object sender, RoutedEventArgs e)
         {
             Item.Parent.ReplyingItem = Item;
-            if (Window.Current.Content.FindDescendantByName("MessageTextBox") is Control control)
+            if (Window.Current.Content.FindDescendant("MessageTextBox") is Control control)
             {
                 control.Focus(FocusState.Programmatic);
             }

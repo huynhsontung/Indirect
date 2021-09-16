@@ -17,6 +17,7 @@ using Indirect.Pages;
 using Indirect.Services;
 using InstagramAPI;
 using InstagramAPI.Utils;
+using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.Helpers;
 
 namespace Indirect
@@ -68,7 +69,7 @@ namespace Indirect
         public Task<int> CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)
         {
             var newView = view ?? CoreApplication.CreateNewView();
-            return newView.Dispatcher.AwaitableRunAsync(async () =>
+            return newView.DispatcherQueue.EnqueueAsync(async () =>
             {
                 var frame = new Frame();
                 frame.Navigate(targetPage, parameter);
