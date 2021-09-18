@@ -42,7 +42,6 @@ namespace Indirect.Services
         public async Task<bool> InitializeAsync()
         {
             _sampleCount = 0;
-            _audioGraph?.Dispose();
             _waveform.Clear();
             var settings = new AudioGraphSettings(AudioRenderCategory.Speech);
             CreateAudioGraphResult result = await AudioGraph.CreateAsync(settings);
@@ -52,6 +51,7 @@ namespace Indirect.Services
                 return false;
             }
 
+            _audioGraph?.Dispose();
             var audioGraph = _audioGraph = result.Graph;
 
             try
@@ -145,6 +145,7 @@ namespace Indirect.Services
         public void Dispose()
         {
             _audioGraph?.Dispose();
+            _audioGraph = null;
         }
     }
 }
