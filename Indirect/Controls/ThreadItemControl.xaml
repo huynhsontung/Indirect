@@ -218,7 +218,6 @@
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                         CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                         IsCacheEnabled="True"
-                        PlaceholderSource="/Assets/PlaceholderSquare-200.png"
                         Source="{x:Bind PreviewImageUri}"
                         Tapped="OpenWebLink" />
 
@@ -257,7 +256,6 @@
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                     IsCacheEnabled="True"
-                    PlaceholderSource="/Assets/PlaceholderSquare-200.png"
                     Source="{x:Bind PreviewImageUri}"
                     Tapped="ImageFrame_Tapped" />
             </DataTemplate>
