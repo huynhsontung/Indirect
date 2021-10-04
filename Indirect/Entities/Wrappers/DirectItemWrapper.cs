@@ -474,12 +474,12 @@ namespace Indirect.Entities.Wrappers
 
         private static void CheckItemTextForEmoji(DirectItem item)
         {
-            if (item.ItemType != DirectItemType.Text)
+            if (item.ItemType != DirectItemType.Text && item.ItemType != DirectItemType.Like)
             {
                 return;
             }
 
-            if (item.Text.Length > 1 && Emoji.IsEmoji(item.Text))
+            if (!string.IsNullOrEmpty(item.Text) && Emoji.IsEmoji(item.Text))
             {
                 item.Like = item.Text;
                 item.ItemType = DirectItemType.Like;
