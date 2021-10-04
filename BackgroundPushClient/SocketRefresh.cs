@@ -12,7 +12,6 @@ namespace BackgroundPushClient
             try
             {
                 await Utils.RefreshAllPushSockets();
-                Utils.PopMessageToast("Successfully refreshed push sockets.");
             }
             catch (Exception e)
             {
