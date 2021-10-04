@@ -136,17 +136,17 @@ namespace Indirect.Entities.Wrappers
                 case DirectItemType.Text when !string.IsNullOrEmpty(Source.Text) && Source.Text[0] == '#' && !Source.Text.Contains(' '):
                     return new Uri("https://www.instagram.com/explore/tags/" + Source.Text.Substring(1));
 
-                case DirectItemType.Link:
+                case DirectItemType.Link when !string.IsNullOrEmpty(Source.Link?.LinkContext?.LinkUrl):
                     return new UriBuilder(Source.Link.LinkContext.LinkUrl).Uri;
 
-                case DirectItemType.MediaShare:
+                case DirectItemType.MediaShare when !string.IsNullOrEmpty(Source.MediaShare?.Code):
                     return new Uri("https://www.instagram.com/p/" + Source.MediaShare.Code);
 
-                case DirectItemType.Hashtag:
+                case DirectItemType.Hashtag when !string.IsNullOrEmpty(Source.HashtagMedia?.Name):
                     return new Uri("https://www.instagram.com/explore/tags/" + Source.HashtagMedia.Name.ToLower(CultureInfo.CurrentCulture));
 
                 case DirectItemType.Profile:
-                    return Source.Profile.ProfileUrl;
+                    return Source.Profile?.ProfileUrl;
 
                 case DirectItemType.Clip when !string.IsNullOrEmpty(Source.Clip?.Clip?.Code):
                     return new Uri("https://www.instagram.com/p/" + Source.Clip.Clip.Code);
