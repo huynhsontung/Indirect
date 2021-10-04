@@ -71,11 +71,8 @@
                     <Button
                         HorizontalAlignment="Center"
                         Click="SendFileButton_OnClick"
-                        Content="Send">
-                        <Button.KeyboardAccelerators>
-                            <KeyboardAccelerator Key="Enter" />
-                        </Button.KeyboardAccelerators>
-                    </Button>
+                        Content="Send"
+                        TabIndex="0" />
                 </StackPanel>
             </Flyout>
         </FlyoutBase.AttachedFlyout>
