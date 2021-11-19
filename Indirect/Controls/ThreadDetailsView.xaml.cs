@@ -348,12 +348,22 @@ namespace Indirect.Controls
 
         private async void MessageTextBox_OnCtrlV(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
         {
-            var dataPackage = Clipboard.GetContent();
-            if (dataPackage.Contains(StandardDataFormats.Bitmap))
+            try
             {
-                var imageStream = await dataPackage.GetBitmapAsync();
-                FilePickerPreview.Source = await imageStream.OpenReadAsync();
-                FilePickerFlyout.ShowAt(SendFilesButton);
+                var dataPackage = Clipboard.GetContent();
+                if (dataPackage.Contains(StandardDataFormats.Bitmap))
+                {
+                    var imageStream = await dataPackage.GetBitmapAsync();
+                    FilePickerPreview.Source = await imageStream.OpenReadAsync();
+                    FilePickerFlyout.ShowAt(SendFilesButton);
+                }
+            }
+            catch (Exception)
+            {
+                if (Window.Current.Content is MainPage mainPage)
+                {
+                    mainPage.ShowStatus("Cannot open clipboard", "Please check system settings and try again later", InfoBarSeverity.Error, 5);
+                }
             }
         }
 
@@ -484,8 +494,11 @@ namespace Indirect.Controls
 
         private void ClearReplyButton_OnClick(object sender, RoutedEventArgs e)
         {
-            Thread.ReplyingItem = null;
-            MessageTextBox.Focus(FocusState.Programmatic);
+            if (Thread != null)
+            {
+                Thread.ReplyingItem = null;
+                MessageTextBox.Focus(FocusState.Programmatic);
+            }
         }
 
         private async void SendButton_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)

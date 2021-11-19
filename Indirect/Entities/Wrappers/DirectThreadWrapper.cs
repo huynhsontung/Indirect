@@ -165,7 +165,7 @@ namespace Indirect.Entities.Wrappers
 
         private void OnQuickReplyEmojiChanged(DependencyObject sender, DependencyProperty dp)
         {
-            if (!string.IsNullOrEmpty(QuickReplyEmoji))
+            if (!string.IsNullOrEmpty(QuickReplyEmoji) && !string.IsNullOrEmpty(ThreadId))
             {
                 _viewModel.Settings.SetForThread(ThreadId, nameof(QuickReplyEmoji), QuickReplyEmoji);
             }
