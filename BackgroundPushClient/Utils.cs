@@ -320,7 +320,6 @@ namespace BackgroundPushClient
                     await Task.Delay(TimeSpan.FromSeconds(PushClient.WaitTime));
                     await instagram.PushClient.TransferPushSocket();
                     await SessionManager.SaveSessionAsync(instagram, true);
-                    PopMessageToast($"Push client for {instagram.Session.LoggedInUser.Username} started.");
                 }
                 catch (Exception e)
                 {
