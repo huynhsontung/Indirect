@@ -95,6 +95,7 @@ namespace Indirect.Entities.Wrappers
 
         public Dictionary<long, UserInfo> DetailedUserInfoDictionary { get; }
         public bool IsContactPanel { get; set; }
+        public bool IsTemp { get; set; }
         public ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper> ObservableItems { get; }
         public BaseUser Viewer => _viewModel.LoggedInUser;
         public string ThreadId => Source.ThreadId;

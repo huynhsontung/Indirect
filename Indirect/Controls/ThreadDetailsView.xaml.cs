@@ -198,45 +198,7 @@ namespace Indirect.Controls
             var message = MessageTextBox.Text;
             MessageTextBox.Text = string.Empty;
             MessageTextBox.Focus(FocusState.Programmatic);
-            if(string.IsNullOrEmpty(message))
-            {
-                if (string.IsNullOrEmpty(Thread.QuickReplyEmoji) || Thread.QuickReplyEmoji == "♥")
-                {
-                    await ViewModel.ChatService.SendLike(Thread);
-                    return;
-                }
-
-                message = Thread.QuickReplyEmoji;
-            }
-
-            if (string.IsNullOrWhiteSpace(message))
-            {
-                return;
-            }
-
-            message = message.Trim(' ', '\n', '\r');
-            if (Thread.ReplyingItem != null)
-            {
-                var replyingItem = Thread.ReplyingItem;
-                Thread.ReplyingItem = null;
-                await ViewModel.ChatService.ReplyToItem(replyingItem, message);
-            } 
-            else
-            {
-                var links = Helpers.ExtractLinks(message);
-                if (links.Count > 0)
-                {
-                    await ViewModel.ChatService.SendLink(Thread, message, links);
-                }
-                else
-                {
-                    var responseThread = await ViewModel.ChatService.SendTextMessage(Thread, message);
-                    if (responseThread != null)
-                    {
-                        Thread.Update(responseThread);
-                    }
-                }
-            }
+            await ViewModel.ChatService.SendMessage(Thread, message);
         }
 
         private async void SendFilesButton_OnClick(object sender, RoutedEventArgs e)

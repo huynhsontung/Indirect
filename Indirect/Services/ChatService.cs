@@ -29,6 +29,58 @@ namespace Indirect.Services
             _viewModel = viewModel;
         }
 
+        public async Task SendMessage(DirectThreadWrapper thread, string message)
+        {
+            var messageSent = true;
+
+            try
+            {
+                if (string.IsNullOrEmpty(message))
+                {
+                    if (string.IsNullOrEmpty(thread.QuickReplyEmoji) || thread.QuickReplyEmoji == "♥")
+                    {
+                        await SendLike(thread);
+                        return;
+                    }
+
+                    message = thread.QuickReplyEmoji;
+                }
+
+                if (string.IsNullOrWhiteSpace(message))
+                {
+                    messageSent = false;
+                    return;
+                }
+
+                message = message.Trim(' ', '\n', '\r');
+                if (thread.ReplyingItem != null)
+                {
+                    var replyingItem = thread.ReplyingItem;
+                    thread.ReplyingItem = null;
+                    await ReplyToItem(replyingItem, message);
+                    return;
+                }
+
+                var links = Helpers.ExtractLinks(message);
+                if (links.Count > 0)
+                {
+                    await SendLink(thread, message, links);
+                }
+                else
+                {
+                    var responseThread = await SendTextMessage(thread, message);
+                    if (responseThread != null)
+                    {
+                        thread.Update(responseThread);
+                    }
+                }
+            }
+            finally
+            {
+                if (messageSent) thread.IsTemp = false;
+            }
+        }
+
         public async Task SendLink(DirectThreadWrapper thread, string text, List<string> links)
         {
             Contract.Requires(thread != null);

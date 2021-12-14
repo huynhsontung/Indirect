@@ -66,11 +66,12 @@ namespace Indirect.Entities.Wrappers
                 if (tempThread != null && tempThread != e.NewValue)
                 {
                     inbox._tempThread = null;
-                    inbox.Threads.Remove(tempThread);
+                    if (tempThread.IsTemp) inbox.Threads.Remove(tempThread);
                 }
 
                 if (e.NewValue is DirectThreadWrapper newThread && !inbox.Threads.Contains(newThread))
                 {
+                    newThread.IsTemp = true;
                     inbox.Threads.Insert(0, newThread);
                     inbox._tempThread = newThread;
                     inbox.SelectedThread = newThread;
