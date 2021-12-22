@@ -41,6 +41,7 @@ namespace Indirect.Controls
             var view = (ThreadItemControl)d;
             var item = (DirectItemWrapper)e.NewValue;
             view.ProcessItem();
+            view.UpdateItemMargin();
             view.UpdateContextMenu();
             view.Bindings.Update();
         }
@@ -104,6 +105,12 @@ namespace Indirect.Controls
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unexpected RelativeItemMode");
             }
+        }
+
+        private void UpdateItemMargin()
+        {
+            if (Item == null) return;
+            MainContentControl.Margin = Item.FromMe ? new Thickness(50, 0, 0, 0) : new Thickness(0, 0, 50, 0);
         }
 
         private string GetSeenText(Dictionary<long, LastSeen> lastSeenAt)
