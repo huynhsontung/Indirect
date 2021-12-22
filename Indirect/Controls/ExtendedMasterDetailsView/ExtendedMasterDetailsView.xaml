@@ -16,13 +16,10 @@
                         BorderThickness="{TemplateBinding BorderThickness}">
                         <Grid x:Name="RootPanel">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition
-                                    x:Name="MasterColumn"
-                                    Width="*"
-                                    MinWidth="{Binding MasterPaneWidth, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <ColumnDefinition x:Name="MasterColumn" Width="*" />
                                 <ColumnDefinition
                                     x:Name="DetailsColumn"
-                                    Width="2*"
+                                    Width="1.5*"
                                     MinWidth="320" />
                             </Grid.ColumnDefinitions>
                             <Grid
@@ -68,7 +65,8 @@
                                 Background="Transparent"
                                 Canvas.ZIndex="1"
                                 GripperForeground="Transparent"
-                                ResizeBehavior="BasedOnAlignment">
+                                ResizeBehavior="BasedOnAlignment"
+                                Visibility="Collapsed">
                                 <community:GridSplitter.RenderTransform>
                                     <ScaleTransform ScaleX="0.5" />
                                 </community:GridSplitter.RenderTransform>

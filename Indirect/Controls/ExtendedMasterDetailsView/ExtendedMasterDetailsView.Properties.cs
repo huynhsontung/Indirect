@@ -128,16 +128,6 @@ namespace Indirect.Controls
             new PropertyMetadata(null));
 
         /// <summary>
-        /// Identifies the <see cref="MasterPaneWidth"/> dependency property.
-        /// </summary>
-        /// <returns>The identifier for the <see cref="MasterPaneWidth"/> dependency property.</returns>
-        public static readonly DependencyProperty MasterPaneWidthProperty = DependencyProperty.Register(
-            nameof(MasterPaneWidth),
-            typeof(double),
-            typeof(ExtendedMasterDetailsView),
-            new PropertyMetadata(320d));
-
-        /// <summary>
         /// Identifies the <see cref="NoSelectionContent"/> dependency property.
         /// </summary>
         /// <returns>The identifier for the <see cref="NoSelectionContent"/> dependency property.</returns>
@@ -309,19 +299,6 @@ namespace Indirect.Controls
         {
             get { return (DataTemplate)GetValue(DetailsHeaderTemplateProperty); }
             set { SetValue(DetailsHeaderTemplateProperty, value); }
-        }
-
-        /// <summary>
-        /// Gets or sets the width of the master pane when the view is expanded.
-        /// </summary>
-        /// <returns>
-        /// The width of the SplitView pane when it's fully expanded. The default is 320
-        /// device-independent pixel (DIP).
-        /// </returns>
-        public double MasterPaneWidth
-        {
-            get { return (double)GetValue(MasterPaneWidthProperty); }
-            set { SetValue(MasterPaneWidthProperty, value); }
         }
 
         /// <summary>
