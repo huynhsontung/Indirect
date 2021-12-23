@@ -68,11 +68,7 @@ namespace Indirect.Services
                 }
                 else
                 {
-                    var responseThread = await SendTextMessage(thread, message);
-                    if (responseThread != null)
-                    {
-                        thread.Update(responseThread);
-                    }
+                    await SendTextMessage(thread, message);
                 }
             }
             finally
