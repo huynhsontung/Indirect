@@ -262,7 +262,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ApacheThrift">
-      <Version>0.15.0</Version>
+      <Version>0.14.2</Version>
     </PackageReference>
     <PackageReference Include="DotNetZip">
       <Version>1.16.0</Version>
