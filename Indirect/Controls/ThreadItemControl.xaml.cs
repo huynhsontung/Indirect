@@ -110,15 +110,23 @@ namespace Indirect.Controls
 
         private void UpdateContextMenu()
         {
-            if (Item.Source.ItemType == DirectItemType.ActionLog)
+            switch (Item.Source.ItemType)
             {
-                ItemContainer.Visibility = Item.Source.HideInThread ? Visibility.Collapsed : Visibility.Visible;
-                ContextFlyout = null;
-            }
+                case DirectItemType.ActionLog:
+                    ItemContainer.Visibility = Item.Source.HideInThread ? Visibility.Collapsed : Visibility.Visible;
+                    ContextFlyout = null;
+                    break;
 
-            if (Item.Source.ItemType == DirectItemType.Text)
-            {
-                MenuCopyOption.Visibility = Visibility.Visible;
+                case DirectItemType.VideoCallEvent:
+                    ContextFlyout = null;
+                    break;
+
+                case DirectItemType.Text:
+                    MenuCopyOption.Visibility = Visibility.Visible;
+                    break;
+
+                default:
+                    break;
             }
 
             if (Item.VideoUri != null || Item.FullImageUri != null)
@@ -243,7 +251,7 @@ namespace Indirect.Controls
 
         private async void Item_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            if (Item.ObservableReactions.MeLiked) return;
+            if (Item.ObservableReactions.MeLiked || Item.Source.ItemType == DirectItemType.VideoCallEvent) return;
             await ViewModel.ChatService.ReactToItem(Item, Emoji.RedHeart.ToString());
         }
 

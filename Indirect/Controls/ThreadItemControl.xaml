@@ -489,23 +489,49 @@
             </DataTemplate>
 
             <DataTemplate x:Key="VideoCallTemplate" x:DataType="wrappers:DirectItemWrapper">
-                <Border
-                    x:Name="NotAvailableMessage"
+                <Grid
+                    MinWidth="{StaticResource MediaItemMaxWidth}"
+                    MaxWidth="{StaticResource TextItemMaxWidth}"
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
-                    Background="Transparent"
-                    BorderBrush="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                    BorderThickness="1"
+                    Background="{ThemeResource FromThemItemBackground}"
                     CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
-                    <TextBlock
-                        MaxWidth="{StaticResource TextItemMaxWidth}"
-                        Margin="{StaticResource TextMargin}"
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border
+                        Grid.Row="0"
+                        Grid.RowSpan="2"
+                        Grid.Column="0"
+                        Margin="10,8,0,8"
                         HorizontalAlignment="Center"
-                        FontStyle="Italic"
-                        Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                        Style="{ThemeResource FluentCaptionTextStyle}"
+                        VerticalAlignment="Center"
+                        Background="{StaticResource SystemControlBackgroundBaseLowBrush}"
+                        CornerRadius="99">
+                        <SymbolIcon Margin="6" Symbol="{x:Bind GetVideoEventSymbol()}" />
+                    </Border>
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="10,8,8,0"
+                        VerticalAlignment="Bottom"
+                        FontWeight="Medium"
                         Text="{x:Bind Description}"
                         TextWrapping="Wrap" />
-                </Border>
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="10,0,8,8"
+                        VerticalAlignment="Top"
+                        Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                        Style="{ThemeResource FluentCaptionTextStyle}"
+                        Text="{x:Bind MinimalTimestamp}"
+                        TextWrapping="Wrap" />
+                </Grid>
             </DataTemplate>
 
             <DataTemplate x:Key="ProfileTemplate" x:DataType="wrappers:DirectItemWrapper">

@@ -63,6 +63,8 @@ namespace Indirect.Entities.Wrappers
 
         public LinkTextForDisplay LinkText { get; }
 
+        public string MinimalTimestamp => Source.Timestamp.ToString("t");
+
         public bool IsReplyable => GetItemReplyable();
 
         public HorizontalAlignment HorizontalAlignment => GetHorizontalAlignment();
@@ -425,14 +427,7 @@ namespace Indirect.Entities.Wrappers
                         break;
 
                     case DirectItemType.VideoCallEvent:
-                        if (Source.VideoCallEvent?.Action == "video_call_started")
-                        {
-                            Description = FromMe ? "You started a video chat" : "Video chat started";
-                        }
-                        else
-                        {
-                            Description = "Video chat ended";
-                        }
+                        Description = Source.VideoCallEvent?.Description;
                         break;
 
                     case DirectItemType.Profile:
@@ -511,6 +506,13 @@ namespace Indirect.Entities.Wrappers
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unexpected RelativeItemMode");
             }
+        }
+
+        public Windows.UI.Xaml.Controls.Symbol GetVideoEventSymbol()
+        {
+            return Source.VideoCallEvent?.Action == "video_call_ended"
+                ? Windows.UI.Xaml.Controls.Symbol.HangUp
+                : Windows.UI.Xaml.Controls.Symbol.Phone;
         }
     }
 }
