@@ -58,19 +58,6 @@
                                     XYFocusKeyboardNavigation="Enabled" />
                                 <Grid x:Name="MasterCommandBarPanel" Grid.Row="2" />
                             </Grid>
-                            <community:GridSplitter
-                                x:Name="RootPanelSplitter"
-                                Grid.Column="1"
-                                HorizontalAlignment="Left"
-                                Background="Transparent"
-                                Canvas.ZIndex="1"
-                                GripperForeground="Transparent"
-                                ResizeBehavior="BasedOnAlignment"
-                                Visibility="Collapsed">
-                                <community:GridSplitter.RenderTransform>
-                                    <ScaleTransform ScaleX="0.5" />
-                                </community:GridSplitter.RenderTransform>
-                            </community:GridSplitter>
                             <Grid
                                 x:Name="DetailsPanel"
                                 Grid.Column="1"
@@ -232,13 +219,11 @@
                                         <Setter Target="NoSelectionPresenter.Visibility" Value="Collapsed" />
                                         <Setter Target="MasterPanel.BorderThickness" Value="0" />
                                         <Setter Target="MasterPanel.Width" Value="NaN" />
-                                        <Setter Target="RootPanelSplitter.Visibility" Value="Collapsed" />
                                         <Setter Target="DetailsColumn.MinWidth" Value="0" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="IntermediateState">
                                     <VisualState.Setters>
-                                        <Setter Target="RootPanelSplitter.Visibility" Value="Collapsed" />
                                         <Setter Target="MasterPanel.Width" Value="80" />
                                         <Setter Target="MasterColumn.Width" Value="Auto" />
                                         <Setter Target="MasterColumn.MinWidth" Value="0" />
