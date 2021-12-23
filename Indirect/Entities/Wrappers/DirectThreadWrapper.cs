@@ -105,6 +105,7 @@ namespace Indirect.Entities.Wrappers
         private readonly DispatcherQueue _dispatcherQueue;
         private readonly TimeSpan _showTimestampThreshold;
         private readonly TimeSpan _showSeparatorThreshold;
+        private int _pageCounter;
 
         /// <summary>
         /// Only use this constructor to make empty placeholder thread.
@@ -370,40 +371,59 @@ namespace Indirect.Entities.Wrappers
 
         public async Task<IEnumerable<DirectItemWrapper>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
         {
-            // Without ThreadId we cant fetch thread items.
-            var source = Source;
-            if (string.IsNullOrEmpty(source.ThreadId) || !(source.HasOlder ?? true))
+            try
             {
-                return new List<DirectItemWrapper>(0);
+                while (pageIndex > _pageCounter)
+                {
+                    try
+                    {
+                        await Task.Delay(100, cancellationToken);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        return new List<DirectItemWrapper>(0);
+                    }
+                }
+
+                // Without ThreadId we cant fetch thread items.
+                var source = Source;
+                if (string.IsNullOrEmpty(source.ThreadId) || !(source.HasOlder ?? true))
+                {
+                    return new List<DirectItemWrapper>(0);
+                }
+
+                var pagesToLoad = pageSize / 20;
+                if (pagesToLoad < 1) pagesToLoad = 1;
+                var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
+                pagination.StartFromMaxId(source.OldestCursor);
+
+                var result = await _viewModel.InstaApi.GetThreadAsync(source.ThreadId, _viewModel.Inbox.SeqId, pagination);
+                if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0)
+                {
+                    return new List<DirectItemWrapper>(0);
+                }
+
+                UpdateExcludeItemList(result.Value);
+                var wrappedItems = WrapItems(result.Value.Items);
+                var oldestItem = ObservableItems.FirstOrDefault();
+                if (oldestItem != null && !oldestItem.Source.HideInThread)
+                {
+                    var itemsToDecorate = wrappedItems.ToList();
+                    itemsToDecorate.Add(oldestItem);
+                    DecorateItems(itemsToDecorate);
+                }
+                else
+                {
+                    DecorateItems(wrappedItems);
+                }
+
+                result.Value.Items = null;
+                return wrappedItems;
             }
-
-            var pagesToLoad = pageSize / 20;
-            if (pagesToLoad < 1) pagesToLoad = 1;
-            var pagination = PaginationParameters.MaxPagesToLoad(pagesToLoad);
-            pagination.StartFromMaxId(source.OldestCursor);
-
-            var result = await _viewModel.InstaApi.GetThreadAsync(source.ThreadId, _viewModel.Inbox.SeqId, pagination);
-            if (result.Status != ResultStatus.Succeeded || result.Value.Items == null || result.Value.Items.Count == 0)
+            finally
             {
-                return new List<DirectItemWrapper>(0);
+                _pageCounter++;
             }
-
-            UpdateExcludeItemList(result.Value);
-            var wrappedItems = WrapItems(result.Value.Items);
-            var oldestItem = ObservableItems.FirstOrDefault();
-            if (oldestItem != null && !oldestItem.Source.HideInThread)
-            {
-                var itemsToDecorate = wrappedItems.ToList();
-                itemsToDecorate.Add(oldestItem);
-                DecorateItems(itemsToDecorate);
-            }
-            else
-            {
-                DecorateItems(wrappedItems);
-            }
-
-            result.Value.Items = null;
-            return wrappedItems;
         }
 
         private void DecorateOnItemDeleted(object sender, NotifyCollectionChangedEventArgs e)
