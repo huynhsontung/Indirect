@@ -17,6 +17,7 @@ using Microsoft.Toolkit.Uwp.UI;
 using NeoSmart.Unicode;
 using System.Numerics;
 using Windows.UI.Xaml.Hosting;
+using Windows.UI.Composition;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -25,6 +26,7 @@ namespace Indirect.Controls
     internal sealed partial class ThreadItemControl : UserControl
     {
         private static MainViewModel ViewModel => ((App)Application.Current).ViewModel;
+        private bool _visible;
 
         public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
             nameof(Item),
@@ -51,15 +53,19 @@ namespace Indirect.Controls
         public ThreadItemControl()
         {
             this.InitializeComponent();
-            Opacity = 0;
             MainContentControl.SizeChanged += MainContentControl_SizeChanged;
+            MainContentControl.EffectiveViewportChanged += MainContentControl_EffectiveViewportChanged;
+        }
+
+        private void MainContentControl_EffectiveViewportChanged(FrameworkElement sender, EffectiveViewportChangedEventArgs args)
+        {
+            _visible = args.BringIntoViewDistanceY - sender.ActualHeight <= 0;
         }
 
         private void MainContentControl_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (Item == null) return;
+            if (Item == null || !_visible) return;
 
-            Opacity = 1;
             var itemType = Item.Source.ItemType;
             if (itemType == DirectItemType.ActionLog || itemType == DirectItemType.Like) return;
 
@@ -68,12 +74,22 @@ namespace Indirect.Controls
             var prev = e.PreviousSize.ToVector2();
             var next = e.NewSize.ToVector2();
 
+            var batch = Window.Current.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
             var anim = Window.Current.Compositor.CreateVector3KeyFrameAnimation();
             anim.InsertKeyFrame(0, new Vector3(prev / next, 1));
             anim.InsertKeyFrame(1, Vector3.One);
 
             var content = ((ContentControl)sender).ContentTemplateRoot;
             var panel = ElementCompositionPreview.GetElementVisual(content);
+
+            if (!Item.IsInitialized)
+            {
+                var scalarAnim = Window.Current.Compositor.CreateScalarKeyFrameAnimation();
+                scalarAnim.InsertKeyFrame(0, 0);
+                scalarAnim.InsertKeyFrame(1, 1);
+                panel.StartAnimation("Opacity", scalarAnim);
+            }
+
             panel.CenterPoint = new Vector3(Item.FromMe ? next.X : 0, 0, 0);
             panel.StartAnimation("Scale", anim);
 
@@ -86,6 +102,8 @@ namespace Indirect.Controls
                 var text = ElementCompositionPreview.GetElementVisual(content.FindDescendant<TextBlock>());
                 text.StartAnimation("Scale", factor);
             }
+
+            batch.End();
         }
 
         public void OnItemClick()
