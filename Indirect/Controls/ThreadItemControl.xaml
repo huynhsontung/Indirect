@@ -45,6 +45,7 @@
 
             <x:Double x:Key="TextItemMaxWidth">400</x:Double>
             <x:Double x:Key="MediaItemMaxWidth">250</x:Double>
+            <Thickness x:Key="TextMargin">8,6,8,6</Thickness>
 
             <Style x:Name="AvailableOpen" TargetType="Button">
                 <Setter Property="Content" Value="📷 Photo" />
@@ -68,7 +69,7 @@
                     ToolTipService.ToolTip="This item type is something I has not encountered during development and is totally unaccounted for.                         It would be nice if you can provide me some context regarding this item so I can support this item in the future.">
                     <TextBlock
                         MaxWidth="{StaticResource TextItemMaxWidth}"
-                        Margin="6"
+                        Margin="{StaticResource TextMargin}"
                         HorizontalAlignment="Center"
                         FontStyle="Italic"
                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
@@ -88,7 +89,7 @@
                     CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <TextBlock
                         MaxWidth="{StaticResource TextItemMaxWidth}"
-                        Margin="6"
+                        Margin="{StaticResource TextMargin}"
                         HorizontalAlignment="Center"
                         FontStyle="Italic"
                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
@@ -127,7 +128,7 @@
                     CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <TextBlock
                         MaxWidth="{StaticResource TextItemMaxWidth}"
-                        Margin="6"
+                        Margin="{StaticResource TextMargin}"
                         HorizontalAlignment="Center"
                         Style="{ThemeResource FluentBodyTextStyle}"
                         Text="{x:Bind Source.Text}"
@@ -137,7 +138,7 @@
 
             <DataTemplate x:Key="ActionLogTemplate" x:DataType="wrappers:DirectItemWrapper">
                 <TextBlock
-                    Margin="6"
+                    Margin="{StaticResource TextMargin}"
                     HorizontalAlignment="Center"
                     Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                     Text="{x:Bind Source.ActionLog.Description}"
@@ -174,7 +175,7 @@
 
                     <TextBlock
                         Grid.Row="0"
-                        Margin="6"
+                        Margin="{StaticResource TextMargin}"
                         Style="{ThemeResource FluentBodyTextStyle}"
                         TextWrapping="Wrap">
                         <Run Text="{x:Bind LinkText.Before}" /><Hyperlink Foreground="{StaticResource SystemControlForegroundBaseHighBrush}" NavigateUri="{x:Bind NavigateUri}">
@@ -190,7 +191,7 @@
                         Visibility="{x:Bind Source.Link.LinkContext.LinkImageUrl, Converter={StaticResource NullVisibilityConverter}}" />
                     <StackPanel
                         Grid.Row="2"
-                        Margin="6,6,6,8"
+                        Margin="10,6,10,8"
                         Orientation="Vertical"
                         Visibility="{x:Bind Source.Link.LinkContext.LinkTitle, Converter={StaticResource NullVisibilityConverter}}">
                         <TextBlock
@@ -407,7 +408,7 @@
                         Visibility="{x:Bind Source.ReelShareMedia.Type, Converter={StaticResource ReelShareTextVisibilityConverter}}">
                         <TextBlock
                             MaxWidth="{StaticResource TextItemMaxWidth}"
-                            Margin="6"
+                            Margin="{StaticResource TextMargin}"
                             HorizontalAlignment="Center"
                             Style="{ThemeResource FluentBodyTextStyle}"
                             Text="{x:Bind Source.ReelShareMedia.Text}"
@@ -455,7 +456,7 @@
                         Visibility="{x:Bind Source.StoryShareMedia.Text, Converter={StaticResource NullVisibilityConverter}}">
                         <TextBlock
                             MaxWidth="{StaticResource TextItemMaxWidth}"
-                            Margin="6"
+                            Margin="{StaticResource TextMargin}"
                             HorizontalAlignment="Center"
                             Style="{ThemeResource FluentBodyTextStyle}"
                             Text="{x:Bind Source.StoryShareMedia.Text}"
@@ -497,7 +498,7 @@
                     CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <TextBlock
                         MaxWidth="{StaticResource TextItemMaxWidth}"
-                        Margin="6"
+                        Margin="{StaticResource TextMargin}"
                         HorizontalAlignment="Center"
                         FontStyle="Italic"
                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"

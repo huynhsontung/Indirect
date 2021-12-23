@@ -495,19 +495,19 @@ namespace Indirect.Entities.Wrappers
             switch (mode)
             {
                 case RelativeItemMode.Before when FromMe:
-                    return new CornerRadius(8, 2, 8, 8);
+                    return new CornerRadius(14, 2, 14, 14);
                 case RelativeItemMode.After when FromMe:
-                    return new CornerRadius(8, 8, 2, 8);
+                    return new CornerRadius(14, 14, 2, 14);
                 case RelativeItemMode.Both when FromMe:
-                    return new CornerRadius(8, 2, 2, 8);
+                    return new CornerRadius(14, 2, 2, 14);
                 case RelativeItemMode.None:
-                    return new CornerRadius(8);
+                    return new CornerRadius(14);
                 case RelativeItemMode.Before:
-                    return new CornerRadius(2, 8, 8, 8);
+                    return new CornerRadius(2, 14, 14, 14);
                 case RelativeItemMode.After:
-                    return new CornerRadius(8, 8, 8, 2);
+                    return new CornerRadius(14, 14, 14, 2);
                 case RelativeItemMode.Both:
-                    return new CornerRadius(2, 8, 8, 2);
+                    return new CornerRadius(2, 14, 14, 2);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unexpected RelativeItemMode");
             }
