@@ -237,6 +237,7 @@
                 ItemsSource="{x:Bind Thread.ObservableItems, Mode=OneWay}"
                 PreviewKeyDown="ItemsHolder_OnPreviewKeyDown"
                 SelectionMode="None"
+                ShowsScrollingPlaceholders="False"
                 XYFocusKeyboardNavigation="Enabled">
 
                 <ListView.Header>
