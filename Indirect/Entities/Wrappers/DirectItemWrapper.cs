@@ -37,6 +37,7 @@ namespace Indirect.Entities.Wrappers
         public ReactionsWrapper ObservableReactions { get; }
         public BaseUser Sender { get; }
         public DirectItemWrapper RepliedItem { get; }
+        public bool IsInitialized { get; set; }
 
         public bool ShowTimestampHeader
         {

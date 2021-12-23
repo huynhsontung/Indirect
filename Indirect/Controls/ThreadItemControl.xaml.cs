@@ -15,6 +15,8 @@ using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.Media;
 using Microsoft.Toolkit.Uwp.UI;
 using NeoSmart.Unicode;
+using System.Numerics;
+using Windows.UI.Xaml.Hosting;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -49,6 +51,41 @@ namespace Indirect.Controls
         public ThreadItemControl()
         {
             this.InitializeComponent();
+            Opacity = 0;
+            MainContentControl.SizeChanged += MainContentControl_SizeChanged;
+        }
+
+        private void MainContentControl_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (Item == null) return;
+
+            Opacity = 1;
+            var itemType = Item.Source.ItemType;
+            if (itemType == DirectItemType.ActionLog || itemType == DirectItemType.Like) return;
+
+            if (e.PreviousSize == e.NewSize) return;
+
+            var prev = e.PreviousSize.ToVector2();
+            var next = e.NewSize.ToVector2();
+
+            var anim = Window.Current.Compositor.CreateVector3KeyFrameAnimation();
+            anim.InsertKeyFrame(0, new Vector3(prev / next, 1));
+            anim.InsertKeyFrame(1, Vector3.One);
+
+            var content = ((ContentControl)sender).ContentTemplateRoot;
+            var panel = ElementCompositionPreview.GetElementVisual(content);
+            panel.CenterPoint = new Vector3(Item.FromMe ? next.X : 0, 0, 0);
+            panel.StartAnimation("Scale", anim);
+
+            var textBlock = content.FindDescendant<TextBlock>();
+            if (textBlock != null)
+            {
+                var factor = Window.Current.Compositor.CreateExpressionAnimation("Vector3(1 / content.Scale.X, 1 / content.Scale.Y, 1)");
+                factor.SetReferenceParameter("content", panel);
+
+                var text = ElementCompositionPreview.GetElementVisual(content.FindDescendant<TextBlock>());
+                text.StartAnimation("Scale", factor);
+            }
         }
 
         public void OnItemClick()
@@ -109,7 +146,7 @@ namespace Indirect.Controls
 
         private void UpdateItemMargin()
         {
-            if (Item == null) return;
+            if (Item == null || Item.Source.ItemType == DirectItemType.ActionLog) return;
             MainContentControl.Margin = Item.FromMe ? new Thickness(50, 0, 0, 0) : new Thickness(0, 0, 50, 0);
         }
 

@@ -679,6 +679,7 @@
 
             <ContentControl
                 x:Name="RepliedContentControl"
+                MaxWidth="{StaticResource MediaItemMaxWidth}"
                 MaxHeight="160"
                 HorizontalAlignment="{x:Bind MainContentControl.HorizontalAlignment}"
                 Content="{x:Bind Item.RepliedItem}"

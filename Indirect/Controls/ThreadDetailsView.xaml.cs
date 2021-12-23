@@ -17,12 +17,15 @@ using Indirect.Converters;
 using Indirect.Entities.Wrappers;
 using Indirect.Pages;
 using Indirect.Services;
-using Indirect.Utilities;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.UI.Xaml.Controls;
+using System.Numerics;
+using Windows.UI.Composition;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Hosting;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -50,13 +53,13 @@ namespace Indirect.Controls
 
         public DirectThreadWrapper Thread
         {
-            get => (DirectThreadWrapper) GetValue(ThreadProperty);
+            get => (DirectThreadWrapper)GetValue(ThreadProperty);
             set => SetValue(ThreadProperty, value);
         }
 
         public bool IsNewWindow
         {
-            get => (bool) GetValue(IsNewWindowProperty);
+            get => (bool)GetValue(IsNewWindowProperty);
             set => SetValue(IsNewWindowProperty, value);
         }
 
@@ -69,6 +72,7 @@ namespace Indirect.Controls
 
         private bool _needUpdateCaret;   // For moving the caret to the end of text on thread change. This is a bad idea. ¯\_(ツ)_/¯
         private readonly DispatcherQueue _dispatcherQueue;
+        private SizeChangedEventHandler _sizeChangedHandler;
 
         private static void OnIsNewWindowChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -86,7 +90,7 @@ namespace Indirect.Controls
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ThreadDetailsView)d;
-            var thread = (DirectThreadWrapper) e.NewValue;
+            var thread = (DirectThreadWrapper)e.NewValue;
             if (thread == null) return;
 
             view.ViewProfileAppBarButton.Visibility = thread.Users?.Count == 1 ? Visibility.Visible : Visibility.Collapsed;
@@ -102,6 +106,7 @@ namespace Indirect.Controls
         {
             this.InitializeComponent();
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            _sizeChangedHandler = new SizeChangedEventHandler(ItemContainer_SizeChanged);
             ViewModel.PropertyChanged += OnUserPresenceChanged;
             GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
             TypingIndicator.RegisterPropertyChangedCallback(VisibilityProperty, TypingIndicator_OnVisibilityChanged);
@@ -225,7 +230,7 @@ namespace Indirect.Controls
                 }
 
                 var imageProps = await file.Properties.GetImagePropertiesAsync();
-                var ratio = (double) imageProps.Width / imageProps.Height;
+                var ratio = (double)imageProps.Width / imageProps.Height;
                 if (ratio < 0.4 || ratio > 2.5)
                 {
                     DisplayFailDialog("Image does not have valid aspect ratio.");
@@ -338,7 +343,7 @@ namespace Indirect.Controls
 
         private async void UserList_OnItemClick(object sender, ItemClickEventArgs e)
         {
-            var user = (BaseUser) e.ClickedItem;
+            var user = (BaseUser)e.ClickedItem;
             var pk = user.Pk;
             await ShowSingleUserInfoFlyout(pk, (FrameworkElement)sender);
         }
@@ -348,12 +353,12 @@ namespace Indirect.Controls
             if (Thread?.Users == null || Thread.Users.Count == 0) return;
             if (Thread.Users.Count > 1)
             {
-                UserListFlyout.ShowAt((FrameworkElement) sender);
+                UserListFlyout.ShowAt((FrameworkElement)sender);
                 return;
             }
 
             var pk = Thread.Users[0].Pk;
-            await ShowSingleUserInfoFlyout(pk, (FrameworkElement) sender);
+            await ShowSingleUserInfoFlyout(pk, (FrameworkElement)sender);
         }
 
         private async Task ShowSingleUserInfoFlyout(long pk, FrameworkElement element)
@@ -372,7 +377,7 @@ namespace Indirect.Controls
         private void MessageTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
         {
             if (!_needUpdateCaret) return;
-            var tb = (TextBox) sender;
+            var tb = (TextBox)sender;
             tb.SelectionStart = tb.Text.Length;
             _needUpdateCaret = false;
         }
@@ -381,7 +386,7 @@ namespace Indirect.Controls
         {
             e.AcceptedOperation = DataPackageOperation.Copy;
             if (e.DragUIOverride == null) return;
-            if (e.DataView.Contains(StandardDataFormats.StorageItems) || 
+            if (e.DataView.Contains(StandardDataFormats.StorageItems) ||
                 e.DataView.Contains(StandardDataFormats.Bitmap))
             {
                 e.DragUIOverride.Caption = "Send";
@@ -444,7 +449,7 @@ namespace Indirect.Controls
 
         private async void OpenInNewWindow_OnClick(object sender, RoutedEventArgs e)
         {
-            var viewmodel = ((App) Application.Current).ViewModel;
+            var viewmodel = ((App)Application.Current).ViewModel;
             await viewmodel.OpenThreadInNewWindow(Thread);
         }
 
@@ -466,8 +471,8 @@ namespace Indirect.Controls
         private async void SendButton_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
         {
             args.Handled = true;
-            var emoji = await EmojiPicker.ShowAsync((FrameworkElement) sender,
-                new FlyoutShowOptions() {Placement = FlyoutPlacementMode.TopEdgeAlignedRight});
+            var emoji = await EmojiPicker.ShowAsync((FrameworkElement)sender,
+                new FlyoutShowOptions() { Placement = FlyoutPlacementMode.TopEdgeAlignedRight });
             if (string.IsNullOrEmpty(emoji))
             {
                 return;
@@ -567,6 +572,73 @@ namespace Indirect.Controls
                 {
                     // pass
                 }
+            }
+        }
+
+        private void ItemsHolder_ContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+        {
+            args.RegisterUpdateCallback(2, (s, sizeChangedArgs) =>
+            {
+                sizeChangedArgs.ItemContainer.SizeChanged += _sizeChangedHandler;
+            });
+        }
+
+        private void ItemContainer_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var panel = ItemsHolder.ItemsPanelRoot as ItemsStackPanel;
+            if (panel == null || e.PreviousSize.Height == e.NewSize.Height)
+            {
+                return;
+            }
+
+            var selector = sender as SelectorItem;
+
+            var index = ItemsHolder.IndexFromContainer(selector);
+            if (index < panel.LastVisibleIndex && e.PreviousSize.Width < 1 && e.PreviousSize.Height < 1)
+            {
+                return;
+            }
+
+            if (ItemsHolder.ItemFromContainer(selector) is DirectItemWrapper message && !message.IsInitialized)
+            {
+                if (e.PreviousSize.Width > 0 && e.PreviousSize.Height > 0)
+                {
+                    message.IsInitialized = true;
+                }
+
+                return;
+            }
+
+            if (index >= panel.FirstVisibleIndex && index <= panel.LastVisibleIndex)
+            {
+                var diff = (float)e.NewSize.Height - (float)e.PreviousSize.Height;
+                if (Math.Abs(diff) < 2)
+                {
+                    return;
+                }
+
+                var batch = Window.Current.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
+
+                var anim = Window.Current.Compositor.CreateVector3KeyFrameAnimation();
+                anim.InsertKeyFrame(0, new Vector3(0, (float)diff, 0));
+                anim.InsertKeyFrame(1, new Vector3());
+                //anim.Duration = TimeSpan.FromSeconds(5);
+
+                for (int i = panel.FirstCacheIndex; i <= index; i++)
+                {
+                    var container = ItemsHolder.ContainerFromIndex(i) as SelectorItem;
+                    if (container == null)
+                    {
+                        continue;
+                    }
+
+                    var child = VisualTreeHelper.GetChild(container, 0) as UIElement;
+
+                    var visual = ElementCompositionPreview.GetElementVisual(child);
+                    visual.StartAnimation("Offset", anim);
+                }
+
+                batch.End();
             }
         }
     }
