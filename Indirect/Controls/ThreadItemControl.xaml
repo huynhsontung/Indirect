@@ -296,10 +296,11 @@
                             VideoWidth="{x:Bind VideoWidth}">
                             <controls1:AutoVideoControl.TransportControls>
                                 <MediaTransportControls
+                                    MinWidth="0"
                                     IsFullWindowButtonVisible="False"
                                     IsFullWindowEnabled="False"
                                     IsZoomButtonVisible="False"
-                                    ShowAndHideAutomatically="False" />
+                                    ShowAndHideAutomatically="True" />
                             </controls1:AutoVideoControl.TransportControls>
                         </controls1:AutoVideoControl>
                     </Border>
