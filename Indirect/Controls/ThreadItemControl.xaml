@@ -738,7 +738,7 @@
             x:Name="SeenIndicator"
             Grid.Row="5"
             Margin="4,2,4,4"
-            HorizontalAlignment="Right"
+            HorizontalAlignment="{x:Bind GetSeenIndicatorAlignment(Item.FromMe)}"
             Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
             Style="{ThemeResource FluentCaptionTextStyle}"
             Text="{x:Bind GetSeenText(Item.Parent.Source.LastSeenAt), Mode=OneWay}"

@@ -9,17 +9,16 @@ namespace Indirect.Converters
 {
     public class RelativeTimeConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, string language)
+        public static string Convert(DateTimeOffset dateTime)
         {
             // Relative time solution from: https://stackoverflow.com/questions/11/calculate-relative-time-in-c-sharp?page=1&tab=votes#tab-top
-            var reference = (DateTimeOffset) value;
             const int SECOND = 1;
             const int MINUTE = 60 * SECOND;
             const int HOUR = 60 * MINUTE;
             const int DAY = 24 * HOUR;
             const int MONTH = 30 * DAY;
 
-            var ts = new TimeSpan(DateTime.UtcNow.Ticks - reference.Ticks);
+            var ts = new TimeSpan(DateTime.UtcNow.Ticks - dateTime.Ticks);
             double delta = Math.Abs(ts.TotalSeconds);
 
             if (delta < 1 * MINUTE)
@@ -46,13 +45,19 @@ namespace Indirect.Converters
             if (delta < 12 * MONTH)
             {
                 int months = System.Convert.ToInt32(Math.Floor((double)ts.Days / 30));
-                return months <= 1 ? "one month ago" : months + " months ago";
+                return months <= 1 ? "a month ago" : months + " months ago";
             }
             else
             {
                 int years = System.Convert.ToInt32(Math.Floor((double)ts.Days / 365));
                 return years <= 1 ? "one year ago" : years + " years ago";
             }
+        }
+
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            var reference = (DateTimeOffset)value;
+            return Convert(reference);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

@@ -17,6 +17,7 @@ using Microsoft.Toolkit.Uwp.UI;
 using NeoSmart.Unicode;
 using System.Numerics;
 using Windows.UI.Xaml.Hosting;
+using Indirect.Converters;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -163,6 +164,8 @@ namespace Indirect.Controls
             MainContentControl.Margin = Item.FromMe ? new Thickness(50, 0, 0, 0) : new Thickness(0, 0, 50, 0);
         }
 
+        private HorizontalAlignment GetSeenIndicatorAlignment(bool fromMe) => fromMe ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+
         private string GetSeenText(Dictionary<long, LastSeen> lastSeenAt)
         {
             if (lastSeenAt == null || lastSeenAt.Count == 0)
@@ -172,12 +175,17 @@ namespace Indirect.Controls
 
             try
             {
+                var viewerId = Item.Parent.Source.ViewerId;
+                if (!lastSeenAt.TryGetValue(viewerId, out var viewerLastSeen) || viewerLastSeen.Timestamp > Item.Source.Timestamp)
+                    return string.Empty;
+
+                // We can no longer check last seen using item ID matching. Using timestamp instead.
                 var seenList = lastSeenAt.Where(x =>
                         x.Value != null &&
-                        x.Value.ItemId == Item.Source.ItemId &&    // Match item id
-                        x.Key != Item.Parent.Source.ViewerId &&    // Not from viewer
+                        x.Value.Timestamp >= Item.Source.Timestamp &&    // Seen timestamp is newer than item timestamp
+                        x.Key != viewerId &&                // Not from viewer
                         x.Key != Item.Sender.Pk             // Not from sender
-                    ).Select(y => y.Key).ToArray();
+                    ).ToArray();
                 if (seenList.Length == 0)
                 {
                     return string.Empty;
@@ -185,7 +193,9 @@ namespace Indirect.Controls
 
                 if (Item.Parent.Users.Count == 1)
                 {
-                    return Item.FromMe && Item.Parent.LastPermanentItem?.Source.ItemId != Item.Source.ItemId ? string.Empty : "Seen";
+                    return Item.FromMe && Item.Parent.LastPermanentItem?.Source.ItemId != Item.Source.ItemId
+                        ? string.Empty 
+                        : $"Seen {RelativeTimeConverter.Convert(seenList[0].Value.Timestamp)}";
                 }
 
                 if (Item.Parent.Users.Count <= seenList.Length)
@@ -193,7 +203,7 @@ namespace Indirect.Controls
                     return "Seen by everyone";
                 }
 
-                var seenUsers = seenList.Select(x => Item.Parent.Users.FirstOrDefault(y => x == y.Pk)?.Username).ToArray();
+                var seenUsers = seenList.Select(x => Item.Parent.Users.FirstOrDefault(y => x.Key == y.Pk)?.Username).ToArray();
                 if (seenUsers.Length <= 3)
                 {
                     return "Seen by " + string.Join(", ", seenUsers);
