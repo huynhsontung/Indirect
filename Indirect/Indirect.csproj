@@ -17,9 +17,9 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
-    <PackageCertificateKeyFile>Indirect_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <PackageCertificateThumbprint>
-    </PackageCertificateThumbprint>
+    <PackageCertificateKeyFile>
+    </PackageCertificateKeyFile>
+    <PackageCertificateThumbprint>062A3070906D46B2270F44CFCC1F9EA9F952B4AA</PackageCertificateThumbprint>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
@@ -216,6 +216,7 @@
     </Compile>
     <Compile Include="Services\AudioRecorder.cs" />
     <Compile Include="Utilities\Debouncer.cs" />
+    <Compile Include="Utilities\DeviceFamilyHelpers.cs" />
     <Compile Include="Utilities\Helpers.cs" />
     <Compile Include="Controls\Selectors\ItemTemplateSelector.cs" />
     <Compile Include="Controls\PhotoVideoControl.xaml.cs">
