@@ -10,6 +10,7 @@
     xmlns:local="using:Indirect"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     xmlns:users="using:InstagramAPI.Classes.User"
     xmlns:wrappers="using:Indirect.Entities.Wrappers"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
@@ -149,16 +150,6 @@
                             <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
                                 <Setter Property="MinHeight" Value="0" />
                                 <Setter Property="MinWidth" Value="0" />
-                                <Setter Property="ContextFlyout">
-                                    <Setter.Value>
-                                        <MenuFlyout Opening="ReelItemMenuFlyout_OnOpening">
-                                            <MenuFlyoutItem
-                                                Click="OpenReelInNewWindow_OnClick"
-                                                Icon="NewWindow"
-                                                Text="Open in new window" />
-                                        </MenuFlyout>
-                                    </Setter.Value>
-                                </Setter>
                             </Style>
                         </ListView.ItemContainerStyle>
                         <ListView.ItemsPanel>
