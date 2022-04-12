@@ -82,8 +82,7 @@ namespace Indirect.Controls
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
             var story = (ReelItemWrapper) StoryView.SelectedItem;
-            var container = StoryView.ContainerFromItem(story) as FlipViewItem;
-            var textBox = container.FindDescendant<TextBox>();
+            var textBox = ReplyTextBox;
             if (string.IsNullOrEmpty(textBox?.Text) || story == null) return;
             var message = textBox.Text;
             textBox.Text = string.Empty;
@@ -274,19 +273,17 @@ namespace Indirect.Controls
                     break;
                 case VirtualKey.Space when !(FocusManager.GetFocusedElement() is TextBox):
                     e.Handled = true;
-                    StoryView.ContainerFromItem(selected)?.FindDescendant<TextBox>()?.Focus(FocusState.Programmatic);
+                    ReplyTextBox.Focus(FocusState.Programmatic);
                     break;
                 case VirtualKey.GamepadX:
                     e.Handled = true;
-                    var button = StoryView.ContainerFromItem(selected)?.FindDescendant("ReactButton") as Control;
-                    if (button?.Visibility == Visibility.Visible)
+                    if (ReactButton.Visibility == Visibility.Visible)
                     {
-                        button.Focus(FocusState.Programmatic);
+                        ReactButton.Focus(FocusState.Programmatic);
                     }
                     else
                     {
-                        (StoryView.ContainerFromItem(selected)?.FindDescendant("ReplyButton") as Control)?.Focus(
-                            FocusState.Programmatic);
+                        ReplyButton.Focus(FocusState.Programmatic);
                     }
                     break;
                 case VirtualKey.GamepadY:

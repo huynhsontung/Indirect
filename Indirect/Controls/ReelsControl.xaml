@@ -39,101 +39,21 @@
             <converters:NullVisibilityConverter x:Key="NullVisibilityConverter" />
             <converters:NullVisibilityConverter x:Key="InvertNullVisibilityConverter" Invert="True" />
 
-            <DataTemplate x:Key="ReplyControlTemplate" x:DataType="wrappers:ReelItemWrapper">
-                <StackPanel
-                    Margin="0,4,0,0"
-                    Orientation="Horizontal"
-                    Visibility="{x:Bind Parent.Source.CanReply, Converter={StaticResource BooleanVisibilityConverter}}">
-                    <TextBox
-                        x:Name="ReplyTextBox"
-                        Width="300"
-                        Margin="4,0,4,0"
-                        AcceptsReturn="True"
-                        Background="Transparent"
-                        KeyboardAcceleratorPlacementMode="Hidden"
-                        MaxLength="2200"
-                        PlaceholderText="Type a reply"
-                        Text="{x:Bind DraftMessage, Mode=TwoWay}"
-                        TextWrapping="Wrap">
-                        <TextBox.KeyboardAccelerators>
-                            <KeyboardAccelerator
-                                Key="Enter"
-                                Invoked="MessageTextBox_OnEnterPressed"
-                                Modifiers="None" />
-                        </TextBox.KeyboardAccelerators>
-                    </TextBox>
-
-                    <Button
-                        x:Name="ReactButton"
-                        Width="60"
-                        Margin="0,0,4,0"
-                        VerticalAlignment="Bottom"
-                        AutomationProperties.Name="React with an Emoji"
-                        Click="ReactEmojiButton_OnClick"
-                        ToolTipService.ToolTip="React with an Emoji (Ctrl+E)"
-                        Visibility="{Binding ElementName=ReplyTextBox, Path=Text, Converter={StaticResource InvertNullVisibilityConverter}}">
-                        <Button.KeyboardAccelerators>
-                            <KeyboardAccelerator Key="E" Modifiers="Control" />
-                        </Button.KeyboardAccelerators>
-                        <SymbolIcon Symbol="Emoji2" />
-                    </Button>
-
-                    <Button
-                        x:Name="ReplyButton"
-                        Width="60"
-                        Margin="0,0,4,0"
-                        VerticalAlignment="Bottom"
-                        AutomationProperties.Name="Send reply"
-                        Click="SendButton_Click"
-                        ToolTipService.ToolTip="Send reply"
-                        Visibility="{Binding ElementName=ReplyTextBox, Path=Text, Converter={StaticResource NullVisibilityConverter}}">
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE724;" />
-                    </Button>
-                </StackPanel>
-            </DataTemplate>
-
             <DataTemplate x:Key="VideoTemplate" x:DataType="wrappers:ReelItemWrapper">
-                <Grid Margin="0,0,0,6">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <controls1:AutoVideoControl
-                        Grid.Row="0"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        AutoPlay="True"
-                        AutoStop="True"
-                        IsLoopingEnabled="True"
-                        PosterSource="{x:Bind Source.Images[0].Url}"
-                        Source="{x:Bind Source.Videos[0].Url}"
-                        VideoHeight="1137"
-                        VideoWidth="640" />
-
-                    <ContentPresenter
-                        Grid.Row="1"
-                        HorizontalAlignment="Center"
-                        Content="{x:Bind}"
-                        ContentTemplate="{StaticResource ReplyControlTemplate}" />
-                </Grid>
+                <controls1:AutoVideoControl
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    AutoPlay="True"
+                    AutoStop="True"
+                    IsLoopingEnabled="True"
+                    PosterSource="{x:Bind Source.Images[0].Url}"
+                    Source="{x:Bind Source.Videos[0].Url}"
+                    VideoHeight="1137"
+                    VideoWidth="640" />
             </DataTemplate>
 
             <DataTemplate x:Key="ImageTemplate" x:DataType="wrappers:ReelItemWrapper">
-                <Grid Margin="0,0,0,6">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <controls:ImageEx Grid.Row="0" Source="{x:Bind Source.Images[0].Url}" />
-
-                    <ContentPresenter
-                        Grid.Row="1"
-                        HorizontalAlignment="Center"
-                        Content="{x:Bind}"
-                        ContentTemplate="{StaticResource ReplyControlTemplate}" />
-                </Grid>
+                <controls:ImageEx Source="{x:Bind Source.Images[0].Url}" />
             </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -143,6 +63,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <controls1:ReelProgressIndicator
             x:Name="NewReelProgressIndicator"
@@ -245,7 +166,8 @@
             ItemsSource="{x:Bind Source.Items, Mode=OneWay}"
             KeyDown="StoryView_OnKeyDown"
             SelectedIndex="{x:Bind Source.SelectedIndex, Mode=TwoWay}"
-            SelectionChanged="StoryView_OnSelectionChanged">
+            SelectionChanged="StoryView_OnSelectionChanged"
+            UseTouchAnimationsForAllNavigation="False">
             <FlipView.ContextFlyout>
                 <MenuFlyout>
                     <MenuFlyoutItem Click="ViewOnWebMenuItem_OnClick" Text="View on web">
@@ -266,11 +188,65 @@
             </FlipView.ItemTemplateSelector>
         </FlipView>
 
+        <StackPanel
+            Grid.Row="3"
+            Margin="0,4,0,4"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            Orientation="Horizontal"
+            Visibility="{x:Bind ((wrappers:ReelItemWrapper)StoryView.SelectedItem).Parent.Source.CanReply, FallbackValue=Collapsed, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
+            <TextBox
+                x:Name="ReplyTextBox"
+                Width="300"
+                Margin="4,0,4,0"
+                AcceptsReturn="True"
+                Background="Transparent"
+                KeyboardAcceleratorPlacementMode="Hidden"
+                MaxLength="2200"
+                PlaceholderText="Type a reply"
+                Text="{x:Bind ((wrappers:ReelItemWrapper)StoryView.SelectedItem).DraftMessage, Mode=TwoWay, FallbackValue=''}"
+                TextWrapping="Wrap">
+                <TextBox.KeyboardAccelerators>
+                    <KeyboardAccelerator
+                        Key="Enter"
+                        Invoked="MessageTextBox_OnEnterPressed"
+                        Modifiers="None" />
+                </TextBox.KeyboardAccelerators>
+            </TextBox>
+
+            <Button
+                x:Name="ReactButton"
+                Width="60"
+                Margin="0,0,4,0"
+                VerticalAlignment="Bottom"
+                AutomationProperties.Name="React with an Emoji"
+                Click="ReactEmojiButton_OnClick"
+                ToolTipService.ToolTip="React with an Emoji (Ctrl+E)"
+                Visibility="{Binding ElementName=ReplyTextBox, Path=Text, Converter={StaticResource InvertNullVisibilityConverter}}">
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="E" Modifiers="Control" />
+                </Button.KeyboardAccelerators>
+                <SymbolIcon Symbol="Emoji2" />
+            </Button>
+
+            <Button
+                x:Name="ReplyButton"
+                Width="60"
+                Margin="0,0,4,0"
+                VerticalAlignment="Bottom"
+                AutomationProperties.Name="Send reply"
+                Click="SendButton_Click"
+                ToolTipService.ToolTip="Send reply"
+                Visibility="{Binding ElementName=ReplyTextBox, Path=Text, Converter={StaticResource NullVisibilityConverter}}">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE724;" />
+            </Button>
+        </StackPanel>
+
         <muxc:InfoBar
             x:Name="ReplyStatusInfoBar"
             Title="Reply sent"
             Grid.Row="2"
-            Margin="44"
+            Margin="12"
             HorizontalAlignment="Center"
             VerticalAlignment="Bottom"
             Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
