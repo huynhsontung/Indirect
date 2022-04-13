@@ -3,6 +3,39 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:class="using:Indirect.Controls">
 
+    <Style x:Key="NoDividerGridViewHeaderItem" TargetType="GridViewHeaderItem">
+        <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}" />
+        <Setter Property="FontSize" Value="{ThemeResource GridViewHeaderItemThemeFontSize}" />
+        <Setter Property="Background" Value="{ThemeResource GridViewHeaderItemBackground}" />
+        <Setter Property="Margin" Value="0,0,0,8" />
+        <Setter Property="Padding" Value="12,8,12,0" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GridViewHeaderItem">
+                    <StackPanel
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <ContentPresenter
+                            x:Name="ContentPresenter"
+                            Margin="{TemplateBinding Padding}"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            ContentTransitions="{TemplateBinding ContentTransitions}" />
+                    </StackPanel>
+
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="class:EmojiPicker">
         <Setter Property="Height" Value="300" />
         <Setter Property="Width" Value="290" />
@@ -75,7 +108,7 @@
                             Margin="8,0,8,0"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"
-                            PlaceholderText="Type to find an emoji" />
+                            PlaceholderText="Search emoji" />
 
                         <Button
                             x:Name="CloseButton"
@@ -95,7 +128,7 @@
                             SelectionMode="None"
                             TabIndex="0">
                             <GridView.GroupStyle>
-                                <GroupStyle>
+                                <GroupStyle HeaderContainerStyle="{StaticResource NoDividerGridViewHeaderItem}">
                                     <GroupStyle.HeaderTemplate>
                                         <DataTemplate>
                                             <TextBlock FontSize="13" Text="{Binding Key}" />
