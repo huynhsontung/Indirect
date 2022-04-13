@@ -11,5 +11,7 @@ namespace Indirect.Utilities
         public static bool IsIoT => DeviceFamily == "Windows.IoT";
         public static bool IsTeam => DeviceFamily == "Windows.Team";
         public static bool IsHolographic => DeviceFamily == "Windows.Holographic";
+
+        public static bool MultipleViewsSupport => IsDesktop || IsHolographic;
     }
 }

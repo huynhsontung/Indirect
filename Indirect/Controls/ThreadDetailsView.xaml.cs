@@ -26,6 +26,7 @@ using System.Numerics;
 using Windows.UI.Composition;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Hosting;
+using Indirect.Utilities;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -39,53 +40,18 @@ namespace Indirect.Controls
             typeof(ThreadDetailsView),
             new PropertyMetadata(null, OnThreadChanged));
 
-        public static readonly DependencyProperty IsNewWindowProperty = DependencyProperty.Register(
-            nameof(IsNewWindow),
-            typeof(bool),
-            typeof(ThreadDetailsView),
-            new PropertyMetadata(false, OnIsNewWindowChanged));
-
-        public static readonly DependencyProperty ThreadHeaderVisibilityProperty = DependencyProperty.Register(
-            nameof(ThreadHeaderVisibility),
-            typeof(Visibility),
-            typeof(ThreadDetailsView),
-            new PropertyMetadata(Visibility.Visible));
-
         public DirectThreadWrapper Thread
         {
             get => (DirectThreadWrapper)GetValue(ThreadProperty);
             set => SetValue(ThreadProperty, value);
         }
 
-        public bool IsNewWindow
-        {
-            get => (bool)GetValue(IsNewWindowProperty);
-            set => SetValue(IsNewWindowProperty, value);
-        }
-
-        public Visibility ThreadHeaderVisibility
-        {
-            get => (Visibility)GetValue(ThreadHeaderVisibilityProperty);
-            set => SetValue(ThreadHeaderVisibilityProperty, value);
-        }
+        public bool IsNewWindow { get; set; }
 
 
         private bool _needUpdateCaret;   // For moving the caret to the end of text on thread change. This is a bad idea. ¯\_(ツ)_/¯
         private readonly DispatcherQueue _dispatcherQueue;
         private SizeChangedEventHandler _sizeChangedHandler;
-
-        private static void OnIsNewWindowChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if ((bool)e.NewValue)
-            {
-                var view = (ThreadDetailsView)d;
-                view.RootGrid.RowDefinitions[0].Height = new GridLength(0);
-                view.ContentGrid.RowDefinitions[0].Height = new GridLength(82);
-                view.ContentGrid.CornerRadius = new CornerRadius(0);
-                view.ContentGrid.BorderThickness = new Thickness(0);
-                view.BorderThicknessSetter.Value = new Thickness(0);
-            }
-        }
 
         private static void OnThreadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -107,9 +73,28 @@ namespace Indirect.Controls
             this.InitializeComponent();
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
             _sizeChangedHandler = new SizeChangedEventHandler(ItemContainer_SizeChanged);
+            if (!DeviceFamilyHelpers.MultipleViewsSupport)
+            {
+                NewWindowButton.Visibility = Visibility.Collapsed;
+            }
+            
             ViewModel.PropertyChanged += OnUserPresenceChanged;
             GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
             TypingIndicator.RegisterPropertyChangedCallback(VisibilityProperty, TypingIndicator_OnVisibilityChanged);
+            Loading += OnLoading;
+        }
+
+        private void OnLoading(FrameworkElement sender, object args)
+        {
+            if (IsNewWindow)
+            {
+                RootGrid.RowDefinitions[0].Height = new GridLength(0);
+                ContentGrid.RowDefinitions[0].Height = new GridLength(82);
+                ContentGrid.CornerRadius = new CornerRadius(0);
+                ContentGrid.BorderThickness = new Thickness(0);
+                BorderThicknessSetter.Value = new Thickness(0);
+                NewWindowButton.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void TypingIndicator_OnVisibilityChanged(DependencyObject sender, DependencyProperty dp)

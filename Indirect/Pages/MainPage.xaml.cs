@@ -549,7 +549,7 @@ namespace Indirect.Pages
             var reelsWrapper = (ReelWrapper)e.ClickedItem;
             if (reelsWrapper != null)
             {
-                if (DeviceFamilyHelpers.IsDesktop)
+                if (DeviceFamilyHelpers.MultipleViewsSupport)
                 {
                     await OpenReelInNewWindow(reelsWrapper);
                 }
