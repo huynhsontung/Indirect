@@ -41,8 +41,7 @@ namespace Indirect.Entities.Wrappers
             if (!resultThread.IsSucceeded) return false;
             var thread = resultThread.Value;
             Result result;
-            var stringInfo = new System.Globalization.StringInfo(message);
-            if (Emoji.IsEmoji(message) && stringInfo.LengthInTextElements == 1)
+            if (Emoji.IsEmoji(message, 1))
             {
                 result = await ViewModel.InstaApi.SendReelReactAsync(Parent.Source.Id, Source.Id, thread.ThreadId, message);
             }
