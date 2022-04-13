@@ -200,9 +200,6 @@
     <Compile Include="Converters\HasNewMessageStyleConverter.cs" />
     <Compile Include="Converters\FromMeBoolToAlignmentConverter.cs" />
     <Compile Include="Converters\FromMeBoolToBrushConverter.cs" />
-    <Compile Include="Pages\ContactPanelPage.xaml.cs">
-      <DependentUpon>ContactPanelPage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Pages\ReelPage.xaml.cs">
       <DependentUpon>ReelPage.xaml</DependentUpon>
     </Compile>
@@ -387,10 +384,6 @@
     <Page Include="Pages\AboutPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Pages\ContactPanelPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\LoginPage.xaml">
       <SubType>Designer</SubType>

@@ -135,67 +135,58 @@ namespace Indirect
                     "Windows.ApplicationModel.Core.CoreApplication", "EnablePrelaunch");
             await ViewModel.Initialize();
 
-            if (e is ContactPanelActivatedEventArgs cpEventArgs)
+            var rootFrame = Window.Current.Content as Frame;
+
+            // Do not repeat app initialization when the Window already has content,
+            // just ensure that the window is active
+            if (rootFrame == null)
             {
-                var contactFrame = new Frame();
-                Window.Current.Content = contactFrame;
-                contactFrame.Navigate(typeof(ContactPanelPage), cpEventArgs);
+                ConfigureMainView();
+
+                // Create a Frame to act as the navigation context and navigate to the first page
+                rootFrame = new Frame();
+
+                rootFrame.NavigationFailed += OnNavigationFailed;
+
+                if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+                {
+                    // Handle different ExecutionStates
+                }
+
+                // Place the frame in the current Window
+                Window.Current.Content = rootFrame;
             }
-            else
+
+            if (e is LaunchActivatedEventArgs launchActivatedArgs && launchActivatedArgs.PrelaunchActivated)
             {
-                var rootFrame = Window.Current.Content as Frame;
+                return;
+            }
 
-                // Do not repeat app initialization when the Window already has content,
-                // just ensure that the window is active
-                if (rootFrame == null)
+            if (e is ToastNotificationActivatedEventArgs toastActivated)
+            {
+                var launchArgs = HttpUtility.ParseQueryString(toastActivated.Argument);
+                var threadId = launchArgs["threadId"];
+                var viewerId = toastActivated.Argument.Contains("viewerId") ? launchArgs["viewerId"] : null;
+                var targetSession =
+                    ViewModel.AvailableSessions.Select(x => x.Session)
+                        .FirstOrDefault(x => x.LoggedInUser.Pk.ToString() == viewerId);
+                if (!string.IsNullOrEmpty(viewerId) && targetSession != null)
                 {
-                    ConfigureMainView();
-
-                    // Create a Frame to act as the navigation context and navigate to the first page
-                    rootFrame = new Frame();
-
-                    rootFrame.NavigationFailed += OnNavigationFailed;
-
-                    if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
-                    {
-                        // Handle different ExecutionStates
-                    }
-
-                    // Place the frame in the current Window
-                    Window.Current.Content = rootFrame;
+                    await ViewModel.SwitchAccountAsync(targetSession);
                 }
 
-                if (e is LaunchActivatedEventArgs launchActivatedArgs && launchActivatedArgs.PrelaunchActivated)
-                {
-                    return;
-                }
+                ViewModel.OpenThreadWhenReady(threadId);
+            }
 
-                if (e is ToastNotificationActivatedEventArgs toastActivated)
-                {
-                    var launchArgs = HttpUtility.ParseQueryString(toastActivated.Argument);
-                    var threadId = launchArgs["threadId"];
-                    var viewerId = toastActivated.Argument.Contains("viewerId") ? launchArgs["viewerId"] : null;
-                    var targetSession =
-                        ViewModel.AvailableSessions.Select(x => x.Session)
-                            .FirstOrDefault(x => x.LoggedInUser.Pk.ToString() == viewerId);
-                    if (!string.IsNullOrEmpty(viewerId) && targetSession != null)
-                    {
-                        await ViewModel.SwitchAccountAsync(targetSession);
-                    }
+            if (canEnablePrelaunch)
+            {
+                TryEnablePrelaunch();
+            }
 
-                    ViewModel.OpenThreadWhenReady(threadId);
-                }
-
-                if (canEnablePrelaunch)
-                {
-                    TryEnablePrelaunch();
-                }
-
-                ViewModel.StartedFromMainView = true;
-                if (rootFrame.Content == null)
-                {
-                    rootFrame.Navigate(ViewModel.IsUserAuthenticated ? typeof(MainPage) : typeof(LoginPage));
-                }
+            ViewModel.StartedFromMainView = true;
+            if (rootFrame.Content == null)
+            {
+                rootFrame.Navigate(ViewModel.IsUserAuthenticated ? typeof(MainPage) : typeof(LoginPage));
             }
 
             Window.Current.Activate();
