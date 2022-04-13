@@ -1,10 +1,14 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Foundation.Metadata;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Data;
+using Microsoft.Toolkit.Uwp.UI;
 using NeoSmart.Unicode;
 
 namespace Indirect.Controls
@@ -13,23 +17,26 @@ namespace Indirect.Controls
     {
         private static Flyout openFlyout;
 
-        private int skinToneIndex = 0;
-        private Border highlightBorder;
-        private Button skinToneButton;
+        private readonly CollectionViewSource groupedEmoji;
+        private readonly DispatcherQueue queue;
+        private readonly DispatcherQueueTimer timer;
         private ListViewBase emojiPresenter;
         private Button[] categoryButtons;
         private Button closeButton;
         private TextBox searchBox;
         private string selectedEmoji;
-        private SingleEmoji[] activeEmoji;
-        private ObservableCollection<SingleEmoji> allEmoji;
-        private bool searchMode;
 
         public EmojiPicker()
         {
             this.DefaultStyleKey = typeof(EmojiPicker);
             this.categoryButtons = new Button[6];
-            
+            this.queue = DispatcherQueue.GetForCurrentThread();
+            this.timer = queue.CreateTimer();
+            this.groupedEmoji = new CollectionViewSource
+            {
+                IsSourceGrouped = true
+            };
+
             Loaded += OnLoaded;
         }
 
@@ -60,32 +67,34 @@ namespace Indirect.Controls
         {
             base.OnApplyTemplate();
 
-            this.highlightBorder = (Border) this.GetTemplateChild("HighlightBorder");
-            this.skinToneButton = (Button) this.GetTemplateChild("SkinToneButton");
             this.emojiPresenter = (ListViewBase) this.GetTemplateChild("EmojiPresenter");
 
-            this.categoryButtons[0] = (Button) this.GetTemplateChild("SmilesButton");
-            this.categoryButtons[1] = (Button) this.GetTemplateChild("PeopleButton");
-            this.categoryButtons[2] = (Button) this.GetTemplateChild("BalloonButton");
-            this.categoryButtons[3] = (Button) this.GetTemplateChild("PizzaButton");
-            this.categoryButtons[4] = (Button) this.GetTemplateChild("CarButton");
-            this.categoryButtons[5] = (Button) this.GetTemplateChild("HeartButton");
-
+            this.categoryButtons[0] = (Button)this.GetTemplateChild("SmilesButton");
+            this.categoryButtons[1] = (Button)this.GetTemplateChild("PeopleButton");
+            this.categoryButtons[2] = (Button)this.GetTemplateChild("PizzaButton");
+            this.categoryButtons[3] = (Button)this.GetTemplateChild("CarButton");
+            this.categoryButtons[4] = (Button)this.GetTemplateChild("BalloonButton");
+            this.categoryButtons[5] = (Button)this.GetTemplateChild("HeartButton");
             this.closeButton = (Button) this.GetTemplateChild("CloseButton");
             this.searchBox = (TextBox) this.GetTemplateChild("SearchBox");
 
-            this.skinToneButton.Click += this.SkinToneButtonClick;
             this.closeButton.Click += this.CloseButtonClick;
             this.emojiPresenter.ItemClick += this.EmojiSelected;
             this.searchBox.TextChanged += SearchBoxTextChanged;
+
+            this.ResetDisplayEmoji();
+
+            categoryButtons[0].Tag = EmojiGroups[0].First();
+            categoryButtons[1].Tag = EmojiGroups[1].First();
+            categoryButtons[2].Tag = EmojiGroups[3].First();
+            categoryButtons[3].Tag = EmojiGroups[4].First();
+            categoryButtons[4].Tag = EmojiGroups[5].First();
+            categoryButtons[5].Tag = EmojiGroups[7].First();
 
             foreach (var button in this.categoryButtons)
             {
                 button.Click += this.ChangeCategoryClick;
             }
-
-            this.SetCurrentEmoji(0);
-            this.allEmoji = new ObservableCollection<SingleEmoji>();
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
@@ -93,62 +102,49 @@ namespace Indirect.Controls
             this.searchBox.Focus(FocusState.Programmatic);
         }
 
-        private void RefreshSearch(string phrase)
+        private async void RefreshSearch()
         {
+            var phrase = searchBox.Text.Trim();
             if (phrase.Length == 0)
             {
-                VisualStateManager.GoToState(this, "NormalState", true);
-                this.searchMode = false;
-                this.SetCurrentEmoji(0);
-                Grid.SetColumn(this.highlightBorder, 1);
-                this.skinToneButton.Visibility = Visibility.Collapsed;
-                this.allEmoji.Clear();
+                this.ResetDisplayEmoji();
             }
             else
             {
-                VisualStateManager.GoToState(this, "SearchState", true);
-                this.searchMode = true;
-                this.skinToneButton.Visibility = Visibility.Visible;
-
-                this.UpdateSearchResults(phrase);
-
-                this.emojiPresenter.ItemsSource = this.allEmoji;
+                await this.UpdateSearchResults(phrase);
             }
         }
 
-        private void UpdateSearchResults(string phrase)
+        private async Task UpdateSearchResults(string phrase)
         {
-            var skinToneName = SkinTones[this.skinToneIndex].Name;
-
-            // add emoji which satisfy current search phrase
-            var emojisToAdd = AllEmoji()
-                .Where(e => e.SearchTerms.Any(s => s.StartsWith(phrase)));
-
-            this.allEmoji.Clear();
-            foreach (var emoji in emojisToAdd)
+            void Action()
             {
-                this.allEmoji.Add(emoji);
+                var result = Emoji.All
+                    .Where(e => e.SearchTerms.Any(s => s.StartsWith(phrase)))
+                    .Select(x => new EmojiViewModel(x)).ToImmutableList();
+                queue.TryEnqueue(() => this.emojiPresenter.ItemsSource = result);
             }
+
+            await Task.Run(Action);
         }
 
         private void SearchBoxTextChanged(object sender, TextChangedEventArgs e)
         {
-            RefreshSearch(searchBox.Text.ToLower());
+            this.timer.Debounce(RefreshSearch, TimeSpan.FromMilliseconds(100));
         }
 
         private void EmojiSelected(object sender, ItemClickEventArgs e)
         {
-            this.selectedEmoji = ((SingleEmoji)e.ClickedItem).ToString();
+            this.selectedEmoji = ((EmojiViewModel)e.ClickedItem).Glyph;
             openFlyout.Hide();
         }
 
         private void ChangeCategoryClick(object sender, RoutedEventArgs e)
         {
+            if (!string.IsNullOrEmpty(searchBox.Text)) return;
             var button = (Button)sender;
-            var tag = int.Parse(button.Tag.ToString());
-            this.SetCurrentEmoji(tag);
-            this.skinToneButton.Visibility = tag == 1 ? Visibility.Visible : Visibility.Collapsed;
-            Grid.SetColumn(this.highlightBorder, tag + 1);
+            var firstItemInGroup = button.Tag;
+            this.emojiPresenter.ScrollIntoView(firstItemInGroup, ScrollIntoViewAlignment.Leading);
         }
 
         private void CloseButtonClick(object sender, RoutedEventArgs e)
@@ -156,29 +152,11 @@ namespace Indirect.Controls
             openFlyout.Hide();
         }
 
-        private void SetCurrentEmoji(int id)
+        private void ResetDisplayEmoji()
         {
-            this.activeEmoji = EmojiGroups[id];
-            this.emojiPresenter.ItemsSource = activeEmoji;
-        }
-
-        private void SkinToneButtonClick(object sender, RoutedEventArgs e)
-        {
-            this.skinToneIndex = (this.skinToneIndex + 1) % 6;
-            var skinTone = SkinTones[this.skinToneIndex];
-            EmojiGroups[1] = skinTone.SkinEmoji;
-
-            this.skinToneButton.Content = skinTone.Emoji;
-
-            if (!this.searchMode)
-            {
-                this.SetCurrentEmoji(1);
-            }
-            else
-            {
-                this.allEmoji.Clear();
-                this.RefreshSearch(this.searchBox.Text);
-            }
+            if (groupedEmoji.Source == null)
+                groupedEmoji.Source = EmojiGroups;
+            this.emojiPresenter.ItemsSource = this.groupedEmoji.View;
         }
     }
 }

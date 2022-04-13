@@ -138,7 +138,7 @@
   <ItemGroup>
     <Compile Include="Controls\EmojiPicker\EmojiPicker.cs" />
     <Compile Include="Controls\EmojiPicker\EmojiPicker.Groups.cs" />
-    <Compile Include="Controls\EmojiPicker\EmojiSkinTone.cs" />
+    <Compile Include="Controls\EmojiPicker\EmojiViewModel.cs" />
     <Compile Include="Controls\ReactionsControl.xaml.cs">
       <DependentUpon>ReactionsControl.xaml</DependentUpon>
     </Compile>
@@ -427,10 +427,10 @@
       <Version>7.1.2</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.UI.Xaml">
-      <Version>2.7.0</Version>
+      <Version>2.7.1</Version>
     </PackageReference>
     <PackageReference Include="Unicode.net">
-      <Version>0.1.2</Version>
+      <Version>2.0.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

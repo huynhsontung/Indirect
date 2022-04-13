@@ -5,9 +5,9 @@
 
     <Style TargetType="class:EmojiPicker">
         <Setter Property="Height" Value="300" />
-        <Setter Property="Width" Value="300" />
+        <Setter Property="Width" Value="290" />
         <Setter Property="MaxHeight" Value="300" />
-        <Setter Property="MaxWidth" Value="300" />
+        <Setter Property="MaxWidth" Value="290" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="Template">
@@ -18,7 +18,7 @@
                         MaxHeight="{TemplateBinding MaxHeight}"
                         XYFocusKeyboardNavigation="Enabled">
                         <Grid.Resources>
-                            <Style x:Key="BasicButtonStyle" TargetType="Button">
+                            <Style BasedOn="{StaticResource DefaultButtonStyle}" TargetType="Button">
                                 <Setter Property="Background" Value="Transparent" />
                                 <Setter Property="BorderThickness" Value="0" />
                                 <Setter Property="Width" Value="40" />
@@ -26,8 +26,6 @@
                                 <Setter Property="HorizontalAlignment" Value="Stretch" />
                                 <Setter Property="VerticalAlignment" Value="Stretch" />
                             </Style>
-
-                            <Style BasedOn="{StaticResource BasicButtonStyle}" TargetType="Button" />
                         </Grid.Resources>
 
                         <Grid.ColumnDefinitions>
@@ -36,46 +34,78 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" MinHeight="40" />
                             <RowDefinition />
-                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
+
+                        <StackPanel
+                            x:Name="CategoriesPanel"
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="3"
+                            Margin="8,0"
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal">
+
+                            <Button x:Name="SmilesButton" ToolTipService.ToolTip="Smiley faces and animals">
+                                <FontIcon FontSize="14" Glyph="&#xED54;" />
+                            </Button>
+                            <Button x:Name="PeopleButton" ToolTipService.ToolTip="People">
+                                <FontIcon FontSize="14" Glyph="&#xED53;" />
+                            </Button>
+                            <Button x:Name="PizzaButton" ToolTipService.ToolTip="Food and plants">
+                                <FontIcon FontSize="14" Glyph="&#xED56;" />
+                            </Button>
+                            <Button x:Name="CarButton" ToolTipService.ToolTip="Transportation and places">
+                                <FontIcon FontSize="14" Glyph="&#xED57;" />
+                            </Button>
+                            <Button x:Name="BalloonButton" ToolTipService.ToolTip="Celebrations and objects">
+                                <FontIcon FontSize="14" Glyph="&#xED55;" />
+                            </Button>
+                            <Button x:Name="HeartButton" ToolTipService.ToolTip="Symbols">
+                                <FontIcon FontSize="14" Glyph="&#xEB51;" />
+                            </Button>
+                        </StackPanel>
 
                         <TextBox
                             x:Name="SearchBox"
-                            Margin="12,0,12,0"
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="8,0,8,0"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"
-                            Background="Transparent"
-                            BorderThickness="0"
                             PlaceholderText="Type to find an emoji" />
 
                         <Button
                             x:Name="CloseButton"
+                            Grid.Row="0"
                             Grid.Column="2"
-                            Style="{ThemeResource BasicButtonStyle}"
                             Visibility="Collapsed">
                             <SymbolIcon Height="10" Symbol="Clear" />
                         </Button>
 
-                        <Button
-                            x:Name="SkinToneButton"
-                            Grid.Column="1"
-                            Content="✋"
-                            Style="{ThemeResource BasicButtonStyle}"
-                            Visibility="Collapsed" />
-
                         <GridView
                             x:Name="EmojiPresenter"
-                            Grid.Row="1"
+                            Grid.Row="2"
+                            Grid.Column="0"
                             Grid.ColumnSpan="3"
-                            Padding="14,0,8,0"
+                            Padding="8,0,8,0"
                             IsItemClickEnabled="True"
                             SelectionMode="None"
                             TabIndex="0">
+                            <GridView.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontSize="13" Text="{Binding Key}" />
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </GridView.GroupStyle>
 
                             <GridView.ItemContainerStyle>
-                                <Style TargetType="GridViewItem">
+                                <Style BasedOn="{StaticResource DefaultGridViewItemStyle}" TargetType="GridViewItem">
                                     <Setter Property="Margin" Value="0" />
                                     <Setter Property="Padding" Value="0" />
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -93,120 +123,13 @@
                                         HorizontalAlignment="Stretch"
                                         VerticalAlignment="Center"
                                         FontSize="28"
-                                        Text="{Binding}"
-                                        TextAlignment="Center" />
+                                        Text="{Binding Glyph}"
+                                        TextAlignment="Center"
+                                        ToolTipService.ToolTip="{Binding Name}" />
                                 </DataTemplate>
                             </GridView.ItemTemplate>
 
                         </GridView>
-
-                        <Grid
-                            x:Name="SearchPanel"
-                            Grid.Row="2"
-                            Grid.ColumnSpan="3"
-                            HorizontalAlignment="Stretch"
-                            Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
-                            Visibility="Collapsed">
-
-                            <Border
-                                Width="40"
-                                Height="40"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Bottom"
-                                BorderBrush="{ThemeResource SystemControlBackgroundAccentBrush}"
-                                BorderThickness="0,0,0,4">
-
-                                <SymbolIcon
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Symbol="Find" />
-
-                            </Border>
-
-                        </Grid>
-
-                        <Grid
-                            x:Name="CategoriesPanel"
-                            Grid.Row="2"
-                            Grid.ColumnSpan="3"
-                            HorizontalAlignment="Stretch"
-                            Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
-                            CornerRadius="2">
-
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <Button
-                                x:Name="SmilesButton"
-                                Grid.Column="1"
-                                Tag="0"
-                                ToolTipService.ToolTip="Smiley faces and animals">
-                                <FontIcon FontSize="14" Glyph="&#xED54;" />
-                            </Button>
-                            <Button
-                                x:Name="PeopleButton"
-                                Grid.Column="2"
-                                Tag="1"
-                                ToolTipService.ToolTip="People">
-                                <FontIcon FontSize="14" Glyph="&#xED53;" />
-                            </Button>
-                            <Button
-                                x:Name="BalloonButton"
-                                Grid.Column="3"
-                                Tag="2"
-                                ToolTipService.ToolTip="Celebrations and objects">
-                                <FontIcon FontSize="14" Glyph="&#xED55;" />
-                            </Button>
-                            <Button
-                                x:Name="PizzaButton"
-                                Grid.Column="4"
-                                Tag="3"
-                                ToolTipService.ToolTip="Food and plants">
-                                <FontIcon FontSize="14" Glyph="&#xED56;" />
-                            </Button>
-                            <Button
-                                x:Name="CarButton"
-                                Grid.Column="5"
-                                Tag="4"
-                                ToolTipService.ToolTip="Transportation and places">
-                                <FontIcon FontSize="14" Glyph="&#xED57;" />
-                            </Button>
-                            <Button
-                                x:Name="HeartButton"
-                                Grid.Column="6"
-                                Tag="5"
-                                ToolTipService.ToolTip="Symbols">
-                                <FontIcon FontSize="14" Glyph="&#xEB51;" />
-                            </Button>
-
-                            <Border
-                                x:Name="HighlightBorder"
-                                Grid.Column="1"
-                                Height="4"
-                                VerticalAlignment="Bottom"
-                                Background="{ThemeResource SystemControlBackgroundAccentBrush}" />
-                        </Grid>
-
-                        <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroup>
-                                <VisualState x:Name="NormalState" />
-                                <VisualState x:Name="SearchState">
-                                    <VisualState.Setters>
-                                        <Setter Target="CategoriesPanel.Visibility" Value="Collapsed" />
-                                        <Setter Target="SearchPanel.Visibility" Value="Visible" />
-                                    </VisualState.Setters>
-                                </VisualState>
-                            </VisualStateGroup>
-                        </VisualStateManager.VisualStateGroups>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
