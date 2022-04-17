@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
-using Windows.Web.Http;
-using Windows.Web.Http.Filters;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Windows.ApplicationModel.Resources;
 
 namespace InstagramAPI
 {
@@ -53,7 +51,8 @@ namespace InstagramAPI
         public static void StartAppCenter()
         {
 #if !DEBUG
-            AppCenter.Start(Secrets.APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
+            ResourceLoader secrets = ResourceLoader.GetForViewIndependentUse("Secrets");
+            AppCenter.Start(secrets.GetString("AppCenterApiKey"), typeof(Analytics), typeof(Crashes));
 #endif
         }
     }

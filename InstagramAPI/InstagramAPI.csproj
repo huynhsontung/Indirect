@@ -247,7 +247,6 @@
     <Compile Include="Realtime\Subscriptions\Skywalker.cs" />
     <Compile Include="Realtime\Thrift\GraphQLMessage.cs" />
     <Compile Include="Realtime\Thrift\SkywalkerMessage.cs" />
-    <Compile Include="SECRETS.cs" />
     <Compile Include="Realtime\PubsubEventArgs.cs" />
     <Compile Include="Realtime\MessageSyncEventArgs.cs" />
     <Compile Include="Realtime\SyncItem.cs" />
@@ -287,6 +286,7 @@
   <ItemGroup>
     <None Include="Fbns\Fbns.thrift" />
     <None Include="Realtime\Thrift\Realtime.thrift" />
+    <PRIResource Include="Secrets.resw" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
