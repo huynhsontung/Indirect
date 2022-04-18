@@ -593,6 +593,7 @@ namespace Indirect.Pages
                     FlatReelsContainer flatReels = await PrepareReelsForSecondaryView(selectedIndex);
                     Frame frame = (Frame)Window.Current.Content;
                     frame.Navigate(typeof(ReelPage), flatReels);
+                    frame.BackStack.Clear();
                 }
 
                 _reelPageView.CoreView.DispatcherQueue.TryEnqueue(PrepareReels);
