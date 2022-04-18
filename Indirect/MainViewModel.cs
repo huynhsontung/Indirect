@@ -18,22 +18,21 @@ using InstagramAPI.Classes.Direct;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
 using InstagramAPI.Utils;
-using Microsoft.Toolkit.Uwp.Helpers;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Realtime;
+using Microsoft.Toolkit.Mvvm.ComponentModel;
 
 namespace Indirect
 {
-    internal partial class MainViewModel : INotifyPropertyChanged
+    [INotifyPropertyChanged]
+    internal partial class MainViewModel
     {
         private string _threadToBeOpened;
         private readonly DispatcherQueue _mainWindowDispatcherQueue;
 
         private string ThreadInfoKey => $"{nameof(ThreadInfoDictionary)}_{LoggedInUser?.Pk}";
         private Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; set; }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public Instagram InstaApi { get; private set; }
         public bool StartedFromMainView { get; set; }
@@ -43,7 +42,7 @@ namespace Indirect
         public InboxWrapper PendingInbox { get; }
         public InboxWrapper Inbox { get; }
         public List<DirectThreadWrapper> SecondaryThreads { get; } = new List<DirectThreadWrapper>();
-        public UserSessionContainer[] AvailableSessions { get; private set; } = new UserSessionContainer[0];
+        public UserSessionContainer[] AvailableSessions { get; private set; } = Array.Empty<UserSessionContainer>();
         public UserSessionData ActiveSession => InstaApi.Session;
         public BaseUser LoggedInUser => InstaApi.Session.LoggedInUser;
         public AndroidDevice Device => InstaApi?.Device;
@@ -51,6 +50,9 @@ namespace Indirect
         public ReelsFeed ReelsFeed { get; } = new ReelsFeed();
         public ChatService ChatService { get; }
         public SettingsService Settings { get; }
+
+        [ObservableProperty]
+        private bool _showStoryInNewWindow;
 
         public MainViewModel(DispatcherQueue mainWindowDispatcherQueue)
         {
@@ -60,8 +62,23 @@ namespace Indirect
             ChatService = new ChatService(this);
             Settings = new SettingsService(this);
 
+            ShowStoryInNewWindow = true;
+            if (SettingsService.TryGetGlobal("ShowStoryInNewWindow", out bool? result))
+            {
+                ShowStoryInNewWindow = result ?? true;
+            }
+
+            PropertyChanged += OnPropertyChanged;
             Inbox.FirstUpdated += OnInboxFirstUpdated;
             Inbox.Threads.CollectionChanged += InboxThreads_OnCollectionChanged;
+        }
+
+        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ShowStoryInNewWindow))
+            {
+                SettingsService.SetGlobal("ShowStoryInNewWindow", ShowStoryInNewWindow);
+            }
         }
 
         public async Task Initialize()

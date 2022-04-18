@@ -365,6 +365,7 @@
                                         Text="Add Account" />
                                 </MenuFlyoutSubItem>
                                 <MenuFlyoutSeparator />
+                                <ToggleMenuFlyoutItem IsChecked="{x:Bind ViewModel.ShowStoryInNewWindow, Mode=TwoWay}" Text="Show Story in new window" />
                                 <MenuFlyoutSubItem Text="Theme">
                                     <MenuFlyoutItem Click="ThemeItem_Click" Text="System" />
                                     <MenuFlyoutItem Click="ThemeItem_Click" Text="Dark" />

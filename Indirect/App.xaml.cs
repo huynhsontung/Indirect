@@ -66,6 +66,8 @@ namespace Indirect
                 ApplicationViewSwitchingOptions.ConsolidateViews);
         }
 
+        public bool IsViewOpen(int viewId) => SecondaryViewIds.Contains(viewId);
+
         public Task<int> CreateAndShowNewView(Type targetPage, object parameter = null, CoreApplicationView view = null)
         {
             var newView = view ?? CoreApplication.CreateNewView();

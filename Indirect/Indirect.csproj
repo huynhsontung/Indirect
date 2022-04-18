@@ -9,6 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Indirect</RootNamespace>
     <AssemblyName>Indirect</AssemblyName>
+    <LangVersion>10.0</LangVersion>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.19041.0</TargetPlatformVersion>
@@ -143,6 +144,7 @@
     <Compile Include="Controls\SendAudioControl.xaml.cs">
       <DependentUpon>SendAudioControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Entities\CoreViewHandle.cs" />
     <Compile Include="Entities\AudioWithWaveform.cs" />
     <Compile Include="Entities\LinkTextForDisplay.cs" />
     <Compile Include="Entities\Wrappers\RelativeItemMode.cs" />
@@ -408,6 +410,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.13</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Toolkit.Mvvm">
+      <Version>7.1.2</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Toolkit.Uwp.UI.Controls.Core">
       <Version>7.1.2</Version>
