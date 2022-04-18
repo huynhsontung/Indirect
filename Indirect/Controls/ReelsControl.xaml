@@ -55,6 +55,15 @@
             <DataTemplate x:Key="ImageTemplate" x:DataType="wrappers:ReelItemWrapper">
                 <controls:ImageEx Source="{x:Bind Source.Images[0].Url}" />
             </DataTemplate>
+
+            <muxc:TeachingTip
+                x:Name="StoryInNewWindowTeachingTip"
+                Title="Better Story for multitaskers!"
+                CloseButtonContent="Got it!"
+                IsLightDismissEnabled="False"
+                PlacementMargin="16,24"
+                PreferredPlacement="Auto"
+                Subtitle="Story now opens in a new window by default, so you can watch and chat at the same time!&#x0a;&#x0a;You can change this behavior in the main menu." />
         </ResourceDictionary>
     </UserControl.Resources>
 

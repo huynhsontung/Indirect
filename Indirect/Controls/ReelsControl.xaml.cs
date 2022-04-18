@@ -9,6 +9,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Indirect.Entities;
 using Indirect.Entities.Wrappers;
+using Indirect.Services;
 using Indirect.Utilities;
 using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.UI;
@@ -63,11 +64,23 @@ namespace Indirect.Controls
         private void ReelsControl_OnLoaded(object sender, RoutedEventArgs e)
         {
             Source?.SelectItemToView();
+            ConditionallyShowTeachingTip();
         }
 
         private void ReelsControl_OnUnloaded(object sender, RoutedEventArgs e)
         {
             Source = null;
+        }
+
+        private async void ConditionallyShowTeachingTip()
+        {
+            if (DeviceFamilyHelpers.MultipleViewsSupport &&
+                (!SettingsService.TryGetGlobal(nameof(StoryInNewWindowTeachingTip), out bool? b1) || (b1 ?? true)))
+            {
+                await Task.Delay(1000);
+                StoryInNewWindowTeachingTip.IsOpen = true;
+                SettingsService.SetGlobal(nameof(StoryInNewWindowTeachingTip), false);
+            }
         }
 
         private async Task PopReplyDeliveryStatus()
