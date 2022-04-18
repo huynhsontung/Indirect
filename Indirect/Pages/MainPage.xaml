@@ -520,11 +520,6 @@
                                                 </SwipeControl>
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
-                                        <ListView.ItemContainerStyle>
-                                            <Style TargetType="ListViewItem">
-                                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                            </Style>
-                                        </ListView.ItemContainerStyle>
                                     </ListView>
                                     <TextBlock
                                         Grid.Row="3"

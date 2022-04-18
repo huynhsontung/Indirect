@@ -18,6 +18,7 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
+            <x:Double x:Key="ListViewItemMinHeight">0</x:Double>
             <converters:EqualityVisibilityConverter x:Key="VisibleWhenZeroConverter" />
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter" />
             <converters:BooleanVisibilityConverter x:Key="InvertBooleanVisibilityConverter" Invert="True" />
@@ -303,13 +304,6 @@
                         <ItemsStackPanel VerticalAlignment="Bottom" ItemsUpdatingScrollMode="KeepLastItemInView" />
                     </ItemsPanelTemplate>
                 </ListView.ItemsPanel>
-
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <Setter Property="MinHeight" Value="0" />
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                    </Style>
-                </ListView.ItemContainerStyle>
 
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="wrappers:DirectItemWrapper">

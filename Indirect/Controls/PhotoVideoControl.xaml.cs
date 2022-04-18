@@ -21,21 +21,11 @@ namespace Indirect.Controls
             typeof(object),
             typeof(PhotoVideoControl),
             new PropertyMetadata(null, SourceChanged));
-        public static readonly DependencyProperty AreTransportControlsEnabledProperty = DependencyProperty.Register(
-            nameof(AreTransportControlsEnabled),
-            typeof(bool),
-            typeof(AutoVideoControl),
-            new PropertyMetadata(false));
 
         public object Source
         {
             get => GetValue(SourceProperty);
             set => SetValue(SourceProperty, value);
-        }
-        public bool AreTransportControlsEnabled
-        {
-            get => (bool)GetValue(AreTransportControlsEnabledProperty);
-            set => SetValue(AreTransportControlsEnabledProperty, value);
         }
 
         private static void SourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
