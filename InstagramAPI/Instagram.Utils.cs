@@ -5,7 +5,6 @@ using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Windows.ApplicationModel.Resources;
 
 namespace InstagramAPI
 {
@@ -51,8 +50,7 @@ namespace InstagramAPI
         public static void StartAppCenter()
         {
 #if !DEBUG
-            ResourceLoader secrets = ResourceLoader.GetForViewIndependentUse("Secrets");
-            AppCenter.Start(secrets.GetString("AppCenterApiKey"), typeof(Analytics), typeof(Crashes));
+            AppCenter.Start(APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
 #endif
         }
     }

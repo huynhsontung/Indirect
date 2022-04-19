@@ -267,10 +267,6 @@ __pycache__/
 # binary files and texts notes
 **/*.bin
 **/*.txt
-/InstantMessaging/MqttHelpers/Thrift
-/InstantMessaging/Notification/Thrift
-/Indirect/SECRETS.cs
-/InstagramAPI/SECRETS.cs
 
 # generated configs
 *.editorconfig

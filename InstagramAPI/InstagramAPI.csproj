@@ -251,6 +251,7 @@
     <Compile Include="Realtime\MessageSyncEventArgs.cs" />
     <Compile Include="Realtime\SyncItem.cs" />
     <Compile Include="Realtime\UserPresenceEventArgs.cs" />
+    <Compile Include="Secrets.cs" />
     <Compile Include="Utils\CacheManager.cs" />
     <Compile Include="Utils\CryptoHelper.cs" />
     <Compile Include="Utils\DebugLogger.cs" />
@@ -286,7 +287,6 @@
   <ItemGroup>
     <None Include="Fbns\Fbns.thrift" />
     <None Include="Realtime\Thrift\Realtime.thrift" />
-    <PRIResource Include="Secrets.resw" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
