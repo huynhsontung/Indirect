@@ -167,8 +167,7 @@ namespace Indirect
             }
             else
             {
-                //await ContactsService.DeleteAllAppContacts();
-                InstaApi = new Instagram(InstaApi.Session);
+                InstaApi = new Instagram(null);
                 return true;
             }
         }
