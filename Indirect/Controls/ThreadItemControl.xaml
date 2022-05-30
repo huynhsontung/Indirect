@@ -260,7 +260,7 @@
                     HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                     CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                     IsCacheEnabled="True"
-                    Source="{x:Bind PreviewImageUri}"
+                    Source="{x:Bind FullImageUri}"
                     Tapped="ImageFrame_Tapped" />
             </DataTemplate>
 
