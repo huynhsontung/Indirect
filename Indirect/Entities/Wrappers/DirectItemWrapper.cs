@@ -328,6 +328,7 @@ namespace Indirect.Entities.Wrappers
                 case DirectItemType.Like:
                 case DirectItemType.Link:
                 case DirectItemType.Media:
+                case DirectItemType.Clip:
                     return true;
                 
                 case DirectItemType.Unknown:
