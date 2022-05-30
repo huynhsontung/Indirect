@@ -89,7 +89,21 @@ namespace InstagramAPI.Classes.Direct
 
         #region MediaShare
 
-        [JsonProperty("media_share")] public DirectMediaShare MediaShare { get; set; }
+        [JsonProperty("media_share")]
+        public DirectMediaShare MediaShare { get; set; }
+
+        [JsonProperty("direct_media_share")]
+        public DirectMediaShareWithContext DirectMediaShare
+        {
+            get => _directMediaShare;
+            set
+            {
+                _directMediaShare = value;
+                MediaShare = value.Media;
+            }
+        }
+
+        private DirectMediaShareWithContext _directMediaShare;
 
         #endregion
 

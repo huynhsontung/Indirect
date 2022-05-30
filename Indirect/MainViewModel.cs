@@ -32,7 +32,7 @@ namespace Indirect
         private readonly DispatcherQueue _mainWindowDispatcherQueue;
 
         private string ThreadInfoKey => $"{nameof(ThreadInfoDictionary)}_{LoggedInUser?.Pk}";
-        private Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; set; }
+        public Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; private set; }
 
         public Instagram InstaApi { get; private set; }
         public bool StartedFromMainView { get; set; }

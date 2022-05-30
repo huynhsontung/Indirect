@@ -382,6 +382,10 @@ namespace Indirect.Entities.Wrappers
                             Description = FromMe ? "You sent a video" : "Sent you a video";
                         break;
 
+                    case DirectItemType.MediaShare when Source.DirectMediaShare?.MediaShareType == "tag":
+                        Description = FromMe ? "You tagged them in your post" : "They tagged you in their post";
+                        break;
+
                     case DirectItemType.MediaShare:
                         Description = FromMe ? "You shared a post" : "Shared a post";
                         break;

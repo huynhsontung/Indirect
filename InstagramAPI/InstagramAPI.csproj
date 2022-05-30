@@ -136,6 +136,7 @@
     <Compile Include="Classes\Direct\ItemContent\Clip\ClipCaption.cs" />
     <Compile Include="Classes\Direct\ItemContent\Clip\ItemClip.cs" />
     <Compile Include="Classes\Direct\ItemContent\DirectActionLog.cs" />
+    <Compile Include="Classes\Direct\ItemContent\DirectMediaShareWithContext.cs" />
     <Compile Include="Classes\JsonConverters\ActivityIndicatorDataConverter.cs" />
     <Compile Include="Classes\JsonConverters\BoolConverter.cs" />
     <Compile Include="Classes\JsonConverters\CookieCollectionConverter.cs" />
