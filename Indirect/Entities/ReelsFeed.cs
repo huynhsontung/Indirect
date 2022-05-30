@@ -5,26 +5,36 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.UI.Core;
-using Windows.UI.Xaml;
 using Indirect.Entities.Wrappers;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Utils;
+using Indirect.Services;
+using Windows.System;
 
 namespace Indirect.Entities
 {
-    internal class ReelsFeed : DependencyObject
+    internal class ReelsFeed
     {
         public ObservableCollection<ReelWrapper> Reels { get; } = new ObservableCollection<ReelWrapper>();
 
         public ImmutableList<Reel> LatestReelsFeed { get; private set; }
 
+        private readonly DispatcherQueue _dispatcherQueue;
+        private readonly SettingsService _settingsService;
         private CancellationTokenSource _reelsUpdateLoop;
+
+        public ReelsFeed(SettingsService settingsService)
+        {
+            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            _settingsService = settingsService;
+        }
 
         public async Task UpdateReelsFeedAsync(ReelsTrayFetchReason fetchReason = ReelsTrayFetchReason.ColdStart)
         {
+            _settingsService.TryGetForUser("HideReelsFeed", out bool? value);
+            if (value ?? false) return;
             if (Debouncer.Throttle(nameof(UpdateReelsFeed), TimeSpan.FromSeconds(10)) ||
                 fetchReason == ReelsTrayFetchReason.ColdStart)
             {
@@ -36,7 +46,10 @@ namespace Indirect.Entities
         {
             var result = await ((App)App.Current).ViewModel.InstaApi.GetReelsTrayFeed(fetchReason);
             if (!result.IsSucceeded) return;
-            await Dispatcher.QuickRunAsync(() =>
+            _dispatcherQueue.TryEnqueue(fetchReason == ReelsTrayFetchReason.PullToRefresh
+                ? DispatcherQueuePriority.Normal
+                : DispatcherQueuePriority.Low,
+            () =>
             {
                 try
                 {
@@ -49,7 +62,7 @@ namespace Indirect.Entities
                     // TODO: investigate origin of ArgumentOutOfRangeException
                     DebugLogger.LogException(e);
                 }
-            }, fetchReason == ReelsTrayFetchReason.PullToRefresh ? CoreDispatcherPriority.Normal : CoreDispatcherPriority.Low);
+            });
         }
 
         private void SyncReels(Reel[] target)
@@ -149,7 +162,7 @@ namespace Indirect.Entities
                         _reelsUpdateLoop = null;
                     }
                 }
-                
+
                 tokenSource.Dispose();
             }
         }

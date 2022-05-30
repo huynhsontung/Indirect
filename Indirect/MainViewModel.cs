@@ -47,12 +47,12 @@ namespace Indirect
         public BaseUser LoggedInUser => InstaApi.Session.LoggedInUser;
         public AndroidDevice Device => InstaApi?.Device;
         public bool IsUserAuthenticated => InstaApi?.IsUserAuthenticated ?? false;
-        public ReelsFeed ReelsFeed { get; } = new ReelsFeed();
+        public ReelsFeed ReelsFeed { get; }
         public ChatService ChatService { get; }
         public SettingsService Settings { get; }
 
-        [ObservableProperty]
-        private bool _showStoryInNewWindow;
+        [ObservableProperty] private bool _showStoryInNewWindow;
+        [ObservableProperty] private bool _hideReelsFeed;
 
         public MainViewModel(DispatcherQueue mainWindowDispatcherQueue)
         {
@@ -61,23 +61,46 @@ namespace Indirect
             //PendingInbox = new InboxWrapper(this, true);
             ChatService = new ChatService(this);
             Settings = new SettingsService(this);
-
-            ShowStoryInNewWindow = true;
-            if (SettingsService.TryGetGlobal("ShowStoryInNewWindow", out bool? result))
-            {
-                ShowStoryInNewWindow = result ?? true;
-            }
+            ReelsFeed = new ReelsFeed(Settings);
 
             PropertyChanged += OnPropertyChanged;
             Inbox.FirstUpdated += OnInboxFirstUpdated;
             Inbox.Threads.CollectionChanged += InboxThreads_OnCollectionChanged;
         }
 
-        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(ShowStoryInNewWindow))
             {
                 SettingsService.SetGlobal("ShowStoryInNewWindow", ShowStoryInNewWindow);
+            }
+
+            if (e.PropertyName == nameof(HideReelsFeed))
+            {
+                Settings.SetForUser("HideReelsFeed", HideReelsFeed);
+                if (HideReelsFeed)
+                {
+                    ReelsFeed.Reels.Clear();
+                }
+                else
+                {
+                    await ReelsFeed.UpdateReelsFeedAsync(ReelsTrayFetchReason.PullToRefresh);
+                }
+            }
+        }
+
+        private void LoadValuesFromSettings()
+        {
+            _showStoryInNewWindow = true;
+            if (SettingsService.TryGetGlobal("ShowStoryInNewWindow", out bool? b))
+            {
+                _showStoryInNewWindow = b ?? true;
+            }
+
+            _hideReelsFeed = false;
+            if (Settings.TryGetForUser("HideReelsFeed", out bool? b1))
+            {
+                _hideReelsFeed = b1 ?? false;
             }
         }
 
@@ -100,6 +123,7 @@ namespace Indirect
         public async Task OnLoggedIn()
         {
             if (!IsUserAuthenticated) throw new Exception("User is not logged in.");
+            LoadValuesFromSettings();
             SyncLock.Acquire(ActiveSession.SessionName);
             ReelsFeed.StopReelsFeedUpdateLoop(true);
             var tasks = new List<Task>
