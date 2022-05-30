@@ -40,16 +40,119 @@
                 <Setter Property="FontWeight" Value="Bold" />
             </Style>
 
-            <converters:EqualityConverter
-                x:Key="DisableWhenEqualZero"
-                Invert="True"
-                ReferenceValue="0" />
-            <converters:EqualityConverter
-                x:Key="DisableWhenEqual32"
-                Invert="True"
-                ReferenceValue="32" />
             <converters:EqualityVisibilityConverter x:Key="VisibleWhenNotZeroConverter" Invert="True" />
             <converters:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter" />
+
+            <MenuFlyout x:Key="MasterMenuFlyout" Placement="Bottom">
+                <!--<MenuFlyoutItem Click="TestButton_OnClick" Text="Test" />-->
+                <MenuFlyoutItem Click="Profile_Click" Text="{x:Bind ViewModel.LoggedInUser.Username}" />
+                <!--<ToggleMenuFlyoutItem Text="Pending inbox" IsChecked="False" Click="TogglePendingInbox_OnClick"
+                                                      IsEnabled="{x:Bind _viewModel.Inbox.PendingRequestsCount, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"/>-->
+                <MenuFlyoutSubItem x:Name="SwitchAccountMenu" Text="Switch Account">
+                    <MenuFlyoutItem
+                        Click="AddAccountButton_OnClick"
+                        Icon="Add"
+                        Text="Add Account" />
+                </MenuFlyoutSubItem>
+                <MenuFlyoutSeparator />
+                <ToggleMenuFlyoutItem IsChecked="{x:Bind ViewModel.ShowStoryInNewWindow, Mode=TwoWay}" Text="Show Story in New Window" />
+                <ToggleMenuFlyoutItem IsChecked="{x:Bind ViewModel.HideReelsFeed, Mode=TwoWay}" Text="Hide Reels Feed" />
+                <MenuFlyoutSubItem Text="Theme">
+                    <MenuFlyoutItem Click="ThemeItem_Click" Text="System" />
+                    <MenuFlyoutItem Click="ThemeItem_Click" Text="Dark" />
+                    <MenuFlyoutItem Click="ThemeItem_Click" Text="Light" />
+                </MenuFlyoutSubItem>
+                <MenuFlyoutItem Click="About_Click" Text="About" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Click="LogoutButton_Click" Text="Log Out" />
+            </MenuFlyout>
+
+            <DataTemplate x:Key="ReelWrapperDataTemplate" x:DataType="wrappers:ReelWrapper">
+                <Grid
+                    Margin="0,4,0,8"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    AutomationProperties.LabeledBy="{Binding ElementName=StoryUsername}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="54" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <controls:ImageEx
+                        Grid.Row="0"
+                        Width="46"
+                        Height="46"
+                        Margin="4"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        CornerRadius="99"
+                        Source="{x:Bind Source.User.ProfilePictureUrl}" />
+                    <Border
+                        Grid.Row="0"
+                        Width="54"
+                        Height="54"
+                        BorderThickness="2"
+                        CornerRadius="99"
+                        Visibility="{x:Bind HasUnseenItems, Converter={StaticResource BooleanVisibilityConverter}}">
+                        <Border.BorderBrush>
+                            <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
+                                <GradientStop Offset="0" Color="#962fbf" />
+                                <GradientStop Offset="0.5" Color="#d62976" />
+                                <GradientStop Offset="1" Color="#feda75" />
+                            </LinearGradientBrush>
+                        </Border.BorderBrush>
+                    </Border>
+                    <TextBlock
+                        x:Name="StoryUsername"
+                        Grid.Row="1"
+                        MaxWidth="54"
+                        HorizontalAlignment="Center"
+                        Style="{ThemeResource FluentCaptionTextStyle}"
+                        Text="{x:Bind Source.User.Username}" />
+                </Grid>
+            </DataTemplate>
+
+            <DataTemplate x:Key="DirectThreadWrapperDataTemplate" x:DataType="wrappers:DirectThreadWrapper">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <controls1:ProfilePicture
+                        Grid.Row="0"
+                        Grid.RowSpan="2"
+                        Grid.Column="0"
+                        Width="48"
+                        Height="48"
+                        Margin="4,8,16,8"
+                        x:Phase="2"
+                        Source="{x:Bind Users}" />
+
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom"
+                        MaxLines="1"
+                        Style="{ThemeResource FluentTitleTextStyle}"
+                        Text="{x:Bind Source.Title}" />
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        x:Phase="1"
+                        MaxLines="1"
+                        Style="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}"
+                        Text="{x:Bind LastPermanentItem.Description, Mode=OneWay}" />
+                </Grid>
+            </DataTemplate>
         </ResourceDictionary>
     </Page.Resources>
 
@@ -117,6 +220,7 @@
             BorderThickness="0"
             CompactModeThresholdWidth="{StaticResource IntermediateWindowWidth}"
             IntermediateModeThresholdWidth="{StaticResource FullWindowWidth}"
+            ItemTemplate="{StaticResource DirectThreadWrapperDataTemplate}"
             ItemsSource="{x:Bind Inbox.Threads, Mode=OneWay}"
             SelectedItem="{x:Bind ViewModel.Inbox.SelectedThread, Mode=TwoWay}">
             <controls1:ExtendedMasterDetailsView.MasterListHeader>
@@ -141,6 +245,7 @@
                         Canvas.ZIndex="1"
                         IsItemClickEnabled="True"
                         ItemClick="ReelsFeed_OnItemClicked"
+                        ItemTemplate="{StaticResource ReelWrapperDataTemplate}"
                         ItemsSource="{x:Bind ViewModel.ReelsFeed.Reels}"
                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
                         ScrollViewer.HorizontalScrollMode="Enabled"
@@ -160,51 +265,6 @@
                                     Orientation="Horizontal" />
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
-                        <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="wrappers:ReelWrapper">
-                                <Grid
-                                    Margin="0,4,0,8"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Top"
-                                    AutomationProperties.LabeledBy="{Binding ElementName=StoryUsername}">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="54" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <controls:ImageEx
-                                        Grid.Row="0"
-                                        Width="46"
-                                        Height="46"
-                                        Margin="4"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        CornerRadius="99"
-                                        Source="{x:Bind Source.User.ProfilePictureUrl}" />
-                                    <Border
-                                        Grid.Row="0"
-                                        Width="54"
-                                        Height="54"
-                                        BorderThickness="2"
-                                        CornerRadius="99"
-                                        Visibility="{x:Bind HasUnseenItems, Converter={StaticResource BooleanVisibilityConverter}}">
-                                        <Border.BorderBrush>
-                                            <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
-                                                <GradientStop Offset="0" Color="#962fbf" />
-                                                <GradientStop Offset="0.5" Color="#d62976" />
-                                                <GradientStop Offset="1" Color="#feda75" />
-                                            </LinearGradientBrush>
-                                        </Border.BorderBrush>
-                                    </Border>
-                                    <TextBlock
-                                        x:Name="StoryUsername"
-                                        Grid.Row="1"
-                                        MaxWidth="54"
-                                        HorizontalAlignment="Center"
-                                        Style="{ThemeResource FluentCaptionTextStyle}"
-                                        Text="{x:Bind Source.User.Username}" />
-                                </Grid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
                         <ListView.Header>
                             <ListViewItem
                                 MinWidth="0"
@@ -271,51 +331,6 @@
                 </Grid>
             </controls1:ExtendedMasterDetailsView.NoSelectionContent>
 
-            <controls1:ExtendedMasterDetailsView.ItemTemplate>
-                <DataTemplate x:DataType="wrappers:DirectThreadWrapper">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <controls1:ProfilePicture
-                            Grid.Row="0"
-                            Grid.RowSpan="2"
-                            Grid.Column="0"
-                            Width="48"
-                            Height="48"
-                            Margin="4,8,16,8"
-                            x:Phase="2"
-                            Source="{x:Bind Users}" />
-
-                        <TextBlock
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Bottom"
-                            MaxLines="1"
-                            Style="{ThemeResource FluentTitleTextStyle}"
-                            Text="{x:Bind Source.Title}" />
-
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            x:Phase="1"
-                            MaxLines="1"
-                            Style="{x:Bind HasUnreadMessage, Mode=OneWay, Converter={StaticResource HasNewMessageStyleConverter}}"
-                            Text="{x:Bind LastPermanentItem.Description, Mode=OneWay}" />
-                    </Grid>
-                </DataTemplate>
-            </controls1:ExtendedMasterDetailsView.ItemTemplate>
-
             <controls1:ExtendedMasterDetailsView.DetailsTemplate>
                 <DataTemplate x:DataType="wrappers:DirectThreadWrapper">
                     <controls1:ThreadDetailsView Thread="{x:Bind}" />
@@ -344,6 +359,7 @@
                         VerticalAlignment="Center"
                         AutomationProperties.Name="Main menu"
                         Background="Transparent"
+                        Flyout="{StaticResource MasterMenuFlyout}"
                         ToolTipService.ToolTip="Main menu">
                         <controls:ImageEx
                             Width="32"
@@ -352,31 +368,6 @@
                             ImageExFailed="MasterMenuButton_OnImageExFailed"
                             Source="{x:Bind ViewModel.LoggedInUser.ProfilePictureUrl, Mode=OneWay}"
                             Style="{ThemeResource ProfilePicturePlaceholderStyle}" />
-                        <Button.Flyout>
-                            <MenuFlyout Placement="Bottom">
-                                <!--<MenuFlyoutItem Click="TestButton_OnClick" Text="Test" />-->
-                                <MenuFlyoutItem Click="Profile_Click" Text="{x:Bind ViewModel.LoggedInUser.Username}" />
-                                <!--<ToggleMenuFlyoutItem Text="Pending inbox" IsChecked="False" Click="TogglePendingInbox_OnClick"
-                                                      IsEnabled="{x:Bind _viewModel.Inbox.PendingRequestsCount, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"/>-->
-                                <MenuFlyoutSubItem x:Name="SwitchAccountMenu" Text="Switch Account">
-                                    <MenuFlyoutItem
-                                        Click="AddAccountButton_OnClick"
-                                        Icon="Add"
-                                        Text="Add Account" />
-                                </MenuFlyoutSubItem>
-                                <MenuFlyoutSeparator />
-                                <ToggleMenuFlyoutItem IsChecked="{x:Bind ViewModel.ShowStoryInNewWindow, Mode=TwoWay}" Text="Show Story in New Window" />
-                                <ToggleMenuFlyoutItem IsChecked="{x:Bind ViewModel.HideReelsFeed, Mode=TwoWay}" Text="Hide Reels Feed" />
-                                <MenuFlyoutSubItem Text="Theme">
-                                    <MenuFlyoutItem Click="ThemeItem_Click" Text="System" />
-                                    <MenuFlyoutItem Click="ThemeItem_Click" Text="Dark" />
-                                    <MenuFlyoutItem Click="ThemeItem_Click" Text="Light" />
-                                </MenuFlyoutSubItem>
-                                <MenuFlyoutItem Click="About_Click" Text="About" />
-                                <MenuFlyoutSeparator />
-                                <MenuFlyoutItem Click="LogoutButton_Click" Text="Log Out" />
-                            </MenuFlyout>
-                        </Button.Flyout>
                     </Button>
                     <TextBlock
                         x:Name="MasterHeading"
@@ -396,6 +387,7 @@
                         VerticalAlignment="Center"
                         AutomationProperties.Name="New message"
                         Background="Transparent"
+                        Flyout="{x:Bind controls1:NewMessagePicker.GetFlyout()}"
                         ToolTipService.ToolTip="New message (Ctrl+N)">
                         <SymbolIcon
                             Width="32"
@@ -404,154 +396,6 @@
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="N" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
-                        <Button.Flyout>
-                            <Flyout x:Name="NewThreadFlyout" Placement="RightEdgeAlignedTop">
-                                <Grid Width="240">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock
-                                        Grid.Row="0"
-                                        Grid.Column="0"
-                                        VerticalAlignment="Center"
-                                        Style="{ThemeResource FluentBaseTextStyle}"
-                                        Text="To:" />
-                                    <AutoSuggestBox
-                                        x:Name="NewMessageSuggestBox"
-                                        Grid.Row="1"
-                                        Grid.Column="0"
-                                        Grid.ColumnSpan="3"
-                                        Margin="0,8,0,0"
-                                        AutomationProperties.Name="Recipient search box"
-                                        IsEnabled="{x:Bind NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqual32}, Mode=OneWay}"
-                                        PlaceholderText="Search recipient"
-                                        ProcessKeyboardAccelerators="NewMessageSuggestBox_OnProcessKeyboardAccelerators"
-                                        QueryIcon="Find"
-                                        QuerySubmitted="NewMessageSuggestBox_OnQuerySubmitted"
-                                        SuggestionChosen="NewMessageSuggestBox_OnSuggestionChosen"
-                                        TextChanged="NewMessageSuggestBox_OnTextChanged"
-                                        UpdateTextOnSelect="False">
-                                        <AutoSuggestBox.ItemTemplate>
-                                            <DataTemplate x:DataType="users:BaseUser">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <controls:ImageEx
-                                                        Width="28"
-                                                        Height="28"
-                                                        VerticalAlignment="Center"
-                                                        CornerRadius="99"
-                                                        Source="{x:Bind ProfilePictureUrl}"
-                                                        Style="{ThemeResource ProfilePicturePlaceholderStyle}" />
-                                                    <TextBlock
-                                                        Margin="12,0,0,0"
-                                                        VerticalAlignment="Center"
-                                                        Text="{x:Bind Username}" />
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </AutoSuggestBox.ItemTemplate>
-                                    </AutoSuggestBox>
-                                    <ListView
-                                        x:Name="NewMessageCandidateList"
-                                        Grid.Row="2"
-                                        Grid.Column="0"
-                                        Grid.ColumnSpan="3"
-                                        MaxHeight="400"
-                                        Margin="0,8,0,4"
-                                        ItemsSource="{x:Bind NewMessageCandidates}"
-                                        SelectionMode="None">
-                                        <ListView.ItemTemplate>
-                                            <DataTemplate x:DataType="users:BaseUser">
-                                                <SwipeControl>
-                                                    <SwipeControl.RightItems>
-                                                        <SwipeItems Mode="Execute">
-                                                            <SwipeItem
-                                                                Background="Firebrick"
-                                                                Invoked="ClearSingleCandidateSwipe_OnInvoked"
-                                                                Text="Clear">
-                                                                <SwipeItem.IconSource>
-                                                                    <SymbolIconSource Symbol="Clear" />
-                                                                </SwipeItem.IconSource>
-                                                            </SwipeItem>
-                                                        </SwipeItems>
-                                                    </SwipeControl.RightItems>
-                                                    <Grid
-                                                        HorizontalAlignment="Stretch"
-                                                        Background="Transparent"
-                                                        PointerEntered="Candidate_PointerEntered"
-                                                        PointerExited="Candidate_OnPointerExited">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <controls:ImageEx
-                                                            Grid.Column="0"
-                                                            Width="28"
-                                                            Height="28"
-                                                            VerticalAlignment="Center"
-                                                            CornerRadius="99"
-                                                            Source="{x:Bind ProfilePictureUrl}"
-                                                            Style="{ThemeResource ProfilePicturePlaceholderStyle}" />
-                                                        <TextBlock
-                                                            Grid.Column="1"
-                                                            Margin="12,0,0,0"
-                                                            VerticalAlignment="Center"
-                                                            Text="{x:Bind Username}" />
-                                                        <Button
-                                                            x:Name="ClearSingleCandidateButton"
-                                                            Grid.Column="2"
-                                                            HorizontalAlignment="Right"
-                                                            VerticalAlignment="Center"
-                                                            Background="Transparent"
-                                                            Click="ClearSingleCandidateButton_OnClick"
-                                                            Foreground="{StaticResource ButtonForegroundThemeBrush}"
-                                                            Style="{StaticResource TextBlockButtonStyle}"
-                                                            ToolTipService.ToolTip="Remove recipient"
-                                                            Visibility="Collapsed">
-                                                            <FontIcon FontSize="14" Glyph="&#xE106;" />
-                                                        </Button>
-                                                    </Grid>
-                                                </SwipeControl>
-                                            </DataTemplate>
-                                        </ListView.ItemTemplate>
-                                    </ListView>
-                                    <TextBlock
-                                        Grid.Row="3"
-                                        Grid.Column="0"
-                                        Margin="10,0,0,0"
-                                        VerticalAlignment="Center"
-                                        Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                                        Style="{ThemeResource FluentCaptionTextStyle}">
-                                        <Run Text="{x:Bind NewMessageCandidates.Count, Mode=OneWay}" /><Run Text=" recipient(s)" />
-                                    </TextBlock>
-                                    <Button
-                                        Grid.Row="3"
-                                        Grid.Column="1"
-                                        AutomationProperties.Name="Clear selection"
-                                        Background="Transparent"
-                                        Click="NewMessageClearAll_OnClick"
-                                        ToolTipService.ToolTip="Clear selection">
-                                        <SymbolIcon Symbol="ClearSelection" />
-                                    </Button>
-                                    <Button
-                                        Grid.Row="3"
-                                        Grid.Column="2"
-                                        Margin="6,0,0,0"
-                                        AutomationProperties.Name="Create chat thread from selected recipients"
-                                        Click="ChatButton_OnClick"
-                                        Content="Chat"
-                                        IsEnabled="{x:Bind NewMessageCandidates.Count, Converter={StaticResource DisableWhenEqualZero}, Mode=OneWay}"
-                                        Style="{ThemeResource AccentButtonStyle}" />
-                                </Grid>
-                            </Flyout>
-                        </Button.Flyout>
                     </Button>
 
                     <AutoSuggestBox
@@ -594,11 +438,8 @@
                             </DataTemplate>
                         </AutoSuggestBox.ItemTemplate>
                     </AutoSuggestBox>
-
-
                 </Grid>
             </controls1:ExtendedMasterDetailsView.MasterHeader>
-
         </controls1:ExtendedMasterDetailsView>
 
         <muxc:InfoBar

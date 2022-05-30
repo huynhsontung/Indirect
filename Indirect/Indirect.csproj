@@ -137,6 +137,9 @@
     <Compile Include="Controls\EmojiPicker\EmojiPicker.cs" />
     <Compile Include="Controls\EmojiPicker\EmojiPicker.Groups.cs" />
     <Compile Include="Controls\EmojiPicker\EmojiViewModel.cs" />
+    <Compile Include="Controls\NewMessagePicker.xaml.cs">
+      <DependentUpon>NewMessagePicker.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ReactionsControl.xaml.cs">
       <DependentUpon>ReactionsControl.xaml</DependentUpon>
     </Compile>
@@ -334,6 +337,10 @@
     <Page Include="Controls\ExtendedMasterDetailsView\ExtendedMasterDetailsView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\NewMessagePicker.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ReactionsControl.xaml">
       <SubType>Designer</SubType>
