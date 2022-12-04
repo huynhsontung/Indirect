@@ -461,7 +461,12 @@ namespace Indirect.Entities.Wrappers
             var startIndex = text.IndexOf(link.LinkContext.LinkUrl, StringComparison.Ordinal);
             if (startIndex < 0)
             {
-                return default;
+                return new LinkTextForDisplay
+                {
+                    Before = string.Empty,
+                    LinkText = text,
+                    After = string.Empty
+                };
             }
 
             var urlLength = link.LinkContext.LinkUrl.Length;

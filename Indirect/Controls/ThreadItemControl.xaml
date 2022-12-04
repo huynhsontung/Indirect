@@ -188,11 +188,13 @@
                         Margin="0,2,0,0"
                         IsCacheEnabled="False"
                         Source="{x:Bind Source.Link.LinkContext.LinkImageUrl}"
+                        Tapped="OpenWebLink"
                         Visibility="{x:Bind Source.Link.LinkContext.LinkImageUrl, Converter={StaticResource NullVisibilityConverter}}" />
                     <StackPanel
                         Grid.Row="2"
                         Margin="10,6,10,8"
                         Orientation="Vertical"
+                        Tapped="OpenWebLink"
                         Visibility="{x:Bind Source.Link.LinkContext.LinkTitle, Converter={StaticResource NullVisibilityConverter}}">
                         <TextBlock
                             FontWeight="Medium"
