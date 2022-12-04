@@ -21,7 +21,7 @@ using InstagramAPI.Utils;
 using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Realtime;
-using Microsoft.Toolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Indirect
 {
