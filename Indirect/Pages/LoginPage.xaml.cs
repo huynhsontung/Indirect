@@ -12,6 +12,8 @@ using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Utils;
 using InstagramAPI.Classes.Core;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.Web.WebView2.Core;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -56,6 +58,7 @@ namespace Indirect.Pages
             Window.Current.SizeChanged -= OnWindowSizeChanged;
             LoginWebview.NavigationStarting -= LoginWebviewOnNavigationStarting;
             SystemNavigationManager.GetForCurrentView().BackRequested -= SystemNavigationManager_BackRequested;
+            LoginWebview.Close();
         }
 
         private void DisableButtons()
@@ -78,11 +81,12 @@ namespace Indirect.Pages
             FbLoginButton.IsEnabled = true;
         }
 
-        private async void LoginWebviewOnNavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
+        private async void LoginWebviewOnNavigationStarting(WebView2 sender, CoreWebView2NavigationStartingEventArgs args)
         {
             this.Log($"Navigating to: {args.Uri}");
+            if (!Uri.TryCreate(args.Uri, UriKind.Absolute, out Uri uri)) return;
             // Clearing challenge
-            if (args.Uri.PathAndQuery == "/" || string.IsNullOrEmpty(args.Uri.PathAndQuery))
+            if (uri.PathAndQuery == "/" || string.IsNullOrEmpty(uri.PathAndQuery))
             {
                 if (await Debouncer.Delay("ClearingChallenge", 200) && await TryClearingChallenge(sender))
                 {
@@ -93,7 +97,7 @@ namespace Indirect.Pages
             }
 
             // Facebook OAuth Login
-            if (args.Uri.PathAndQuery.Contains("accounts/signup", StringComparison.OrdinalIgnoreCase))
+            if (uri.PathAndQuery.Contains("accounts/signup", StringComparison.OrdinalIgnoreCase))
             {
                 // Uri looks like this: https://www.instagram.com/accounts/signup/?#access_token=...
                 WebviewPopup.IsOpen = false;
@@ -102,7 +106,7 @@ namespace Indirect.Pages
                 DisableButtons();
                 try
                 {
-                    var query = args.Uri.Fragment.Substring(1); // turn fragment into query (remove the '#')
+                    var query = uri.Fragment.Substring(1); // turn fragment into query (remove the '#')
                     var urlParams = new WwwFormUrlDecoder(query);
                     if (query.Contains("access_token="))
                     {
@@ -243,22 +247,22 @@ namespace Indirect.Pages
             return false;
         }
 
-        private async Task<bool> TryClearingChallenge(WebView challengeWebView)
+        private async Task<bool> TryClearingChallenge(WebView2 challengeWebView)
         {
             const int retryCount = 4;
             _challengeRepeatCount++;
             if (_challengeRepeatCount < retryCount)
             {
                 WebviewPopup.IsOpen = false;
-                challengeWebView.Stop();
+                challengeWebView.NavigateToString(string.Empty);
                 return true;
             }
 
             if (_challengeRepeatCount == retryCount)
             {
                 WebviewPopup.IsOpen = false;
-                challengeWebView.Stop();
-                challengeWebView.Navigate(new Uri("https://www.instagram.com/"));
+                challengeWebView.NavigateToString(string.Empty);
+                challengeWebView.Source = new Uri("https://www.instagram.com/");
                 var manualLoginDialog = new ContentDialog
                 {
                     Title = "Stuck at this screen?",
@@ -284,7 +288,7 @@ namespace Indirect.Pages
 
         private void OpenChallengeInWebView(Uri uri)
         {
-            LoginWebview.Navigate(uri);
+            LoginWebview.Source = uri;
             WebviewPopup.IsOpen = true;
         }
 
@@ -371,7 +375,7 @@ namespace Indirect.Pages
             // https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/#login
             // Potentially upgrade to new WebAuthenticationBroker whenever it gets updated.
             // Tracking: https://github.com/MicrosoftEdge/WebView2Feedback/issues/171
-            LoginWebview.Navigate(new Uri("https://m.facebook.com/v6.0/dialog/oauth?client_id=124024574287414&scope=email&response_type=token&redirect_uri=https%3A%2F%2Fwww.instagram.com%2Faccounts%2Fsignup%2F"));
+            LoginWebview.Source = new Uri("https://m.facebook.com/v6.0/dialog/oauth?client_id=124024574287414&scope=email&response_type=token&redirect_uri=https%3A%2F%2Fwww.instagram.com%2Faccounts%2Fsignup%2F");
         }
 
         private void BackButton_OnClick(object sender, RoutedEventArgs e)

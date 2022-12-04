@@ -141,10 +141,11 @@
                     Canvas.ZIndex="1"
                     Click="PopupCloseButton_Click"
                     Content="Close" />
-                <WebView
+                <muxc:WebView2
                     x:Name="LoginWebview"
                     Height="400"
-                    MinWidth="380" />
+                    MinWidth="380"
+                    CanGoBack="False" />
             </StackPanel>
         </Popup>
     </Grid>
