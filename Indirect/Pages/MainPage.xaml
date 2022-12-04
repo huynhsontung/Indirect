@@ -86,21 +86,20 @@
                         VerticalAlignment="Center"
                         CornerRadius="99"
                         Source="{x:Bind Source.User.ProfilePictureUrl}" />
-                    <Border
+                    <Ellipse
                         Grid.Row="0"
                         Width="54"
                         Height="54"
-                        BorderThickness="2"
-                        CornerRadius="99"
+                        StrokeThickness="2"
                         Visibility="{x:Bind HasUnseenItems, Converter={StaticResource BooleanVisibilityConverter}}">
-                        <Border.BorderBrush>
+                        <Ellipse.Stroke>
                             <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
                                 <GradientStop Offset="0" Color="#962fbf" />
                                 <GradientStop Offset="0.5" Color="#d62976" />
                                 <GradientStop Offset="1" Color="#feda75" />
                             </LinearGradientBrush>
-                        </Border.BorderBrush>
-                    </Border>
+                        </Ellipse.Stroke>
+                    </Ellipse>
                     <TextBlock
                         x:Name="StoryUsername"
                         Grid.Row="1"
