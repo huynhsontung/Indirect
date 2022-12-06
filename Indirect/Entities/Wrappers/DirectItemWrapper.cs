@@ -329,13 +329,13 @@ namespace Indirect.Entities.Wrappers
                 case DirectItemType.Link:
                 case DirectItemType.Media:
                 case DirectItemType.Clip:
+                case DirectItemType.StoryShare:
                     return true;
                 
                 case DirectItemType.Unknown:
                 case DirectItemType.ReelShare:
                 case DirectItemType.Placeholder:
                 case DirectItemType.RavenMedia:
-                case DirectItemType.StoryShare:
                 case DirectItemType.ActionLog:
                 case DirectItemType.Profile:
                 case DirectItemType.Location:
