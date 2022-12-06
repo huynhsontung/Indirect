@@ -169,7 +169,7 @@
                     CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="150" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
@@ -185,9 +185,13 @@
 
                     <controls:ImageEx
                         Grid.Row="1"
+                        Width="250"
+                        Height="180"
                         Margin="0,2,0,0"
+                        VerticalAlignment="Center"
                         IsCacheEnabled="False"
                         Source="{x:Bind Source.Link.LinkContext.LinkImageUrl}"
+                        Stretch="UniformToFill"
                         Tapped="OpenWebLink"
                         Visibility="{x:Bind Source.Link.LinkContext.LinkImageUrl, Converter={StaticResource NullVisibilityConverter}}" />
                     <StackPanel
@@ -219,12 +223,13 @@
                     <controls:ImageEx
                         Grid.Row="0"
                         Grid.RowSpan="3"
-                        MaxWidth="{StaticResource MediaItemMaxWidth}"
-                        MaxHeight="300"
+                        Width="162"
+                        Height="288"
                         HorizontalAlignment="{x:Bind FromMe, Converter={StaticResource FromMeAlignmentConverter}}"
                         CornerRadius="{x:Bind GetRelativeCornerRadius(RelativeMode), Mode=OneWay}"
                         IsCacheEnabled="True"
                         Source="{x:Bind PreviewImageUri}"
+                        Stretch="UniformToFill"
                         Tapped="OpenWebLink" />
 
                     <Image
@@ -349,9 +354,10 @@
                         <controls:ImageEx
                             x:Name="MediaShareImageFrame"
                             Grid.Row="1"
+                            Height="150"
                             HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
                             Source="{x:Bind PreviewImageUri}"
+                            Stretch="UniformToFill"
                             Tapped="OpenWebLink" />
                         <StackPanel
                             Grid.Row="1"
