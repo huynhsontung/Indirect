@@ -53,8 +53,16 @@ namespace Indirect.Controls
         public ThreadItemControl()
         {
             this.InitializeComponent();
+            Unloaded += OnUnloaded;
             MainContentControl.SizeChanged += MainContentControl_SizeChanged;
             MainContentControl.EffectiveViewportChanged += MainContentControl_EffectiveViewportChanged;
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            Unloaded -= OnUnloaded;
+            MainContentControl.SizeChanged -= MainContentControl_SizeChanged;
+            MainContentControl.EffectiveViewportChanged -= MainContentControl_EffectiveViewportChanged;
         }
 
         private void MainContentControl_EffectiveViewportChanged(FrameworkElement sender, EffectiveViewportChangedEventArgs args)
@@ -308,6 +316,7 @@ namespace Indirect.Controls
 
         private async void StoryShareOwnerLink_OnClick(Hyperlink sender, HyperlinkClickEventArgs args)
         {
+            if (Item.Source.StoryShareMedia == null) return;
             var uri = new Uri($"https://www.instagram.com/{Item.Source.StoryShareMedia.OwnerUsername}/");
             await Launcher.LaunchUriAsync(uri);
         }
