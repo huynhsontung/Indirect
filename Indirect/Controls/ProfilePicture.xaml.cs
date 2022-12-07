@@ -53,11 +53,11 @@ namespace Indirect.Controls
 
             WeakReferenceMessenger.Default.Register<UserPresenceUpdatedMessage>(this, (r, m) =>
             {
-                if (Source == null) return;
                 ProfilePicture view = (ProfilePicture)r;
-                if (Source.All(user => user.Pk != m.UserId)) return;
                 view._dispatcherQueue.TryEnqueue(() =>
                 {
+                    if (Source == null) return;
+                    if (Source.All(user => user.Pk != m.UserId)) return;
                     IsUserActive = m.Presence.IsActive;
                 });
             });
