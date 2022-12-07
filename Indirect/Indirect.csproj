@@ -153,6 +153,7 @@
     <Compile Include="Entities\CoreViewHandle.cs" />
     <Compile Include="Entities\AudioWithWaveform.cs" />
     <Compile Include="Entities\LinkTextForDisplay.cs" />
+    <Compile Include="Entities\Messages\OpenReelMessage.cs" />
     <Compile Include="Entities\Messages\ReelRequestMessage.cs" />
     <Compile Include="Entities\Messages\ReelsFeedUpdatedMessage.cs" />
     <Compile Include="Entities\ProfilePictureWithStoryViewModel.cs" />

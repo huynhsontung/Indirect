@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Indirect.Entities.Messages;
-using InstagramAPI.Classes;
+using Indirect.Entities.Wrappers;
 using InstagramAPI.Classes.User;
 
 namespace Indirect.Entities
@@ -15,6 +16,7 @@ namespace Indirect.Entities
         [ObservableProperty] private ObservableCollection<BaseUser> _users;
 
         private BaseUser _singleUser;
+        private ReelWrapper _reel;
 
         public ProfilePictureWithStoryViewModel()
         {
@@ -31,9 +33,9 @@ namespace Indirect.Entities
             else
             {
                 _singleUser = value[0];
-                Reel reel = Messenger.Send(new ReelRequestMessage(_singleUser)).Response;
+                ReelWrapper reel = _reel = Messenger.Send(new ReelRequestMessage(_singleUser)).Response;
                 HasReel = reel != null;
-                Unseen = reel?.Seen == null;
+                Unseen = reel?.HasUnseenItems ?? false;
             }
         }
 
@@ -45,14 +47,22 @@ namespace Indirect.Entities
             }
         }
 
-        private void Update(IReadOnlyList<Reel> reels)
+        [RelayCommand]
+        public void OpenReel()
         {
-            foreach (Reel reel in reels)
+            if (_reel == null) return;
+            Messenger.Send(new OpenReelMessage(_reel));
+        }
+
+        private void Update(IReadOnlyList<ReelWrapper> reels)
+        {
+            foreach (ReelWrapper reel in reels)
             {
-                if (reel.User.Equals(_singleUser))
+                if (reel.Source.User.Equals(_singleUser))
                 {
+                    _reel = reel;
                     HasReel = true;
-                    Unseen = reel.Seen == null;
+                    Unseen = reel.HasUnseenItems;
                     return;
                 }
             }

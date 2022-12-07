@@ -1,10 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Messaging.Messages;
-using InstagramAPI.Classes;
+using Indirect.Entities.Wrappers;
 using InstagramAPI.Classes.User;
 
 namespace Indirect.Entities.Messages
 {
-    internal class ReelRequestMessage : RequestMessage<Reel>
+    internal class ReelRequestMessage : RequestMessage<ReelWrapper>
     {
         public BaseUser User { get; }
 

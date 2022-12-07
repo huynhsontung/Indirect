@@ -10,28 +10,32 @@ using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes;
 using InstagramAPI.Utils;
-using Indirect.Services;
 using Windows.System;
 using CommunityToolkit.Mvvm.Messaging;
 using Indirect.Entities.Messages;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Indirect.Pages;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.ApplicationModel.Core;
 
 namespace Indirect.Entities
 {
-    internal class ReelsFeed : ObservableRecipient, IRecipient<ReelRequestMessage>
+    internal class ReelsFeed : ObservableRecipient, IRecipient<ReelRequestMessage>, IRecipient<OpenReelMessage>
     {
         public ObservableCollection<ReelWrapper> Reels { get; } = new ObservableCollection<ReelWrapper>();
 
         public ImmutableList<Reel> LatestReelsFeed { get; private set; }
 
         private readonly DispatcherQueue _dispatcherQueue;
-        private readonly SettingsService _settingsService;
+        private readonly MainViewModel _viewModel;
         private CancellationTokenSource _reelsUpdateLoop;
+        private CoreViewHandle _reelPageView;
 
-        public ReelsFeed(SettingsService settingsService)
+        public ReelsFeed(MainViewModel viewModel)
         {
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
-            _settingsService = settingsService;
+            _viewModel = viewModel;
 
             IsActive = true;
         }
@@ -44,9 +48,9 @@ namespace Indirect.Entities
                 return;
             }
 
-            foreach (Reel reel in LatestReelsFeed)
+            foreach (ReelWrapper reel in Reels)
             {
-                if (reel.User.Equals(message.User))
+                if (reel.Source.User.Equals(message.User))
                 {
                     message.Reply(reel);
                     return;
@@ -56,10 +60,82 @@ namespace Indirect.Entities
             message.Reply(null);
         }
 
+        public async void Receive(OpenReelMessage message)
+        {
+            await OpenReelsAsync(message.Start);
+        }
+
+        public async Task OpenReelsAsync(ReelWrapper startReel)
+        {
+            if (_reelPageView != null && !_viewModel.ShowStoryInNewWindow)
+            {
+                await CloseSecondaryReelViews();
+            }
+
+            if (DeviceFamilyHelpers.MultipleViewsSupport && _viewModel.ShowStoryInNewWindow)
+            {
+                OpenReelsInNewWindow(startReel);
+            }
+            else
+            {
+                var flatReels = await PrepareFlatReelsContainer(startReel);
+                ((Frame)Window.Current.Content).Navigate(typeof(ReelPage), flatReels);
+            }
+        }
+
+        private async Task CloseSecondaryReelViews()
+        {
+            CoreViewHandle handle = _reelPageView;
+            if (handle != null)
+            {
+                await App.CloseSecondaryView(handle.Id);
+                _reelPageView = null;
+            }
+        }
+
+        private void OpenReelsInNewWindow(ReelWrapper startReel)
+        {
+            int selectedIndex = LatestReelsFeed.IndexOf(startReel.Source);
+
+            if (_reelPageView != null && ((App)App.Current).IsViewOpen(_reelPageView.Id))
+            {
+                async void PrepareReels()
+                {
+                    FlatReelsContainer flatReels = await PrepareReelsForSecondaryViewAsync(selectedIndex);
+                    Frame frame = (Frame)Window.Current.Content;
+                    frame.Navigate(typeof(ReelPage), flatReels);
+                    frame.BackStack.Clear();
+                }
+
+                _reelPageView.CoreView.DispatcherQueue.TryEnqueue(PrepareReels);
+            }
+            else
+            {
+                CoreApplicationView view = CoreApplication.CreateNewView();
+
+                async void RunOnMainThread()
+                {
+                    FlatReelsContainer flatReels = await PrepareReelsForSecondaryViewAsync(selectedIndex);
+                    int viewId = await ((App)App.Current).CreateAndShowNewView(typeof(ReelPage), flatReels, view);
+                    _reelPageView = new CoreViewHandle(viewId, view);
+                }
+
+                view.DispatcherQueue.TryEnqueue(RunOnMainThread);
+            }
+
+        }
+
+        private async Task<FlatReelsContainer> PrepareReelsForSecondaryViewAsync(int selectedIndex)
+        {
+            List<ReelWrapper> wrappedReels = LatestReelsFeed.Select(x => new ReelWrapper(x)).ToList();
+            FlatReelsContainer flatReels = await PrepareFlatReelsContainer(wrappedReels, selectedIndex);
+            flatReels.SecondaryView = true;
+            return flatReels;
+        }
+
         public async Task UpdateReelsFeedAsync(ReelsTrayFetchReason fetchReason = ReelsTrayFetchReason.ColdStart)
         {
-            _settingsService.TryGetForUser("HideReelsFeed", out bool? value);
-            if (value ?? false) return;
+            if (_viewModel.HideReelsFeed) return;
             if (Debouncer.Throttle(nameof(UpdateReelsFeed), TimeSpan.FromSeconds(10)) ||
                 fetchReason == ReelsTrayFetchReason.ColdStart)
             {
@@ -81,7 +157,7 @@ namespace Indirect.Entities
                     var reels = result.Value.Where(x => x.ReelType == "user_reel").ToArray();
                     LatestReelsFeed = reels.ToImmutableList();
                     SyncReels(reels);
-                    WeakReferenceMessenger.Default.Send(new ReelsFeedUpdatedMessage(reels));
+                    WeakReferenceMessenger.Default.Send(new ReelsFeedUpdatedMessage(Reels));
                 }
                 catch (ArgumentOutOfRangeException e)
                 {

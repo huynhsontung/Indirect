@@ -61,7 +61,7 @@ namespace Indirect
             //PendingInbox = new InboxWrapper(this, true);
             ChatService = new ChatService(this);
             Settings = new SettingsService(this);
-            ReelsFeed = new ReelsFeed(Settings);
+            ReelsFeed = new ReelsFeed(this);
 
             PropertyChanged += OnPropertyChanged;
             Inbox.FirstUpdated += OnInboxFirstUpdated;

@@ -47,7 +47,6 @@ namespace Indirect.Pages
         }
 
         private MainViewModel ViewModel => ((App) Application.Current).ViewModel;
-        private CoreViewHandle _reelPageView;
         private bool _loggedOut;
 
         public MainPage()
@@ -452,20 +451,7 @@ namespace Indirect.Pages
             var reelsWrapper = (ReelWrapper)e.ClickedItem;
             if (reelsWrapper != null)
             {
-                if (_reelPageView != null && !ViewModel.ShowStoryInNewWindow)
-                {
-                    await CloseSecondaryReelViews();
-                }
-
-                if (DeviceFamilyHelpers.MultipleViewsSupport && ViewModel.ShowStoryInNewWindow)
-                {
-                    OpenReelInNewWindow(reelsWrapper);
-                }
-                else
-                {
-                    var flatReels = await ViewModel.ReelsFeed.PrepareFlatReelsContainer(reelsWrapper);
-                    this.Frame.Navigate(typeof(ReelPage), flatReels);
-                }
+                await ViewModel.ReelsFeed.OpenReelsAsync(reelsWrapper);
             }
         }
 
@@ -473,56 +459,6 @@ namespace Indirect.Pages
         {
             args.Handled = true;
             SearchBox.Focus(FocusState.Programmatic);
-        }
-
-        private async Task CloseSecondaryReelViews()
-        {
-            CoreViewHandle handle = _reelPageView;
-            if (handle != null)
-            {
-                await App.CloseSecondaryView(handle.Id);
-                _reelPageView = null;
-            }
-        }
-
-        private void OpenReelInNewWindow(ReelWrapper reelWrapper)
-        {
-            int selectedIndex = ViewModel.ReelsFeed.LatestReelsFeed.IndexOf(reelWrapper.Source);
-
-            if (_reelPageView != null && ((App)App.Current).IsViewOpen(_reelPageView.Id))
-            {
-                async void PrepareReels()
-                {
-                    FlatReelsContainer flatReels = await PrepareReelsForSecondaryView(selectedIndex);
-                    Frame frame = (Frame)Window.Current.Content;
-                    frame.Navigate(typeof(ReelPage), flatReels);
-                    frame.BackStack.Clear();
-                }
-
-                _reelPageView.CoreView.DispatcherQueue.TryEnqueue(PrepareReels);
-            }
-            else
-            {
-                CoreApplicationView view = CoreApplication.CreateNewView();
-
-                async void RunOnMainThread()
-                {
-                    FlatReelsContainer flatReels = await PrepareReelsForSecondaryView(selectedIndex);
-                    int viewId = await ((App)App.Current).CreateAndShowNewView(typeof(ReelPage), flatReels, view);
-                    _reelPageView = new CoreViewHandle(viewId, view);
-                }
-
-                view.DispatcherQueue.TryEnqueue(RunOnMainThread);
-            }
-
-        }
-
-        private async Task<FlatReelsContainer> PrepareReelsForSecondaryView(int selectedIndex)
-        {
-            List<ReelWrapper> wrappedReels = ViewModel.ReelsFeed.LatestReelsFeed.Select(x => new ReelWrapper(x)).ToList();
-            FlatReelsContainer flatReels = await ViewModel.ReelsFeed.PrepareFlatReelsContainer(wrappedReels, selectedIndex);
-            flatReels.SecondaryView = true;
-            return flatReels;
         }
 
         private void ReelItemMenuFlyout_OnOpening(object sender, object e)
