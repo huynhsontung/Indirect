@@ -1,6 +1,5 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
@@ -19,7 +18,6 @@ using Indirect.Pages;
 using Indirect.Services;
 using InstagramAPI.Classes;
 using InstagramAPI.Classes.User;
-using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.UI.Xaml.Controls;
 using System.Numerics;
@@ -50,7 +48,7 @@ namespace Indirect.Controls
 
         public bool IsNewWindow { get; set; }
 
-
+        private long _firstUserId;
         private bool _needUpdateCaret;   // For moving the caret to the end of text on thread change. This is a bad idea. ¯\_(ツ)_/¯
         private readonly DispatcherQueue _dispatcherQueue;
         private SizeChangedEventHandler _sizeChangedHandler;
@@ -64,6 +62,7 @@ namespace Indirect.Controls
             view.ViewProfileAppBarButton.Visibility = thread.Users?.Count == 1 ? Visibility.Visible : Visibility.Collapsed;
             view.MessageInputGrid.Visibility = thread.Source.Pending ? Visibility.Collapsed : Visibility.Visible;
             view._needUpdateCaret = true;
+            view._firstUserId = thread.Users?.FirstOrDefault()?.Pk ?? default;
             view.OnUserPresenceChanged();
             view.ConditionallyShowTeachingTips();
         }
@@ -86,9 +85,9 @@ namespace Indirect.Controls
 
             WeakReferenceMessenger.Default.Register<UserPresenceUpdatedMessage>(this, (r, m) =>
             {
-                if (Thread?.Users.Count == default) return;
-                if (Thread.Users[0].Pk != m.UserId) return;
-                _dispatcherQueue.TryEnqueue(OnUserPresenceChanged);
+                ThreadDetailsView view = (ThreadDetailsView)r;
+                if (view._firstUserId != m.UserId) return;
+                view._dispatcherQueue.TryEnqueue(view.OnUserPresenceChanged);
             });
         }
 
