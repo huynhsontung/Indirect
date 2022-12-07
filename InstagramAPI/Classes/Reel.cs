@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace InstagramAPI.Classes
 {
-    public class Reel : IEquatable<Reel>
+    public class Reel
     {
         [JsonProperty("id")]
         public JValue Id { get; set; }
@@ -76,10 +76,5 @@ namespace InstagramAPI.Classes
 
         [JsonProperty("is_cacheable", NullValueHandling = NullValueHandling.Ignore)]
         public bool? IsCacheable { get; set; }
-
-        public bool Equals(Reel other)
-        {
-            return Id.Equals(other?.Id);
-        }
     }
 }
