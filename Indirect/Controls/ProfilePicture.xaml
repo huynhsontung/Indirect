@@ -40,8 +40,9 @@
             VerticalAlignment="Bottom"
             Visibility="{x:Bind IsUserActive, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
             <Ellipse
-                Width="14"
-                Height="14"
+                x:Name="ActiveCircle"
+                MinWidth="14"
+                MinHeight="14"
                 Fill="Chartreuse"
                 Stroke="{ThemeResource MainBackground}"
                 StrokeThickness="2" />

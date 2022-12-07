@@ -137,6 +137,7 @@ namespace Indirect.Controls
             Person1.Height = Person2.Height = e.NewSize.Height * groupImageRatio;
             Person1.Margin = new Thickness((1 - groupImageRatio) * e.NewSize.Width, 0, 0, (1 - groupImageRatio) * e.NewSize.Height);
             Person2.Margin = new Thickness(0, (1 - groupImageRatio) * e.NewSize.Height, (1 - groupImageRatio) * e.NewSize.Width, 0);
+            ActiveCircle.Width = ActiveCircle.Height = e.NewSize.Height * 0.25;
         }
     }
 }
