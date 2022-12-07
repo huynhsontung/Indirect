@@ -7,7 +7,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="300"
     d:DesignWidth="400"
-    SizeChanged="ProfilePictureWithStory_OnSizeChanged"
     mc:Ignorable="d">
     <UserControl.Resources>
         <LinearGradientBrush x:Key="StoryBrush" StartPoint="0,1" EndPoint="1,0">
@@ -25,8 +24,7 @@
             Visibility="{x:Bind ViewModel.HasReel, Mode=OneWay}" />
         <local:ProfilePicture
             x:Name="Picture"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
+            Margin="{x:Bind GetPictureMargin(ViewModel.HasReel), Mode=OneWay}"
             Source="{x:Bind Source, Mode=OneWay}" />
         <Button
             HorizontalAlignment="Stretch"

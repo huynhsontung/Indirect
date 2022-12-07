@@ -181,8 +181,7 @@
                     <Grid
                         x:Name="ThreadInfoHeader"
                         Margin="8,6,0,0"
-                        Background="Transparent"
-                        Tapped="ShowUsersInfoFlyout">
+                        Background="Transparent">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="*" />
@@ -192,7 +191,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <controls1:ProfilePicture
+                        <controls1:ProfilePictureWithStory
                             x:Name="ProfilePictureView"
                             Grid.Row="0"
                             Grid.RowSpan="2"
