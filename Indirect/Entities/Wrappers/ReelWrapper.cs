@@ -1,21 +1,11 @@
-﻿using Windows.UI.Xaml;
-using InstagramAPI.Classes;
+﻿using InstagramAPI.Classes;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Indirect.Entities.Wrappers
 {
-    public class ReelWrapper : DependencyObject
+    public partial class ReelWrapper : ObservableObject
     {
-        public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
-            nameof(Source),
-            typeof(Reel),
-            typeof(ReelWrapper),
-            new PropertyMetadata(null));
-
-        public Reel Source
-        {
-            get => (Reel)GetValue(SourceProperty);
-            set => SetValue(SourceProperty, value);
-        }
+        [ObservableProperty] private Reel _source;
 
         public bool HasUnseenItems => Source.Seen != Source.LatestReelMedia;
 
