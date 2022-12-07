@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Indirect.Entities.Messages;
 using InstagramAPI.Classes.Responses;
 using Windows.System;
+using System.Collections.Generic;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -21,7 +22,7 @@ namespace Indirect.Controls
     {
         public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
             nameof(Source),
-            typeof(ObservableCollection<BaseUser>),
+            typeof(IList<BaseUser>),
             typeof(ProfilePicture),
             new PropertyMetadata(null, OnSourceChanged));
         public static readonly DependencyProperty IsUserActiveProperty = DependencyProperty.Register(
@@ -31,9 +32,9 @@ namespace Indirect.Controls
             new PropertyMetadata(null));
 
 
-        public ObservableCollection<BaseUser> Source
+        public IList<BaseUser> Source
         {
-            get => (ObservableCollection<BaseUser>)GetValue(SourceProperty);
+            get => (IList<BaseUser>)GetValue(SourceProperty);
             set => SetValue(SourceProperty, value);
         }
 
@@ -65,7 +66,7 @@ namespace Indirect.Controls
         private static void OnSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ProfilePicture)d;
-            var item = (ObservableCollection<BaseUser>)e.NewValue;
+            var item = (IList<BaseUser>)e.NewValue;
             if (item.Count > 1)
             {
                 view.Single.Visibility = Visibility.Collapsed;

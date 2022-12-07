@@ -13,7 +13,7 @@ namespace Indirect.Entities
     {
         [ObservableProperty] private bool _hasReel;
         [ObservableProperty] private bool _unseen;
-        [ObservableProperty] private ObservableCollection<BaseUser> _users;
+        [ObservableProperty] private IList<BaseUser> _users;
 
         private BaseUser _singleUser;
         private ReelWrapper _reel;
@@ -23,7 +23,7 @@ namespace Indirect.Entities
             IsActive = true;
         }
 
-        partial void OnUsersChanged(ObservableCollection<BaseUser> value)
+        partial void OnUsersChanged(IList<BaseUser> value)
         {
             if (value.Count is > 1 or 0)
             {

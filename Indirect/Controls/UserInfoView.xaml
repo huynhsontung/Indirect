@@ -31,7 +31,7 @@
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <controls:ImageEx
+        <local:ProfilePictureWithStory
             Grid.Row="0"
             Grid.RowSpan="3"
             Grid.Column="0"
@@ -39,9 +39,7 @@
             Height="76"
             Margin="8,0,16,0"
             VerticalAlignment="Center"
-            CornerRadius="99"
-            Source="{x:Bind User.ProfilePictureUrl, Mode=OneWay}"
-            Style="{ThemeResource ProfilePicturePlaceholderStyle}" />
+            Source="{x:Bind ToUserArray(User), Mode=OneWay}" />
         <StackPanel
             Grid.Row="0"
             Grid.Column="1"

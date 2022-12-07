@@ -1,6 +1,6 @@
 ﻿using Indirect.Entities;
 using InstagramAPI.Classes.User;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -13,13 +13,13 @@ namespace Indirect.Controls
     {
         public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
             nameof(Source),
-            typeof(ObservableCollection<BaseUser>),
+            typeof(IList<BaseUser>),
             typeof(ProfilePicture),
             new PropertyMetadata(null));
 
-        public ObservableCollection<BaseUser> Source
+        public IList<BaseUser> Source
         {
-            get => (ObservableCollection<BaseUser>)GetValue(SourceProperty);
+            get => (IList<BaseUser>)GetValue(SourceProperty);
             set
             {
                 SetValue(SourceProperty, value);

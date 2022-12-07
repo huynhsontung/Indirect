@@ -51,6 +51,8 @@ namespace Indirect.Controls
             return string.IsNullOrEmpty(s) ? Visibility.Collapsed : Visibility.Visible;
         }
 
+        private BaseUser[] ToUserArray(UserInfo user) => new BaseUser[] { user };
+
         public UserInfoView()
         {
             this.InitializeComponent();
