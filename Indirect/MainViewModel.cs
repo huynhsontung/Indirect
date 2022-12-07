@@ -64,7 +64,6 @@ namespace Indirect
             Settings = new SettingsService(this);
             ReelsFeed = new ReelsFeed(this);
 
-            PropertyChanged += OnPropertyChanged;
             Inbox.FirstUpdated += OnInboxFirstUpdated;
             Inbox.Threads.CollectionChanged += InboxThreads_OnCollectionChanged;
 
@@ -83,25 +82,18 @@ namespace Indirect
             }
         }
 
-        private async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        partial void OnHideReelsFeedChanged(bool value)
         {
-            if (e.PropertyName == nameof(ShowStoryInNewWindow))
+            Settings.SetForUser("HideReelsFeed", value);
+            if (!value)
             {
-                SettingsService.SetGlobal("ShowStoryInNewWindow", ShowStoryInNewWindow);
+                _ = ReelsFeed.UpdateReelsFeedAsync(ReelsTrayFetchReason.PullToRefresh);
             }
+        }
 
-            if (e.PropertyName == nameof(HideReelsFeed))
-            {
-                Settings.SetForUser("HideReelsFeed", HideReelsFeed);
-                if (HideReelsFeed)
-                {
-                    ReelsFeed.Reels.Clear();
-                }
-                else
-                {
-                    await ReelsFeed.UpdateReelsFeedAsync(ReelsTrayFetchReason.PullToRefresh);
-                }
-            }
+        partial void OnShowStoryInNewWindowChanged(bool value)
+        {
+            SettingsService.SetGlobal("ShowStoryInNewWindow", value);
         }
 
         private void LoadValuesFromSettings()
