@@ -18,7 +18,7 @@ namespace BackgroundPushClient
 
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
-            Instagram.StartAppCenter();
+            Instagram.StartSentry();
             taskInstance.Canceled += TaskInstanceOnCanceled;
             this.Log("-------------- Start of background task --------------");
             var details = (SocketActivityTriggerDetails) taskInstance.TriggerDetails;
@@ -130,6 +130,7 @@ namespace BackgroundPushClient
             }
             finally
             {
+                await Sentry.SentrySdk.FlushAsync(TimeSpan.FromSeconds(2));
                 taskInstance.Canceled -= TaskInstanceOnCanceled;
                 lockFile?.Dispose();
                 _cancellation.Dispose();

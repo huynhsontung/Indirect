@@ -50,8 +50,28 @@ namespace InstagramAPI
         public static void StartAppCenter()
         {
 #if !DEBUG
-            AppCenter.Start(APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
+            AppCenter.Start(APPCENTER_SECRET, typeof(Analytics));
 #endif
+        }
+
+        public static IDisposable StartSentry()
+        {
+            return Sentry.SentrySdk.Init(o =>
+            {
+                // Tells which project in Sentry to send events to:
+                o.Dsn = SENTRY_DSN;
+
+#if DEBUG
+                o.Debug = true;
+#endif
+
+                // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+                // We recommend adjusting this value in production.
+                //o.TracesSampleRate = 1.0;
+
+                // Enable Global Mode since this is a client app.
+                o.IsGlobalModeEnabled = true;
+            });
         }
     }
 }

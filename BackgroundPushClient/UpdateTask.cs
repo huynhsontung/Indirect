@@ -12,7 +12,7 @@ namespace BackgroundPushClient
     {
         public async void Run(IBackgroundTaskInstance taskInstance)
         {
-            Instagram.StartAppCenter();
+            Instagram.StartSentry();
             var deferral = taskInstance.GetDeferral();
             try
             {
@@ -31,6 +31,7 @@ namespace BackgroundPushClient
             }
             finally
             {
+                await Sentry.SentrySdk.FlushAsync(TimeSpan.FromSeconds(2));
                 deferral.Complete();
             }
         }

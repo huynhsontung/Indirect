@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -83,17 +84,20 @@ namespace InstagramAPI.Utils
 #if !DEBUG
             if (track)
             {
-                if (properties is IDictionary<string, string> strDict)
-                {
-                    Crashes.TrackError(ex, strDict);
-                }
+                //if (properties is IDictionary<string, string> strDict)
+                //{
+                //    Crashes.TrackError(ex, strDict);
+                //}
 
                 if (properties is IDictionary<string, object> objDict)
                 {
-                    strDict = new Dictionary<string, string>(objDict.Select(x =>
-                        new KeyValuePair<string, string>(x.Key, x.Value?.ToString())));
-                    Crashes.TrackError(ex, strDict);
+                    //strDict = new Dictionary<string, string>(objDict.Select(x =>
+                    //    new KeyValuePair<string, string>(x.Key, x.Value?.ToString())));
+                    //Crashes.TrackError(ex, strDict);
+                    ex.AddSentryContext("properties", objDict.ToImmutableDictionary());
                 }
+
+                Sentry.SentrySdk.CaptureException(ex);
             }
 #endif
             if (LogLevel < LogLevel.Exceptions) return;
