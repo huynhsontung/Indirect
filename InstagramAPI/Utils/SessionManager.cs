@@ -239,8 +239,9 @@ namespace InstagramAPI.Utils
 
         private static async Task WriteToFileAsync(string fileName, IBuffer data)
         {
+            if (data.Length == 0) return;
             fileName = SanitizeFileName(fileName);
-            var file = await LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
+            var file = await LocalFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             using (var writeStream = await file.OpenAsync(FileAccessMode.ReadWrite))
             {
                 await writeStream.WriteAsync(data);
