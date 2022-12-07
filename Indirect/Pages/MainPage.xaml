@@ -122,7 +122,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <controls1:ProfilePicture
+                    <controls1:ProfilePictureWithStory
                         Grid.Row="0"
                         Grid.RowSpan="2"
                         Grid.Column="0"

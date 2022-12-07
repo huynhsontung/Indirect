@@ -12,10 +12,13 @@ using InstagramAPI.Classes;
 using InstagramAPI.Utils;
 using Indirect.Services;
 using Windows.System;
+using CommunityToolkit.Mvvm.Messaging;
+using Indirect.Entities.Messages;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Indirect.Entities
 {
-    internal class ReelsFeed
+    internal class ReelsFeed : ObservableRecipient, IRecipient<ReelRequestMessage>
     {
         public ObservableCollection<ReelWrapper> Reels { get; } = new ObservableCollection<ReelWrapper>();
 
@@ -29,6 +32,28 @@ namespace Indirect.Entities
         {
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
             _settingsService = settingsService;
+
+            IsActive = true;
+        }
+
+        public void Receive(ReelRequestMessage message)
+        {
+            if (LatestReelsFeed == null || message.User == null)
+            {
+                message.Reply(null);
+                return;
+            }
+
+            foreach (Reel reel in LatestReelsFeed)
+            {
+                if (reel.User.Equals(message.User))
+                {
+                    message.Reply(reel);
+                    return;
+                }
+            }
+
+            message.Reply(null);
         }
 
         public async Task UpdateReelsFeedAsync(ReelsTrayFetchReason fetchReason = ReelsTrayFetchReason.ColdStart)
@@ -56,6 +81,7 @@ namespace Indirect.Entities
                     var reels = result.Value.Where(x => x.ReelType == "user_reel").ToArray();
                     LatestReelsFeed = reels.ToImmutableList();
                     SyncReels(reels);
+                    WeakReferenceMessenger.Default.Send(new ReelsFeedUpdatedMessage(reels));
                 }
                 catch (ArgumentOutOfRangeException e)
                 {

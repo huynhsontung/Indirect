@@ -39,19 +39,14 @@
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Visibility="{x:Bind IsUserActive, Converter={StaticResource BooleanVisibilityConverter}, Mode=OneWay}">
-
-            <Ellipse
-                Width="16"
-                Height="16"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Fill="{ThemeResource MainBackground}" />
             <Ellipse
                 Width="12"
                 Height="12"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Fill="Chartreuse" />
+                Fill="Chartreuse"
+                Stroke="{ThemeResource MainBackground}"
+                StrokeThickness="2" />
         </Grid>
     </Grid>
 </UserControl>

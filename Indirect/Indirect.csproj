@@ -140,6 +140,9 @@
     <Compile Include="Controls\NewMessagePicker.xaml.cs">
       <DependentUpon>NewMessagePicker.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ProfilePictureWithStory.xaml.cs">
+      <DependentUpon>ProfilePictureWithStory.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ReactionsControl.xaml.cs">
       <DependentUpon>ReactionsControl.xaml</DependentUpon>
     </Compile>
@@ -150,6 +153,9 @@
     <Compile Include="Entities\CoreViewHandle.cs" />
     <Compile Include="Entities\AudioWithWaveform.cs" />
     <Compile Include="Entities\LinkTextForDisplay.cs" />
+    <Compile Include="Entities\Messages\ReelRequestMessage.cs" />
+    <Compile Include="Entities\Messages\ReelsFeedUpdatedMessage.cs" />
+    <Compile Include="Entities\ProfilePictureWithStoryViewModel.cs" />
     <Compile Include="Entities\Wrappers\RelativeItemMode.cs" />
     <Compile Include="MainViewModel.Realtime.cs" />
     <Compile Include="Pages\AboutPage.xaml.cs">
@@ -339,6 +345,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\NewMessagePicker.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ProfilePictureWithStory.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

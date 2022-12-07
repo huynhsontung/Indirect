@@ -1,0 +1,40 @@
+﻿<UserControl
+    x:Class="Indirect.Controls.ProfilePictureWithStory"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Indirect.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="300"
+    d:DesignWidth="400"
+    SizeChanged="ProfilePictureWithStory_OnSizeChanged"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <LinearGradientBrush x:Key="StoryBrush" StartPoint="0,1" EndPoint="1,0">
+            <GradientStop Offset="0" Color="#962fbf" />
+            <GradientStop Offset="0.5" Color="#d62976" />
+            <GradientStop Offset="1" Color="#feda75" />
+        </LinearGradientBrush>
+    </UserControl.Resources>
+
+    <Grid>
+        <Ellipse
+            x:Name="Indicator"
+            Stroke="{x:Bind GetIndicatorStrokeBrush(ViewModel.Unseen), Mode=OneWay}"
+            StrokeThickness="{x:Bind GetIndicatorStrokeThickness(ViewModel.Unseen), Mode=OneWay}"
+            Visibility="{x:Bind ViewModel.HasReel, Mode=OneWay}" />
+        <local:ProfilePicture
+            x:Name="Picture"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Source="{x:Bind Source, Mode=OneWay}" />
+        <Button
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Background="Transparent"
+            BorderThickness="0"
+            Canvas.ZIndex="1"
+            CornerRadius="99"
+            Visibility="{x:Bind ViewModel.HasReel, Mode=OneWay}" />
+    </Grid>
+</UserControl>
