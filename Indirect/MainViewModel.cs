@@ -22,11 +22,12 @@ using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.Core;
 using InstagramAPI.Realtime;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using Indirect.Entities.Messages;
 
 namespace Indirect
 {
-    [INotifyPropertyChanged]
-    internal partial class MainViewModel
+    internal partial class MainViewModel : ObservableRecipient, IRecipient<UserPresenceRequestMessage>
     {
         private string _threadToBeOpened;
         private readonly DispatcherQueue _mainWindowDispatcherQueue;
@@ -66,6 +67,20 @@ namespace Indirect
             PropertyChanged += OnPropertyChanged;
             Inbox.FirstUpdated += OnInboxFirstUpdated;
             Inbox.Threads.CollectionChanged += InboxThreads_OnCollectionChanged;
+
+            IsActive = true;
+        }
+
+        public void Receive(UserPresenceRequestMessage message)
+        {
+            if (UserPresenceDictionary.TryGetValue(message.UserId, out UserPresenceValue presence))
+            {
+                message.Reply(presence);
+            }
+            else
+            {
+                message.Reply(null);
+            }
         }
 
         private async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -200,10 +215,11 @@ namespace Indirect
         {
             var user = await InstaApi.UpdateLoggedInUser();
             if (user == null) return;
-            _mainWindowDispatcherQueue.TryEnqueue(() =>
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
-            });
+            // TODO: Find alternative for below
+            //_mainWindowDispatcherQueue.TryEnqueue(() =>
+            //{
+            //    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
+            //});
         }
 
         public async Task UpdateThread(DirectThreadWrapper thread)
@@ -372,6 +388,7 @@ namespace Indirect
                 foreach (var userPresenceValue in presenceResult.Value.UserPresence)
                 {
                     UserPresenceDictionary[userPresenceValue.Key] = userPresenceValue.Value;
+                    Messenger.Send(new UserPresenceUpdatedMessage(userPresenceValue.Key, userPresenceValue.Value));
                 }
             }
             catch (Exception e)

@@ -8,6 +8,10 @@ using Windows.UI.Xaml.Controls;
 using Indirect.Utilities;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Utils;
+using CommunityToolkit.Mvvm.Messaging;
+using Indirect.Entities.Messages;
+using InstagramAPI.Classes.Responses;
+using Windows.System;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -39,10 +43,29 @@ namespace Indirect.Controls
             set => SetValue(IsUserActiveProperty, value);
         }
 
+        private readonly DispatcherQueue _dispatcherQueue;
+
+        public ProfilePicture()
+        {
+            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            this.InitializeComponent();
+
+            WeakReferenceMessenger.Default.Register<UserPresenceUpdatedMessage>(this, (r, m) =>
+            {
+                if (Source == null) return;
+                ProfilePicture view = (ProfilePicture)r;
+                if (Source.All(user => user.Pk != m.UserId)) return;
+                view._dispatcherQueue.TryEnqueue(() =>
+                {
+                    IsUserActive = m.Presence.IsActive;
+                });
+            });
+        }
+
         private static void OnSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var view = (ProfilePicture)d;
-            var item = (ObservableCollection<BaseUser>) e.NewValue;
+            var item = (ObservableCollection<BaseUser>)e.NewValue;
             if (item.Count > 1)
             {
                 view.Single.Visibility = Visibility.Collapsed;
@@ -56,49 +79,53 @@ namespace Indirect.Controls
                 view.Group.Visibility = Visibility.Collapsed;
                 view.Single.Source = item[0]?.ProfilePictureUrl;
             }
-            view.OnUserPresenceChanged(view, new PropertyChangedEventArgs(string.Empty));
+
+            view.UpdatePresence();
         }
 
-        public ProfilePicture()
+        public void UpdatePresence()
         {
-            this.InitializeComponent();
-            ((App)Application.Current).ViewModel.PropertyChanged += OnUserPresenceChanged;
-        }
-
-        public void UnsubscribeHandlers()
-        {
-            ((App) Application.Current).ViewModel.PropertyChanged -= OnUserPresenceChanged;
-        }
-
-        private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName != nameof(MainViewModel.UserPresenceDictionary) &&
-                !string.IsNullOrEmpty(e.PropertyName))
+            if (Source == null) return;
+            UserPresenceValue presence = null;
+            foreach (BaseUser user in Source)
             {
-                return;
+                presence = WeakReferenceMessenger.Default.Send(new UserPresenceRequestMessage(user.Pk));
+                if (presence != null) break;
             }
 
-            try
-            {
-                await Dispatcher.QuickRunAsync(() =>
-                {
-                    if (Source == null)
-                    {
-                        return;
-                    }
-
-                    IsUserActive = Source.Any(user =>
-                        ((App) Application.Current).ViewModel.UserPresenceDictionary
-                        .TryGetValue(user.Pk, out var value) &&
-                        value.IsActive);
-                }, CoreDispatcherPriority.Low);
-            }
-            catch (InvalidComObjectException exception)
-            {
-                // This happens when ContactPanel is closed but this view still listens to event from viewmodel
-                DebugLogger.LogException(exception, false);
-            }
+            if (presence == null) return;
+            IsUserActive = presence.IsActive;
         }
+
+        //private async void OnUserPresenceChanged(object sender, PropertyChangedEventArgs e)
+        //{
+        //    if (e.PropertyName != nameof(MainViewModel.UserPresenceDictionary) &&
+        //        !string.IsNullOrEmpty(e.PropertyName))
+        //    {
+        //        return;
+        //    }
+
+        //    try
+        //    {
+        //        await Dispatcher.QuickRunAsync(() =>
+        //        {
+        //            if (Source == null)
+        //            {
+        //                return;
+        //            }
+
+        //            IsUserActive = Source.Any(user =>
+        //                ((App) Application.Current).ViewModel.UserPresenceDictionary
+        //                .TryGetValue(user.Pk, out var value) &&
+        //                value.IsActive);
+        //        }, CoreDispatcherPriority.Low);
+        //    }
+        //    catch (InvalidComObjectException exception)
+        //    {
+        //        // This happens when ContactPanel is closed but this view still listens to event from viewmodel
+        //        DebugLogger.LogException(exception, false);
+        //    }
+        //}
 
         private void ProfilePicture_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {

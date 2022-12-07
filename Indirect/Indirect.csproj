@@ -156,6 +156,8 @@
     <Compile Include="Entities\Messages\OpenReelMessage.cs" />
     <Compile Include="Entities\Messages\ReelRequestMessage.cs" />
     <Compile Include="Entities\Messages\ReelsFeedUpdatedMessage.cs" />
+    <Compile Include="Entities\Messages\UserPresenceRequestMessage.cs" />
+    <Compile Include="Entities\Messages\UserPresenceUpdatedMessage.cs" />
     <Compile Include="Entities\ProfilePictureWithStoryViewModel.cs" />
     <Compile Include="Entities\Wrappers\RelativeItemMode.cs" />
     <Compile Include="MainViewModel.Realtime.cs" />

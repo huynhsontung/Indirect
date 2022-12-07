@@ -15,6 +15,8 @@ using InstagramAPI.Realtime;
 using InstagramAPI.Utils;
 using Microsoft.UI.Xaml.Controls;
 using Newtonsoft.Json;
+using Indirect.Entities.Messages;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Indirect
 {
@@ -308,7 +310,7 @@ namespace Indirect
         private void OnUserPresenceChanged(object sender, UserPresenceEventArgs e)
         {
             UserPresenceDictionary[e.UserId] = e;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserPresenceDictionary)));
+            Messenger.Send(new UserPresenceUpdatedMessage(e.UserId, e));
         }
 
         private void ShowErrorMessage(string title, string message)

@@ -27,6 +27,8 @@ using Windows.UI.Composition;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Hosting;
 using Indirect.Utilities;
+using CommunityToolkit.Mvvm.Messaging;
+using Indirect.Entities.Messages;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -78,10 +80,16 @@ namespace Indirect.Controls
                 NewWindowButton.Visibility = Visibility.Collapsed;
             }
             
-            ViewModel.PropertyChanged += OnUserPresenceChanged;
             GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
             TypingIndicator.RegisterPropertyChangedCallback(VisibilityProperty, TypingIndicator_OnVisibilityChanged);
             Loading += OnLoading;
+
+            WeakReferenceMessenger.Default.Register<UserPresenceUpdatedMessage>(this, (r, m) =>
+            {
+                if (Thread?.Users.Count == default) return;
+                if (Thread.Users[0].Pk != m.UserId) return;
+                _dispatcherQueue.TryEnqueue(OnUserPresenceChanged);
+            });
         }
 
         private void OnLoading(FrameworkElement sender, object args)
@@ -110,26 +118,6 @@ namespace Indirect.Controls
                         ItemsHolder.ScrollIntoView(ItemsHolder.Footer);
                     });
                 }
-            }
-        }
-
-        public void UnsubscribeHandlers()
-        {
-            ViewModel.PropertyChanged -= OnUserPresenceChanged;
-            ProfilePictureView.UnsubscribeHandlers();
-        }
-
-        private void OnUserPresenceChanged(object sender, PropertyChangedEventArgs args)
-        {
-            if (args.PropertyName != nameof(MainViewModel.UserPresenceDictionary) && !string.IsNullOrEmpty(args.PropertyName)) return;
-            try
-            {
-                _dispatcherQueue.TryEnqueue(OnUserPresenceChanged);
-            }
-            catch (InvalidComObjectException exception)
-            {
-                // This happens when ContactPanel is closed but this view still listens to event from viewmodel
-                DebugLogger.LogException(exception, false);
             }
         }
 
