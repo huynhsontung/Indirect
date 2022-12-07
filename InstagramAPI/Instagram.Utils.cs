@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Windows.ApplicationModel;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
@@ -56,10 +57,14 @@ namespace InstagramAPI
 
         public static IDisposable StartSentry()
         {
+            PackageId id = Package.Current.Id;
+            string release =
+                $"{id.Name}@{id.Version.Major}.{id.Version.Minor}.{id.Version.Build}.{id.Version.Revision}";
             return Sentry.SentrySdk.Init(o =>
             {
                 // Tells which project in Sentry to send events to:
                 o.Dsn = SENTRY_DSN;
+                o.Release = release;
 
 #if DEBUG
                 o.Debug = true;
