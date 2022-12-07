@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Microsoft.AppCenter.Analytics;
 using Newtonsoft.Json;
 
 namespace InstagramAPI.Classes.Media
@@ -78,9 +77,6 @@ namespace InstagramAPI.Classes.Media
 
         [JsonProperty("analytics_response_payload")]
         public string AnalyticsResponsePayload { get; set; }
-
-        [JsonProperty("analytics")]
-        public Analytics Analytics { get; set; }
 
         [JsonProperty("user", NullValueHandling = NullValueHandling.Ignore)]
         public AuthorInfo User { get; set; }
