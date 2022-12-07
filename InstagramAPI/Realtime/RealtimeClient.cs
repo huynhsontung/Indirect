@@ -446,8 +446,8 @@ namespace InstagramAPI.Realtime
 
         private void HandleSkywalkerMessage(SkywalkerMessage message)
         {
-            var pubsub = JsonConvert.DeserializeObject<PubsubEventArgs>(message.Payload);
-            if (pubsub.Data[0].Path.Contains("activity_indicator_id"))
+            PubsubEventArgs pubsub = JsonConvert.DeserializeObject<PubsubEventArgs>(message.Payload);
+            if (pubsub != null && pubsub.Data[0].Path.Contains("activity_indicator_id"))
             {
                 ActivityIndicatorChanged?.Invoke(this, pubsub);
             }
