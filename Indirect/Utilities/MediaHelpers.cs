@@ -41,13 +41,16 @@ namespace Indirect.Utilities
 
         public static async Task DownloadMedia(Uri url)
         {
+            if (!url.IsAbsoluteUri) return;
             var fileName = System.IO.Path.GetFileName(url.LocalPath);
             var extension = System.IO.Path.GetExtension(url.LocalPath);
+            if (string.IsNullOrEmpty(fileName) || string.IsNullOrEmpty(extension)) return;
             var savePicker = new FileSavePicker
             {
                 SuggestedStartLocation = PickerLocationId.Downloads,
                 SuggestedFileName = fileName
             };
+
             savePicker.FileTypeChoices.Add("Media", new List<string> { extension });
             var saveFile = await savePicker.PickSaveFileAsync();
             if (saveFile != null)
