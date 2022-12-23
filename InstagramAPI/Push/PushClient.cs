@@ -271,6 +271,7 @@ namespace InstagramAPI.Push
 
             var socket = new StreamSocket();
             var socketActivityTask = taskInstance?.Task ?? await RequestBackgroundAccess();
+            if (socketActivityTask == null) return;
             EnableTransferOwnershipOnSocket(socket, socketActivityTask);
 
             await socket.ConnectAsync(new HostName(HostName), "443", SocketProtectionLevel.Tls12);
