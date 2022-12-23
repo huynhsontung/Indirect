@@ -45,7 +45,6 @@ namespace Indirect
         public List<DirectThreadWrapper> SecondaryThreads { get; } = new List<DirectThreadWrapper>();
         public UserSessionContainer[] AvailableSessions { get; private set; } = Array.Empty<UserSessionContainer>();
         public UserSessionData ActiveSession => InstaApi.Session;
-        public BaseUser LoggedInUser => InstaApi.Session.LoggedInUser;
         public AndroidDevice Device => InstaApi?.Device;
         public bool IsUserAuthenticated => InstaApi?.IsUserAuthenticated ?? false;
         public ReelsFeed ReelsFeed { get; }
@@ -54,6 +53,7 @@ namespace Indirect
 
         [ObservableProperty] private bool _showStoryInNewWindow;
         [ObservableProperty] private bool _hideReelsFeed;
+        [ObservableProperty] private BaseUser _loggedInUser;
 
         public MainViewModel(DispatcherQueue mainWindowDispatcherQueue)
         {
@@ -125,6 +125,7 @@ namespace Indirect
             ThreadInfoDictionary =
                 await CacheManager.ReadCacheAsync<Dictionary<string, DirectThreadInfo>>(ThreadInfoKey) ??
                 new Dictionary<string, DirectThreadInfo>();
+            LoggedInUser = InstaApi.Session.LoggedInUser;
         }
 
         public async Task OnLoggedIn()
@@ -139,7 +140,8 @@ namespace Indirect
                 Inbox.ClearInbox(),
                 GetUserPresence(),
                 ReelsFeed.UpdateReelsFeedAsync(),
-                PushClient.StartFromMainView()
+                PushClient.StartFromMainView(),
+                UpdateLoggedInUser()
             };
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -205,13 +207,13 @@ namespace Indirect
 
         public async Task UpdateLoggedInUser()
         {
-            var user = await InstaApi.UpdateLoggedInUser();
-            if (user == null) return;
-            // TODO: Find alternative for below
-            //_mainWindowDispatcherQueue.TryEnqueue(() =>
-            //{
-            //    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoggedInUser)));
-            //});
+            await InstaApi.UpdateLoggedInUser();
+            _mainWindowDispatcherQueue.TryEnqueue(() =>
+            {
+                // Force reload
+                _loggedInUser = null;
+                LoggedInUser = InstaApi.Session.LoggedInUser;
+            });
         }
 
         public async Task UpdateThread(DirectThreadWrapper thread)

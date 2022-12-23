@@ -364,8 +364,7 @@
                             Width="32"
                             Height="32"
                             CornerRadius="99"
-                            ImageExFailed="MasterMenuButton_OnImageExFailed"
-                            Source="{x:Bind ViewModel.LoggedInUser.ProfilePictureUrl, Mode=OneWay}"
+                            Source="{x:Bind ViewModel.LoggedInUser.ProfilePictureUrl, Mode=OneWay, FallbackValue={x:Null}}"
                             Style="{ThemeResource ProfilePicturePlaceholderStyle}" />
                     </Button>
                     <TextBlock

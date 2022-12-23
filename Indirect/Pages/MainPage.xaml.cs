@@ -395,11 +395,6 @@ namespace Indirect.Pages
                 "New messages will not be updated. Please restart Indirect to reconnect.", InfoBarSeverity.Error);
         }
 
-        private async void MasterMenuButton_OnImageExFailed(object sender, ImageExFailedEventArgs e)
-        {
-            await ViewModel.UpdateLoggedInUser();
-        }
-
         private async void AddAccountButton_OnClick(object sender, RoutedEventArgs e)
         {
             await ((App)App.Current).CloseAllSecondaryViews();
