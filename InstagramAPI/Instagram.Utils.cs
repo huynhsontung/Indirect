@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Windows.ApplicationModel;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
@@ -51,32 +50,8 @@ namespace InstagramAPI
         public static void StartAppCenter()
         {
 #if !DEBUG
-            AppCenter.Start(APPCENTER_SECRET, typeof(Analytics));
+            AppCenter.Start(APPCENTER_SECRET, typeof(Analytics), typeof(Crashes));
 #endif
-        }
-
-        public static IDisposable StartSentry()
-        {
-            PackageId id = Package.Current.Id;
-            string release =
-                $"{id.Name}@{id.Version.Major}.{id.Version.Minor}.{id.Version.Build}.{id.Version.Revision}";
-            return Sentry.SentrySdk.Init(o =>
-            {
-                // Tells which project in Sentry to send events to:
-                o.Dsn = SENTRY_DSN;
-                o.Release = release;
-
-#if DEBUG
-                o.Debug = true;
-#endif
-
-                // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
-                // We recommend adjusting this value in production.
-                //o.TracesSampleRate = 1.0;
-
-                // Enable Global Mode since this is a client app.
-                o.IsGlobalModeEnabled = true;
-            });
         }
     }
 }

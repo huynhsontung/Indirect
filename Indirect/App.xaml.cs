@@ -19,10 +19,6 @@ using InstagramAPI;
 using InstagramAPI.Utils;
 using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Uwp.Helpers;
-using Sentry.Protocol;
-using Sentry;
-using System.Runtime.ExceptionServices;
-using System.Security;
 
 namespace Indirect
 {
@@ -41,9 +37,7 @@ namespace Indirect
         /// </summary>
         public App()
         {
-            Instagram.StartSentry();
             Instagram.StartAppCenter();
-            this.UnhandledException += OnUnhandledException;
             this.InitializeComponent();
             SetTheme();
             this.Suspending += OnSuspending;
@@ -56,26 +50,6 @@ namespace Indirect
 
             ViewModel = new MainViewModel(DispatcherQueue.GetForCurrentThread());
             SecondaryViewIds = new List<int>();
-        }
-
-        [SecurityCritical]
-        [HandleProcessCorruptedStateExceptions]
-        private void OnUnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
-        {
-            // Get a reference to the exception, because the Exception property is cleared when accessed.
-            var exception = e.Exception;
-            if (exception != null)
-            {
-                // Tell Sentry this was an unhandled exception
-                exception.Data[Mechanism.HandledKey] = false;
-                exception.Data[Mechanism.MechanismKey] = "Application.UnhandledException";
-
-                // Capture the exception
-                SentrySdk.CaptureException(exception);
-
-                // Flush the event immediately
-                SentrySdk.Flush(TimeSpan.FromSeconds(2));
-            }
         }
 
         public async Task CloseAllSecondaryViews()
@@ -249,9 +223,6 @@ namespace Indirect
             try
             {
                 await ViewModel.OnSuspending();
-
-                // Flush Sentry events when suspending
-                await SentrySdk.FlushAsync(TimeSpan.FromSeconds(2));
             }
             catch (Exception exception)
             {
