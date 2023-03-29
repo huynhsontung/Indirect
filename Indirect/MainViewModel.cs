@@ -35,7 +35,6 @@ namespace Indirect
         private string ThreadInfoKey => $"{nameof(ThreadInfoDictionary)}_{LoggedInUser?.Pk}";
         public Dictionary<string, DirectThreadInfo> ThreadInfoDictionary { get; private set; }
 
-        public Instagram InstaApi { get; private set; }
         public bool StartedFromMainView { get; set; }
         private PushClient PushClient => InstaApi.PushClient;
         private RealtimeClient RealtimeClient => InstaApi.RealtimeClient;
@@ -50,10 +49,18 @@ namespace Indirect
         public ReelsFeed ReelsFeed { get; }
         public ChatService ChatService { get; }
         public SettingsService Settings { get; }
+        public BaseUser LoggedInUser => InstaApi?.Session.LoggedInUser;
 
         [ObservableProperty] private bool _showStoryInNewWindow;
         [ObservableProperty] private bool _hideReelsFeed;
-        [ObservableProperty] private BaseUser _loggedInUser;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(LoggedInUser))]
+        private int _forceUserReload;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(LoggedInUser))]
+        private Instagram? _instaApi;
 
         public MainViewModel(DispatcherQueue mainWindowDispatcherQueue)
         {
@@ -125,7 +132,6 @@ namespace Indirect
             ThreadInfoDictionary =
                 await CacheManager.ReadCacheAsync<Dictionary<string, DirectThreadInfo>>(ThreadInfoKey) ??
                 new Dictionary<string, DirectThreadInfo>();
-            LoggedInUser = InstaApi.Session.LoggedInUser;
         }
 
         public async Task OnLoggedIn()
@@ -211,8 +217,7 @@ namespace Indirect
             _mainWindowDispatcherQueue.TryEnqueue(() =>
             {
                 // Force reload
-                _loggedInUser = null;
-                LoggedInUser = InstaApi.Session.LoggedInUser;
+                ForceUserReload++;
             });
         }
 
