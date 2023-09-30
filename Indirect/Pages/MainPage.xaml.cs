@@ -1,29 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using Indirect.Entities.Wrappers;
+using Indirect.Services;
+using Indirect.Utilities;
+using InstagramAPI;
+using InstagramAPI.Classes.Core;
+using InstagramAPI.Utils;
+using Microsoft.Toolkit.Uwp.UI;
+using Microsoft.Toolkit.Uwp.UI.Controls;
+using Microsoft.UI.Xaml.Controls;
+using System;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
-using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
-using Indirect.Entities;
-using Indirect.Entities.Wrappers;
-using Indirect.Services;
-using Indirect.Utilities;
-using InstagramAPI;
-using InstagramAPI.Classes.Core;
-using InstagramAPI.Classes.User;
-using InstagramAPI.Utils;
-using Microsoft.Toolkit.Uwp.UI;
-using Microsoft.Toolkit.Uwp.UI.Controls;
-using Microsoft.UI.Xaml.Controls;
-using SwipeItem = Windows.UI.Xaml.Controls.SwipeItem;
-using SwipeItemInvokedEventArgs = Windows.UI.Xaml.Controls.SwipeItemInvokedEventArgs;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -42,11 +33,11 @@ namespace Indirect.Pages
 
         internal InboxWrapper Inbox
         {
-            get => (InboxWrapper) GetValue(InboxProperty);
+            get => (InboxWrapper)GetValue(InboxProperty);
             set => SetValue(InboxProperty, value);
         }
 
-        private MainViewModel ViewModel => ((App) Application.Current).ViewModel;
+        private MainViewModel ViewModel => ((App)Application.Current).ViewModel;
         private bool _loggedOut;
 
         public MainPage()
@@ -224,7 +215,7 @@ namespace Indirect.Pages
                 Frame.Navigate(typeof(MainPage));
             }
         }
-        
+
         private void DetailsBackButton_OnClick(object sender, RoutedEventArgs e) => ViewModel.SetSelectedThreadNull();
 
         private void OnWindowFocusChange(object sender, WindowActivatedEventArgs e)
@@ -255,7 +246,7 @@ namespace Indirect.Pages
                 return;
             }
 
-            var inboxThread = (DirectThreadWrapper) e.AddedItems[0];
+            var inboxThread = (DirectThreadWrapper)e.AddedItems[0];
             this.Log("Thread change invoked: " + inboxThread.Users[0].Username);
             try
             {
@@ -269,6 +260,7 @@ namespace Indirect.Pages
                 DebugLogger.LogException(ex);
             }
 
+            if (ViewModel.GhostMode) return;
             if (await Debouncer.Delay("OnThreadChanged", e.RemovedItems[0] == null ? 600 : 200)
                 .ConfigureAwait(false))
             {
@@ -304,7 +296,7 @@ namespace Indirect.Pages
 
         private void SearchBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
         {
-            var selectedItem = (DirectThreadWrapper) args.SelectedItem;
+            var selectedItem = (DirectThreadWrapper)args.SelectedItem;
             sender.Text = selectedItem.Source.Title;
         }
 
@@ -312,7 +304,7 @@ namespace Indirect.Pages
         {
             if (args.ChosenSuggestion != null)
             {
-                ViewModel.MakeProperInboxThread((DirectThreadWrapper) args.ChosenSuggestion);
+                ViewModel.MakeProperInboxThread((DirectThreadWrapper)args.ChosenSuggestion);
             }
             else if (!string.IsNullOrEmpty(sender.Text))
             {
@@ -420,7 +412,7 @@ namespace Indirect.Pages
             {
                 var item = new MenuFlyoutItem
                 {
-                    Icon = new BitmapIcon {UriSource = sessionContainer.ProfilePicture, ShowAsMonochrome = false},
+                    Icon = new BitmapIcon { UriSource = sessionContainer.ProfilePicture, ShowAsMonochrome = false },
                     Text = sessionContainer.Session.LoggedInUser.Username,
                     DataContext = sessionContainer.Session
                 };
@@ -458,7 +450,7 @@ namespace Indirect.Pages
 
         private void ReelItemMenuFlyout_OnOpening(object sender, object e)
         {
-            var menu = (MenuFlyout) sender;
+            var menu = (MenuFlyout)sender;
             var dataContext = menu.Target?.DataContext ?? (menu.Target as ContentControl)?.Content;
             foreach (var item in menu.Items)
             {

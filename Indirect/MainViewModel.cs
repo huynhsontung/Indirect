@@ -1,29 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
-using Windows.System;
-using Windows.UI.Core;
+﻿#nullable enable
+
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Indirect.Entities;
+using Indirect.Entities.Messages;
 using Indirect.Entities.Wrappers;
 using Indirect.Pages;
 using Indirect.Services;
 using Indirect.Utilities;
 using InstagramAPI;
 using InstagramAPI.Classes.Android;
+using InstagramAPI.Classes.Core;
 using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.Responses;
 using InstagramAPI.Classes.User;
 using InstagramAPI.Push;
-using InstagramAPI.Utils;
-using InstagramAPI.Classes.Responses;
-using InstagramAPI.Classes.Core;
 using InstagramAPI.Realtime;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Messaging;
-using Indirect.Entities.Messages;
+using InstagramAPI.Utils;
+using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
+using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
+using Windows.System;
+using Windows.UI.Core;
 
 namespace Indirect
 {
@@ -53,6 +54,7 @@ namespace Indirect
 
         [ObservableProperty] private bool _showStoryInNewWindow;
         [ObservableProperty] private bool _hideReelsFeed;
+        [ObservableProperty] private bool _ghostMode;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(LoggedInUser))]
@@ -103,18 +105,29 @@ namespace Indirect
             SettingsService.SetGlobal("ShowStoryInNewWindow", value);
         }
 
+        partial void OnGhostModeChanged(bool value)
+        {
+            SettingsService.SetGlobal(nameof(GhostMode), value);
+        }
+
         private void LoadValuesFromSettings()
         {
-            _showStoryInNewWindow = true;
+            ShowStoryInNewWindow = true;
             if (SettingsService.TryGetGlobal("ShowStoryInNewWindow", out bool? b))
             {
-                _showStoryInNewWindow = b ?? true;
+                ShowStoryInNewWindow = b ?? true;
             }
 
-            _hideReelsFeed = false;
+            HideReelsFeed = false;
             if (Settings.TryGetForUser("HideReelsFeed", out bool? b1))
             {
-                _hideReelsFeed = b1 ?? false;
+                HideReelsFeed = b1 ?? false;
+            }
+
+            GhostMode = false;
+            if (SettingsService.TryGetGlobal(nameof(GhostMode), out bool? b2))
+            {
+                GhostMode = b2 ?? false;
             }
         }
 
@@ -227,7 +240,7 @@ namespace Indirect
             {
                 return;
             }
-            
+
             var result = await InstaApi.GetThreadAsync(thread.Source.ThreadId, Inbox.SeqId, PaginationParameters.MaxPagesToLoad(1));
             if (result.IsSucceeded)
             {
@@ -243,7 +256,10 @@ namespace Indirect
             if (Inbox.Threads.Contains(selectedThread))
             {
                 await UpdateThread(selectedThread);
-                await selectedThread.MarkLatestItemSeen();
+                if (!GhostMode)
+                {
+                    await selectedThread.MarkLatestItemSeen();
+                }
             }
             else
             {
@@ -306,7 +322,7 @@ namespace Indirect
                 if (cloneThread == null) return;
                 var wrapper = new DirectThreadWrapper(this, cloneThread);
                 SecondaryThreads.Add(wrapper);
-                await ((App) App.Current).CreateAndShowNewView(typeof(ThreadPage), wrapper, newView);
+                await ((App)App.Current).CreateAndShowNewView(typeof(ThreadPage), wrapper, newView);
             });
         }
 
@@ -336,7 +352,7 @@ namespace Indirect
                 var result = await InstaApi.GetThreadByParticipantsAsync(userIds);
                 if (result.IsSucceeded)
                 {
-                    thread = result.Value != null && result.Value.Users.Count > 0 ? 
+                    thread = result.Value != null && result.Value.Users.Count > 0 ?
                         new DirectThreadWrapper(this, result.Value) : new DirectThreadWrapper(placeholderThread.Users?[0], this);
                 }
                 else
