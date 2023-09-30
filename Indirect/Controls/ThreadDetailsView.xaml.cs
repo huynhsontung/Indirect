@@ -1,32 +1,32 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Indirect.Converters;
+using Indirect.Entities.Messages;
+using Indirect.Entities.Wrappers;
+using Indirect.Pages;
+using Indirect.Services;
+using Indirect.Utilities;
+using InstagramAPI.Classes;
+using InstagramAPI.Classes.User;
+using Microsoft.Toolkit.Uwp.UI;
+using Microsoft.UI.Xaml.Controls;
+using System;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
+using Windows.UI.Composition;
 using Windows.UI.ViewManagement;
 using Windows.UI.ViewManagement.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Input;
-using Indirect.Converters;
-using Indirect.Entities.Wrappers;
-using Indirect.Pages;
-using Indirect.Services;
-using InstagramAPI.Classes;
-using InstagramAPI.Classes.User;
-using Microsoft.Toolkit.Uwp.UI;
-using Microsoft.UI.Xaml.Controls;
-using System.Numerics;
-using Windows.UI.Composition;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Hosting;
-using Indirect.Utilities;
-using CommunityToolkit.Mvvm.Messaging;
-using Indirect.Entities.Messages;
+using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -78,7 +78,7 @@ namespace Indirect.Controls
             {
                 NewWindowButton.Visibility = Visibility.Collapsed;
             }
-            
+
             GifPicker.ImageSelected += (sender, media) => GifPickerFlyout.Hide();
             TypingIndicator.RegisterPropertyChangedCallback(VisibilityProperty, TypingIndicator_OnVisibilityChanged);
             Loading += OnLoading;
@@ -346,12 +346,16 @@ namespace Indirect.Controls
             UserInfoFlyout.ShowAt(element);
         }
 
-        private void MessageTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
+        private async void MessageTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            if (!_needUpdateCaret) return;
-            var tb = (TextBox)sender;
-            tb.SelectionStart = tb.Text.Length;
-            _needUpdateCaret = false;
+            if (_needUpdateCaret)
+            {
+                var tb = (TextBox)sender;
+                tb.SelectionStart = tb.Text.Length;
+                _needUpdateCaret = false;
+            }
+
+            await Thread.OnUserInteraction();
         }
 
         private void OnDragOver(object sender, DragEventArgs e)

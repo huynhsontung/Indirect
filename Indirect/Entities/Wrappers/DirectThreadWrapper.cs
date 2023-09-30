@@ -1,4 +1,10 @@
-﻿using System;
+﻿using Indirect.Utilities;
+using InstagramAPI.Classes.Core;
+using InstagramAPI.Classes.Direct;
+using InstagramAPI.Classes.User;
+using InstagramAPI.Utils;
+using Microsoft.Toolkit.Collections;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -7,12 +13,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.System;
 using Windows.UI.Xaml;
-using Indirect.Utilities;
-using InstagramAPI.Classes.Direct;
-using InstagramAPI.Classes.User;
-using InstagramAPI.Utils;
-using Microsoft.Toolkit.Collections;
-using InstagramAPI.Classes.Core;
 
 namespace Indirect.Entities.Wrappers
 {
@@ -53,7 +53,7 @@ namespace Indirect.Entities.Wrappers
             nameof(HasUnreadMessage),
             typeof(bool),
             typeof(DirectThreadWrapper),
-            new PropertyMetadata(false));
+            new PropertyMetadata(false, OnHasUnreadMessagePropertyChanged));
 
         public DirectItemWrapper LastPermanentItem
         {
@@ -105,6 +105,7 @@ namespace Indirect.Entities.Wrappers
         private readonly TimeSpan _showTimestampThreshold;
         private readonly TimeSpan _showSeparatorThreshold;
         private int _pageCounter;
+        private bool _shouldMarkLatestItemSeen;
 
         /// <summary>
         /// Only use this constructor to make empty placeholder thread.
@@ -251,6 +252,13 @@ namespace Indirect.Entities.Wrappers
                 LastPermanentItem = ObservableItems.LastOrDefault();
                 source.Items = null;
             });
+        }
+
+
+        private static void OnHasUnreadMessagePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var thread = (DirectThreadWrapper)d;
+            thread._shouldMarkLatestItemSeen = (bool)e.NewValue;
         }
 
         private static void OnLastPermanentItemPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -496,11 +504,6 @@ namespace Indirect.Entities.Wrappers
                 }
             }
 
-            if (before != null)
-            {
-                
-            }
-
             if (after != null && !after.Source.HideInThread)
             {
                 var hasItemAfter = after.Sender.Equals(current.Sender) && IsCloseEnough(after.Source.Timestamp, current.Source.Timestamp, _showSeparatorThreshold);
@@ -542,6 +545,15 @@ namespace Indirect.Entities.Wrappers
             return threshold.Ticks > 0
                 ? threshold.Negate() < x - y && x - y < threshold
                 : threshold < x - y && x - y < threshold.Negate();
+        }
+
+        public async Task OnUserInteraction()
+        {
+            if (_shouldMarkLatestItemSeen && !_viewModel.GhostMode)
+            {
+                _shouldMarkLatestItemSeen = false;
+                await MarkLatestItemSeen();
+            }
         }
 
         public async Task MarkLatestItemSeen()

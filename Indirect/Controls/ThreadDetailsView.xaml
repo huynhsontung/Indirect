@@ -436,6 +436,7 @@
                     Margin="4,0"
                     VerticalAlignment="Stretch"
                     AcceptsReturn="True"
+                    GotFocus="{x:Bind Thread.OnUserInteraction}"
                     KeyboardAcceleratorPlacementMode="Hidden"
                     MaxLength="2200"
                     PlaceholderText="Type a message"
