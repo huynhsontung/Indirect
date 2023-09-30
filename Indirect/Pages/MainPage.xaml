@@ -57,6 +57,10 @@
                 <MenuFlyoutSeparator />
                 <ToggleMenuFlyoutItem IsChecked="{x:Bind ViewModel.ShowStoryInNewWindow, Mode=TwoWay}" Text="Show Story in New Window" />
                 <ToggleMenuFlyoutItem IsChecked="{x:Bind ViewModel.HideReelsFeed, Mode=TwoWay}" Text="Hide Reels Feed" />
+                <ToggleMenuFlyoutItem
+                    IsChecked="{x:Bind ViewModel.GhostMode, Mode=TwoWay}"
+                    Text="Ghost Mode"
+                    ToolTipService.ToolTip="Read messages without marking them as seen" />
                 <MenuFlyoutSubItem Text="Theme">
                     <MenuFlyoutItem Click="ThemeItem_Click" Text="System" />
                     <MenuFlyoutItem Click="ThemeItem_Click" Text="Dark" />
@@ -360,12 +364,21 @@
                         Background="Transparent"
                         Flyout="{StaticResource MasterMenuFlyout}"
                         ToolTipService.ToolTip="Main menu">
-                        <controls:ImageEx
-                            Width="32"
-                            Height="32"
-                            CornerRadius="99"
-                            Source="{x:Bind ViewModel.LoggedInUser.ProfilePictureUrl, Mode=OneWay, FallbackValue={x:Null}}"
-                            Style="{ThemeResource ProfilePicturePlaceholderStyle}" />
+                        <Grid>
+                            <controls:ImageEx
+                                Width="32"
+                                Height="32"
+                                CornerRadius="99"
+                                Source="{x:Bind ViewModel.LoggedInUser.ProfilePictureUrl, Mode=OneWay, FallbackValue={x:Null}}"
+                                Style="{ThemeResource ProfilePicturePlaceholderStyle}" />
+                            <TextBlock
+                                Margin="-4,-2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                FontSize="14"
+                                Text="👻"
+                                Visibility="{x:Bind ViewModel.GhostMode, Mode=OneWay}" />
+                        </Grid>
                     </Button>
                     <TextBlock
                         x:Name="MasterHeading"
