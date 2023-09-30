@@ -343,6 +343,35 @@
                     IsIndeterminate="True"
                     Visibility="Collapsed" />
 
+                <Rectangle
+                    Grid.Row="1"
+                    Grid.RowSpan="3"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="5"
+                    Margin="3,0,3,-10"
+                    Fill="{ThemeResource SystemFillColorAttentionBackgroundBrush}"
+                    RadiusX="8"
+                    RadiusY="8"
+                    Stroke="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                    StrokeDashArray="6,2"
+                    StrokeDashCap="Round"
+                    StrokeThickness="1,1,1,0"
+                    Visibility="{x:Bind Thread.GhostMode, Mode=OneWay}" />
+
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="5"
+                    Margin="0,2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    FontStyle="Italic"
+                    Foreground="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="Ghost Mode is active"
+                    ToolTipService.ToolTip="Messages won't be marked as seen when you read them"
+                    Visibility="{x:Bind Thread.GhostMode, Mode=OneWay}" />
+
                 <Grid
                     Grid.Row="1"
                     Grid.Column="2"

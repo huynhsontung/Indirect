@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,6 +55,19 @@ namespace Indirect.Entities.Wrappers
             typeof(bool),
             typeof(DirectThreadWrapper),
             new PropertyMetadata(false, OnHasUnreadMessagePropertyChanged));
+
+        public static readonly DependencyProperty GhostModeProperty = DependencyProperty.Register(
+            nameof(GhostMode),
+            typeof(bool),
+            typeof(DirectThreadWrapper),
+            new PropertyMetadata(false));
+
+        // Separate property from MainViewModel due to thread affinity
+        public bool GhostMode
+        {
+            get => (bool)GetValue(GhostModeProperty);
+            set => SetValue(GhostModeProperty, value);
+        }
 
         public DirectItemWrapper LastPermanentItem
         {
@@ -124,6 +138,7 @@ namespace Indirect.Entities.Wrappers
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
             _showTimestampThreshold = TimeSpan.FromHours(2);
             _showSeparatorThreshold = TimeSpan.FromMinutes(5);
+            GhostMode = _viewModel.GhostMode;
             Users = new ObservableCollection<BaseUser>();
             ObservableItems = new ReversedIncrementalLoadingCollection<DirectThreadWrapper, DirectItemWrapper>(this);
             DetailedUserInfoDictionary = new Dictionary<long, UserInfo>();
@@ -163,6 +178,15 @@ namespace Indirect.Entities.Wrappers
             ObservableItems.CollectionChanged += DecorateOnItemDeleted;
             ObservableItems.CollectionChanged += HideTypingIndicatorOnItemReceived;
             RegisterPropertyChangedCallback(QuickReplyEmojiProperty, OnQuickReplyEmojiChanged);
+            _viewModel.PropertyChanged += ViewModelOnPropertyChanged;
+        }
+
+        private void ViewModelOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(_viewModel.GhostMode))
+            {
+                _dispatcherQueue.TryEnqueue(() => GhostMode = _viewModel.GhostMode);
+            }
         }
 
         private void OnQuickReplyEmojiChanged(DependencyObject sender, DependencyProperty dp)
